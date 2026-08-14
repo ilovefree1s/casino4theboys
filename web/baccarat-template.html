@@ -1,0 +1,887 @@
+<title>for the boys · Baccarat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  /* Single-theme by design: the page is a casino felt, one committed world. */
+  :root {
+    --felt: #5C1A1B;
+    --felt-deep: #471314;
+    --ink: #0E0A0B;
+    --bone: #F5F1E8;
+    --gold: #FFF049;
+    --trim: #D9B23A;
+    --glow: #FFE45C;
+    --player: #2F6FBF;
+    --banker: #B5301F;
+    --tie: #2F8F4E;
+    --display: "Arial Black", "Franklin Gothic Heavy", "Segoe UI", sans-serif;
+    --script: "Snell Roundhand", "Brush Script MT", "Segoe Script", cursive;
+    --ui: "Segoe UI", system-ui, -apple-system, sans-serif;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: radial-gradient(ellipse at 50% 20%, var(--felt) 0%, var(--felt) 55%, var(--felt-deep) 100%);
+    font-family: var(--ui);
+    color: var(--bone);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    overflow-x: hidden;
+  }
+  button { font-family: var(--ui); cursor: pointer; border: none; background: none; color: inherit; }
+  button:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
+
+  .table {
+    position: relative;
+    max-width: 430px;
+    min-height: 100dvh;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
+    gap: 0;
+  }
+
+  .outline {
+    text-shadow:
+      -2px -2px 0 var(--ink), 2px -2px 0 var(--ink),
+      -2px 2px 0 var(--ink), 2px 2px 0 var(--ink), 0 3px 0 var(--ink);
+  }
+  .outline-1 {
+    text-shadow:
+      -1px -1px 0 var(--ink), 1px -1px 0 var(--ink),
+      -1px 1px 0 var(--ink), 1px 1px 0 var(--ink), 0 2px 0 var(--ink);
+  }
+
+  /* ---- watermarks ---- */
+  .wm-layer {
+    position: absolute; inset: 0; overflow: hidden;
+    pointer-events: none; z-index: 0;
+  }
+  .wm {
+    position: absolute; text-align: center; pointer-events: none;
+    user-select: none; -webkit-user-select: none; white-space: nowrap;
+  }
+  .wm .s { font-family: var(--script); color: rgba(245,225,215,.10); line-height: 1; display: block; }
+  .wm .h { font-size: 9px; letter-spacing: .45em; color: rgba(200,90,80,.16); font-weight: 600; margin-top: 2px; display: block; }
+  .table > *:not(.wm) { z-index: 1; }
+
+  /* ---- top bar ---- */
+  .topbar {
+    width: 100%; display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 0 2px; font-size: 11px;
+  }
+  .brand { font-family: var(--script); font-size: 21px; color: rgba(245,225,215,.75); }
+  .money { display: flex; gap: 12px; align-items: center; padding-right: 54px; }
+  .money .lbl { font-size: 8.5px; letter-spacing: .12em; color: rgba(245,241,232,.6); }
+  .money .val { font-family: var(--display); font-size: 14px; color: var(--glow); }
+  .money .val.staked { color: var(--bone); }
+
+  .shoe-line {
+    font-size: 9.5px; letter-spacing: .3em; color: rgba(245,241,232,.55);
+    margin: 2px 0 8px; text-align: center;
+  }
+
+  /* ---- hands ---- */
+  .hands { display: flex; gap: 10px; width: 100%; align-items: flex-start; }
+  .hand { flex: 1; text-align: center; min-width: 0; }
+  .hand-title { display: flex; justify-content: center; align-items: center; gap: 8px; }
+  .hand-name { font-family: var(--display); font-size: 21px; letter-spacing: .06em; transition: opacity 200ms; }
+  .hand-name.player { color: var(--player); }
+  .hand-name.banker { color: var(--banker); }
+  .hand.dimmed .hand-name, .hand.dimmed .total-badge { opacity: .55; }
+  .total-badge {
+    color: var(--bone); font-family: var(--display); font-size: 13px;
+    border-radius: 999px; padding: 0 9px; border: 2px solid var(--ink); display: none;
+  }
+  .hand.player .total-badge { background: var(--player); }
+  .hand.banker .total-badge { background: var(--banker); }
+  .hand-rule { height: 3px; background: var(--bone); border-radius: 2px; margin: 5px 2px 10px; }
+  .divider { width: 3px; height: 36px; background: var(--bone); border-radius: 2px; margin-top: 8px; }
+  .cards { display: flex; gap: 6px; justify-content: center; min-height: 78px; }
+  .slot {
+    width: 52px; height: 78px; border-radius: 6px;
+    border: 1.5px dashed rgba(245,241,232,.3);
+  }
+
+  .card { width: 52px; height: 78px; perspective: 700px; }
+  .card .inner {
+    position: relative; width: 100%; height: 100%;
+    transform-style: preserve-3d; transform: rotateY(180deg);
+    transition: transform 480ms cubic-bezier(.2,.7,.2,1);
+  }
+  .card.up .inner { transform: rotateY(0); }
+  .card .face {
+    position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+    border-radius: 6px; box-shadow: 0 4px 10px rgba(0,0,0,.5);
+  }
+  .card .front {
+    background: #FAF6EC; border: 1px solid rgba(0,0,0,.4);
+    display: flex; flex-direction: column; justify-content: space-between;
+    padding: 4px 5px; font-family: var(--display);
+  }
+  .card .front.red { color: #B3222E; }
+  .card .front.black { color: #141014; }
+  .card .tl { font-size: 13px; line-height: 1; text-align: left; }
+  .card .tl .suit { font-size: 11px; }
+  .card .mid { font-size: 20px; text-align: center; }
+  .card .br { font-size: 10px; align-self: flex-end; transform: rotate(180deg); }
+  .card .back {
+    transform: rotateY(180deg); border: 2px solid var(--trim);
+    background: repeating-linear-gradient(45deg, #401012 0 6px, #521619 6px 12px);
+  }
+  @keyframes card-enter { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .card.enter { animation: card-enter 240ms ease-out; }
+  @media (prefers-reduced-motion: reduce) {
+    .card .inner { transition-duration: 1ms; }
+    .card.enter { animation: none; }
+  }
+
+  .message {
+    font-family: var(--display); font-size: 14px; min-height: 21px;
+    text-align: center; margin-top: 6px; color: var(--bone);
+  }
+  .message.win { color: var(--glow); }
+
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-top: 6px; }
+  .pill {
+    display: flex; gap: 5px; align-items: center;
+    background: rgba(14,10,11,.7); border: 1.5px solid var(--trim);
+    border-radius: 999px; padding: 3px 10px; font-size: 11px; font-weight: 800;
+  }
+  .pill .amt { color: var(--glow); font-weight: 900; }
+  .pill.push { border-color: rgba(245,241,232,.35); }
+  .pill.push .amt { color: rgba(245,241,232,.7); }
+
+  /* ---- bet spots shared ---- */
+  .spot { position: relative; }
+  .placed {
+    position: absolute; width: 50px; height: 50px; border-radius: 50%;
+    overflow: hidden; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    pointer-events: none; box-shadow: 0 4px 10px rgba(0,0,0,.55); display: none;
+  }
+  .placed img { width: 106%; height: 106%; margin: -3%; display: block; }
+  .placed .scrim {
+    position: absolute; inset: 0; background: rgba(14,10,11,.64);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); color: var(--glow);
+  }
+
+  /* ---- pair / tie row ---- */
+  .pair-row {
+    display: flex; width: 100%; border: 4px solid var(--bone); border-radius: 12px;
+    overflow: hidden; margin-top: 10px; box-shadow: 0 6px 16px rgba(0,0,0,.35);
+  }
+  .pair-cell {
+    flex: 1; position: relative; text-align: center; padding: 10px 4px 13px;
+    font-family: var(--display); transition: background 160ms;
+  }
+  .pair-cell.tie-cell { flex: 1.1; }
+  .pair-cell + .pair-cell { border-left: 4px solid var(--bone); }
+  .pair-cell .t1 { font-size: 14px; letter-spacing: .05em; line-height: 1.15; }
+  .pair-cell.tie-cell .t1 { font-size: 24px; }
+  .pair-cell .pays { font-size: 12px; color: var(--bone); margin-top: 3px; }
+  .pair-cell.p { color: var(--player); }
+  .pair-cell.b { color: var(--banker); }
+  .pair-cell.t { color: var(--tie); }
+  .pair-cell.active { background: rgba(0,0,0,.22); }
+  .pair-cell.won { background: rgba(255,228,92,.25); }
+
+  /* ---- placards ---- */
+  .placards { position: relative; width: 100%; margin-top: 10px; }
+  .placard-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+  .placard {
+    position: relative; border: 3px solid var(--ink); border-radius: 12px;
+    padding: 7px 6px 11px; text-align: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,.5); transition: box-shadow 160ms;
+  }
+  .placard.active { box-shadow: 0 0 0 2px rgba(255,255,255,.65), 0 8px 18px rgba(0,0,0,.55); }
+  .placard.won { box-shadow: 0 0 0 3px var(--glow), 0 8px 18px rgba(0,0,0,.55); }
+  .placard .ttl { font-family: var(--display); font-size: 15px; letter-spacing: .04em; color: var(--gold); line-height: 1.1; }
+  .placard .cjk { font-size: 11px; font-weight: 900; color: var(--gold); margin-top: 1px; }
+  .placard .cols { display: flex; margin-top: 5px; font-weight: 800; font-size: 9.5px; line-height: 1.3; }
+  .placard .col { flex: 1; padding: 0 5px; color: var(--ink); }
+  .placard .col + .col { border-left: 2px solid var(--ink); }
+  .placard.lit .col { color: var(--gold); }
+  .placard.lit .col + .col { border-left-color: rgba(255,240,73,.8); }
+  .placard.fortune7 { background: linear-gradient(180deg,#F5A623,#E08A12); }
+  .placard.golden8 { background: linear-gradient(180deg,#9BBF3B,#7FA32A); }
+  .placard.heavenly9 { background: linear-gradient(180deg,#BFDCEF,#9CC4E0); }
+  .placard.blazing7s { background: linear-gradient(180deg,#D6402A,#B02415); }
+
+  .medallion {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    width: 96px; height: 96px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #FFE45C, #D9A21B 72%);
+    border: 3px solid var(--ink);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,.5); z-index: 2; cursor: pointer;
+    padding: 0; transition: box-shadow 160ms;
+  }
+  .medallion.active { box-shadow: 0 0 0 2px rgba(255,255,255,.65), 0 6px 14px rgba(0,0,0,.5); }
+  .medallion.won { box-shadow: 0 0 0 3px var(--glow), 0 0 18px rgba(255,228,92,.5); }
+  .medallion .tiny { font-size: 6px; font-weight: 800; color: var(--ink); letter-spacing: .05em; }
+  .medallion .big { font-family: var(--display); font-size: 15px; color: #C22A18; line-height: .95; }
+
+  /* ---- circles ---- */
+  .circles { display: flex; gap: 48px; justify-content: center; margin-top: 14px; }
+  .circle-wrap { position: relative; width: 140px; height: 134px; }
+  .circle-wrap svg.arch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); overflow: visible; }
+  .bet-circle {
+    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100px; height: 100px; border-radius: 50%;
+    border: 7px solid; background: transparent; transition: background 160ms, box-shadow 160ms;
+    box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 2px var(--ink);
+  }
+  .bet-circle.player { border-color: var(--player); }
+  .bet-circle.banker { border-color: var(--banker); }
+  .bet-circle.active { background: rgba(0,0,0,.2); }
+  .bet-circle.won {
+    background: rgba(255,228,92,.18);
+    box-shadow: 0 0 22px rgba(255,228,92,.55), inset 0 0 0 2px var(--ink), 0 0 0 2px var(--ink);
+  }
+  .arch text {
+    font-family: var(--display); font-size: 19px; font-weight: 900; letter-spacing: .12em;
+    stroke: var(--ink); stroke-width: 1.6px; paint-order: stroke;
+  }
+
+  /* ---- chips rack ---- */
+  .rack { display: flex; gap: 8px; margin-top: 12px; }
+  .chip-btn {
+    width: 50px; height: 50px; border-radius: 50%; padding: 0; overflow: hidden;
+    box-shadow: 0 5px 12px rgba(0,0,0,.5); transition: transform 140ms, box-shadow 140ms;
+    position: relative;
+  }
+  .chip-btn img { width: 106%; height: 106%; margin: -3%; display: block; }
+  .chip-btn.sel { transform: translateY(-4px); box-shadow: 0 0 0 3px var(--glow), 0 5px 12px rgba(0,0,0,.5); }
+
+  /* ---- actions ---- */
+  .actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; min-height: 46px; }
+  .btn {
+    border-radius: 999px; padding: 11px 22px; font-weight: 800;
+    letter-spacing: .08em; font-size: 13px;
+  }
+  .btn.solid { background: var(--trim); color: var(--ink); border: 2px solid var(--ink); box-shadow: 0 4px 12px rgba(0,0,0,.4); }
+  .btn.ghost { border: 1.5px solid rgba(245,241,232,.45); color: var(--bone); }
+  .dealing-label { font-family: var(--display); letter-spacing: .15em; opacity: .8; font-size: 13px; }
+
+  /* ---- road drawer ---- */
+  .road-drawer {
+    position: fixed; top: env(safe-area-inset-top, 0px); right: 10px; z-index: 20;
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .road-panel {
+    background: rgba(36,15,16,.96); border: 1.5px solid var(--trim); border-radius: 14px;
+    padding: 10px 12px; margin-bottom: 5px; display: none; text-align: center;
+  }
+  .road-drawer.open .road-panel { display: block; }
+  .road-counts { font-size: 9px; letter-spacing: .25em; color: rgba(245,241,232,.6); margin-bottom: 6px; }
+  .road-grid-box {
+    background: rgba(0,0,0,.28); border: 2px solid rgba(245,241,232,.5); border-radius: 8px;
+    padding: 7px; min-width: 200px; max-width: 74vw; overflow-x: auto;
+  }
+  .road-cols { display: flex; gap: 3px; justify-content: flex-start; min-height: 111px; }
+  .road-col { display: flex; flex-direction: column; gap: 3px; }
+  .bead {
+    width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--ink);
+    font-size: 8px; font-weight: 800; color: var(--bone);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .bead.P { background: var(--player); } .bead.B { background: var(--banker); } .bead.T { background: var(--tie); }
+  .road-empty { font-size: 10px; color: rgba(245,241,232,.5); align-self: center; padding: 0 8px; }
+  .road-log { margin-top: 9px; }
+  .road-log .hdr {
+    font-size: 8px; letter-spacing: .25em; color: rgba(245,241,232,.6);
+    margin-bottom: 4px; text-align: center;
+  }
+  .log-row { display: flex; align-items: center; gap: 7px; padding: 1px 2px; width: 190px; margin: 0 auto; }
+  .log-row .num { width: 26px; font-size: 10px; color: rgba(245,241,232,.5); text-align: left; }
+  .log-row .net { margin-left: auto; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .log-row .net.win { color: var(--glow); }
+  .log-row .net.loss { color: #FF9C8A; }
+  .log-row .net.even { color: rgba(245,241,232,.6); }
+  .road-tab {
+    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim);
+    border-radius: 0 0 10px 10px; padding: 3px 20px 4px; color: var(--trim); font-size: 9px; line-height: 1;
+  }
+  .road-tab .arrow { display: inline-block; transition: transform 240ms; }
+  .road-drawer.open .road-tab .arrow { transform: rotate(180deg); }
+</style>
+
+<div class="table">
+  <div class="wm-layer">
+    <div class="wm" style="top:14%; left:-4%;"><span class="s" style="font-size:38px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+    <div class="wm" style="top:14%; right:-6%;"><span class="s" style="font-size:38px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+    <div class="wm" style="top:47%; left:24%;"><span class="s" style="font-size:44px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+    <div class="wm" style="bottom:20%; left:-5%;"><span class="s" style="font-size:36px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+    <div class="wm" style="bottom:20%; right:-6%;"><span class="s" style="font-size:36px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+    <div class="wm" style="bottom:1%; left:22%;"><span class="s" style="font-size:42px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
+  </div>
+
+  <div class="topbar">
+    <span class="brand">for the boys</span>
+    <div class="money">
+      <span><span class="lbl">BANKROLL </span><span class="val" id="bankroll">1,000</span></span>
+      <span><span class="lbl">STAKED </span><span class="val staked" id="staked">0</span></span>
+    </div>
+  </div>
+  <div class="shoe-line">PUNTO BANCO · 8 DECKS · <span id="shoeCount">416</span> CARDS IN SHOE</div>
+
+  <div class="hands">
+    <div class="hand player" id="handP">
+      <div class="hand-title">
+        <span class="hand-name player outline">PLAYER</span>
+        <span class="total-badge" id="totalP">0</span>
+      </div>
+      <div class="hand-rule"></div>
+      <div class="cards" id="cardsP"><div class="slot"></div></div>
+    </div>
+    <div class="divider"></div>
+    <div class="hand banker" id="handB">
+      <div class="hand-title">
+        <span class="hand-name banker outline">BANKER</span>
+        <span class="total-badge" id="totalB">0</span>
+      </div>
+      <div class="hand-rule"></div>
+      <div class="cards" id="cardsB"><div class="slot"></div></div>
+    </div>
+  </div>
+
+  <div class="message outline-1" id="message">Place your bets</div>
+  <div class="pills" id="pills"></div>
+
+  <div class="pair-row">
+    <button class="pair-cell p spot" id="spot-playerPair">
+      <div class="t1 outline-1">PLAYER<br>PAIR</div>
+      <div class="pays outline-1">11 to 1</div>
+      <div class="placed"></div>
+    </button>
+    <button class="pair-cell t tie-cell spot" id="spot-tie">
+      <div class="t1 outline-1">TIE</div>
+      <div class="pays outline-1">8 to 1</div>
+      <div class="placed"></div>
+    </button>
+    <button class="pair-cell b spot" id="spot-bankerPair">
+      <div class="t1 outline-1">BANKER<br>PAIR</div>
+      <div class="pays outline-1">11 to 1</div>
+      <div class="placed"></div>
+    </button>
+  </div>
+
+  <div class="placards">
+    <div class="placard-grid">
+      <button class="placard fortune7 spot" id="spot-fortune7">
+        <div class="ttl outline-1">FORTUNE 7</div>
+        <div class="cjk outline-1">威連好運 7</div>
+        <div class="cols"><div class="col">Banker Wins with<br>a 3-Card 7<br>PAYS 40 to 1</div></div>
+        <div class="placed"></div>
+      </button>
+      <button class="placard golden8 spot" id="spot-golden8">
+        <div class="ttl outline-1">GOLDEN 8</div>
+        <div class="cjk outline-1">金牌平安 8</div>
+        <div class="cols"><div class="col">Player Wins with<br>a 3-Card 8<br>PAYS 25 to 1</div></div>
+        <div class="placed"></div>
+      </button>
+      <button class="placard heavenly9 spot" id="spot-heavenly9">
+        <div class="ttl outline-1">HEAVENLY 9</div>
+        <div class="cjk outline-1">天上人間 9</div>
+        <div class="cols">
+          <div class="col">P &amp; B Have<br>3-Card 9<br>PAYS 75 to 1</div>
+          <div class="col">P or B Has<br>3-Card 9<br>PAYS 10 to 1</div>
+        </div>
+        <div class="placed"></div>
+      </button>
+      <button class="placard blazing7s lit spot" id="spot-blazing7s">
+        <div class="ttl outline-1">BLAZING 7s</div>
+        <div class="cjk outline-1">燒倍烈火 7s</div>
+        <div class="cols">
+          <div class="col">P &amp; B Have<br>3-Card 7s<br>PAYS 125 to 1</div>
+          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 25 to 1</div>
+        </div>
+        <div class="placed"></div>
+      </button>
+    </div>
+    <button class="medallion spot" id="spot-coverAll" aria-label="Bet Cover All, pays 6 to 1">
+      <span class="tiny">THE FORTUNE EVENT PAYS</span>
+      <span class="big outline-1">COVER</span>
+      <span class="big outline-1">ALL</span>
+      <span class="tiny">PAYS 6 TO 1</span>
+      <div class="placed"></div>
+    </button>
+  </div>
+
+  <div class="circles">
+    <div class="circle-wrap spot" id="spot-player">
+      <svg class="arch" width="140" height="56" viewBox="0 0 140 56">
+        <defs><path id="arcP" d="M 8 54 Q 70 2 132 54" fill="none"></path></defs>
+        <text fill="#2F6FBF"><textPath href="#arcP" startOffset="50%" text-anchor="middle">PLAYER</textPath></text>
+      </svg>
+      <button class="bet-circle player" aria-label="Bet on Player"></button>
+      <div class="placed"></div>
+    </div>
+    <div class="circle-wrap spot" id="spot-banker">
+      <svg class="arch" width="140" height="56" viewBox="0 0 140 56">
+        <defs><path id="arcB" d="M 8 54 Q 70 2 132 54" fill="none"></path></defs>
+        <text fill="#B5301F"><textPath href="#arcB" startOffset="50%" text-anchor="middle">BANKER</textPath></text>
+      </svg>
+      <button class="bet-circle banker" aria-label="Bet on Banker"></button>
+      <div class="placed"></div>
+    </div>
+  </div>
+
+  <div class="rack" id="rack"></div>
+  <div class="actions" id="actions"></div>
+</div>
+
+<div class="road-drawer" id="roadDrawer">
+  <div class="road-panel">
+    <div class="road-counts" id="roadCounts">BEAD ROAD · P 0 · B 0 · T 0</div>
+    <div class="road-grid-box"><div class="road-cols" id="roadCols"><div class="road-empty">Results appear here as you play</div></div></div>
+    <div class="road-log" id="roadLog" style="display:none">
+      <div class="hdr" id="roadLogHdr">LAST 10 HANDS</div>
+      <div id="roadLogRows"></div>
+    </div>
+  </div>
+  <button class="road-tab" id="roadTab" aria-label="Toggle bead road"><span class="arrow">▼</span></button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- chip art ----------
+  var CHIP_IMG = {
+    25: "data:image/png;base64,__CHIP_25__",
+    100: "data:image/png;base64,__CHIP_100__",
+    500: "data:image/png;base64,__CHIP_500__",
+    1000: "data:image/png;base64,__CHIP_1K__",
+    5000: "data:image/png;base64,__CHIP_5K__"
+  };
+  var CHIP_VALUES = [25, 100, 500, 1000, 5000];
+
+  // ---------- engine ----------
+  var SUITS = [["♠", 0], ["♥", 1], ["♦", 1], ["♣", 0]];
+  var RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  var DECKS = 8, RESHUFFLE_AT = 16;
+
+  function buildShoe() {
+    var shoe = [];
+    for (var d = 0; d < DECKS; d++)
+      for (var s = 0; s < 4; s++)
+        for (var r = 0; r < 13; r++)
+          shoe.push({ rank: RANKS[r], suit: SUITS[s][0], red: SUITS[s][1] === 1 });
+    for (var i = shoe.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = shoe[i]; shoe[i] = shoe[j]; shoe[j] = t;
+    }
+    return shoe;
+  }
+  function cardValue(c) {
+    if (c.rank === "A") return 1;
+    if (c.rank === "10" || c.rank === "J" || c.rank === "Q" || c.rank === "K") return 0;
+    return parseInt(c.rank, 10);
+  }
+  function handTotal(cards) {
+    var t = 0;
+    for (var i = 0; i < cards.length; i++) t += cardValue(cards[i]);
+    return t % 10;
+  }
+  function playHand(shoe) {
+    var draw = function () { return shoe.pop(); };
+    var player = [draw(), draw()];
+    var banker = [draw(), draw()];
+    var p = handTotal(player), b = handTotal(banker);
+    var natural = p >= 8 || b >= 8;
+    if (!natural) {
+      var third = null;
+      if (p <= 5) { third = draw(); player.push(third); }
+      if (third === null) {
+        if (b <= 5) banker.push(draw());
+      } else {
+        var t = cardValue(third);
+        var draws = b <= 2 || (b === 3 && t !== 8) || (b === 4 && t >= 2 && t <= 7) ||
+          (b === 5 && t >= 4 && t <= 7) || (b === 6 && (t === 6 || t === 7));
+        if (draws) banker.push(draw());
+      }
+    }
+    p = handTotal(player); b = handTotal(banker);
+    return { player: player, banker: banker, outcome: p > b ? "P" : b > p ? "B" : "T", natural: natural };
+  }
+
+  var BET_NAMES = {
+    player: "Player", banker: "Banker", tie: "Tie",
+    playerPair: "Player Pair", bankerPair: "Banker Pair",
+    fortune7: "Fortune 7", golden8: "Golden 8", heavenly9: "Heavenly 9", blazing7s: "Blazing 7s",
+    coverAll: "Cover All"
+  };
+
+  // Returns per-spot amounts returned (stake included on wins/pushes).
+  function settleBreakdown(h, placed) {
+    var out = {};
+    function pay(key, mult) { if (placed[key]) out[key] = placed[key] * mult; }
+    var pT = handTotal(h.player), bT = handTotal(h.banker);
+    var p3 = h.player.length === 3, b3 = h.banker.length === 3;
+
+    if (h.outcome === "P") pay("player", 2);
+    if (h.outcome === "B") pay("banker", 1.95);
+    if (h.outcome === "T") { pay("tie", 9); pay("player", 1); pay("banker", 1); }
+
+    if (h.player[0].rank === h.player[1].rank) pay("playerPair", 12);
+    if (h.banker[0].rank === h.banker[1].rank) pay("bankerPair", 12);
+
+    var fortune7 = h.outcome === "B" && b3 && bT === 7;
+    var golden8 = h.outcome === "P" && p3 && pT === 8;
+    if (fortune7) pay("fortune7", 41);
+    if (golden8) pay("golden8", 26);
+    var p9 = p3 && pT === 9, b9 = b3 && bT === 9;
+    if (p9 && b9) pay("heavenly9", 76); else if (p9 || b9) pay("heavenly9", 11);
+    var p7 = p3 && pT === 7, b7 = b3 && bT === 7;
+    if (p7 && b7) pay("blazing7s", 126); else if (p7 || b7) pay("blazing7s", 26);
+    // Cover All: 6 to 1 when any fortune event occurs
+    if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay("coverAll", 7);
+    return out;
+  }
+
+  function winningSpots(h) {
+    var s = {};
+    var pT = handTotal(h.player), bT = handTotal(h.banker);
+    var p3 = h.player.length === 3, b3 = h.banker.length === 3;
+    s[h.outcome === "P" ? "player" : h.outcome === "B" ? "banker" : "tie"] = true;
+    if (h.player[0].rank === h.player[1].rank) s.playerPair = true;
+    if (h.banker[0].rank === h.banker[1].rank) s.bankerPair = true;
+    if (h.outcome === "B" && b3 && bT === 7) s.fortune7 = true;
+    if (h.outcome === "P" && p3 && pT === 8) s.golden8 = true;
+    if ((p3 && pT === 9) || (b3 && bT === 9)) s.heavenly9 = true;
+    if ((p3 && pT === 7) || (b3 && bT === 7)) s.blazing7s = true;
+    if (s.fortune7 || s.golden8 || s.heavenly9 || s.blazing7s) s.coverAll = true;
+    return s;
+  }
+
+  // ---------- state ----------
+  var shoe = buildShoe();
+  var bankroll = 1000, bets = {}, selectedChip = 25;
+  var phase = "betting", hand = null, history = [], lastBets = null;
+  var chipHistory = [];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var fmt = function (n) { return (Math.round(n * 100) / 100).toLocaleString("en-US"); };
+  function totalStaked() { var t = 0, k; for (k in bets) t += bets[k]; return t; }
+
+  // ---------- render ----------
+  function setMessage(text, win) {
+    var m = $("message");
+    m.textContent = text;
+    m.className = "message outline-1" + (win ? " win" : "");
+  }
+  function updateMoney() {
+    $("bankroll").textContent = fmt(bankroll);
+    $("staked").textContent = fmt(totalStaked());
+    $("shoeCount").textContent = shoe.length;
+  }
+  function updatePlaced() {
+    var spots = ["player", "banker", "tie", "playerPair", "bankerPair", "fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"];
+    spots.forEach(function (key) {
+      var el = document.querySelector("#spot-" + key + " .placed");
+      if (!el) return;
+      var amt = bets[key] || 0;
+      if (amt <= 0) { el.style.display = "none"; el.innerHTML = ""; return; }
+      var chip = null;
+      for (var i = CHIP_VALUES.length - 1; i >= 0; i--) if (CHIP_VALUES[i] <= amt) { chip = CHIP_VALUES[i]; break; }
+      var html = chip ? '<img src="' + CHIP_IMG[chip] + '" alt="">' : "";
+      if (!chip || chip !== amt) {
+        var label = fmt(amt);
+        var size = label.length <= 3 ? 16 : label.length <= 5 ? 12 : 9;
+        html += '<div class="scrim" style="font-size:' + size + 'px">' + label + "</div>";
+      }
+      el.innerHTML = html;
+      el.style.display = "block";
+      // main circles centre the chip in the ring, not the wrapper
+      if (key === "player" || key === "banker") { el.style.top = "auto"; el.style.bottom = "25px"; el.style.transform = "translate(-50%,50%)"; }
+    });
+    // active highlights
+    ["playerPair", "tie", "bankerPair"].forEach(function (key) {
+      var cell = $("spot-" + key);
+      cell.classList.toggle("active", (bets[key] || 0) > 0 && phase === "betting");
+    });
+    ["fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"].forEach(function (key) {
+      $("spot-" + key).classList.toggle("active", (bets[key] || 0) > 0);
+    });
+    ["player", "banker"].forEach(function (key) {
+      document.querySelector("#spot-" + key + " .bet-circle").classList.toggle("active", (bets[key] || 0) > 0);
+    });
+  }
+  function clearWinHighlights() {
+    document.querySelectorAll(".won").forEach(function (el) { el.classList.remove("won"); });
+    $("handP").classList.remove("dimmed");
+    $("handB").classList.remove("dimmed");
+  }
+  function applyWinHighlights(h) {
+    var w = winningSpots(h);
+    if (w.playerPair) $("spot-playerPair").classList.add("won");
+    if (w.tie) $("spot-tie").classList.add("won");
+    if (w.bankerPair) $("spot-bankerPair").classList.add("won");
+    ["fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"].forEach(function (k) {
+      if (w[k]) $("spot-" + k).classList.add("won");
+    });
+    if (w.player) document.querySelector("#spot-player .bet-circle").classList.add("won");
+    if (w.banker) document.querySelector("#spot-banker .bet-circle").classList.add("won");
+    if (h.outcome === "P") $("handB").classList.add("dimmed");
+    if (h.outcome === "B") $("handP").classList.add("dimmed");
+  }
+  function renderRack() {
+    var rack = $("rack");
+    rack.innerHTML = "";
+    CHIP_VALUES.forEach(function (v) {
+      var b = document.createElement("button");
+      b.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+      b.setAttribute("aria-label", "Select " + v + " chip");
+      b.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+      b.addEventListener("click", function () { selectedChip = v; renderRack(); });
+      rack.appendChild(b);
+    });
+  }
+  function renderActions() {
+    var a = $("actions");
+    a.innerHTML = "";
+    function btn(label, solid, fn) {
+      var b = document.createElement("button");
+      b.className = "btn " + (solid ? "solid" : "ghost");
+      b.textContent = label;
+      b.addEventListener("click", fn);
+      a.appendChild(b);
+    }
+    if (phase === "betting") {
+      btn("DEAL", true, deal);
+      btn("Undo", false, undoBet);
+      btn("Clear", false, clearBets);
+      if (bankroll < 25 && totalStaked() === 0) btn("Buy back in (1,000)", true, function () {
+        bankroll = 1000; updateMoney(); renderActions(); setMessage("Place your bets");
+      });
+    } else if (phase === "result") {
+      btn("REBET", true, function () { nextHand(true); });
+      btn("New bets", false, function () { nextHand(false); });
+    } else {
+      var d = document.createElement("span");
+      d.className = "dealing-label";
+      d.textContent = "DEALING";
+      a.appendChild(d);
+    }
+  }
+  function renderRoad() {
+    var counts = { P: 0, B: 0, T: 0 };
+    history.forEach(function (rec) { counts[rec.r]++; });
+    $("roadCounts").textContent = "BEAD ROAD · P " + counts.P + " · B " + counts.B + " · T " + counts.T;
+    var cols = $("roadCols");
+    cols.innerHTML = "";
+    if (!history.length) {
+      cols.innerHTML = '<div class="road-empty">Results appear here as you play</div>';
+      $("roadLog").style.display = "none";
+      return;
+    }
+    var col = null;
+    history.forEach(function (rec, i) {
+      if (i % 6 === 0) { col = document.createElement("div"); col.className = "road-col"; cols.appendChild(col); }
+      var b = document.createElement("div");
+      b.className = "bead " + rec.r;
+      b.textContent = rec.r;
+      col.appendChild(b);
+    });
+    var box = cols.parentElement;
+    box.scrollLeft = box.scrollWidth;
+
+    // last-10 ledger, most recent first
+    var log = $("roadLog");
+    log.style.display = "block";
+    var recent = history.slice(-10).reverse();
+    $("roadLogHdr").textContent = "LAST " + recent.length + " HANDS";
+    var rows = $("roadLogRows");
+    rows.innerHTML = "";
+    recent.forEach(function (rec, i) {
+      var row = document.createElement("div");
+      row.className = "log-row";
+      var cls = rec.net > 0 ? "win" : rec.net < 0 ? "loss" : "even";
+      var txt = rec.net > 0 ? "+" + fmt(rec.net) : rec.net < 0 ? "−" + fmt(-rec.net) : "even";
+      row.innerHTML =
+        '<span class="num">#' + (history.length - i) + "</span>" +
+        '<span class="bead ' + rec.r + '">' + rec.r + "</span>" +
+        '<span class="net ' + cls + '">' + txt + "</span>";
+      rows.appendChild(row);
+    });
+  }
+  function renderPills(breakdown, placed, outcome) {
+    var p = $("pills");
+    p.innerHTML = "";
+    var entries = [];
+    for (var k in breakdown) entries.push([k, breakdown[k] - (placed[k] || 0)]);
+    entries.sort(function (a, b) { return b[1] - a[1]; });
+    entries.forEach(function (e) {
+      var won = e[1] > 0;
+      var pill = document.createElement("span");
+      pill.className = "pill" + (won ? "" : " push");
+      pill.innerHTML = "<span>" + BET_NAMES[e[0]] + '</span><span class="amt">' + (won ? "+" + fmt(e[1]) : "push") + "</span>";
+      p.appendChild(pill);
+    });
+  }
+
+  // ---------- cards ----------
+  function cardEl(c) {
+    var el = document.createElement("div");
+    el.className = "card";
+    el.innerHTML =
+      '<div class="inner">' +
+      '<div class="face front ' + (c.red ? "red" : "black") + '">' +
+      '<div class="tl">' + c.rank + "</div>" +
+      '<div class="mid">' + c.suit + "</div>" +
+      '<div class="br">' + c.rank + "</div>" +
+      "</div>" +
+      '<div class="face back"></div>' +
+      "</div>";
+    return el;
+  }
+  function showBacks(which, n, cards) {
+    var host = $(which === "p" ? "cardsP" : "cardsB");
+    host.innerHTML = "";
+    for (var i = 0; i < n; i++) host.appendChild(cardEl(cards[i]));
+  }
+  function addThird(which, card) {
+    var el = cardEl(card);
+    el.classList.add("enter");
+    $(which === "p" ? "cardsP" : "cardsB").appendChild(el);
+  }
+  function flip(which, index, total) {
+    var host = $(which === "p" ? "cardsP" : "cardsB");
+    var el = host.children[index];
+    if (el) el.classList.add("up");
+    var badge = $(which === "p" ? "totalP" : "totalB");
+    badge.textContent = total;
+    badge.style.display = "inline-block";
+  }
+  function resetHands() {
+    $("cardsP").innerHTML = '<div class="slot"></div>';
+    $("cardsB").innerHTML = '<div class="slot"></div>';
+    $("totalP").style.display = "none";
+    $("totalB").style.display = "none";
+  }
+
+  // ---------- actions ----------
+  function addBet(key) {
+    if (phase !== "betting") return;
+    if (selectedChip > bankroll - totalStaked()) {
+      setMessage("Not enough bankroll for that chip");
+      return;
+    }
+    bets[key] = (bets[key] || 0) + selectedChip;
+    chipHistory.push({ k: key, v: selectedChip });
+    setMessage("Place your bets");
+    updateMoney(); updatePlaced(); renderActions();
+  }
+  function clearBets() {
+    if (phase !== "betting") return;
+    bets = {};
+    chipHistory = [];
+    setMessage("Place your bets");
+    updateMoney(); updatePlaced(); renderActions();
+  }
+  function undoBet() {
+    if (phase !== "betting" || !chipHistory.length) return;
+    var last = chipHistory.pop();
+    var left = (bets[last.k] || 0) - last.v;
+    if (left > 0) bets[last.k] = left; else delete bets[last.k];
+    updateMoney(); updatePlaced(); renderActions();
+  }
+  var timers = [];
+  function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+
+  function deal() {
+    if (phase !== "betting") return;
+    if (totalStaked() === 0) { setMessage("Place a bet first"); return; }
+    if (shoe.length < RESHUFFLE_AT) shoe = buildShoe();
+    var placed = {}; for (var k in bets) placed[k] = bets[k];
+    lastBets = placed;
+    chipHistory = [];
+    bankroll -= totalStaked();
+    hand = playHand(shoe);
+    phase = "dealing";
+    clearWinHighlights();
+    $("pills").innerHTML = "";
+    setMessage("Dealing…");
+    updateMoney(); renderActions();
+
+    var h = hand;
+    // both hands open with two face-down cards; thirds arrive only if drawn
+    showBacks("p", 2, h.player);
+    showBacks("b", 2, h.banker);
+    t(450, function () { flip("p", 0, handTotal(h.player.slice(0, 1))); });
+    t(970, function () { flip("b", 0, handTotal(h.banker.slice(0, 1))); });
+    t(1490, function () { flip("p", 1, handTotal(h.player.slice(0, 2))); });
+    t(2010, function () { flip("b", 1, handTotal(h.banker.slice(0, 2))); });
+    var when = 2010;
+    if (h.player.length === 3) {
+      when += 650;
+      t(when, function () { setMessage("Player draws…"); addThird("p", h.player[2]); });
+      when += 450;
+      t(when, function () { flip("p", 2, handTotal(h.player)); });
+    }
+    if (h.banker.length === 3) {
+      when += 650;
+      t(when, function () { setMessage("Banker draws…"); addThird("b", h.banker[2]); });
+      when += 450;
+      t(when, function () { flip("b", 2, handTotal(h.banker)); });
+    }
+    t(when + 1000, function () {
+      var breakdown = settleBreakdown(h, placed);
+      var returned = 0; for (var k in breakdown) returned += breakdown[k];
+      bankroll += returned;
+      var stakedThisHand = 0; for (var k2 in placed) stakedThisHand += placed[k2];
+      history.push({ r: h.outcome, net: returned - stakedThisHand });
+      var pT = handTotal(h.player), bT = handTotal(h.banker);
+      var hi = Math.max(pT, bT), lo = Math.min(pT, bT);
+      var who = h.outcome === "P" ? "Player wins " + hi + " over " + lo :
+        h.outcome === "B" ? "Banker wins " + hi + " over " + lo : "Tie at " + hi;
+      var text = who + (h.natural ? " — natural" : "");
+      if (returned > 0) text += " · returned " + fmt(returned);
+      setMessage(text, returned > 0);
+      renderPills(breakdown, placed, h.outcome);
+      applyWinHighlights(h);
+      phase = "result";
+      bets = {};
+      updateMoney(); updatePlaced(); renderActions(); renderRoad();
+    });
+  }
+
+  function nextHand(repeat) {
+    if (phase !== "result") return;
+    phase = "betting";
+    hand = null;
+    clearWinHighlights();
+    resetHands();
+    $("pills").innerHTML = "";
+    if (repeat && lastBets) {
+      var cost = 0, k;
+      for (k in lastBets) cost += lastBets[k];
+      if (cost <= bankroll) {
+        bets = {}; chipHistory = [];
+        for (k in lastBets) { bets[k] = lastBets[k]; chipHistory.push({ k: k, v: lastBets[k] }); }
+        setMessage("Same bets placed");
+        updateMoney(); updatePlaced(); renderActions();
+        return;
+      }
+    }
+    setMessage("Place your bets");
+    updateMoney(); updatePlaced(); renderActions();
+  }
+
+  // ---------- wire up ----------
+  ["player", "banker", "tie", "playerPair", "bankerPair", "fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"].forEach(function (key) {
+    var spot = $("spot-" + key);
+    var target = spot.querySelector(".bet-circle") || spot;
+    target.addEventListener("click", function () { addBet(key); });
+  });
+  $("roadTab").addEventListener("click", function () {
+    $("roadDrawer").classList.toggle("open");
+  });
+
+  renderRack(); renderActions(); updateMoney(); updatePlaced(); renderRoad();
+})();
+</script>
