@@ -309,6 +309,40 @@
     font-size: 11px; font-weight: 900; background: rgba(14,10,11,.9); border: 1.5px solid;
   }
 
+  /* ---- Blazing 777s: same table, red felt ---- */
+  .bj-felt { display: none; }
+  .bj-table.blazing .bj-felt { display: block; }
+  .bj-table.blazing { background: #0C0A0C; }
+  .bj-table.blazing .bj-topbar { border-bottom-color: rgba(199,20,20,.8); }
+  .bj-table.blazing .bj-money .val { color: #FF2A2A; }
+  .bj-table.blazing .bj-money .val.staked { color: var(--bone); }
+  .bj-table.blazing .bj-badge .num,
+  .bj-table.blazing .bj-hand-title .num { background: #C71414; }
+  .bj-table.blazing .bj-badge .num.bust,
+  .bj-table.blazing .bj-hand-title .num.bust { background: #6E1010; }
+  .bj-table.blazing .bj-hand-title .nm { color: var(--bone); }
+  .bj-table.blazing .bj-result-pill.win { border-color: #FF2A2A; }
+  .bj-table.blazing .bj-result-pill .amt.w { color: #FF2A2A; }
+  .bj-table.blazing .chip-btn.sel { box-shadow: 0 0 0 1.5px #FF2A2A, 0 5px 12px rgba(0,0,0,.5); }
+  .bj-table.blazing .bj-message.win { color: #FF2A2A; }
+  /* The felt's horseshoe, sitting behind the cards. */
+  .bj-table.blazing .bj-felt {
+    position: absolute; left: 6%; right: 6%; top: 96px; bottom: 190px;
+    border: 1.4px solid rgba(255,42,42,.6); border-radius: 50%;
+    box-shadow: 0 0 22px rgba(255,42,42,.18), inset 0 0 22px rgba(255,42,42,.10);
+    pointer-events: none; z-index: 0;
+  }
+  .bj-table.blazing > *:not(.bj-felt) { position: relative; z-index: 1; }
+  .slot.red {
+    border: 1.5px solid rgba(255,42,42,.9); border-style: solid;
+    box-shadow: 0 0 10px rgba(255,42,42,.35), inset 0 0 8px rgba(255,42,42,.12);
+  }
+  .bj-sidespots.b7 { justify-content: space-between; gap: 0; }
+  .b7-trilux { width: 118px; padding: 0; border-radius: 10px; position: relative; }
+  .b7-trilux img { width: 100%; display: block; }
+  .b7-trilux .placed { width: 44px; height: 44px; top: auto; bottom: -14px; transform: translate(-50%, 0); }
+  .b7-balance { width: 118px; flex: none; }
+
   .bj-coins {
     display: none; margin: 6px auto 0; width: fit-content;
     display_: none; align-items: center; gap: 8px;
@@ -568,6 +602,7 @@
 <div class="screen" id="screen-blackjack">
   <img class="bj-bg" src="__BG__" alt="">
   <div class="bj-table">
+    <div class="bj-felt"></div>
     <div class="bj-topbar">
       <button class="backlink" id="bj-back">‹ LOBBY</button>
       <div class="bj-money">
@@ -578,7 +613,7 @@
     <div class="bj-sub" id="bj-sub">FREE BET BLACKJACK · 8 DECKS · 416 CARDS IN SHOE</div>
     <div class="bj-spacer"></div>
     <div class="bj-hdr-wrap">
-      <img src="__HDR_DEALER__" alt="Dealer">
+      <img src="__HDR_DEALER__" alt="Dealer" id="bj-dhdr">
       <span class="bj-badge" id="bj-dbadge"><span class="num" id="bj-dbadge-num">0</span></span>
     </div>
     <div class="cards" id="bj-dcards" style="margin-top:8px"><div class="slot"></div></div>
@@ -787,7 +822,10 @@
     btnSplit: "__BTN_SPLIT__", btnDouble: "__BTN_DOUBLE__",
     btnRebet: "__BTN_REBET__", btnNewbet: "__BTN_NEWBET__",
     badgeFreeSplit: "__BADGE_FSPLIT__", badgeFreeDouble: "__BADGE_FDOUBLE__",
-    paytable: "__PAYTABLE__"
+    paytable: "__PAYTABLE__",
+    // Blazing 777s runs its own red felt.
+    b7Dealer: "__B7_DEALER__", b7YourHand: "__B7_YOURHAND__",
+    b7Trilux: "__B7_TRILUX__", b7Bet: "__B7_BET__"
   };
   function chipsFor(bankroll) {
     var all = [25, 100, 500, 1000, 5000];
@@ -1000,11 +1038,14 @@
       // Ace plays low as well: A-2-3.
       var wheel = distinct && idx[0] === 0 && idx[1] === 1 && idx[2] === RANK_ORDER.length - 1;
       var straight = run || wheel;
-      if (trips && flush) return { label: "Suited trips", pays: 100 };
-      if (straight && flush) return { label: "Straight flush", pays: 40 };
-      if (trips) return { label: "Three of a kind", pays: 30 };
-      if (straight) return { label: "Straight", pays: 10 };
-      if (flush) return { label: "Flush", pays: 5 };
+      // Q-K-A is the top run, so suited it becomes the royal.
+      var royal = straight && idx[0] === RANK_ORDER.indexOf("Q") &&
+        idx[1] === RANK_ORDER.indexOf("K") && idx[2] === RANK_ORDER.indexOf("A");
+      if (royal && flush) return { label: "Royal Flush", pays: 50 };
+      if (straight && flush) return { label: "Straight Flush", pays: 35 };
+      if (trips) return { label: "Three of a Kind", pays: 30 };
+      if (straight) return { label: "Straight", pays: 15 };
+      if (flush) return { label: "Flush", pays: 10 };
       return null;
     }
     function draw() { return shoe.pop(); }
@@ -1019,6 +1060,11 @@
     function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
 
     // ---------- render ----------
+    /** Blazing 777s dresses the same table in its own red art. */
+    function yourHandArt() {
+      return variant === "blazing" ? BJ_ART.b7YourHand : "__HDR_YOURHAND__";
+    }
+    function slotClass() { return variant === "blazing" ? "slot red" : "slot"; }
     function setMessage(text, win) {
       var m = $("bj-message");
       m.textContent = phase === "betting" ? "⚡  " + text + "  ⚡" : text;
@@ -1027,6 +1073,11 @@
     function renderTop() {
       $("bj-bankroll").textContent = fmt(bankroll);
       $("bj-staked").textContent = fmt(totalAtRisk());
+      var blazing = variant === "blazing";
+      document.querySelector(".bj-table").classList.toggle("blazing", blazing);
+      // The purple watermark belongs to Free Bet only.
+      document.querySelector("#screen-blackjack .bj-bg").style.display = blazing ? "none" : "";
+      $("bj-dhdr").src = blazing ? BJ_ART.b7Dealer : "__HDR_DEALER__";
       var sub = $("bj-sub");
       if (Shell.mode === "campaign") {
         sub.textContent = "CAMPAIGN · GOAL $" + fmt(Shell.getGoal());
@@ -1043,7 +1094,7 @@
     function renderDealer() {
       var host = $("bj-dcards");
       host.innerHTML = "";
-      if (!dealer.length) { host.innerHTML = '<div class="slot"></div>'; }
+      if (!dealer.length) { host.innerHTML = '<div class="' + slotClass() + '"></div>'; }
       dealer.forEach(function (c, i) {
         host.appendChild(cardEl(c, i === 0 || holeUp));
       });
@@ -1063,8 +1114,8 @@
         var empty = document.createElement("div");
         empty.className = "bj-hand";
         empty.innerHTML =
-          '<div class="bj-hdr-wrap"><img src="__HDR_YOURHAND__" alt="Your hand"></div>' +
-          '<div class="cards" style="margin-top:8px"><div class="slot"></div></div>';
+          '<div class="bj-hdr-wrap"><img src="' + yourHandArt() + '" alt="Your hand"></div>' +
+          '<div class="cards" style="margin-top:8px"><div class="' + slotClass() + '"></div></div>';
         host.appendChild(empty);
         return;
       }
@@ -1081,7 +1132,7 @@
         for (var c = 0; c < coins; c++) coinsHtml += '<img class="coin" src="' + BOYS_IMG + '" alt="coin">';
         var title;
         if (single) {
-          title = '<div class="bj-hdr-wrap"><img src="__HDR_YOURHAND__" alt="Your hand">' +
+          title = '<div class="bj-hdr-wrap"><img src="' + yourHandArt() + '" alt="Your hand">' +
             '<span class="bj-badge" style="display:flex">' +
             (badge ? '<span class="num blue' + (isBust(h.cards) ? " bust" : "") + '">' + badge + "</span>" : "") +
             coinsHtml + "</span></div>";
@@ -1183,10 +1234,11 @@
     function blazingSpots() {
       // Blazing 7s rides free, so only the main bet and TriLux take chips.
       var row = document.createElement("div");
-      row.className = "bj-sidespots";
+      row.className = "bj-sidespots b7";
       row.innerHTML =
-        '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.spotBet + '" alt="Bet"><div class="placed"></div></button>' +
-        '<div class="bj-side lux"><button class="bj-side-ring" id="bj-luxspot">TRI<br>LUX<div class="placed"></div></button></div>';
+        '<button class="b7-trilux spot" id="bj-luxspot"><img src="' + BJ_ART.b7Trilux + '" alt="TriLux side bet"><div class="placed"></div></button>' +
+        '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.b7Bet + '" alt="Bet"><div class="placed"></div></button>' +
+        '<span class="b7-balance"></span>';
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
@@ -1598,9 +1650,9 @@
         ["Two 7s", 25], ["One 7", 1]
       ], "#FF7A1A");
       rows($("pays-trilux"), [
-        ["Suited trips", 100], ["Straight flush", 40], ["Three of a kind", 30],
-        ["Straight", 10], ["Flush", 5]
-      ], "#FF3FD8");
+        ["Royal Flush", 50], ["Straight Flush", 35], ["Three of a Kind", 30],
+        ["Straight", 15], ["Flush", 10]
+      ], "#FF2A2A");
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });

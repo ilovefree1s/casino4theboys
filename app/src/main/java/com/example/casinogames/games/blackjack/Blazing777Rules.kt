@@ -18,11 +18,11 @@ object Blazing777Rules {
     }
 
     enum class TriluxWin(val label: String, val payout: Int) {
-        SUITED_TRIPS("Suited trips", 100),
-        STRAIGHT_FLUSH("Straight flush", 40),
-        THREE_KIND("Three of a kind", 30),
-        STRAIGHT("Straight", 10),
-        FLUSH("Flush", 5),
+        ROYAL_FLUSH("Royal Flush", 50),
+        STRAIGHT_FLUSH("Straight Flush", 35),
+        THREE_KIND("Three of a Kind", 30),
+        STRAIGHT("Straight", 15),
+        FLUSH("Flush", 10),
     }
 
     /** Blazing 7s counts sevens across the player's two cards and the dealer up card. */
@@ -47,8 +47,11 @@ object Blazing777Rules {
         val flush = cards.all { it.suit == cards[0].suit }
         val trips = ranks.all { it == ranks[0] }
         val straight = isStraight(ranks)
+        // Q-K-A is the top run, so suited it becomes the royal.
+        val royal = straight &&
+            ranks.toSet() == setOf(Rank.QUEEN, Rank.KING, Rank.ACE)
         return when {
-            trips && flush -> TriluxWin.SUITED_TRIPS
+            royal && flush -> TriluxWin.ROYAL_FLUSH
             straight && flush -> TriluxWin.STRAIGHT_FLUSH
             trips -> TriluxWin.THREE_KIND
             straight -> TriluxWin.STRAIGHT

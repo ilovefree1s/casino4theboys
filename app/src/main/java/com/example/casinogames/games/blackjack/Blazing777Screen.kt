@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -32,7 +33,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -45,21 +51,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casinogames.R
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
+import com.example.casinogames.ui.common.CardHeight
 import com.example.casinogames.ui.common.CasinoChip
-import com.example.casinogames.ui.common.EmptyCardSlot
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
+import com.example.casinogames.ui.common.CardWidth
 import com.example.casinogames.ui.common.chipsFor
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
-private val NeonPurple = Color(0xFF8B30D9)
-private val NeonBlue = Color(0xFF2E7BFF)
-private val NeonMagenta = Color(0xFFFF3FD8)
-private val HotPink = Color(0xFFFF1493)
+private val RedNeon = Color(0xFFFF2A2A)
+private val RedDeep = Color(0xFFC71414)
 private val BlazeOrange = Color(0xFFFF7A1A)
-private val TableBlack = Color(0xFF040308)
+// Matches the felt tone baked into the sliced art so the pieces sit flush.
+private val TableBlack = Color(0xFF0C0A0C)
 
 @Composable
 fun Blazing777Screen(
@@ -71,12 +77,6 @@ fun Blazing777Screen(
     LaunchedEffect(campaign) { vm.enterMode(campaign) }
     var showPayTable by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize().background(TableBlack)) {
-        Image(
-            painter = painterResource(R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.45f),
-            contentScale = ContentScale.Crop,
-        )
         Column(
             Modifier
                 .fillMaxSize()
@@ -87,9 +87,14 @@ fun Blazing777Screen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(onBack, vm)
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x26FFFFFF)))
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .height(1.5.dp)
+                    .background(RedDeep.copy(alpha = 0.8f))
+            )
             Spacer(Modifier.height(6.dp))
-            // The pay tables live behind this line now that the spots carry no labels.
+            // The pay tables live behind this line.
             Text(
                 if (vm.campaign) "CAMPAIGN · GOAL \$${formatMoney(vm.goal)}"
                 else "BLAZING 777s · 8 DECKS · ${vm.shoeCount} CARDS IN SHOE",
@@ -101,21 +106,26 @@ fun Blazing777Screen(
                     .clickable { showPayTable = true }
                     .padding(horizontal = 10.dp, vertical = 3.dp),
             )
-            Spacer(Modifier.weight(1f))
-            DealerArea(vm)
-            Spacer(Modifier.height(8.dp))
-            MessageLine(vm)
-            SidePills(vm)
-            Spacer(Modifier.weight(1f))
-            PlayerArea(vm)
-            Spacer(Modifier.weight(1f))
+            // Everything below sits inside the felt's red horseshoe.
+            Box(Modifier.weight(1f).fillMaxWidth().drawBehind { drawHorseshoe() }) {
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.height(10.dp))
+                    DealerArea(vm)
+                    Spacer(Modifier.height(8.dp))
+                    MessageLine(vm)
+                    SidePills(vm)
+                    Spacer(Modifier.weight(1f))
+                    PlayerArea(vm)
+                    Spacer(Modifier.weight(1f))
+                }
+            }
+            BottomRow(vm)
+            Spacer(Modifier.height(10.dp))
             if (vm.phase == BjPhase.BETTING) {
-                BetSpots(vm, onShowPayTable = { showPayTable = true })
-                Spacer(Modifier.height(12.dp))
                 ChipRack(vm)
-                Spacer(Modifier.height(10.dp))
-            } else if (vm.playerHands.size < 3) {
-                BetSpots(vm, onShowPayTable = { showPayTable = true })
                 Spacer(Modifier.height(10.dp))
             }
             ActionButtons(vm)
@@ -145,6 +155,29 @@ fun Blazing777Screen(
     }
 }
 
+/** The red oval that frames the felt, glowing outward from a bright core. */
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHorseshoe() {
+    val inset = size.width * 0.06f
+    val topLift = size.height * 0.06f
+    val rect = androidx.compose.ui.geometry.Rect(
+        offset = Offset(inset, topLift),
+        size = Size(size.width - inset * 2, size.height - topLift * 0.4f),
+    )
+    listOf(
+        16f to 0.05f,
+        9f to 0.09f,
+        4f to 0.20f,
+        1.4f to 0.6f,
+    ).forEach { (width, alpha) ->
+        drawOval(
+            color = RedNeon.copy(alpha = alpha),
+            topLeft = rect.topLeft,
+            size = rect.size,
+            style = Stroke(width = width),
+        )
+    }
+}
+
 @Composable
 private fun TopBar(onBack: () -> Unit, vm: Blazing777ViewModel) {
     Row(
@@ -153,7 +186,7 @@ private fun TopBar(onBack: () -> Unit, vm: Blazing777ViewModel) {
     ) {
         Text(
             "‹ BLACKJACK",
-            color = P.OffWhite.copy(alpha = 0.8f),
+            color = P.OffWhite.copy(alpha = 0.85f),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,
             letterSpacing = 0.1.em,
@@ -175,7 +208,7 @@ private fun TopBar(onBack: () -> Unit, vm: Blazing777ViewModel) {
                 )
                 OutlinedText(
                     formatMoney(vm.bankroll),
-                    fontSize = 14.sp, color = P.WinGlow, outlineWidth = 1.dp,
+                    fontSize = 14.sp, color = RedNeon, outlineWidth = 1.dp,
                 )
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -193,12 +226,37 @@ private fun TopBar(onBack: () -> Unit, vm: Blazing777ViewModel) {
     }
 }
 
+/** Empty seat on the felt: a red-lit card outline, matching the table art. */
+@Composable
+private fun RedCardSlot() {
+    Box(
+        Modifier
+            .size(CardWidth, CardHeight)
+            .drawBehind {
+                val radius = CornerRadius(7.dp.toPx())
+                drawRoundRect(
+                    color = RedNeon.copy(alpha = 0.18f),
+                    cornerRadius = radius,
+                    style = Stroke(width = 6.dp.toPx()),
+                )
+                drawRoundRect(
+                    color = RedNeon.copy(alpha = 0.9f),
+                    cornerRadius = radius,
+                    style = Stroke(width = 1.5.dp.toPx()),
+                )
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        Text("♠", color = Color(0x33FFFFFF), fontSize = 20.sp)
+    }
+}
+
 @Composable
 private fun DealerArea(vm: Blazing777ViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(contentAlignment = Alignment.Center) {
             Image(
-                painter = painterResource(R.drawable.fb_header_dealer),
+                painter = painterResource(R.drawable.b7_header_dealer),
                 contentDescription = "Dealer",
                 modifier = Modifier.width(300.dp),
                 contentScale = ContentScale.FillWidth,
@@ -210,7 +268,7 @@ private fun DealerArea(vm: Blazing777ViewModel) {
                     text = if (vm.holeRevealed && BlackjackCore.isBlackjack(vm.dealerCards)) "BJ"
                     else "$t",
                     color = if (vm.holeRevealed && BlackjackCore.total(vm.dealerCards) > 21)
-                        Color(0xFF8E2B1E) else NeonPurple,
+                        Color(0xFF6E1010) else RedDeep,
                     modifier = Modifier.align(Alignment.CenterEnd),
                 )
             }
@@ -218,7 +276,7 @@ private fun DealerArea(vm: Blazing777ViewModel) {
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             if (vm.dealerCards.isEmpty()) {
-                EmptyCardSlot()
+                RedCardSlot()
             } else {
                 vm.dealerCards.forEachIndexed { i, card ->
                     PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed)
@@ -249,12 +307,11 @@ private fun MessageLine(vm: Blazing777ViewModel) {
         fontSize = 15.sp,
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Medium,
-        color = if (win) P.WinGlow else P.OffWhite.copy(alpha = 0.92f),
+        color = if (win) RedNeon else P.OffWhite.copy(alpha = 0.92f),
         textAlign = TextAlign.Center,
     )
 }
 
-/** Side-bet hits announce themselves the moment the deal lands. */
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SidePills(vm: Blazing777ViewModel) {
@@ -270,7 +327,7 @@ private fun SidePills(vm: Blazing777ViewModel) {
     ) {
         // The free bet quotes no odds — it isn't paying yet.
         blazing?.let { HitPill(it.label, BlazeOrange) }
-        trilux?.let { HitPill("${it.label} · ${it.payout}:1", NeonMagenta) }
+        trilux?.let { HitPill("${it.label} · ${it.payout}:1", RedNeon) }
     }
 }
 
@@ -290,9 +347,9 @@ private fun HitPill(text: String, color: Color) {
 private fun PlayerArea(vm: Blazing777ViewModel) {
     if (vm.playerHands.isEmpty()) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            YourHandHeader(badge = null, badgeColor = NeonBlue)
+            YourHandHeader(badge = null, badgeColor = RedDeep)
             Spacer(Modifier.height(8.dp))
-            EmptyCardSlot()
+            RedCardSlot()
         }
         return
     }
@@ -315,7 +372,7 @@ private fun PlayerArea(vm: Blazing777ViewModel) {
 private fun YourHandHeader(badge: String?, badgeColor: Color) {
     Box(contentAlignment = Alignment.Center) {
         Image(
-            painter = painterResource(R.drawable.fb_header_yourhand),
+            painter = painterResource(R.drawable.b7_header_yourhand),
             contentDescription = "Your hand",
             modifier = Modifier.width(300.dp),
             contentScale = ContentScale.FillWidth,
@@ -343,7 +400,7 @@ private fun PlayerHandColumn(vm: Blazing777ViewModel, i: Int, hand: BjHand) {
             single && BlackjackCore.isBlackjack(hand.cards) -> "BJ"
             else -> "$total"
         }
-        val badgeColor = if (bust) Color(0xFF8E2B1E) else NeonBlue
+        val badgeColor = if (bust) Color(0xFF6E1010) else RedDeep
         if (single) {
             YourHandHeader(badge = badge, badgeColor = badgeColor)
         } else {
@@ -351,11 +408,11 @@ private fun PlayerHandColumn(vm: Blazing777ViewModel, i: Int, hand: BjHand) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(7.dp),
             ) {
-                if (active) Text("▶", fontSize = 11.sp, color = P.WinGlow)
+                if (active) Text("▶", fontSize = 11.sp, color = RedNeon)
                 OutlinedText(
                     "HAND ${i + 1}",
                     fontSize = 15.sp,
-                    color = NeonBlue,
+                    color = P.OffWhite,
                     letterSpacing = 0.08.em,
                     outlineWidth = 1.5.dp,
                 )
@@ -365,7 +422,7 @@ private fun PlayerHandColumn(vm: Blazing777ViewModel, i: Int, hand: BjHand) {
                         "2×",
                         fontSize = 9.sp, fontWeight = FontWeight.Black, color = P.Ink,
                         modifier = Modifier
-                            .background(P.GoldTrim, RoundedCornerShape(999.dp))
+                            .background(RedNeon, RoundedCornerShape(999.dp))
                             .padding(horizontal = 6.dp, vertical = 2.dp),
                     )
                 }
@@ -391,7 +448,7 @@ private fun ResultPill(r: BjResult) {
             .background(Color(0xE60E0A0B), RoundedCornerShape(999.dp))
             .border(
                 1.5.dp,
-                if (won) NeonMagenta else P.OffWhite.copy(alpha = 0.35f),
+                if (won) RedNeon else P.OffWhite.copy(alpha = 0.35f),
                 RoundedCornerShape(999.dp),
             )
             .padding(horizontal = 10.dp, vertical = 4.dp),
@@ -408,7 +465,7 @@ private fun ResultPill(r: BjResult) {
             fontSize = 11.sp,
             fontWeight = FontWeight.Black,
             color = when {
-                r.net > 0 -> P.WinGlow
+                r.net > 0 -> RedNeon
                 r.net < 0 -> Color(0xFFFF9C8A)
                 else -> P.OffWhite.copy(alpha = 0.7f)
             },
@@ -416,66 +473,46 @@ private fun ResultPill(r: BjResult) {
     }
 }
 
+/** TriLux placard doubles as its betting spot, with the BET circle alongside. */
 @Composable
-private fun BetSpots(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
+private fun BottomRow(vm: Blazing777ViewModel) {
     val betting = vm.phase == BjPhase.BETTING
+    val triluxAmount = if (betting) vm.triluxBet else vm.triluxStake
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
+        Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        Box(contentAlignment = Alignment.BottomCenter) {
+            Image(
+                painter = painterResource(R.drawable.b7_trilux),
+                contentDescription = "TriLux side bet",
+                modifier = Modifier
+                    .width(118.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable(enabled = betting) { vm.addTriluxChip() },
+                contentScale = ContentScale.FillWidth,
+            )
+            PlacedBetChip(triluxAmount, size = 44.dp, modifier = Modifier.offset(y = 14.dp))
+        }
+        Spacer(Modifier.weight(1f))
         Box(contentAlignment = Alignment.Center) {
             Image(
-                painter = painterResource(R.drawable.fb_spot_bet),
+                painter = painterResource(R.drawable.b7_spot_bet),
                 contentDescription = "Bet spot",
                 modifier = Modifier
-                    .size(96.dp)
+                    .size(104.dp)
                     .clip(CircleShape)
                     .clickable(enabled = betting) { vm.addChip() },
                 contentScale = ContentScale.Fit,
             )
             // Once dealt, the stake lives on the hand rather than the spot.
-            PlacedBetChip(if (betting) vm.bet else vm.playerHands.firstOrNull()?.stake ?: 0)
-        }
-        SideSpot(
-            label = "TRI\nLUX",
-            color = NeonMagenta,
-            amount = if (betting) vm.triluxBet else vm.triluxStake,
-            enabled = betting,
-            onClick = vm::addTriluxChip,
-        )
-    }
-}
-
-@Composable
-private fun SideSpot(
-    label: String,
-    color: Color,
-    amount: Int,
-    enabled: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(contentAlignment = Alignment.Center) {
-        Box(
-            Modifier
-                .size(74.dp)
-                .background(Color(0x66000000), CircleShape)
-                .border(2.dp, color.copy(alpha = 0.85f), CircleShape)
-                .clip(CircleShape)
-                .clickable(enabled = enabled, onClick = onClick),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                label,
-                color = color,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Black,
-                lineHeight = 12.sp,
-                letterSpacing = 0.06.em,
-                textAlign = TextAlign.Center,
+            PlacedBetChip(
+                if (betting) vm.bet else vm.playerHands.firstOrNull()?.stake ?: 0
             )
         }
-        PlacedBetChip(amount, size = 44.dp)
+        Spacer(Modifier.weight(1f))
+        // Balances the placard so the BET circle stays centred.
+        Spacer(Modifier.width(118.dp))
     }
 }
 
@@ -488,7 +525,7 @@ private fun ChipRack(vm: Blazing777ViewModel) {
                 contentDescription = "${chip.value} chip",
                 selected = vm.selectedChip == chip.value,
                 onClick = { vm.selectedChip = chip.value },
-                selectedColor = HotPink,
+                selectedColor = RedNeon,
             )
         }
     }
@@ -553,7 +590,7 @@ private fun PillButton(text: String, onClick: () -> Unit) {
     Box(
         Modifier
             .clip(RoundedCornerShape(999.dp))
-            .background(P.GoldTrim)
+            .background(RedNeon)
             .border(2.dp, P.Ink, RoundedCornerShape(999.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 11.dp)
@@ -582,7 +619,7 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
                 .widthIn(max = 340.dp)
                 .padding(24.dp)
                 .background(Color(0xF20E0A0B), RoundedCornerShape(14.dp))
-                .border(1.5.dp, NeonMagenta.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
+                .border(1.5.dp, RedNeon.copy(alpha = 0.6f), RoundedCornerShape(14.dp))
                 .padding(18.dp),
         ) {
             PayList(
@@ -593,7 +630,7 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             PayList(
                 "TRILUX",
-                NeonMagenta,
+                RedNeon,
                 Blazing777Rules.TriluxWin.entries.map { it.label to it.payout },
             )
             Spacer(Modifier.height(14.dp))

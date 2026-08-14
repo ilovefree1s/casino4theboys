@@ -63,11 +63,27 @@ class Blazing777RulesTest {
     // ---- TriLux ----
 
     @Test
-    fun `suited trips outrank a straight flush`() {
+    fun `queen king ace in one suit is the royal`() {
+        val hand = listOf(
+            c(Rank.QUEEN, Suit.SPADES), c(Rank.KING, Suit.SPADES), c(Rank.ACE, Suit.SPADES),
+        )
+        assertEquals(TriluxWin.ROYAL_FLUSH, Blazing777Rules.trilux(hand))
+    }
+
+    @Test
+    fun `off-suit queen king ace is only a straight`() {
+        val hand = listOf(
+            c(Rank.QUEEN, Suit.SPADES), c(Rank.KING, Suit.HEARTS), c(Rank.ACE, Suit.SPADES),
+        )
+        assertEquals(TriluxWin.STRAIGHT, Blazing777Rules.trilux(hand))
+    }
+
+    @Test
+    fun `trips outrank a flush even when suited`() {
         val hand = listOf(
             c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.SPADES),
         )
-        assertEquals(TriluxWin.SUITED_TRIPS, Blazing777Rules.trilux(hand))
+        assertEquals(TriluxWin.THREE_KIND, Blazing777Rules.trilux(hand))
     }
 
     @Test
@@ -79,7 +95,7 @@ class Blazing777RulesTest {
     }
 
     @Test
-    fun `mixed-suit trips pay three of a kind`() {
+    fun `mixed-suit trips also pay three of a kind`() {
         val hand = listOf(
             c(Rank.NINE, Suit.SPADES), c(Rank.NINE, Suit.HEARTS), c(Rank.NINE, Suit.CLUBS),
         )
