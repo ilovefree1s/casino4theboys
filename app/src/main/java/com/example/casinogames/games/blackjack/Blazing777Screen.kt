@@ -528,9 +528,9 @@ private fun BottomRow(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
             Box(contentAlignment = Alignment.Center) {
                 Box(
                     Modifier
-                        .size(84.dp)
+                        .size(63.dp)
                         .border(2.dp, RedNeon.copy(alpha = 0.9f), CircleShape)
-                        .padding(4.dp)
+                        .padding(3.dp)
                         .clip(CircleShape)
                         .clickable(enabled = betting) { vm.addTriluxChip() },
                     contentAlignment = Alignment.Center,
@@ -543,7 +543,7 @@ private fun BottomRow(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
                         contentScale = ContentScale.Crop,
                     )
                 }
-                PlacedBetChip(triluxAmount, size = 46.dp)
+                PlacedBetChip(triluxAmount, size = 38.dp)
             }
             Spacer(Modifier.height(3.dp))
             Text(
