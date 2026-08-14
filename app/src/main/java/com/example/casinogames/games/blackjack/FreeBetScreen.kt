@@ -584,8 +584,8 @@ private fun ActionButtons(vm: FreeBetViewModel) {
     ) {
         when (vm.phase) {
             BjPhase.BETTING -> {
-                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
                 ImgButton(R.drawable.btn_undo, "Undo", vm::undoChip)
+                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
                 ImgButton(R.drawable.btn_clear, "Clear", vm::clearBet)
                 if (!vm.campaign && vm.bankroll < 25 && vm.bet == 0) {
                     PillButton("Buy back in", onClick = vm::buyBackIn)

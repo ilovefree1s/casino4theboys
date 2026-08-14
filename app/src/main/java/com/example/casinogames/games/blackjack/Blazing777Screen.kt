@@ -35,8 +35,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -116,8 +114,7 @@ fun Blazing777Screen(
                     .clickable { showPayTable = true }
                     .padding(horizontal = 10.dp, vertical = 3.dp),
             )
-            // Everything below sits inside the felt's red horseshoe.
-            Box(Modifier.weight(1f).fillMaxWidth().drawBehind { drawHorseshoe() }) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
                 Column(
                     Modifier.fillMaxSize(),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -162,29 +159,6 @@ fun Blazing777Screen(
                 },
             )
         }
-    }
-}
-
-/** The red oval that frames the felt, glowing outward from a bright core. */
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawHorseshoe() {
-    val inset = size.width * 0.06f
-    val topLift = size.height * 0.06f
-    val rect = androidx.compose.ui.geometry.Rect(
-        offset = Offset(inset, topLift),
-        size = Size(size.width - inset * 2, size.height - topLift * 0.4f),
-    )
-    listOf(
-        16f to 0.05f,
-        9f to 0.09f,
-        4f to 0.20f,
-        1.4f to 0.6f,
-    ).forEach { (width, alpha) ->
-        drawOval(
-            color = RedNeon.copy(alpha = alpha),
-            topLeft = rect.topLeft,
-            size = rect.size,
-            style = Stroke(width = width),
-        )
     }
 }
 
@@ -581,22 +555,22 @@ private fun ActionButtons(vm: Blazing777ViewModel) {
     ) {
         when (vm.phase) {
             BjPhase.BETTING -> {
-                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
-                ImgButton(R.drawable.btn_undo, "Undo", vm::undoChip)
-                ImgButton(R.drawable.btn_clear, "Clear", vm::clearBet)
+                ImgButton(R.drawable.r_btn_undo, "Undo", vm::undoChip)
+                ImgButton(R.drawable.r_btn_deal, "Deal", vm::deal)
+                ImgButton(R.drawable.r_btn_clear, "Clear", vm::clearBet)
                 if (!vm.campaign && vm.bankroll < 25 && vm.bet == 0) {
                     PillButton("Buy back in", onClick = vm::buyBackIn)
                 }
             }
             BjPhase.PLAYER_TURN -> {
-                ImgButton(R.drawable.btn_hit, "Hit", vm::hit)
-                ImgButton(R.drawable.btn_stand, "Stand", vm::stand)
-                if (vm.canDouble) ImgButton(R.drawable.btn_double, "Double", vm::doubleDown)
-                if (vm.canSplit) ImgButton(R.drawable.btn_split, "Split", vm::split)
+                ImgButton(R.drawable.r_btn_hit, "Hit", vm::hit)
+                ImgButton(R.drawable.r_btn_stand, "Stand", vm::stand)
+                if (vm.canDouble) ImgButton(R.drawable.r_btn_double, "Double", vm::doubleDown)
+                if (vm.canSplit) ImgButton(R.drawable.r_btn_split, "Split", vm::split)
             }
             BjPhase.RESULT -> {
-                ImgButton(R.drawable.btn_rebet, "Rebet", { vm.nextHand(true) })
-                ImgButton(R.drawable.btn_newbet, "New bet", { vm.nextHand(false) })
+                ImgButton(R.drawable.r_btn_rebet, "Rebet", { vm.nextHand(true) })
+                ImgButton(R.drawable.r_btn_newbet, "New bet", { vm.nextHand(false) })
             }
             else -> {
                 Spacer(Modifier.weight(1f))

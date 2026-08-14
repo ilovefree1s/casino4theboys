@@ -311,7 +311,6 @@
 
   /* ---- Blazing 777s: same table, red felt ---- */
   .bj-felt { display: none; }
-  .bj-table.blazing .bj-felt { display: block; }
   .bj-table.blazing { background: #0C0A0C; }
   .bj-table.blazing .bj-topbar { border-bottom-color: rgba(199,20,20,.8); }
   .bj-table.blazing .bj-money .val { color: #FF2A2A; }
@@ -325,14 +324,6 @@
   .bj-table.blazing .bj-result-pill .amt.w { color: #FF2A2A; }
   .bj-table.blazing .chip-btn.sel { box-shadow: 0 0 0 1.5px #FF2A2A, 0 5px 12px rgba(0,0,0,.5); }
   .bj-table.blazing .bj-message.win { color: #FF2A2A; }
-  /* The felt's horseshoe, sitting behind the cards. */
-  .bj-table.blazing .bj-felt {
-    position: absolute; left: 6%; right: 6%; top: 96px; bottom: 190px;
-    border: 1.4px solid rgba(255,42,42,.6); border-radius: 50%;
-    box-shadow: 0 0 22px rgba(255,42,42,.18), inset 0 0 22px rgba(255,42,42,.10);
-    pointer-events: none; z-index: 0;
-  }
-  .bj-table.blazing > *:not(.bj-felt) { position: relative; z-index: 1; }
   .slot.red {
     border: 1.5px solid rgba(255,42,42,.9); border-style: solid;
     box-shadow: 0 0 10px rgba(255,42,42,.35), inset 0 0 8px rgba(255,42,42,.12);
@@ -382,10 +373,14 @@
     border: 1.5px solid rgba(255,63,216,.6);
   }
 
-  /* ================= BACCARAT (its own gold felt world) ================= */
-  #screen-baccarat {
-    background: radial-gradient(ellipse at 50% 20%, var(--felt) 0%, var(--felt) 55%, var(--felt-deep) 100%);
+  /* ================= BACCARAT ================= */
+  #screen-baccarat { position: relative; background: var(--night); }
+  /* The 4 The Boys art carries the branding, so the script watermarks retire. */
+  .bacc-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .45; pointer-events: none;
   }
+  .wm-layer { display: none; }
   .table {
     position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -614,7 +609,6 @@
 <div class="screen" id="screen-blackjack">
   <img class="bj-bg" src="__BG__" alt="">
   <div class="bj-table">
-    <div class="bj-felt"></div>
     <div class="bj-topbar">
       <button class="backlink" id="bj-back">‹ LOBBY</button>
       <div class="bj-money">
@@ -654,6 +648,7 @@
 
 <!-- ================= BACCARAT ================= -->
 <div class="screen" id="screen-baccarat">
+<img class="bacc-bg" src="__BG__" alt="">
 <div class="table">
   <div class="wm-layer">
     <div class="wm" style="top:14%; left:-4%;"><span class="s" style="font-size:38px;">for the boys</span><span class="h">HOTEL &amp; CASINO</span></div>
@@ -839,6 +834,14 @@
     b7Dealer: "__B7_DEALER__", b7YourHand: "__B7_YOURHAND__",
     b7Trilux: "__B7_TRILUX__", b7Bet: "__B7_BET__"
   };
+  /** Blazing 777s uses the red button set; Free Bet keeps the neon one. */
+  var RED_BTN = {
+    btnDeal: "__R_DEAL__", btnUndo: "__R_UNDO__", btnClear: "__R_CLEAR__",
+    btnHit: "__R_HIT__", btnStand: "__R_STAND__",
+    btnSplit: "__R_SPLIT__", btnDouble: "__R_DOUBLE__",
+    btnRebet: "__R_REBET__", btnNewbet: "__R_NEWBET__",
+    badgeFreeSplit: "__BADGE_FSPLIT__", badgeFreeDouble: "__BADGE_FDOUBLE__"
+  };
   function chipsFor(bankroll) {
     var all = [25, 100, 500, 1000, 5000];
     if (bankroll >= 100000) all.push(25000);
@@ -1021,6 +1024,8 @@
       return cards.length === 2 && bjValue(cards[0].rank) === bjValue(cards[1].rank);
     }
     function isFreeSplit(cards) { return canSplitCards(cards) && bjValue(cards[0].rank) !== 10; }
+    /** Paid doubles are limited to hands holding an ace. */
+    function hasAce(cards) { return cards.some(function (c) { return c.rank === "A"; }); }
     function potMult(coins) {
       return coins >= 7 ? 1000 : [0, 3, 10, 30, 60, 100, 300][coins] || 0;
     }
@@ -1298,10 +1303,12 @@
     function renderActions() {
       var a = $("bj-actions");
       a.innerHTML = "";
+      // Each variant draws from its own button set.
+      var ART = variant === "blazing" ? RED_BTN : BJ_ART;
       if (phase === "betting") {
-        a.appendChild(imgBtn(BJ_ART.btnDeal, "Deal", deal));
-        a.appendChild(imgBtn(BJ_ART.btnUndo, "Undo", undoChip));
-        a.appendChild(imgBtn(BJ_ART.btnClear, "Clear", clearBet));
+        a.appendChild(imgBtn(ART.btnUndo, "Undo", undoChip));
+        a.appendChild(imgBtn(ART.btnDeal, "Deal", deal));
+        a.appendChild(imgBtn(ART.btnClear, "Clear", clearBet));
         if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
           var buy = document.createElement("button");
           buy.className = "btn solid";
@@ -1313,16 +1320,17 @@
         }
       } else if (phase === "player") {
         var h = hands[active];
-        a.appendChild(imgBtn(BJ_ART.btnHit, "Hit", hit));
-        a.appendChild(imgBtn(BJ_ART.btnStand, "Stand", stand));
+        a.appendChild(imgBtn(ART.btnHit, "Hit", hit));
+        a.appendChild(imgBtn(ART.btnStand, "Stand", stand));
         var live = h && !h.done;
         if (variant === "blazing") {
-          // Classic rules: double any two cards, split any pair, both for cash.
-          if (live && h.cards.length === 2 && bankroll >= h.betUnit) {
-            a.appendChild(imgBtn(BJ_ART.btnDouble, "Double", doubleDown));
+          // Doubles follow the other table's rule; splits are any pair, for cash.
+          if (live && h.cards.length === 2 && bankroll >= h.betUnit &&
+              (canFreeDouble(h.cards) || hasAce(h.cards))) {
+            a.appendChild(imgBtn(ART.btnDouble, "Double", doubleDown));
           }
           if (live && hands.length < 4 && canSplitCards(h.cards) && bankroll >= h.betUnit) {
-            a.appendChild(imgBtn(BJ_ART.btnSplit, "Split", split));
+            a.appendChild(imgBtn(ART.btnSplit, "Split", split));
           }
         } else {
           // Free double on hard 9-11; paid double only when holding an ace.
@@ -1330,16 +1338,16 @@
           var paidDbl = live && h.cards.length === 2 && !h.isFree &&
             h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
           if (freeDbl || paidDbl) {
-            a.appendChild(imgBtn(freeDbl ? BJ_ART.badgeFreeDouble : BJ_ART.btnDouble, "Double", doubleDown));
+            a.appendChild(imgBtn(freeDbl ? ART.badgeFreeDouble : ART.btnDouble, "Double", doubleDown));
           }
           if (live && hands.length < 4 && canSplitCards(h.cards) &&
               (isFreeSplit(h.cards) || bankroll >= h.betUnit)) {
-            a.appendChild(imgBtn(isFreeSplit(h.cards) ? BJ_ART.badgeFreeSplit : BJ_ART.btnSplit, "Split", split));
+            a.appendChild(imgBtn(isFreeSplit(h.cards) ? ART.badgeFreeSplit : ART.btnSplit, "Split", split));
           }
         }
       } else if (phase === "result") {
-        a.appendChild(imgBtn(BJ_ART.btnRebet, "Rebet", function () { nextHand(true); }));
-        a.appendChild(imgBtn(BJ_ART.btnNewbet, "New bet", function () { nextHand(false); }));
+        a.appendChild(imgBtn(ART.btnRebet, "Rebet", function () { nextHand(true); }));
+        a.appendChild(imgBtn(ART.btnNewbet, "New bet", function () { nextHand(false); }));
       } else {
         var d = document.createElement("span");
         d.className = "dealing-label";
@@ -1474,8 +1482,8 @@
       if (!h || h.done || h.cards.length !== 2) return;
       var free = variant === "freebet" && canFreeDouble(h.cards);
       var paidOk = variant === "blazing"
-        ? bankroll >= h.betUnit
-        : !h.isFree && h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
+        ? (canFreeDouble(h.cards) || hasAce(h.cards)) && bankroll >= h.betUnit
+        : !h.isFree && hasAce(h.cards) && bankroll >= h.betUnit;
       if (!free && !paidOk) return;
       if (free) freeCoins++;
       else { bankroll -= h.betUnit; h.stake += h.betUnit; syncWallet(); }
@@ -1830,8 +1838,8 @@
         a.appendChild(b);
       }
       if (phase === "betting") {
-        btn("DEAL", true, deal);
         btn("Undo", false, undoBet);
+        btn("DEAL", true, deal);
         btn("Clear", false, clearBets);
         if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
           btn("Buy back in (1,000)", true, function () {

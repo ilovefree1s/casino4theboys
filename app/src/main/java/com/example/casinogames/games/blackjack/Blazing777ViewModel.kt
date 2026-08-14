@@ -272,7 +272,10 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         get() {
             val h = current ?: return false
             if (phase != BjPhase.PLAYER_TURN || h.done || h.cards.size != 2) return false
-            return bankroll >= h.betUnit
+            // Same rule as the other table: hard 9-11, or any hand holding an ace.
+            val eligible = FreeBetRules.canFreeDouble(h.cards) ||
+                FreeBetRules.canPaidDouble(h.cards)
+            return eligible && bankroll >= h.betUnit
         }
     val canSplit: Boolean
         get() {

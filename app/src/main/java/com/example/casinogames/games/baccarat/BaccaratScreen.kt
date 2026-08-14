@@ -94,16 +94,14 @@ fun BaccaratScreen(
         else emptySet()
     var roadOpen by rememberSaveable { mutableStateOf(false) }
 
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(
-                Brush.radialGradient(
-                    0f to P.Felt, 0.55f to P.Felt, 1f to P.FeltDeep,
-                )
-            )
-    ) {
-        Watermarks()
+    Box(Modifier.fillMaxSize().background(Color(0xFF040308))) {
+        // The 4 The Boys art carries the branding, so the script watermarks retire.
+        Image(
+            painter = painterResource(com.example.casinogames.R.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize().alpha(0.45f),
+            contentScale = ContentScale.Crop,
+        )
 
         BoxWithConstraints(
             Modifier
@@ -831,8 +829,8 @@ private fun ActionButtons(vm: BaccaratViewModel) {
     ) {
         when (vm.phase) {
             Phase.BETTING -> {
-                PillButton("DEAL", solid = true, onClick = vm::deal)
                 PillButton("Undo", solid = false, onClick = vm::undoBet)
+                PillButton("DEAL", solid = true, onClick = vm::deal)
                 PillButton("Clear", solid = false, onClick = vm::clearBets)
             }
             Phase.RESULT -> {
