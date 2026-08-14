@@ -20,7 +20,7 @@ object Blazing777Rules {
     enum class TriluxWin(val label: String, val payout: Int) {
         ROYAL_FLUSH("Royal Flush", 50),
         STRAIGHT_FLUSH("Straight Flush", 35),
-        THREE_KIND("Three of a Kind", 30),
+        THREE_KIND("Three of a Kind", 25),
         STRAIGHT("Straight", 15),
         FLUSH("Flush", 10),
     }

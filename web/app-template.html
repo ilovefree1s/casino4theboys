@@ -1060,7 +1060,7 @@
         idx[1] === RANK_ORDER.indexOf("K") && idx[2] === RANK_ORDER.indexOf("A");
       if (royal && flush) return { label: "Royal Flush", pays: 50 };
       if (straight && flush) return { label: "Straight Flush", pays: 35 };
-      if (trips) return { label: "Three of a Kind", pays: 30 };
+      if (trips) return { label: "Three of a Kind", pays: 25 };
       if (straight) return { label: "Straight", pays: 15 };
       if (flush) return { label: "Flush", pays: 10 };
       return null;
@@ -1672,7 +1672,7 @@
         ["Two 7s", 25], ["One 7", 1]
       ], "#FF7A1A");
       rows($("pays-trilux"), [
-        ["Royal Flush", 50], ["Straight Flush", 35], ["Three of a Kind", 30],
+        ["Royal Flush", 50], ["Straight Flush", 35], ["Three of a Kind", 25],
         ["Straight", 15], ["Flush", 10]
       ], "#FF2A2A");
     })();
