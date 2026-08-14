@@ -37,7 +37,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -77,6 +79,14 @@ fun Blazing777Screen(
     LaunchedEffect(campaign) { vm.enterMode(campaign) }
     var showPayTable by remember { mutableStateOf(false) }
     Box(Modifier.fillMaxSize().background(TableBlack)) {
+        Image(
+            painter = painterResource(R.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize().alpha(0.4f),
+            contentScale = ContentScale.Crop,
+            // Tinted so the watermark burns red with this felt instead of purple.
+            colorFilter = ColorFilter.tint(RedNeon, BlendMode.Modulate),
+        )
         Column(
             Modifier
                 .fillMaxSize()
@@ -512,7 +522,15 @@ private fun BottomRow(vm: Blazing777ViewModel) {
         }
         Spacer(Modifier.weight(1f))
         // Balances the placard so the BET circle stays centred.
-        Spacer(Modifier.width(118.dp))
+        Box(Modifier.width(118.dp), contentAlignment = Alignment.Center) {
+            Image(
+                painter = painterResource(R.drawable.fourtheboys_spot),
+                contentDescription = "4 The Boys",
+                // Clipped round so the art's square backing never shows on the felt.
+                modifier = Modifier.size(76.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+        }
     }
 }
 

@@ -341,7 +341,13 @@
   .b7-trilux { width: 118px; padding: 0; border-radius: 10px; position: relative; }
   .b7-trilux img { width: 100%; display: block; }
   .b7-trilux .placed { width: 44px; height: 44px; top: auto; bottom: -14px; transform: translate(-50%, 0); }
-  .b7-balance { width: 118px; flex: none; }
+  .b7-balance {
+    width: 118px; flex: none; display: flex; justify-content: center;
+  }
+  /* Clipped round so the art's square backing never shows on the felt. */
+  .b7-balance img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; }
+  /* The watermark burns red with this felt instead of purple. */
+  .bj-bg.b7 { opacity: .4; filter: hue-rotate(85deg) saturate(1.25); }
 
   .bj-coins {
     display: none; margin: 6px auto 0; width: fit-content;
@@ -1075,8 +1081,7 @@
       $("bj-staked").textContent = fmt(totalAtRisk());
       var blazing = variant === "blazing";
       document.querySelector(".bj-table").classList.toggle("blazing", blazing);
-      // The purple watermark belongs to Free Bet only.
-      document.querySelector("#screen-blackjack .bj-bg").style.display = blazing ? "none" : "";
+      document.querySelector("#screen-blackjack .bj-bg").classList.toggle("b7", blazing);
       $("bj-dhdr").src = blazing ? BJ_ART.b7Dealer : "__HDR_DEALER__";
       var sub = $("bj-sub");
       if (Shell.mode === "campaign") {
@@ -1238,7 +1243,7 @@
       row.innerHTML =
         '<button class="b7-trilux spot" id="bj-luxspot"><img src="' + BJ_ART.b7Trilux + '" alt="TriLux side bet"><div class="placed"></div></button>' +
         '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.b7Bet + '" alt="Bet"><div class="placed"></div></button>' +
-        '<span class="b7-balance"></span>';
+        '<span class="b7-balance"><img src="' + BOYS_IMG + '" alt="4 The Boys"></span>';
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
