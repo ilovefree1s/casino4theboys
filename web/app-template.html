@@ -99,6 +99,20 @@
   .lb-imgcard:not(.soon):active { transform: scale(.985); }
   .lb-imgcard.soon { pointer-events: none; }
 
+  /* ============ BLACKJACK VARIANTS PAGE ============ */
+  #screen-bjmenu { position: relative; background: var(--night); }
+  .bjm-col {
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .bjm-top { width: 100%; display: flex; align-items: center; }
+  .bjm-header { width: 78%; max-width: 330px; display: block; }
+  .bjm-cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+  .bjm-card { width: 100%; padding: 0; border-radius: 20px; overflow: hidden; }
+  .bjm-card img { width: 100%; display: block; }
+  .bjm-card:active { transform: scale(.985); }
+
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
   .st-col {
@@ -269,6 +283,32 @@
   .bj-spot img { width: 100%; height: 100%; display: block; object-fit: contain; }
   .bj-spot-bet { left: 50%; top: 50%; transform: translate(-50%,-50%); width: 92px; height: 92px; }
   .bj-spot-boys { right: 6px; top: 50%; transform: translateY(-50%); width: 74px; height: 74px; }
+  /* Blazing 777s uses two neon side-bet rings either side of the BET spot. */
+  .bj-sidespots {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; padding: 0 4px;
+  }
+  .bj-side { display: flex; flex-direction: column; align-items: center; flex: none; }
+  .bj-side-ring {
+    position: relative; width: 74px; height: 74px; border-radius: 50%;
+    background: rgba(0,0,0,.4); border: 2px solid; padding: 0;
+    font-weight: 900; font-size: 11px; line-height: 12px; letter-spacing: .06em;
+  }
+  .bj-side.blaze .bj-side-ring { border-color: rgba(255,122,26,.85); color: #FF7A1A; }
+  .bj-side.lux .bj-side-ring { border-color: rgba(255,63,216,.85); color: #FF3FD8; }
+  .bj-side .pays { font-size: 8px; font-weight: 700; margin-top: 3px; padding: 2px 8px; }
+  .bj-side.blaze .pays { color: rgba(255,122,26,.75); }
+  .bj-side.lux .pays { color: rgba(255,63,216,.75); }
+  .bj-side .placed { width: 44px; height: 44px; }
+  .bj-betring {
+    position: relative; width: 96px; height: 96px; border-radius: 50%; padding: 0; flex: none;
+  }
+  .bj-betring img { width: 100%; height: 100%; display: block; object-fit: contain; }
+  .bj-hitpill {
+    display: inline-block; border-radius: 999px; padding: 4px 10px;
+    font-size: 11px; font-weight: 900; background: rgba(14,10,11,.9); border: 1.5px solid;
+  }
+
   .bj-coins {
     display: none; margin: 6px auto 0; width: fit-content;
     display_: none; align-items: center; gap: 8px;
@@ -497,6 +537,21 @@
   </div>
 </div>
 
+<!-- ============ BLACKJACK VARIANTS PAGE ============ -->
+<div class="screen" id="screen-bjmenu">
+  <img class="mm-bg" src="__BG__" alt="" style="opacity:.35">
+  <div class="bjm-col">
+    <div class="bjm-top">
+      <button class="lb-menu" id="bjm-back" aria-label="Back to lobby">←</button>
+    </div>
+    <img class="bjm-header" src="__BJ_HEADER__" alt="Blackjack variants">
+    <div class="bjm-cards">
+      <button class="bjm-card" id="bjm-freebet"><img src="__BJ_FREEBET__" alt="Free Bet Blackjack — play"></button>
+      <button class="bjm-card" id="bjm-blazing"><img src="__BJ_BLAZING__" alt="Blazing 777s with TriLux — play"></button>
+    </div>
+  </div>
+</div>
+
 <!-- ================= SETTINGS ================= -->
 <div class="screen" id="screen-settings">
   <img class="mm-bg" src="__BG__" alt="" style="opacity:.35">
@@ -536,6 +591,17 @@
     <div class="bj-actions" id="bj-actions"></div>
   </div>
   <div class="bj-modal" id="bj-ptmodal"><img src="__PAYTABLE__" alt="4 The Boys pay table"></div>
+  <div class="bj-modal" id="bj-sidepays">
+    <div style="max-width:340px;width:82vw;background:rgba(14,10,11,.96);border:1.5px solid rgba(255,63,216,.6);border-radius:14px;padding:18px">
+      <div style="color:#FF7A1A;font-weight:900;font-size:14px;letter-spacing:.12em">BLAZING 7s</div>
+      <div style="margin-top:6px" id="pays-blazing"></div>
+      <div style="color:#FF3FD8;font-weight:900;font-size:14px;letter-spacing:.12em;margin-top:16px">TRILUX</div>
+      <div style="margin-top:6px" id="pays-trilux"></div>
+      <div style="margin-top:14px;font-size:10px;color:rgba(245,241,232,.6)">
+        Both side bets use your two cards plus the dealer's up card.
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ================= BACCARAT ================= -->
@@ -819,9 +885,16 @@
   $("st-back").addEventListener("click", function () { Shell.showMenu(); });
   $("lb-back").addEventListener("click", function () { Shell.showMenu(); });
   $("lb-baccarat").addEventListener("click", function () { Baccarat.enter(); Shell.show("baccarat"); });
-  $("lb-blackjack").addEventListener("click", function () { Blackjack.enter(); Shell.show("blackjack"); });
+  $("lb-blackjack").addEventListener("click", function () { Shell.show("bjmenu"); });
+  $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("bjm-freebet").addEventListener("click", function () {
+    Blackjack.enter("freebet"); Shell.show("blackjack");
+  });
+  $("bjm-blazing").addEventListener("click", function () {
+    Blackjack.enter("blazing"); Shell.show("blackjack");
+  });
   $("bacc-back").addEventListener("click", function () { Shell.showLobby(); });
-  $("bj-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("bj-back").addEventListener("click", function () { Shell.show("bjmenu"); });
 
   // ---------- shared card element ----------
   function cardEl(c, faceUp) {
@@ -863,6 +936,11 @@
     var selectedChip = 25, chipHist = [], lastBet = 0, lastPotBet = 0;
     var hands = [], dealer = [], holeUp = false, active = 0;
     var phase = "betting", results = [], timers = [];
+    // "freebet" = free doubles/splits + 4 The Boys; "blazing" = classic 3:2 with side bets.
+    var variant = "freebet";
+    var blazingBet = 0, triluxBet = 0, blazingStake = 0, triluxStake = 0;
+    var lastBlazing = 0, lastTrilux = 0;
+    var blazingWin = null, triluxWin = null;
 
     function bjValue(rank) {
       if (rank === "A") return 1;
@@ -894,12 +972,45 @@
     function potMult(coins) {
       return coins >= 7 ? 1000 : [0, 3, 10, 30, 60, 100, 300][coins] || 0;
     }
+
+    // ---- Blazing 777s side bets: player's two cards + dealer up card ----
+    var RANK_ORDER = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    function blazingOf(cards) {
+      var sevens = cards.filter(function (c) { return c.rank === "7"; });
+      if (sevens.length === 3) {
+        var oneSuit = sevens.every(function (c) { return c.suit === sevens[0].suit; });
+        if (oneSuit) return { label: "Suited 777", pays: 1000 };
+        var oneColor = sevens.every(function (c) { return c.red === sevens[0].red; });
+        return oneColor ? { label: "Colored 777", pays: 250 } : { label: "Three 7s", pays: 100 };
+      }
+      if (sevens.length === 2) return { label: "Two 7s", pays: 25 };
+      if (sevens.length === 1) return { label: "One 7", pays: 1 };
+      return null;
+    }
+    function triluxOf(cards) {
+      if (cards.length !== 3) return null;
+      var flush = cards.every(function (c) { return c.suit === cards[0].suit; });
+      var trips = cards.every(function (c) { return c.rank === cards[0].rank; });
+      var idx = cards.map(function (c) { return RANK_ORDER.indexOf(c.rank); })
+        .sort(function (a, b) { return a - b; });
+      var distinct = idx[0] !== idx[1] && idx[1] !== idx[2];
+      var run = distinct && idx[1] === idx[0] + 1 && idx[2] === idx[1] + 1;
+      // Ace plays low as well: A-2-3.
+      var wheel = distinct && idx[0] === 0 && idx[1] === 1 && idx[2] === RANK_ORDER.length - 1;
+      var straight = run || wheel;
+      if (trips && flush) return { label: "Suited trips", pays: 100 };
+      if (straight && flush) return { label: "Straight flush", pays: 40 };
+      if (trips) return { label: "Three of a kind", pays: 30 };
+      if (straight) return { label: "Straight", pays: 10 };
+      if (flush) return { label: "Flush", pays: 5 };
+      return null;
+    }
     function draw() { return shoe.pop(); }
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
     function totalAtRisk() {
-      if (phase === "betting") return bet + potBet;
-      var s = potStake;
+      if (phase === "betting") return bet + potBet + blazingBet + triluxBet;
+      var s = potStake + blazingStake + triluxStake;
       hands.forEach(function (h) { s += h.stake; });
       return s;
     }
@@ -919,7 +1030,8 @@
         sub.textContent = "CAMPAIGN · GOAL $" + fmt(Shell.getGoal());
         sub.className = "bj-sub campaign";
       } else {
-        sub.textContent = "FREE BET BLACKJACK · 8 DECKS · " + shoe.length + " CARDS IN SHOE";
+        sub.textContent = (variant === "blazing" ? "BLAZING 777s" : "FREE BET BLACKJACK") +
+          " · 8 DECKS · " + shoe.length + " CARDS IN SHOE";
         sub.className = "bj-sub";
       }
     }
@@ -998,6 +1110,20 @@
     function renderExtraPills() {
       var p = $("bj-extra-pills");
       p.innerHTML = "";
+      // Blazing side bets shout the moment they land, before the hand plays out.
+      if (variant === "blazing" && phase !== "betting" && phase !== "result") {
+        [[blazingWin, blazingStake, "#FF7A1A"], [triluxWin, triluxStake, "#FF3FD8"]]
+          .forEach(function (e) {
+            if (!e[0] || e[1] <= 0) return;
+            var s = document.createElement("span");
+            s.className = "bj-hitpill";
+            s.style.borderColor = e[2];
+            s.style.color = e[2];
+            s.textContent = e[0].label + " · " + e[0].pays + ":1";
+            p.appendChild(s);
+          });
+        return;
+      }
       if (phase !== "result") return;
       results.slice(hands.length).forEach(function (r) {
         var won = r.net > 0;
@@ -1011,24 +1137,11 @@
     function renderBottom() {
       var b = $("bj-bottom");
       b.innerHTML = "";
-      var compact = phase !== "betting" && hands.length >= 3;
+      var betting = phase === "betting";
+      var compact = !betting && hands.length >= 3;
       if (!compact) {
-        var spots = document.createElement("div");
-        spots.className = "bj-spots";
-        spots.innerHTML =
-          '<button class="bj-paytable" id="bj-pt"><img src="' + BJ_ART.paytable + '" alt="Pay table"></button>' +
-          '<button class="bj-spot bj-spot-bet spot" id="bj-betspot"><img src="' + BJ_ART.spotBet + '" alt="Bet"><div class="placed"></div></button>' +
-          '<button class="bj-spot bj-spot-boys spot" id="bj-boyspot"><img src="' + BOYS_IMG + '" alt="4 The Boys"><div class="placed"></div></button>';
-        b.appendChild(spots);
-        $("bj-pt").addEventListener("click", function () { $("bj-ptmodal").classList.add("on"); });
-        $("bj-betspot").addEventListener("click", function () { addChip(false); });
-        $("bj-boyspot").addEventListener("click", function () { addChip(true); });
-        var betPl = document.querySelector("#bj-betspot .placed");
-        if (bet > 0) { betPl.innerHTML = chipHtml(bet); betPl.style.display = "block"; }
-        var potAmt = phase === "betting" ? potBet : potStake;
-        var boysPl = document.querySelector("#bj-boyspot .placed");
-        if (potAmt > 0) { boysPl.innerHTML = chipHtml(potAmt); boysPl.style.display = "block"; }
-        if (phase === "betting") {
+        b.appendChild(variant === "blazing" ? blazingSpots() : freeBetSpots());
+        if (betting) {
           var rack = document.createElement("div");
           rack.className = "rack";
           chipsFor(bankroll).forEach(function (v) {
@@ -1039,12 +1152,65 @@
             rack.appendChild(cb);
           });
           b.appendChild(rack);
-        } else if (phase !== "betting" && freeCoins > 0) {
+        } else if (variant === "freebet" && freeCoins > 0) {
           b.appendChild(coinsRow());
         }
-      } else {
-        if (potStake > 0 || freeCoins > 0) b.appendChild(coinsRow());
+      } else if (variant === "freebet" && (potStake > 0 || freeCoins > 0)) {
+        b.appendChild(coinsRow());
       }
+    }
+    function freeBetSpots() {
+      var spots = document.createElement("div");
+      spots.className = "bj-spots";
+      spots.innerHTML =
+        '<button class="bj-paytable" id="bj-pt"><img src="' + BJ_ART.paytable + '" alt="Pay table"></button>' +
+        '<button class="bj-spot bj-spot-bet spot" id="bj-betspot"><img src="' + BJ_ART.spotBet + '" alt="Bet"><div class="placed"></div></button>' +
+        '<button class="bj-spot bj-spot-boys spot" id="bj-boyspot"><img src="' + BOYS_IMG + '" alt="4 The Boys"><div class="placed"></div></button>';
+      on(spots, "#bj-pt", function () { $("bj-ptmodal").classList.add("on"); });
+      on(spots, "#bj-betspot", function () { addChip("main"); });
+      on(spots, "#bj-boyspot", function () { addChip("pot"); });
+      fillPlaced(spots, "#bj-betspot", mainSpotAmount());
+      fillPlaced(spots, "#bj-boyspot", phase === "betting" ? potBet : potStake);
+      return spots;
+    }
+    function blazingSpots() {
+      var row = document.createElement("div");
+      row.className = "bj-sidespots";
+      row.innerHTML =
+        '<div class="bj-side blaze"><button class="bj-side-ring" id="bj-blazespot">BLAZING<br>7s<div class="placed"></div></button>' +
+        '<button class="pays" id="bj-pays1">pays</button></div>' +
+        '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.spotBet + '" alt="Bet"><div class="placed"></div></button>' +
+        '<div class="bj-side lux"><button class="bj-side-ring" id="bj-luxspot">TRI<br>LUX<div class="placed"></div></button>' +
+        '<button class="pays" id="bj-pays2">pays</button></div>';
+      on(row, "#bj-betspot", function () { addChip("main"); });
+      on(row, "#bj-blazespot", function () { addChip("blazing"); });
+      on(row, "#bj-luxspot", function () { addChip("trilux"); });
+      on(row, "#bj-pays1", showSidePays);
+      on(row, "#bj-pays2", showSidePays);
+      fillPlaced(row, "#bj-betspot", mainSpotAmount());
+      fillPlaced(row, "#bj-blazespot", phase === "betting" ? blazingBet : blazingStake);
+      fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : triluxStake);
+      return row;
+    }
+    /** Once dealt, the main stake lives on the hand rather than the spot. */
+    function mainSpotAmount() {
+      if (phase === "betting") return bet;
+      return hands.length ? hands[0].stake : 0;
+    }
+    /** Wires a handler inside a not-yet-inserted fragment, so taps never miss. */
+    function on(root, sel, fn) {
+      var el = root.querySelector(sel);
+      if (el) el.addEventListener("click", fn);
+    }
+    function fillPlaced(root, sel, amount) {
+      var el = root.querySelector(sel + " .placed");
+      if (!el || amount <= 0) return;
+      el.innerHTML = chipHtml(amount);
+      el.style.display = "block";
+    }
+    function showSidePays() {
+      var m = $("bj-sidepays");
+      m.classList.add("on");
     }
     function coinsRow() {
       var row = document.createElement("div");
@@ -1080,16 +1246,27 @@
         var h = hands[active];
         a.appendChild(imgBtn(BJ_ART.btnHit, "Hit", hit));
         a.appendChild(imgBtn(BJ_ART.btnStand, "Stand", stand));
-        // Free double on hard 9-11; paid double only when holding an ace.
-        var freeDbl = h && !h.done && canFreeDouble(h.cards);
-        var paidDbl = h && !h.done && h.cards.length === 2 && !h.isFree &&
-          h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
-        if (freeDbl || paidDbl) {
-          a.appendChild(imgBtn(freeDbl ? BJ_ART.badgeFreeDouble : BJ_ART.btnDouble, "Double", doubleDown));
-        }
-        if (h && !h.done && hands.length < 4 && canSplitCards(h.cards) &&
-            (isFreeSplit(h.cards) || bankroll >= h.betUnit)) {
-          a.appendChild(imgBtn(isFreeSplit(h.cards) ? BJ_ART.badgeFreeSplit : BJ_ART.btnSplit, "Split", split));
+        var live = h && !h.done;
+        if (variant === "blazing") {
+          // Classic rules: double any two cards, split any pair, both for cash.
+          if (live && h.cards.length === 2 && bankroll >= h.betUnit) {
+            a.appendChild(imgBtn(BJ_ART.btnDouble, "Double", doubleDown));
+          }
+          if (live && hands.length < 4 && canSplitCards(h.cards) && bankroll >= h.betUnit) {
+            a.appendChild(imgBtn(BJ_ART.btnSplit, "Split", split));
+          }
+        } else {
+          // Free double on hard 9-11; paid double only when holding an ace.
+          var freeDbl = live && canFreeDouble(h.cards);
+          var paidDbl = live && h.cards.length === 2 && !h.isFree &&
+            h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
+          if (freeDbl || paidDbl) {
+            a.appendChild(imgBtn(freeDbl ? BJ_ART.badgeFreeDouble : BJ_ART.btnDouble, "Double", doubleDown));
+          }
+          if (live && hands.length < 4 && canSplitCards(h.cards) &&
+              (isFreeSplit(h.cards) || bankroll >= h.betUnit)) {
+            a.appendChild(imgBtn(isFreeSplit(h.cards) ? BJ_ART.badgeFreeSplit : BJ_ART.btnSplit, "Split", split));
+          }
         }
       } else if (phase === "result") {
         a.appendChild(imgBtn(BJ_ART.btnRebet, "Rebet", function () { nextHand(true); }));
@@ -1107,28 +1284,39 @@
 
     // ---------- betting ----------
     function chipAmount() {
-      var avail = Math.floor(bankroll - bet - potBet);
+      var avail = Math.floor(bankroll - bet - potBet - blazingBet - triluxBet);
       return Math.min(selectedChip, avail);
     }
-    function addChip(isPot) {
+    var SPOT_SHOUT = {
+      main: "Place your bet",
+      pot: "4 The Boys riding",
+      blazing: "Blazing 7s riding",
+      trilux: "TriLux riding"
+    };
+    function addChip(spot) {
       if (phase !== "betting") return;
       var amount = chipAmount();
       if (amount <= 0) { setMessage("No bankroll left"); return; }
-      if (isPot) { potBet += amount; chipHist.push({ pot: true, v: amount }); }
-      else { bet += amount; chipHist.push({ pot: false, v: amount }); }
-      setMessage(amount < selectedChip ? "All in!" : isPot ? "4 The Boys riding" : "Place your bet");
+      if (spot === "pot") potBet += amount;
+      else if (spot === "blazing") blazingBet += amount;
+      else if (spot === "trilux") triluxBet += amount;
+      else bet += amount;
+      chipHist.push({ spot: spot, v: amount });
+      setMessage(amount < selectedChip ? "All in!" : SPOT_SHOUT[spot]);
       renderTop(); renderBottom();
     }
     function undoChip() {
       if (phase !== "betting" || !chipHist.length) return;
       var last = chipHist.pop();
-      if (last.pot) potBet = Math.max(0, potBet - last.v);
+      if (last.spot === "pot") potBet = Math.max(0, potBet - last.v);
+      else if (last.spot === "blazing") blazingBet = Math.max(0, blazingBet - last.v);
+      else if (last.spot === "trilux") triluxBet = Math.max(0, triluxBet - last.v);
       else bet = Math.max(0, bet - last.v);
       renderTop(); renderBottom();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      bet = 0; potBet = 0; chipHist = [];
+      bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0; chipHist = [];
       setMessage("Place your bet");
       renderTop(); renderBottom();
     }
@@ -1136,16 +1324,21 @@
     // ---------- play ----------
     function deal() {
       if (phase !== "betting") return;
-      if (bet <= 0) { setMessage(potBet > 0 ? "4 The Boys rides with a main bet" : "Place a bet first"); return; }
+      if (bet <= 0) {
+        setMessage(potBet + blazingBet + triluxBet > 0
+          ? "Side bets ride with a main bet" : "Place a bet first");
+        return;
+      }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
-      bankroll -= bet + potBet;
+      bankroll -= bet + potBet + blazingBet + triluxBet;
       syncWallet();
-      lastBet = bet; lastPotBet = potBet;
-      potStake = potBet; chipHist = []; freeCoins = 0;
+      lastBet = bet; lastPotBet = potBet; lastBlazing = blazingBet; lastTrilux = triluxBet;
+      potStake = potBet; blazingStake = blazingBet; triluxStake = triluxBet;
+      blazingWin = null; triluxWin = null;
+      chipHist = []; freeCoins = 0;
       hands = [{ cards: [], stake: bet, betUnit: bet, doubled: false, isFree: false, freeDoubled: false, done: false }];
       dealer = []; holeUp = false; active = 0; results = [];
-      var wager = bet;
-      bet = 0; potBet = 0;
+      bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -1155,6 +1348,13 @@
       t(1550, function () {
         dealer.push(draw());
         renderDealer(); renderTop();
+        if (variant === "blazing") {
+          // Both side bets read the player's two cards plus the dealer's up card.
+          var three = hands[0].cards.concat([dealer[0]]);
+          blazingWin = blazingOf(three);
+          triluxWin = triluxOf(three);
+          renderExtraPills();
+        }
         var up = dealer[0];
         var checks = up.rank === "A" || bjValue(up.rank) === 10;
         var after = 0;
@@ -1206,8 +1406,10 @@
       if (phase !== "player") return;
       var h = hands[active];
       if (!h || h.done || h.cards.length !== 2) return;
-      var free = canFreeDouble(h.cards);
-      var paidOk = !h.isFree && h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
+      var free = variant === "freebet" && canFreeDouble(h.cards);
+      var paidOk = variant === "blazing"
+        ? bankroll >= h.betUnit
+        : !h.isFree && h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
       if (!free && !paidOk) return;
       if (free) freeCoins++;
       else { bankroll -= h.betUnit; h.stake += h.betUnit; syncWallet(); }
@@ -1221,7 +1423,7 @@
       if (phase !== "player") return;
       var i = active, h = hands[i];
       if (!h || h.done || hands.length >= 4 || !canSplitCards(h.cards)) return;
-      var free = isFreeSplit(h.cards);
+      var free = variant === "freebet" && isFreeSplit(h.cards);
       if (!free && bankroll < h.betUnit) return;
       if (free) freeCoins++; else { bankroll -= h.betUnit; syncWallet(); }
       var aces = h.cards[0].rank === "A" && h.cards[1].rank === "A";
@@ -1297,7 +1499,8 @@
     function settle() {
       var dealerBj = isBJ(dealer);
       var dTotal = total(dealer);
-      var push22 = dTotal === 22;
+      // The dealer-22 push is a Free Bet rule; Blazing plays it straight.
+      var push22 = variant === "freebet" && dTotal === 22;
       var totalReturn = 0;
       results = [];
       hands.forEach(function (h, i) {
@@ -1327,9 +1530,25 @@
           net: potReturn - potStake
         });
       }
+      if (blazingStake > 0) {
+        var bRet = blazingWin ? blazingStake * (blazingWin.pays + 1) : 0;
+        totalReturn += bRet;
+        results.push({
+          label: blazingWin ? "Blazing · " + blazingWin.label : "Blazing 7s",
+          net: bRet - blazingStake
+        });
+      }
+      if (triluxStake > 0) {
+        var tRet = triluxWin ? triluxStake * (triluxWin.pays + 1) : 0;
+        totalReturn += tRet;
+        results.push({
+          label: triluxWin ? "TriLux · " + triluxWin.label : "TriLux",
+          net: tRet - triluxStake
+        });
+      }
       bankroll += totalReturn;
       syncWallet();
-      var staked = potStake;
+      var staked = potStake + blazingStake + triluxStake;
       hands.forEach(function (h) { staked += h.stake; });
       var net = totalReturn - staked;
       phase = "result";
@@ -1346,24 +1565,53 @@
       phase = "betting";
       hands = []; dealer = []; holeUp = false; active = 0;
       results = []; potStake = 0; freeCoins = 0; chipHist = [];
-      if (repeat && lastBet + lastPotBet <= bankroll) { bet = lastBet; potBet = lastPotBet; }
-      else if (repeat && lastBet <= bankroll) { bet = lastBet; potBet = 0; }
-      else { bet = 0; potBet = 0; }
+      blazingStake = 0; triluxStake = 0; blazingWin = null; triluxWin = null;
+      var all = lastBet + lastPotBet + lastBlazing + lastTrilux;
+      if (repeat && all <= bankroll) {
+        bet = lastBet; potBet = lastPotBet; blazingBet = lastBlazing; triluxBet = lastTrilux;
+      } else if (repeat && lastBet <= bankroll) {
+        bet = lastBet; potBet = 0; blazingBet = 0; triluxBet = 0;
+      } else {
+        bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0;
+      }
       setMessage("Place your bet");
       renderAll();
       Shell.gate(function () { renderAll(); });
     }
-    function enter() {
+    function enter(v) {
       clearTimers();
+      variant = v === "blazing" ? "blazing" : "freebet";
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : 1000;
       bet = 0; potBet = 0; potStake = 0; freeCoins = 0; chipHist = [];
+      blazingBet = 0; triluxBet = 0; blazingStake = 0; triluxStake = 0;
+      blazingWin = null; triluxWin = null;
       hands = []; dealer = []; holeUp = false; active = 0; results = [];
       phase = "betting";
       setMessage("Place your bet");
       renderAll();
       Shell.gate(function () { renderAll(); });
     }
+    // Side-bet pay tables, listed straight from the same numbers settle() uses.
+    (function fillSidePays() {
+      function rows(host, list, color) {
+        host.innerHTML = list.map(function (r) {
+          return '<div style="display:flex;padding:2px 0;font-size:12px">' +
+            '<span style="color:rgba(245,241,232,.85)">' + r[0] + "</span>" +
+            '<span style="flex:1"></span>' +
+            '<span style="font-weight:900;color:' + color + '">' + r[1] + " to 1</span></div>";
+        }).join("");
+      }
+      rows($("pays-blazing"), [
+        ["Suited 777", 1000], ["Colored 777", 250], ["Three 7s", 100],
+        ["Two 7s", 25], ["One 7", 1]
+      ], "#FF7A1A");
+      rows($("pays-trilux"), [
+        ["Suited trips", 100], ["Straight flush", 40], ["Three of a kind", 30],
+        ["Straight", 10], ["Flush", 5]
+      ], "#FF3FD8");
+    })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
+    $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
     return { enter: enter };
   })();
 

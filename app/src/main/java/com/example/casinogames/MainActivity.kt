@@ -10,6 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.example.casinogames.games.baccarat.BaccaratScreen
+import com.example.casinogames.games.blackjack.Blazing777Screen
+import com.example.casinogames.games.blackjack.BlackjackMenuScreen
+import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.FreeBetScreen
 import com.example.casinogames.lobby.GameId
 import com.example.casinogames.lobby.LobbyScreen
@@ -23,55 +26,63 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CasinoGamesTheme {
+                // Screen keys are "<mode>:<place>", mode being c(ampaign) or t(esting).
                 var screen by rememberSaveable { mutableStateOf("menu") }
-                when (screen) {
-                    "campaign" -> {
-                        BackHandler { screen = "menu" }
-                        LobbyScreen(
-                            campaign = true,
-                            onOpenGame = { if (it.available) screen = "campaign:${it.name}" },
-                            onBack = { screen = "menu" },
-                        )
-                    }
-                    "campaign:${GameId.BACCARAT.name}" -> {
-                        BackHandler { screen = "campaign" }
-                        BaccaratScreen(
-                            onBack = { screen = "campaign" },
-                            campaign = true,
-                            onGameOverExit = { screen = "menu" },
-                        )
-                    }
-                    "campaign:${GameId.FREE_BET_BLACKJACK.name}" -> {
-                        BackHandler { screen = "campaign" }
-                        FreeBetScreen(
-                            onBack = { screen = "campaign" },
-                            campaign = true,
-                            onGameOverExit = { screen = "menu" },
-                        )
-                    }
-                    "settings" -> {
+                val mode = screen.substringBefore(':', "")
+                val place = screen.substringAfter(':', screen)
+                val campaign = mode == "c"
+                val lobby = "$mode:lobby"
+
+                when {
+                    place == "settings" -> {
                         BackHandler { screen = "menu" }
                         SettingsScreen(onBack = { screen = "menu" })
                     }
-                    "lobby" -> {
+                    place == "lobby" -> {
                         BackHandler { screen = "menu" }
                         LobbyScreen(
-                            onOpenGame = { if (it.available) screen = it.name },
+                            campaign = campaign,
+                            onOpenGame = { if (it.available) screen = "$mode:${it.name}" },
                             onBack = { screen = "menu" },
                         )
                     }
-                    GameId.BACCARAT.name -> {
-                        BackHandler { screen = "lobby" }
-                        BaccaratScreen(onBack = { screen = "lobby" })
+                    place == GameId.BACCARAT.name -> {
+                        BackHandler { screen = lobby }
+                        BaccaratScreen(
+                            onBack = { screen = lobby },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
                     }
-                    GameId.FREE_BET_BLACKJACK.name -> {
-                        BackHandler { screen = "lobby" }
-                        FreeBetScreen(onBack = { screen = "lobby" })
+                    place == GameId.BLACKJACK.name -> {
+                        BackHandler { screen = lobby }
+                        BlackjackMenuScreen(
+                            onBack = { screen = lobby },
+                            onPick = { screen = "$mode:${it.name}" },
+                        )
+                    }
+                    place == BlackjackVariant.FREE_BET.name -> {
+                        val back = "$mode:${GameId.BLACKJACK.name}"
+                        BackHandler { screen = back }
+                        FreeBetScreen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == BlackjackVariant.BLAZING_777.name -> {
+                        val back = "$mode:${GameId.BLACKJACK.name}"
+                        BackHandler { screen = back }
+                        Blazing777Screen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
                     }
                     else -> MainMenuScreen(
-                        onCampaign = { screen = "campaign" },
-                        onPlayTesting = { screen = "lobby" },
-                        onSettings = { screen = "settings" },
+                        onCampaign = { screen = "c:lobby" },
+                        onPlayTesting = { screen = "t:lobby" },
+                        onSettings = { screen = "t:settings" },
                     )
                 }
             }

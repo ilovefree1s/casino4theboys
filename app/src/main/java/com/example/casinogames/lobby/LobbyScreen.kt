@@ -42,7 +42,8 @@ import com.example.casinogames.ui.common.formatMoney
 
 enum class GameId(val available: Boolean) {
     BACCARAT(true),
-    FREE_BET_BLACKJACK(true),
+    /** Opens the blackjack variants page rather than a table directly. */
+    BLACKJACK(true),
     ULTIMATE_TEXAS_HOLDEM(false),
     ROULETTE(false),
     CRAPS(false),
@@ -120,7 +121,7 @@ fun LobbyScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 GameCard(R.drawable.lobby_card_baccarat, "Baccarat") { onOpenGame(GameId.BACCARAT) }
-                GameCard(R.drawable.lobby_card_blackjack, "Free Bet Blackjack") { onOpenGame(GameId.FREE_BET_BLACKJACK) }
+                GameCard(R.drawable.lobby_card_blackjack, "Blackjack") { onOpenGame(GameId.BLACKJACK) }
                 GameCard(R.drawable.lobby_card_holdem, "Ultimate Texas Hold'em — coming soon", null)
                 GameCard(R.drawable.lobby_card_roulette, "Roulette — coming soon", null)
                 GameCard(R.drawable.lobby_card_craps, "Craps — coming soon", null)
