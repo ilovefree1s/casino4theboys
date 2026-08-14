@@ -151,8 +151,8 @@
   .card .mid { font-size: 20px; text-align: center; }
   .card .br { font-size: 10px; align-self: flex-end; transform: rotate(180deg); }
   .card .back {
-    transform: rotateY(180deg); border: 2px solid var(--trim);
-    background: repeating-linear-gradient(45deg, #401012 0 6px, #521619 6px 12px);
+    transform: rotateY(180deg);
+    background: #0A0507 url("__CARD_BACK__") center/cover no-repeat;
   }
   @keyframes card-enter { from { transform: translateY(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
   .card.enter { animation: card-enter 240ms ease-out; }
@@ -737,7 +737,7 @@
         <div class="cjk outline-1">燒倍烈火 7s</div>
         <div class="cols">
           <div class="col">P &amp; B Have<br>3-Card 7s<br>PAYS 125 to 1</div>
-          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 25 to 1</div>
+          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 60 to 1</div>
         </div>
         <div class="placed"></div>
       </button>
@@ -1740,7 +1740,7 @@
       var p9 = p3 && pT === 9, b9 = b3 && bT === 9;
       if (p9 && b9) pay("heavenly9", 76); else if (p9 || b9) pay("heavenly9", 11);
       var p7 = p3 && pT === 7, b7 = b3 && bT === 7;
-      if (p7 && b7) pay("blazing7s", 126); else if (p7 || b7) pay("blazing7s", 26);
+      if (p7 && b7) pay("blazing7s", 126); else if (p7 || b7) pay("blazing7s", 61);
       if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay("coverAll", 7);
       return out;
     }

@@ -552,7 +552,7 @@ private fun SidePlacards(vm: BaccaratViewModel, winningSpots: Set<BetType>) {
             listOf(Color(0xFFD6402A), Color(0xFFB02415)),
             listOf(
                 listOf("P & B Have", "3-Card 7s", "PAYS 125 to 1"),
-                listOf("P or B Has", "3-Card 7s", "PAYS 25 to 1"),
+                listOf("P or B Has", "3-Card 7s", "PAYS 60 to 1"),
             ),
             textDark = false,
         ),

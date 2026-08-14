@@ -144,7 +144,7 @@ class BaccaratEngineTest {
                 BetType.BANKER to 39.0,
                 BetType.PLAYER_PAIR to 120.0,
                 BetType.FORTUNE_7 to 410.0,
-                BetType.BLAZING_7S to 260.0,
+                BetType.BLAZING_7S to 610.0,
             ),
             breakdown,
         )
@@ -189,6 +189,6 @@ class BaccaratEngineTest {
             Outcome.BANKER,
             natural = true,
         )
-        assertEquals(260.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
+        assertEquals(610.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
     }
 }

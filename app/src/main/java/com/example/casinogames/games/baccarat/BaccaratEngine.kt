@@ -32,7 +32,7 @@ data class BaccaratHand(
  * Pure punto banco rules and payouts. Payouts mirror the felt:
  * Player 1:1 · Banker 1:1 less 5% commission · Tie 8:1 (P/B push) · Pairs 11:1
  * Fortune 7 40:1 · Golden 8 25:1 · Heavenly 9 75:1 both / 10:1 either ·
- * Blazing 7s 125:1 both / 25:1 either.
+ * Blazing 7s 125:1 both / 60:1 either.
  */
 object BaccaratEngine {
 
@@ -117,7 +117,7 @@ object BaccaratEngine {
         val p7 = p3 && pT == 7
         val b7 = b3 && bT == 7
         if (p7 && b7) pay(BetType.BLAZING_7S, 126.0)
-        else if (p7 || b7) pay(BetType.BLAZING_7S, 26.0)
+        else if (p7 || b7) pay(BetType.BLAZING_7S, 61.0)
 
         // Cover All: 6 to 1 when any of the four fortune events occurs.
         if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay(BetType.COVER_ALL, 7.0)
