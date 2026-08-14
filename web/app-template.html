@@ -340,12 +340,18 @@
   .bj-sidespots.b7 { justify-content: space-between; gap: 0; }
   .b7-trilux { width: 118px; padding: 0; border-radius: 10px; position: relative; }
   .b7-trilux img { width: 100%; display: block; }
-  .b7-trilux .placed { width: 44px; height: 44px; top: auto; bottom: -14px; transform: translate(-50%, 0); }
-  .b7-balance {
-    width: 118px; flex: none; display: flex; justify-content: center;
+  /* The logo ring is where the TriLux chip goes; the placard is just its pay table. */
+  .b7-luxspot { width: 118px; flex: none; display: flex; flex-direction: column; align-items: center; }
+  .b7-luxring {
+    position: relative; width: 84px; height: 84px; border-radius: 50%;
+    border: 2px solid rgba(255,42,42,.9); padding: 4px;
   }
   /* Clipped round so the art's square backing never shows on the felt. */
-  .b7-balance img { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; }
+  .b7-luxring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .b7-luxring .placed { width: 46px; height: 46px; }
+  .b7-luxspot .cap {
+    color: #FF2A2A; font-weight: 900; font-size: 11px; letter-spacing: .14em; margin-top: 3px;
+  }
   /* The watermark burns red with this felt instead of purple. */
   .bj-bg.b7 { opacity: .4; filter: hue-rotate(85deg) saturate(1.25); }
 
@@ -1241,9 +1247,12 @@
       var row = document.createElement("div");
       row.className = "bj-sidespots b7";
       row.innerHTML =
-        '<button class="b7-trilux spot" id="bj-luxspot"><img src="' + BJ_ART.b7Trilux + '" alt="TriLux side bet"><div class="placed"></div></button>' +
+        '<button class="b7-trilux" id="bj-b7pays"><img src="' + BJ_ART.b7Trilux + '" alt="TriLux pay table"></button>' +
         '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.b7Bet + '" alt="Bet"><div class="placed"></div></button>' +
-        '<span class="b7-balance"><img src="' + BOYS_IMG + '" alt="4 The Boys"></span>';
+        '<div class="b7-luxspot"><button class="b7-luxring spot" id="bj-luxspot">' +
+        '<img src="' + BOYS_IMG + '" alt="TriLux side bet"><div class="placed"></div></button>' +
+        '<span class="cap">TRILUX</span></div>';
+      on(row, "#bj-b7pays", showSidePays);
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());

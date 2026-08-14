@@ -132,7 +132,7 @@ fun Blazing777Screen(
                     Spacer(Modifier.weight(1f))
                 }
             }
-            BottomRow(vm)
+            BottomRow(vm, onShowPayTable = { showPayTable = true })
             Spacer(Modifier.height(10.dp))
             if (vm.phase == BjPhase.BETTING) {
                 ChipRack(vm)
@@ -483,27 +483,27 @@ private fun ResultPill(r: BjResult) {
     }
 }
 
-/** TriLux placard doubles as its betting spot, with the BET circle alongside. */
+/**
+ * Placard on the left is the pay table; the logo ring on the right is where
+ * the TriLux chip actually goes, with BET holding the middle.
+ */
 @Composable
-private fun BottomRow(vm: Blazing777ViewModel) {
+private fun BottomRow(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
     val betting = vm.phase == BjPhase.BETTING
     val triluxAmount = if (betting) vm.triluxBet else vm.triluxStake
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.BottomCenter) {
-            Image(
-                painter = painterResource(R.drawable.b7_trilux),
-                contentDescription = "TriLux side bet",
-                modifier = Modifier
-                    .width(118.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable(enabled = betting) { vm.addTriluxChip() },
-                contentScale = ContentScale.FillWidth,
-            )
-            PlacedBetChip(triluxAmount, size = 44.dp, modifier = Modifier.offset(y = 14.dp))
-        }
+        Image(
+            painter = painterResource(R.drawable.b7_trilux),
+            contentDescription = "TriLux pay table",
+            modifier = Modifier
+                .width(118.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .clickable(onClick = onShowPayTable),
+            contentScale = ContentScale.FillWidth,
+        )
         Spacer(Modifier.weight(1f))
         Box(contentAlignment = Alignment.Center) {
             Image(
@@ -521,14 +521,37 @@ private fun BottomRow(vm: Blazing777ViewModel) {
             )
         }
         Spacer(Modifier.weight(1f))
-        // Balances the placard so the BET circle stays centred.
-        Box(Modifier.width(118.dp), contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.fourtheboys_spot),
-                contentDescription = "4 The Boys",
-                // Clipped round so the art's square backing never shows on the felt.
-                modifier = Modifier.size(76.dp).clip(CircleShape),
-                contentScale = ContentScale.Crop,
+        Column(
+            Modifier.width(118.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .size(84.dp)
+                        .border(2.dp, RedNeon.copy(alpha = 0.9f), CircleShape)
+                        .padding(4.dp)
+                        .clip(CircleShape)
+                        .clickable(enabled = betting) { vm.addTriluxChip() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.fourtheboys_spot),
+                        contentDescription = "TriLux side bet",
+                        // Clipped round so the art's square backing never shows.
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                PlacedBetChip(triluxAmount, size = 46.dp)
+            }
+            Spacer(Modifier.height(3.dp))
+            Text(
+                "TRILUX",
+                color = RedNeon,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.14.em,
             )
         }
     }
