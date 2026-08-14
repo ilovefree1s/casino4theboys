@@ -808,6 +808,8 @@
 
   // ---------- wallet & shell ----------
   var CAMPAIGN_START = 5000, CAMPAIGN_GOAL = 1000000;
+  /** Free-play sandbox stake, matching the campaign's starting purse. */
+  var TESTING_BANKROLL = 5000;
   var store = (function () {
     var mem = {};
     function get(k, dflt) {
@@ -1239,7 +1241,9 @@
           var buy = document.createElement("button");
           buy.className = "btn solid";
           buy.textContent = "Buy back in";
-          buy.addEventListener("click", function () { bankroll = 1000; renderAll(); setMessage("Place your bet"); });
+          buy.addEventListener("click", function () {
+            bankroll = TESTING_BANKROLL; renderAll(); setMessage("Place your bet");
+          });
           a.appendChild(buy);
         }
       } else if (phase === "player") {
@@ -1581,7 +1585,7 @@
     function enter(v) {
       clearTimers();
       variant = v === "blazing" ? "blazing" : "freebet";
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : 1000;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
       bet = 0; potBet = 0; potStake = 0; freeCoins = 0; chipHist = [];
       blazingBet = 0; triluxBet = 0; blazingStake = 0; triluxStake = 0;
       blazingWin = null; triluxWin = null;

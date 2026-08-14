@@ -18,7 +18,7 @@ import kotlinx.coroutines.launch
 
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
-private const val STARTING_BANKROLL = 1000.0
+private const val STARTING_BANKROLL = 5000.0
 private const val CAMPAIGN_START = 5000.0
 private const val CAMPAIGN_GOAL = 1_000_000.0
 

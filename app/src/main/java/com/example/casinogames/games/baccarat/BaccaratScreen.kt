@@ -162,7 +162,7 @@ fun BaccaratScreen(
             ActionButtons(vm)
             if (!vm.campaign && vm.bankroll < 25 && vm.totalStaked == 0 && vm.phase == Phase.BETTING) {
                 Spacer(Modifier.height(16.dp))
-                PillButton("Buy back in (1,000)", solid = true, onClick = vm::buyBackIn)
+                PillButton("Buy back in (5,000)", solid = true, onClick = vm::buyBackIn)
             }
             }
         }

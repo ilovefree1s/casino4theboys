@@ -32,7 +32,7 @@ data class BjResult(val label: String, val net: Double)
 
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
-private const val STARTING_BANKROLL = 1000.0
+private const val STARTING_BANKROLL = 5000.0
 private const val CAMPAIGN_START = 5000.0
 private const val CAMPAIGN_GOAL = 1_000_000.0
 
@@ -272,7 +272,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
             if (phase != BjPhase.PLAYER_TURN || h.done || h.cards.size != 2) return false
             // Free double on hard 9-11; paid double only when holding an ace.
             if (FreeBetRules.canFreeDouble(h.cards)) return true
-            return h.cards.any { it.rank == Rank.ACE } && !h.isFree && bankroll >= h.betUnit
+            return FreeBetRules.canPaidDouble(h.cards) && !h.isFree && bankroll >= h.betUnit
         }
     val doubleIsFree: Boolean
         get() = current?.let { FreeBetRules.canFreeDouble(it.cards) } == true

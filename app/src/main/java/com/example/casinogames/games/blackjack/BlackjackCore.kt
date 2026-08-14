@@ -45,6 +45,13 @@ object FreeBetRules {
         return BlackjackCore.total(cards) in 9..11
     }
 
+    /**
+     * Doubling with your own money is limited to hands holding an ace — every
+     * other paid double was dropped from this table.
+     */
+    fun canPaidDouble(cards: List<Card>): Boolean =
+        cards.size == 2 && cards.any { it.rank == Rank.ACE }
+
     /** Any equal-value pair may split; only 10-value pairs cost real money. */
     fun canSplit(cards: List<Card>): Boolean =
         cards.size == 2 &&
