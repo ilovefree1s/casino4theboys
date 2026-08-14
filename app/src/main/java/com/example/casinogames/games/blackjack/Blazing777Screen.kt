@@ -89,12 +89,17 @@ fun Blazing777Screen(
             TopBar(onBack, vm)
             Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x26FFFFFF)))
             Spacer(Modifier.height(6.dp))
+            // The pay tables live behind this line now that the spots carry no labels.
             Text(
                 if (vm.campaign) "CAMPAIGN · GOAL \$${formatMoney(vm.goal)}"
                 else "BLAZING 777s · 8 DECKS · ${vm.shoeCount} CARDS IN SHOE",
                 fontSize = 10.sp,
                 letterSpacing = 0.24.em,
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .clickable { showPayTable = true }
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
             )
             Spacer(Modifier.weight(1f))
             DealerArea(vm)
@@ -254,7 +259,8 @@ private fun MessageLine(vm: Blazing777ViewModel) {
 @Composable
 private fun SidePills(vm: Blazing777ViewModel) {
     val live = vm.phase != BjPhase.BETTING
-    val blazing = vm.blazingWin?.takeIf { live && vm.blazingStake > 0 }
+    // Blazing 7s is on the house, so it announces itself whether or not TriLux is up.
+    val blazing = vm.blazingWin?.takeIf { live }
     val trilux = vm.triluxWin?.takeIf { live && vm.triluxStake > 0 }
     if (blazing == null && trilux == null) return
     androidx.compose.foundation.layout.FlowRow(
@@ -262,7 +268,8 @@ private fun SidePills(vm: Blazing777ViewModel) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.padding(top = 6.dp).widthIn(max = 400.dp),
     ) {
-        blazing?.let { HitPill("${it.label} · ${it.payout}:1", BlazeOrange) }
+        // The free bet quotes no odds — it isn't paying yet.
+        blazing?.let { HitPill(it.label, BlazeOrange) }
         trilux?.let { HitPill("${it.label} · ${it.payout}:1", NeonMagenta) }
     }
 }
@@ -414,17 +421,9 @@ private fun BetSpots(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
     val betting = vm.phase == BjPhase.BETTING
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.spacedBy(28.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SideSpot(
-            label = "BLAZING\n7s",
-            color = BlazeOrange,
-            amount = if (betting) vm.blazingBet else vm.blazingStake,
-            enabled = betting,
-            onClick = vm::addBlazingChip,
-            onLongClick = onShowPayTable,
-        )
         Box(contentAlignment = Alignment.Center) {
             Image(
                 painter = painterResource(R.drawable.fb_spot_bet),
@@ -444,7 +443,6 @@ private fun BetSpots(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
             amount = if (betting) vm.triluxBet else vm.triluxStake,
             enabled = betting,
             onClick = vm::addTriluxChip,
-            onLongClick = onShowPayTable,
         )
     }
 }
@@ -456,42 +454,28 @@ private fun SideSpot(
     amount: Int,
     enabled: Boolean,
     onClick: () -> Unit,
-    onLongClick: () -> Unit,
 ) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center) {
-            Box(
-                Modifier
-                    .size(74.dp)
-                    .background(Color(0x66000000), CircleShape)
-                    .border(2.dp, color.copy(alpha = 0.85f), CircleShape)
-                    .clip(CircleShape)
-                    .clickable(enabled = enabled, onClick = onClick),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    label,
-                    color = color,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
-                    lineHeight = 12.sp,
-                    letterSpacing = 0.06.em,
-                    textAlign = TextAlign.Center,
-                )
-            }
-            PlacedBetChip(amount, size = 44.dp)
+    Box(contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .size(74.dp)
+                .background(Color(0x66000000), CircleShape)
+                .border(2.dp, color.copy(alpha = 0.85f), CircleShape)
+                .clip(CircleShape)
+                .clickable(enabled = enabled, onClick = onClick),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                label,
+                color = color,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                lineHeight = 12.sp,
+                letterSpacing = 0.06.em,
+                textAlign = TextAlign.Center,
+            )
         }
-        Spacer(Modifier.height(3.dp))
-        Text(
-            "pays",
-            fontSize = 8.sp,
-            color = color.copy(alpha = 0.75f),
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .clickable(onClick = onLongClick)
-                .padding(horizontal = 8.dp, vertical = 2.dp),
-        )
+        PlacedBetChip(amount, size = 44.dp)
     }
 }
 
@@ -602,7 +586,7 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
                 .padding(18.dp),
         ) {
             PayList(
-                "BLAZING 7s",
+                "BLAZING 7s · FREE",
                 BlazeOrange,
                 Blazing777Rules.BlazingWin.entries.map { it.label to it.payout },
             )
@@ -614,7 +598,8 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
             )
             Spacer(Modifier.height(14.dp))
             Text(
-                "Both side bets use your two cards plus the dealer's up card.",
+                "Both read your two cards plus the dealer's up card. " +
+                    "Blazing 7s rides free and pays nothing yet.",
                 fontSize = 10.sp,
                 color = P.OffWhite.copy(alpha = 0.6f),
             )

@@ -593,12 +593,13 @@
   <div class="bj-modal" id="bj-ptmodal"><img src="__PAYTABLE__" alt="4 The Boys pay table"></div>
   <div class="bj-modal" id="bj-sidepays">
     <div style="max-width:340px;width:82vw;background:rgba(14,10,11,.96);border:1.5px solid rgba(255,63,216,.6);border-radius:14px;padding:18px">
-      <div style="color:#FF7A1A;font-weight:900;font-size:14px;letter-spacing:.12em">BLAZING 7s</div>
+      <div style="color:#FF7A1A;font-weight:900;font-size:14px;letter-spacing:.12em">BLAZING 7s · FREE</div>
       <div style="margin-top:6px" id="pays-blazing"></div>
       <div style="color:#FF3FD8;font-weight:900;font-size:14px;letter-spacing:.12em;margin-top:16px">TRILUX</div>
       <div style="margin-top:6px" id="pays-trilux"></div>
       <div style="margin-top:14px;font-size:10px;color:rgba(245,241,232,.6)">
-        Both side bets use your two cards plus the dealer's up card.
+        Both read your two cards plus the dealer's up card.
+        Blazing 7s rides free and pays nothing yet.
       </div>
     </div>
   </div>
@@ -940,8 +941,7 @@
     var phase = "betting", results = [], timers = [];
     // "freebet" = free doubles/splits + 4 The Boys; "blazing" = classic 3:2 with side bets.
     var variant = "freebet";
-    var blazingBet = 0, triluxBet = 0, blazingStake = 0, triluxStake = 0;
-    var lastBlazing = 0, lastTrilux = 0;
+    var triluxBet = 0, triluxStake = 0, lastTrilux = 0;
     var blazingWin = null, triluxWin = null;
 
     function bjValue(rank) {
@@ -1011,8 +1011,8 @@
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
     function totalAtRisk() {
-      if (phase === "betting") return bet + potBet + blazingBet + triluxBet;
-      var s = potStake + blazingStake + triluxStake;
+      if (phase === "betting") return bet + potBet + triluxBet;
+      var s = potStake + triluxStake;
       hands.forEach(function (h) { s += h.stake; });
       return s;
     }
@@ -1036,6 +1036,9 @@
           " · 8 DECKS · " + shoe.length + " CARDS IN SHOE";
         sub.className = "bj-sub";
       }
+      // The pay tables live behind this line now that the spots carry no labels.
+      sub.onclick = variant === "blazing" ? showSidePays : null;
+      sub.style.cursor = variant === "blazing" ? "pointer" : "";
     }
     function renderDealer() {
       var host = $("bj-dcards");
@@ -1114,14 +1117,16 @@
       p.innerHTML = "";
       // Blazing side bets shout the moment they land, before the hand plays out.
       if (variant === "blazing" && phase !== "betting" && phase !== "result") {
-        [[blazingWin, blazingStake, "#FF7A1A"], [triluxWin, triluxStake, "#FF3FD8"]]
+        // Blazing 7s is on the house — it shouts regardless of the TriLux stake.
+        // The free bet quotes no odds — it isn't paying yet.
+        [[blazingWin, 1, "#FF7A1A", false], [triluxWin, triluxStake, "#FF3FD8", true]]
           .forEach(function (e) {
             if (!e[0] || e[1] <= 0) return;
             var s = document.createElement("span");
             s.className = "bj-hitpill";
             s.style.borderColor = e[2];
             s.style.color = e[2];
-            s.textContent = e[0].label + " · " + e[0].pays + ":1";
+            s.textContent = e[3] ? e[0].label + " · " + e[0].pays + ":1" : e[0].label;
             p.appendChild(s);
           });
         return;
@@ -1176,21 +1181,15 @@
       return spots;
     }
     function blazingSpots() {
+      // Blazing 7s rides free, so only the main bet and TriLux take chips.
       var row = document.createElement("div");
       row.className = "bj-sidespots";
       row.innerHTML =
-        '<div class="bj-side blaze"><button class="bj-side-ring" id="bj-blazespot">BLAZING<br>7s<div class="placed"></div></button>' +
-        '<button class="pays" id="bj-pays1">pays</button></div>' +
         '<button class="bj-betring spot" id="bj-betspot"><img src="' + BJ_ART.spotBet + '" alt="Bet"><div class="placed"></div></button>' +
-        '<div class="bj-side lux"><button class="bj-side-ring" id="bj-luxspot">TRI<br>LUX<div class="placed"></div></button>' +
-        '<button class="pays" id="bj-pays2">pays</button></div>';
+        '<div class="bj-side lux"><button class="bj-side-ring" id="bj-luxspot">TRI<br>LUX<div class="placed"></div></button></div>';
       on(row, "#bj-betspot", function () { addChip("main"); });
-      on(row, "#bj-blazespot", function () { addChip("blazing"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
-      on(row, "#bj-pays1", showSidePays);
-      on(row, "#bj-pays2", showSidePays);
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
-      fillPlaced(row, "#bj-blazespot", phase === "betting" ? blazingBet : blazingStake);
       fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : triluxStake);
       return row;
     }
@@ -1288,13 +1287,12 @@
 
     // ---------- betting ----------
     function chipAmount() {
-      var avail = Math.floor(bankroll - bet - potBet - blazingBet - triluxBet);
+      var avail = Math.floor(bankroll - bet - potBet - triluxBet);
       return Math.min(selectedChip, avail);
     }
     var SPOT_SHOUT = {
       main: "Place your bet",
       pot: "4 The Boys riding",
-      blazing: "Blazing 7s riding",
       trilux: "TriLux riding"
     };
     function addChip(spot) {
@@ -1302,7 +1300,6 @@
       var amount = chipAmount();
       if (amount <= 0) { setMessage("No bankroll left"); return; }
       if (spot === "pot") potBet += amount;
-      else if (spot === "blazing") blazingBet += amount;
       else if (spot === "trilux") triluxBet += amount;
       else bet += amount;
       chipHist.push({ spot: spot, v: amount });
@@ -1313,14 +1310,13 @@
       if (phase !== "betting" || !chipHist.length) return;
       var last = chipHist.pop();
       if (last.spot === "pot") potBet = Math.max(0, potBet - last.v);
-      else if (last.spot === "blazing") blazingBet = Math.max(0, blazingBet - last.v);
       else if (last.spot === "trilux") triluxBet = Math.max(0, triluxBet - last.v);
       else bet = Math.max(0, bet - last.v);
       renderTop(); renderBottom();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0; chipHist = [];
+      bet = 0; potBet = 0; triluxBet = 0; chipHist = [];
       setMessage("Place your bet");
       renderTop(); renderBottom();
     }
@@ -1329,20 +1325,20 @@
     function deal() {
       if (phase !== "betting") return;
       if (bet <= 0) {
-        setMessage(potBet + blazingBet + triluxBet > 0
+        setMessage(potBet + triluxBet > 0
           ? "Side bets ride with a main bet" : "Place a bet first");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
-      bankroll -= bet + potBet + blazingBet + triluxBet;
+      bankroll -= bet + potBet + triluxBet;
       syncWallet();
-      lastBet = bet; lastPotBet = potBet; lastBlazing = blazingBet; lastTrilux = triluxBet;
-      potStake = potBet; blazingStake = blazingBet; triluxStake = triluxBet;
+      lastBet = bet; lastPotBet = potBet; lastTrilux = triluxBet;
+      potStake = potBet; triluxStake = triluxBet;
       blazingWin = null; triluxWin = null;
       chipHist = []; freeCoins = 0;
       hands = [{ cards: [], stake: bet, betUnit: bet, doubled: false, isFree: false, freeDoubled: false, done: false }];
       dealer = []; holeUp = false; active = 0; results = [];
-      bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0;
+      bet = 0; potBet = 0; triluxBet = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -1534,14 +1530,6 @@
           net: potReturn - potStake
         });
       }
-      if (blazingStake > 0) {
-        var bRet = blazingWin ? blazingStake * (blazingWin.pays + 1) : 0;
-        totalReturn += bRet;
-        results.push({
-          label: blazingWin ? "Blazing · " + blazingWin.label : "Blazing 7s",
-          net: bRet - blazingStake
-        });
-      }
       if (triluxStake > 0) {
         var tRet = triluxWin ? triluxStake * (triluxWin.pays + 1) : 0;
         totalReturn += tRet;
@@ -1552,7 +1540,7 @@
       }
       bankroll += totalReturn;
       syncWallet();
-      var staked = potStake + blazingStake + triluxStake;
+      var staked = potStake + triluxStake;
       hands.forEach(function (h) { staked += h.stake; });
       var net = totalReturn - staked;
       phase = "result";
@@ -1569,14 +1557,14 @@
       phase = "betting";
       hands = []; dealer = []; holeUp = false; active = 0;
       results = []; potStake = 0; freeCoins = 0; chipHist = [];
-      blazingStake = 0; triluxStake = 0; blazingWin = null; triluxWin = null;
-      var all = lastBet + lastPotBet + lastBlazing + lastTrilux;
+      triluxStake = 0; blazingWin = null; triluxWin = null;
+      var all = lastBet + lastPotBet + lastTrilux;
       if (repeat && all <= bankroll) {
-        bet = lastBet; potBet = lastPotBet; blazingBet = lastBlazing; triluxBet = lastTrilux;
+        bet = lastBet; potBet = lastPotBet; triluxBet = lastTrilux;
       } else if (repeat && lastBet <= bankroll) {
-        bet = lastBet; potBet = 0; blazingBet = 0; triluxBet = 0;
+        bet = lastBet; potBet = 0; triluxBet = 0;
       } else {
-        bet = 0; potBet = 0; blazingBet = 0; triluxBet = 0;
+        bet = 0; potBet = 0; triluxBet = 0;
       }
       setMessage("Place your bet");
       renderAll();
@@ -1587,7 +1575,7 @@
       variant = v === "blazing" ? "blazing" : "freebet";
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
       bet = 0; potBet = 0; potStake = 0; freeCoins = 0; chipHist = [];
-      blazingBet = 0; triluxBet = 0; blazingStake = 0; triluxStake = 0;
+      triluxBet = 0; triluxStake = 0;
       blazingWin = null; triluxWin = null;
       hands = []; dealer = []; holeUp = false; active = 0; results = [];
       phase = "betting";

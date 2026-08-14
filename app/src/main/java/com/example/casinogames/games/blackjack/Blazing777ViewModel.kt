@@ -23,7 +23,7 @@ private const val CAMPAIGN_START = 5000.0
 private const val CAMPAIGN_GOAL = 1_000_000.0
 
 /** Which spot a chip went on, so Undo can take it back off the right one. */
-private enum class Spot { MAIN, BLAZING, TRILUX }
+private enum class Spot { MAIN, TRILUX }
 
 /**
  * Blazing 777s: classic blackjack (3:2, dealer hits soft 17, doubles and splits
@@ -33,7 +33,6 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     private val prefs = app.getSharedPreferences("campaign", Context.MODE_PRIVATE)
     private val shoe = Shoe(decks = DECKS)
     private var lastBet = 0
-    private var lastBlazing = 0
     private var lastTrilux = 0
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
@@ -42,11 +41,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     var selectedChip by mutableIntStateOf(25)
     var bet by mutableIntStateOf(0)
         private set
-    var blazingBet by mutableIntStateOf(0)
-        private set
     var triluxBet by mutableIntStateOf(0)
-        private set
-    var blazingStake by mutableIntStateOf(0)
         private set
     var triluxStake by mutableIntStateOf(0)
         private set
@@ -65,15 +60,15 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     var shoeCount by mutableIntStateOf(shoe.cardsRemaining)
         private set
 
-    /** Side-bet outcomes, kept for the badges shown on the spots. */
+    /** Blazing 7s rides free for now — spotted and announced, but never staked. */
     var blazingWin by mutableStateOf<Blazing777Rules.BlazingWin?>(null)
         private set
     var triluxWin by mutableStateOf<Blazing777Rules.TriluxWin?>(null)
         private set
 
     val totalAtRisk: Int
-        get() = if (phase == BjPhase.BETTING) bet + blazingBet + triluxBet
-        else playerHands.sumOf { it.stake } + blazingStake + triluxStake
+        get() = if (phase == BjPhase.BETTING) bet + triluxBet
+        else playerHands.sumOf { it.stake } + triluxStake
 
     // ---- campaign ----
 
@@ -97,8 +92,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         playerHands.clear()
         dealerCards.clear()
         chipHistory.clear()
-        bet = 0; blazingBet = 0; triluxBet = 0
-        blazingStake = 0; triluxStake = 0
+        bet = 0; triluxBet = 0; triluxStake = 0
         blazingWin = null; triluxWin = null
         results = emptyList()
         holeRevealed = false
@@ -141,7 +135,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     // ---- betting ----
 
     private fun chipAmount(): Int =
-        minOf(selectedChip, (bankroll - bet - blazingBet - triluxBet).toInt())
+        minOf(selectedChip, (bankroll - bet - triluxBet).toInt())
 
     private fun place(spot: Spot) {
         if (phase != BjPhase.BETTING) return
@@ -152,20 +146,17 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         }
         when (spot) {
             Spot.MAIN -> bet += amount
-            Spot.BLAZING -> blazingBet += amount
             Spot.TRILUX -> triluxBet += amount
         }
         chipHistory.add(spot to amount)
         message = when {
             amount < selectedChip -> "All in!"
-            spot == Spot.BLAZING -> "Blazing 7s riding"
             spot == Spot.TRILUX -> "TriLux riding"
             else -> "Place your bet"
         }
     }
 
     fun addChip() = place(Spot.MAIN)
-    fun addBlazingChip() = place(Spot.BLAZING)
     fun addTriluxChip() = place(Spot.TRILUX)
 
     fun undoChip() {
@@ -173,14 +164,13 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         val last = chipHistory.removeLastOrNull() ?: return
         when (last.first) {
             Spot.MAIN -> bet = (bet - last.second).coerceAtLeast(0)
-            Spot.BLAZING -> blazingBet = (blazingBet - last.second).coerceAtLeast(0)
             Spot.TRILUX -> triluxBet = (triluxBet - last.second).coerceAtLeast(0)
         }
     }
 
     fun clearBet() {
         if (phase != BjPhase.BETTING) return
-        bet = 0; blazingBet = 0; triluxBet = 0
+        bet = 0; triluxBet = 0
         chipHistory.clear()
         message = "Place your bet"
     }
@@ -190,15 +180,13 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     fun deal() {
         if (phase != BjPhase.BETTING) return
         if (bet <= 0) {
-            message = if (blazingBet + triluxBet > 0) "Side bets ride with a main bet"
-            else "Place a bet first"
+            message = if (triluxBet > 0) "TriLux rides with a main bet" else "Place a bet first"
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        bankroll -= bet + blazingBet + triluxBet
+        bankroll -= bet + triluxBet
         persist()
-        lastBet = bet; lastBlazing = blazingBet; lastTrilux = triluxBet
-        blazingStake = blazingBet
+        lastBet = bet; lastTrilux = triluxBet
         triluxStake = triluxBet
         chipHistory.clear()
         blazingWin = null; triluxWin = null
@@ -210,7 +198,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         phase = BjPhase.DEALING
         message = "Dealing…"
         val wager = bet
-        bet = 0; blazingBet = 0; triluxBet = 0
+        bet = 0; triluxBet = 0
 
         viewModelScope.launch {
             playerHands.add(BjHand(emptyList(), stake = wager, betUnit = wager))
@@ -228,7 +216,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
             val threeCards = playerHands[0].cards + dealerCards[0]
             blazingWin = Blazing777Rules.blazing(threeCards)
             triluxWin = Blazing777Rules.trilux(threeCards)
-            if (blazingStake > 0 && blazingWin != null || triluxStake > 0 && triluxWin != null) {
+            if (blazingWin != null || triluxStake > 0 && triluxWin != null) {
                 delay(500)
                 message = sideBetShout()
             }
@@ -262,7 +250,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun sideBetShout(): String {
         val hits = buildList {
-            if (blazingStake > 0) blazingWin?.let { add(it.label) }
+            blazingWin?.let { add(it.label) }
             if (triluxStake > 0) triluxWin?.let { add(it.label) }
         }
         return if (hits.isEmpty()) message else hits.joinToString(" · ") + "!"
@@ -435,12 +423,6 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(label, returned - h.stake))
         }
 
-        if (blazingStake > 0) {
-            val win = blazingWin
-            val ret = if (win != null) blazingStake * (win.payout + 1.0) else 0.0
-            totalReturn += ret
-            out.add(BjResult(win?.let { "Blazing · ${it.label}" } ?: "Blazing 7s", ret - blazingStake))
-        }
         if (triluxStake > 0) {
             val win = triluxWin
             val ret = if (win != null) triluxStake * (win.payout + 1.0) else 0.0
@@ -450,7 +432,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
 
         bankroll += totalReturn
         persist()
-        val staked = playerHands.sumOf { it.stake } + blazingStake + triluxStake
+        val staked = playerHands.sumOf { it.stake } + triluxStake
         val net = totalReturn - staked
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
@@ -471,16 +453,15 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         holeRevealed = false
         activeHand = 0
         results = emptyList()
-        blazingStake = 0; triluxStake = 0
+        triluxStake = 0
         blazingWin = null; triluxWin = null
         chipHistory.clear()
-        val repeatCost = lastBet + lastBlazing + lastTrilux
-        if (repeatBet && repeatCost <= bankroll) {
-            bet = lastBet; blazingBet = lastBlazing; triluxBet = lastTrilux
+        if (repeatBet && lastBet + lastTrilux <= bankroll) {
+            bet = lastBet; triluxBet = lastTrilux
         } else if (repeatBet && lastBet <= bankroll) {
-            bet = lastBet; blazingBet = 0; triluxBet = 0
+            bet = lastBet; triluxBet = 0
         } else {
-            bet = 0; blazingBet = 0; triluxBet = 0
+            bet = 0; triluxBet = 0
         }
         message = "Place your bet"
     }
