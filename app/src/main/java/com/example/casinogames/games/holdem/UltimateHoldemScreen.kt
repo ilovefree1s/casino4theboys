@@ -351,8 +351,6 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                     size = spot,
                     onClick = { vm.addTrips() }.takeIf { betting },
                 )
-                Spacer(Modifier.width(gap))
-                Spacer(Modifier.width(spot))
             }
             FeltPayTable(
                 title = "TRIPS",
@@ -396,8 +394,6 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
-                Spacer(Modifier.width(gap))
-                Spacer(Modifier.width(spot))
             }
             FeltPayTable(
                 title = "PLAY BET",
