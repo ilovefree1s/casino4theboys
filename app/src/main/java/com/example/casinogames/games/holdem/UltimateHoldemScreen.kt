@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -298,8 +299,10 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    val spot = 58.dp
+    val spot = 62.dp
     val gap = 24.dp
+    /** 20px right of centre. */
+    val shift = 7.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -308,7 +311,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
             Row(
-                Modifier.align(Alignment.BottomCenter),
+                Modifier.align(Alignment.BottomCenter).offset(x = shift),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 DiamondSpot(
@@ -325,11 +328,14 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 title = "TRIPS",
                 color = NeonPink,
                 rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
-                width = gutter - 8.dp,
+                width = gutter - 6.dp,
                 modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 12.dp),
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(
+            Modifier.offset(x = shift),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
             CircleSpot(
                 "ANTE", NeonPurple,
                 amount = if (betting) vm.ante else vm.anteStake,
@@ -356,7 +362,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
             Row(
-                Modifier.align(Alignment.TopCenter),
+                Modifier.align(Alignment.TopCenter).offset(x = shift),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
@@ -372,14 +378,14 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                     "On the River" to "1x",
                 ),
                 width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.BottomStart),
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 7.dp),
             )
             FeltPayTable(
                 title = "BLIND",
                 color = NeonPurple,
                 rows = BlindPay.entries.map { it.label to blindOdds(it) } +
                     ("Other Hands" to "Push"),
-                width = gutter - 8.dp,
+                width = gutter - 6.dp,
                 modifier = Modifier.align(Alignment.BottomEnd),
             )
         }
