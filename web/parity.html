@@ -1,0 +1,126 @@
+<!doctype html>
+<title>Hold'em parity · web engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { background: #0b0d0b; color: #F5F1E8; font: 13px "Segoe UI", system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 16px; letter-spacing: .1em; color: #90FF3D; margin: 0 0 4px; }
+  .sub { color: rgba(245,241,232,.6); margin-bottom: 16px; }
+  #tally { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .ok { color: #90FF3D; }
+  .bad { color: #FF4D4D; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(245,241,232,.12); vertical-align: top; }
+  th { color: rgba(245,241,232,.55); font-weight: 600; font-size: 11px; letter-spacing: .08em; }
+  td.hand { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .why { color: #FF9C8A; font-size: 12px; }
+  iframe { display: none; }
+</style>
+<h1>HOLD'EM PARITY · WEB ENGINE</h1>
+<div class="sub">
+  Runs <code>holdem-parity.txt</code> — the same fixture HoldemParityTest.kt runs against Compose —
+  through <code>window.UTH</code> inside the shipped app.html.
+</div>
+<div id="tally">Loading…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody></tbody></table>
+<iframe id="app" src="app.html"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  var SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
+  var RED = { h: 1, d: 1 };
+
+  function cards(spec) {
+    return spec.trim().split(/\s+/).map(function (token) {
+      var r = token[0] === "T" ? "10" : token[0];
+      var s = token[1];
+      return { rank: r, suit: SUIT[s], red: !!RED[s] };
+    });
+  }
+
+  function parse(text) {
+    return text.split("\n")
+      .map(function (l) { return l.split("#")[0].trim(); })
+      .filter(function (l) { return l.length; })
+      .map(function (line) {
+        var c = line.split("|").map(function (x) { return x.trim(); });
+        var stakes = c[3].split(/\s+/);
+        var want = c[4].split(/\s+/);
+        return {
+          line: line,
+          player: cards(c[0]), dealer: cards(c[1]), board: cards(c[2]),
+          ante: +stakes[0], blind: +stakes[1], play: +stakes[2], trips: +stakes[3],
+          folded: stakes[4] === "fold",
+          outcome: want[0], qualified: want[1] === "q",
+          anteReturn: +want[2], blindReturn: +want[3],
+          playReturn: +want[4], tripsReturn: +want[5],
+          playerHand: c[5], dealerHand: c[6]
+        };
+      });
+  }
+
+  function check(UTH, c) {
+    var s = UTH.settle(c.player, c.dealer, c.board, c.ante, c.blind, c.play, c.trips, c.folded);
+    var bad = [];
+    function eq(what, got, want) {
+      if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
+    }
+    eq("outcome", s.outcome, c.outcome);
+    eq("dealer opened", s.qualified, c.qualified);
+    eq("ante", s.ante, c.anteReturn);
+    eq("blind", s.blind, c.blindReturn);
+    eq("play", s.play, c.playReturn);
+    eq("trips", s.trips, c.tripsReturn);
+    eq("player hand", s.player.label, c.playerHand);
+    eq("dealer hand", s.dealer.label, c.dealerHand);
+    return bad;
+  }
+
+  function run(UTH, cases) {
+    var body = document.querySelector("#rows tbody");
+    var failed = 0;
+    cases.forEach(function (c) {
+      var bad = check(UTH, c);
+      if (bad.length) failed++;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="hand">' + c.line.split("|").slice(0, 4).join(" | ") + "</td>" +
+        '<td class="' + (bad.length ? "bad" : "ok") + '">' +
+        (bad.length ? '<span class="why">' + bad.join("<br>") + "</span>" : "match") +
+        "</td>";
+      body.appendChild(tr);
+    });
+    var tally = document.getElementById("tally");
+    tally.className = failed ? "bad" : "ok";
+    tally.textContent = failed
+      ? failed + " of " + cases.length + " cases disagree with the Compose engine"
+      : "All " + cases.length + " cases match the Compose engine";
+    // So a runner can read the verdict without scraping the table.
+    window.PARITY = { total: cases.length, failed: failed };
+  }
+
+  function fail(msg) {
+    var tally = document.getElementById("tally");
+    tally.className = "bad";
+    tally.textContent = msg;
+    window.PARITY = { total: 0, failed: -1, error: msg };
+  }
+
+  var frame = document.getElementById("app");
+  var text = null, ready = false;
+  function start() {
+    if (!ready || text === null) return;
+    var UTH = frame.contentWindow && frame.contentWindow.UTH;
+    if (!UTH) { fail("app.html did not expose window.UTH — is the build current?"); return; }
+    run(UTH, parse(text));
+  }
+  frame.addEventListener("load", function () { ready = true; start(); });
+  fetch("holdem-parity.txt")
+    .then(function (r) {
+      if (!r.ok) throw new Error("holdem-parity.txt: HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (t) { text = t; start(); })
+    .catch(function (e) { fail(String(e)); });
+})();
+</script>
