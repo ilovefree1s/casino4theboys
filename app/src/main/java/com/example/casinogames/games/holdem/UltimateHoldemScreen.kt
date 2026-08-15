@@ -123,21 +123,21 @@ fun UltimateHoldemScreen(
         ) {
             TopBar(vm, onBack)
             DealerRow(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(7.dp))
             TableDivider()
-            Spacer(Modifier.height(17.dp))
+            Spacer(Modifier.height(11.dp))
             BoardRow(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(7.dp))
             TableDivider()
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(14.dp))
             PlayerRow(vm)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(5.dp))
             MessageLine(vm)
             Spacer(Modifier.weight(1f))
             BetSpots(vm)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             if (vm.phase == UthPhase.BETTING) ChipRail(vm)
-            Spacer(Modifier.height(8.dp))
+            Spacer(Modifier.height(6.dp))
             Actions(vm)
         }
 
@@ -368,12 +368,12 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    val spot = 62.dp
-    val gap = 24.dp
+    val spot = 52.dp
+    val gap = 18.dp
     val shift = 0.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(5.dp),
     ) {
         // The Trips pays sit beside the diamond, resting on the Ante row below.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -465,7 +465,7 @@ private fun FeltPayTable(
     rows: List<Pair<String, String>>,
     width: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
-    fontSize: androidx.compose.ui.unit.TextUnit = 10.sp,
+    fontSize: androidx.compose.ui.unit.TextUnit = 9.sp,
 ) {
     Column(
         modifier.width(width),
