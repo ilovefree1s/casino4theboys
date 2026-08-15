@@ -300,7 +300,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
     val spot = 66.dp
     val gap = 34.dp
-    val placard = 134.dp
+    val placard = 168.dp
     // Every row carries the placard's width on the left, so Trips, Ante and Play
     // stay stacked in one column with the placard hanging off the side.
     val lead = placard + 8.dp
@@ -357,24 +357,20 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
 @Composable
 private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp) {
     Column(
-        Modifier
-            .width(width)
-            .background(Color(0xB3060409), RoundedCornerShape(6.dp))
-            .border(1.dp, FeltGreen.copy(alpha = 0.65f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 7.dp, vertical = 5.dp),
+        Modifier.width(width),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
             Text(
                 "PLAY BET",
-                color = FeltGreen, fontSize = 9.sp,
+                color = FeltGreen, fontSize = 13.sp,
                 fontWeight = FontWeight.Black, letterSpacing = 0.1.em,
                 modifier = Modifier.padding(horizontal = 5.dp),
             )
             Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
         }
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(4.dp))
         PlayBetRow("Before the Flop", "3x or 4x")
         PlayBetRow("After the Flop", "2x")
         PlayBetRow("On the River", "1x")
@@ -384,10 +380,10 @@ private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp) {
 @Composable
 private fun PlayBetRow(label: String, value: String) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = P.OffWhite.copy(alpha = 0.82f), fontSize = 8.sp)
+        Text(label, color = P.OffWhite.copy(alpha = 0.88f), fontSize = 11.sp)
         Box(
             Modifier
                 .weight(1f)
@@ -405,7 +401,7 @@ private fun PlayBetRow(label: String, value: String) {
                     )
                 }
         )
-        Text(value, color = FeltGreen, fontSize = 8.sp, fontWeight = FontWeight.Black)
+        Text(value, color = FeltGreen, fontSize = 11.sp, fontWeight = FontWeight.Black)
     }
 }
 
