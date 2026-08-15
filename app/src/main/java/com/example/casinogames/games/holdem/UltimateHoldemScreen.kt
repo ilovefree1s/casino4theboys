@@ -98,26 +98,25 @@ fun UltimateHoldemScreen(
                 color = NeonPurple.copy(alpha = 0.85f),
                 modifier = Modifier
                     .clickable { showPays = true }
-                    .padding(vertical = 8.dp),
+                    .padding(vertical = 5.dp),
             )
-            Spacer(Modifier.height(4.dp))
             DealerRow(vm)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             TableDivider()
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             BoardRow(vm)
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(10.dp))
             TableDivider()
-            Spacer(Modifier.height(26.dp))
+            Spacer(Modifier.height(22.dp))
             PlayerRow(vm)
             Spacer(Modifier.height(8.dp))
             MessageLine(vm)
             ResultRows(vm)
             Spacer(Modifier.weight(1f))
             BetSpots(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             if (vm.phase == UthPhase.BETTING) ChipRail(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(8.dp))
             Actions(vm)
         }
 
@@ -303,39 +302,57 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     val gap = 24.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            DiamondSpot(
-                label = "TRIPS",
-                color = NeonPink,
-                amount = if (betting) vm.trips else vm.tripsStake,
-                size = spot,
-                onClick = { vm.addTrips() }.takeIf { betting },
-            )
-            Spacer(Modifier.width(gap))
-            Spacer(Modifier.width(spot))
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            CircleSpot(
-                "ANTE", NeonPurple,
-                amount = if (betting) vm.ante else vm.anteStake,
-                size = spot,
-                onClick = { vm.addAnte() }.takeIf { betting },
-            )
-            Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
-                Text(
-                    "=",
-                    color = NeonPurple.copy(alpha = 0.85f),
-                    fontSize = 22.sp, fontWeight = FontWeight.Black,
-                )
+        // The Trips pays stand beside the diamond, running down past the Ante row
+        // so the table costs no height of its own.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val gutter = (maxWidth - (spot * 2 + gap)) / 2
+            Column(
+                Modifier.align(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    DiamondSpot(
+                        label = "TRIPS",
+                        color = NeonPink,
+                        amount = if (betting) vm.trips else vm.tripsStake,
+                        size = spot,
+                        onClick = { vm.addTrips() }.takeIf { betting },
+                    )
+                    Spacer(Modifier.width(gap))
+                    Spacer(Modifier.width(spot))
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircleSpot(
+                        "ANTE", NeonPurple,
+                        amount = if (betting) vm.ante else vm.anteStake,
+                        size = spot,
+                        onClick = { vm.addAnte() }.takeIf { betting },
+                    )
+                    Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
+                        Text(
+                            "=",
+                            color = NeonPurple.copy(alpha = 0.85f),
+                            fontSize = 22.sp, fontWeight = FontWeight.Black,
+                        )
+                    }
+                    // The blind always matches the ante, so it takes no chips itself.
+                    CircleSpot(
+                        "BLIND", NeonPurple,
+                        amount = if (betting) vm.ante else vm.blindStake,
+                        size = spot,
+                        onClick = null,
+                    )
+                }
             }
-            // The blind always matches the ante, so it takes no chips of its own.
-            CircleSpot(
-                "BLIND", NeonPurple,
-                amount = if (betting) vm.ante else vm.blindStake,
-                size = spot,
-                onClick = null,
+            FeltPayTable(
+                title = "TRIPS",
+                color = NeonPink,
+                rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
+                width = gutter - 8.dp,
+                modifier = Modifier.align(Alignment.CenterEnd),
             )
         }
         // The spots stay centred on screen; the ladder takes whatever room is
@@ -350,7 +367,14 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 Spacer(Modifier.width(gap))
                 Spacer(Modifier.width(spot))
             }
-            PlayBetPlacard(
+            FeltPayTable(
+                title = "PLAY BET",
+                color = FeltGreen,
+                rows = listOf(
+                    "Before the Flop" to "3x or 4x",
+                    "After the Flop" to "2x",
+                    "On the River" to "1x",
+                ),
                 width = gutter - 8.dp,
                 modifier = Modifier.align(Alignment.CenterStart),
             )
@@ -358,34 +382,38 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     }
 }
 
-/** The Play bet's shrinking ladder, printed on the felt beside its spot. */
+/** A pay table printed straight onto the felt, ruled heading and dotted leaders. */
 @Composable
-private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
+private fun FeltPayTable(
+    title: String,
+    color: Color,
+    rows: List<Pair<String, String>>,
+    width: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier.width(width),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
+            Box(Modifier.weight(1f).height(1.dp).background(color.copy(alpha = 0.5f)))
             Text(
-                "PLAY BET",
-                color = FeltGreen, fontSize = 12.sp,
+                title,
+                color = color, fontSize = 12.sp,
                 fontWeight = FontWeight.Black, letterSpacing = 0.08.em,
                 modifier = Modifier.padding(horizontal = 4.dp),
             )
-            Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
+            Box(Modifier.weight(1f).height(1.dp).background(color.copy(alpha = 0.5f)))
         }
-        Spacer(Modifier.height(4.dp))
-        PlayBetRow("Before the Flop", "3x or 4x")
-        PlayBetRow("After the Flop", "2x")
-        PlayBetRow("On the River", "1x")
+        Spacer(Modifier.height(2.dp))
+        rows.forEach { (label, value) -> FeltPayRow(label, value, color) }
     }
 }
 
 @Composable
-private fun PlayBetRow(label: String, value: String) {
+private fun FeltPayRow(label: String, value: String, color: Color) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        Modifier.fillMaxWidth().padding(vertical = 1.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(label, color = P.OffWhite.copy(alpha = 0.88f), fontSize = 10.sp, maxLines = 1)
@@ -408,7 +436,7 @@ private fun PlayBetRow(label: String, value: String) {
         )
         Text(
             value,
-            color = FeltGreen, fontSize = 10.sp,
+            color = color, fontSize = 10.sp,
             fontWeight = FontWeight.Black, maxLines = 1,
         )
     }
