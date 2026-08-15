@@ -1198,7 +1198,7 @@
       bestHand.label = CAT[bestHand.cat];
       return bestHand;
     }
-    var BLIND = [[9,500],[8,50],[7,10],[6,3],[5,3],[4,1]];
+    var BLIND = [[9,500],[8,50],[7,10],[6,5],[5,3],[4,1]];
     var TRIPS = [[9,200],[8,100],[7,50],[6,20],[5,10],[4,4],[3,2]];
     function payFor(table, cat) {
       for (var i = 0; i < table.length; i++) if (table[i][0] === cat) return table[i][1];
@@ -2290,9 +2290,11 @@
       var s = UTH.settle(player, dealer, board,
         anteStake, blindStake, playStake, tripsStake, folded);
       settlement = s;
-      // Only a decided hand has a winner worth pointing at.
+      // A tie can still use a card from each hand — A-2 against A-3 both play
+      // their ace — so light whatever either side actually used.
       winners = s.outcome === "win" ? s.player.cards
-        : s.outcome === "push" ? [] : s.dealer.cards;
+        : s.outcome === "push" ? s.player.cards.concat(s.dealer.cards)
+        : s.dealer.cards;
 
       results = [{ label: "Ante", net: s.ante - anteStake }];
       results.push({

@@ -328,13 +328,17 @@ private fun Label(text: String, color: Color, badge: String?) {
 
 @Composable
 private fun MessageLine(vm: UltimateHoldemViewModel) {
-    val won = vm.phase == UthPhase.RESULT && vm.results.sumOf { it.net } > 0
+    val settled = vm.phase == UthPhase.RESULT
+    val net = if (settled) vm.results.sumOf { it.net } else 0.0
+    val won = settled && net > 0
+    val lost = settled && net < 0
     Text(
         vm.message,
-        fontSize = 15.sp,
+        fontSize = if (lost) 18.sp else 15.sp,
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Medium,
-        color = if (won) FeltGreen else P.OffWhite.copy(alpha = 0.92f),
+        color = if (won) FeltGreen else if (lost) LossRed
+        else P.OffWhite.copy(alpha = 0.92f),
         textAlign = TextAlign.Center,
     )
 }

@@ -6,6 +6,13 @@
       "runtimeExecutable": "node",
       "runtimeArgs": ["C:/Users/lifed/AppData/Local/Temp/claude/C--casinogames/243a2b16-2515-4080-8bf8-769679d6b9cd/scratchpad/server.js"],
       "port": 8123
+    },
+    {
+      "name": "web-preview",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:/Users/lifed/AppData/Local/Temp/claude/C--casinogames/854a84f0-9d22-447f-9953-5d3472c7b633/scratchpad/server.js"],
+      "port": 8124,
+      "autoPort": true
     }
   ]
 }
