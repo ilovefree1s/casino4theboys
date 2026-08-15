@@ -304,55 +304,51 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
-        // The Trips pays stand beside the diamond, running down past the Ante row
-        // so the table costs no height of its own.
+        // The Trips pays sit beside the diamond, resting on the Ante row below.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
-            Column(
-                Modifier.align(Alignment.Center),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+            Row(
+                Modifier.align(Alignment.BottomCenter),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    DiamondSpot(
-                        label = "TRIPS",
-                        color = NeonPink,
-                        amount = if (betting) vm.trips else vm.tripsStake,
-                        size = spot,
-                        onClick = { vm.addTrips() }.takeIf { betting },
-                    )
-                    Spacer(Modifier.width(gap))
-                    Spacer(Modifier.width(spot))
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    CircleSpot(
-                        "ANTE", NeonPurple,
-                        amount = if (betting) vm.ante else vm.anteStake,
-                        size = spot,
-                        onClick = { vm.addAnte() }.takeIf { betting },
-                    )
-                    Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
-                        Text(
-                            "=",
-                            color = NeonPurple.copy(alpha = 0.85f),
-                            fontSize = 22.sp, fontWeight = FontWeight.Black,
-                        )
-                    }
-                    // The blind always matches the ante, so it takes no chips itself.
-                    CircleSpot(
-                        "BLIND", NeonPurple,
-                        amount = if (betting) vm.ante else vm.blindStake,
-                        size = spot,
-                        onClick = null,
-                    )
-                }
+                DiamondSpot(
+                    label = "TRIPS",
+                    color = NeonPink,
+                    amount = if (betting) vm.trips else vm.tripsStake,
+                    size = spot,
+                    onClick = { vm.addTrips() }.takeIf { betting },
+                )
+                Spacer(Modifier.width(gap))
+                Spacer(Modifier.width(spot))
             }
             FeltPayTable(
                 title = "TRIPS",
                 color = NeonPink,
                 rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
-                width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.CenterEnd),
+                width = gap + spot + gutter - 8.dp,
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CircleSpot(
+                "ANTE", NeonPurple,
+                amount = if (betting) vm.ante else vm.anteStake,
+                size = spot,
+                onClick = { vm.addAnte() }.takeIf { betting },
+            )
+            Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
+                Text(
+                    "=",
+                    color = NeonPurple.copy(alpha = 0.85f),
+                    fontSize = 22.sp, fontWeight = FontWeight.Black,
+                )
+            }
+            // The blind always matches the ante, so it takes no chips itself.
+            CircleSpot(
+                "BLIND", NeonPurple,
+                amount = if (betting) vm.ante else vm.blindStake,
+                size = spot,
+                onClick = null,
             )
         }
         // The spots stay centred on screen; the ladder takes whatever room is
