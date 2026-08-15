@@ -122,16 +122,6 @@ fun UltimateHoldemScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(vm, onBack)
-            Text(
-                "ULTIMATE TEXAS HOLD'EM · PAY TABLES",
-                fontSize = 11.sp,
-                letterSpacing = 0.14.em,
-                fontWeight = FontWeight.Black,
-                color = NeonPurple.copy(alpha = 0.85f),
-                modifier = Modifier
-                    .clickable { showPays = true }
-                    .padding(top = 1.dp, bottom = 2.dp),
-            )
             DealerRow(vm)
             Spacer(Modifier.height(10.dp))
             TableDivider()
