@@ -104,7 +104,7 @@ fun UltimateHoldemScreen(
             DealerRow(vm)
             Spacer(Modifier.height(10.dp))
             TableDivider()
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(17.dp))
             BoardRow(vm)
             Spacer(Modifier.height(10.dp))
             TableDivider()
@@ -301,8 +301,8 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
     val spot = 62.dp
     val gap = 24.dp
-    /** 20px right of centre. */
-    val shift = 7.dp
+    /** 45px right of centre. */
+    val shift = 15.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -404,6 +404,7 @@ private fun FeltPayTable(
     rows: List<Pair<String, String>>,
     width: androidx.compose.ui.unit.Dp,
     modifier: Modifier = Modifier,
+    fontSize: androidx.compose.ui.unit.TextUnit = 10.sp,
 ) {
     Column(
         modifier.width(width),
@@ -420,12 +421,17 @@ private fun FeltPayTable(
             Box(Modifier.weight(1f).height(1.dp).background(color.copy(alpha = 0.5f)))
         }
         Spacer(Modifier.height(2.dp))
-        rows.forEach { (label, value) -> FeltPayRow(label, value, color) }
+        rows.forEach { (label, value) -> FeltPayRow(label, value, color, fontSize) }
     }
 }
 
 @Composable
-private fun FeltPayRow(label: String, value: String, color: Color) {
+private fun FeltPayRow(
+    label: String,
+    value: String,
+    color: Color,
+    fontSize: androidx.compose.ui.unit.TextUnit,
+) {
     Row(
         Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -433,7 +439,7 @@ private fun FeltPayRow(label: String, value: String, color: Color) {
         Text(
             label,
             color = P.OffWhite.copy(alpha = 0.88f),
-            fontSize = 10.sp, lineHeight = 11.sp, maxLines = 1,
+            fontSize = fontSize, lineHeight = fontSize * 1.1f, maxLines = 1,
         )
         Box(
             Modifier
@@ -454,7 +460,7 @@ private fun FeltPayRow(label: String, value: String, color: Color) {
         )
         Text(
             value,
-            color = color, fontSize = 10.sp, lineHeight = 11.sp,
+            color = color, fontSize = fontSize, lineHeight = fontSize * 1.1f,
             fontWeight = FontWeight.Black, maxLines = 1,
         )
     }
