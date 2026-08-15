@@ -610,7 +610,7 @@
   <img class="bj-bg" src="__BG__" alt="">
   <div class="bj-table">
     <div class="bj-topbar">
-      <button class="backlink" id="bj-back">‹ LOBBY</button>
+      <button class="backlink" id="bj-back">‹ BLACKJACK</button>
       <div class="bj-money">
         <span><span class="lbl">BANKROLL </span><span class="val" id="bj-bankroll">1,000</span></span>
         <span><span class="lbl">STAKED </span><span class="val staked" id="bj-staked">0</span></span>
@@ -640,7 +640,7 @@
       <div style="margin-top:6px" id="pays-trilux"></div>
       <div style="margin-top:14px;font-size:10px;color:rgba(245,241,232,.6)">
         Both read your two cards plus the dealer's up card.
-        Blazing 7s rides free and pays nothing yet.
+        Blazing 7s costs nothing — all three cards must be the seven of diamonds.
       </div>
     </div>
   </div>
@@ -1032,17 +1032,13 @@
 
     // ---- Blazing 777s side bets: player's two cards + dealer up card ----
     var RANK_ORDER = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
+    // Rides free, so only the jackpot pays: all three face-up cards the 7 of diamonds.
+    var BLAZING_JACKPOT = 500000;
     function blazingOf(cards) {
-      var sevens = cards.filter(function (c) { return c.rank === "7"; });
-      if (sevens.length === 3) {
-        var oneSuit = sevens.every(function (c) { return c.suit === sevens[0].suit; });
-        if (oneSuit) return { label: "Suited 777", pays: 1000 };
-        var oneColor = sevens.every(function (c) { return c.red === sevens[0].red; });
-        return oneColor ? { label: "Colored 777", pays: 250 } : { label: "Three 7s", pays: 100 };
-      }
-      if (sevens.length === 2) return { label: "Two 7s", pays: 25 };
-      if (sevens.length === 1) return { label: "One 7", pays: 1 };
-      return null;
+      var hits = cards.filter(function (c) {
+        return c.rank === "7" && c.suit === "♦";
+      });
+      return hits.length === 3 ? { label: "Three 7♦", award: BLAZING_JACKPOT } : null;
     }
     function triluxOf(cards) {
       if (cards.length !== 3) return null;
@@ -1184,16 +1180,22 @@
       p.innerHTML = "";
       // Blazing side bets shout the moment they land, before the hand plays out.
       if (variant === "blazing" && phase !== "betting" && phase !== "result") {
-        // Blazing 7s is on the house — it shouts regardless of the TriLux stake.
-        // The free bet quotes no odds — it isn't paying yet.
-        [[blazingWin, 1, "#FF7A1A", false], [triluxWin, triluxStake, "#FF3FD8", true]]
-          .forEach(function (e) {
+        // Blazing 7s is on the house — it shouts regardless of the TriLux stake,
+        // but it only ever lands on the jackpot now.
+        [
+          [blazingWin, 1, "#FF7A1A", function (w) {
+            return w.label + " · $" + w.award.toLocaleString();
+          }],
+          [triluxWin, triluxStake, "#FF3FD8", function (w) {
+            return w.label + " · " + w.pays + ":1";
+          }]
+        ].forEach(function (e) {
             if (!e[0] || e[1] <= 0) return;
             var s = document.createElement("span");
             s.className = "bj-hitpill";
             s.style.borderColor = e[2];
             s.style.color = e[2];
-            s.textContent = e[3] ? e[0].label + " · " + e[0].pays + ":1" : e[0].label;
+            s.textContent = e[3](e[0]);
             p.appendChild(s);
           });
         return;
@@ -1604,6 +1606,11 @@
           net: potReturn - potStake
         });
       }
+      // The free bet costs nothing, so the jackpot is straight profit.
+      if (blazingWin) {
+        totalReturn += blazingWin.award;
+        results.push({ label: "Blazing " + blazingWin.label, net: blazingWin.award });
+      }
       if (triluxStake > 0) {
         var tRet = triluxWin ? triluxStake * (triluxWin.pays + 1) : 0;
         totalReturn += tRet;
@@ -1620,6 +1627,7 @@
       phase = "result";
       var msg =
         Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        blazingWin ? "🔥 BLAZING 7♦ JACKPOT — $500,000!" :
         push22 ? "Dealer 22 — all hands push" :
         dealerBj ? (net >= 0 ? "Dealer blackjack — push" : "Dealer blackjack") :
         net > 0 ? "You win" : net < 0 ? "Dealer wins" : "Push";
@@ -1664,16 +1672,15 @@
           return '<div style="display:flex;padding:2px 0;font-size:12px">' +
             '<span style="color:rgba(245,241,232,.85)">' + r[0] + "</span>" +
             '<span style="flex:1"></span>' +
-            '<span style="font-weight:900;color:' + color + '">' + r[1] + " to 1</span></div>";
+            '<span style="font-weight:900;color:' + color + '">' + r[1] + "</span></div>";
         }).join("");
       }
       rows($("pays-blazing"), [
-        ["Suited 777", 1000], ["Colored 777", 250], ["Three 7s", 100],
-        ["Two 7s", 25], ["One 7", 1]
+        ["Three 7♦", "$" + BLAZING_JACKPOT.toLocaleString()]
       ], "#FF7A1A");
       rows($("pays-trilux"), [
-        ["Royal Flush", 50], ["Straight Flush", 35], ["Three of a Kind", 25],
-        ["Straight", 15], ["Flush", 10]
+        ["Royal Flush", "50 to 1"], ["Straight Flush", "35 to 1"],
+        ["Three of a Kind", "25 to 1"], ["Straight", "15 to 1"], ["Flush", "10 to 1"]
       ], "#FF2A2A");
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });

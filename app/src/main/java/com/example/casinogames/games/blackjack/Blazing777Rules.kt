@@ -2,6 +2,7 @@ package com.example.casinogames.games.blackjack
 
 import com.example.casinogames.games.core.Card
 import com.example.casinogames.games.core.Rank
+import com.example.casinogames.games.core.Suit
 
 /**
  * Side bets for Blazing 777s. Both are decided by the player's first two cards
@@ -9,12 +10,12 @@ import com.example.casinogames.games.core.Rank
  */
 object Blazing777Rules {
 
-    enum class BlazingWin(val label: String, val payout: Int) {
-        SUITED_777("Suited 777", 1000),
-        COLORED_777("Colored 777", 250),
-        MIXED_777("Three 7s", 100),
-        TWO_SEVENS("Two 7s", 25),
-        ONE_SEVEN("One 7", 1),
+    /**
+     * Blazing 7s rides free, so only the jackpot hand pays: three sevens of
+     * diamonds. The award is flat money, not a multiple of a stake.
+     */
+    enum class BlazingWin(val label: String, val award: Int) {
+        DIAMOND_777("Three 7♦", 500_000),
     }
 
     enum class TriluxWin(val label: String, val payout: Int) {
@@ -25,19 +26,16 @@ object Blazing777Rules {
         FLUSH("Flush", 10),
     }
 
-    /** Blazing 7s counts sevens across the player's two cards and the dealer up card. */
+    /**
+     * The jackpot: all three face-up cards — the player's two plus the dealer's
+     * up card — are the seven of diamonds. Anything less pays nothing and is
+     * not announced.
+     */
     fun blazing(cards: List<Card>): BlazingWin? {
-        val sevens = cards.filter { it.rank == Rank.SEVEN }
-        return when (sevens.size) {
-            3 -> when {
-                sevens.all { it.suit == sevens[0].suit } -> BlazingWin.SUITED_777
-                sevens.all { it.suit.isRed == sevens[0].suit.isRed } -> BlazingWin.COLORED_777
-                else -> BlazingWin.MIXED_777
-            }
-            2 -> BlazingWin.TWO_SEVENS
-            1 -> BlazingWin.ONE_SEVEN
-            else -> null
+        val diamondSevens = cards.count {
+            it.rank == Rank.SEVEN && it.suit == Suit.DIAMONDS
         }
+        return if (diamondSevens == 3) BlazingWin.DIAMOND_777 else null
     }
 
     /** TriLux scores those same three cards as a three-card poker hand. */

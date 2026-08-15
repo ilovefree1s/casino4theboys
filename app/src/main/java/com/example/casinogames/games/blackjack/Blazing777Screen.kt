@@ -300,7 +300,7 @@ private fun MessageLine(vm: Blazing777ViewModel) {
 @Composable
 private fun SidePills(vm: Blazing777ViewModel) {
     val live = vm.phase != BjPhase.BETTING
-    // Blazing 7s is on the house, so it announces itself whether or not TriLux is up.
+    // Blazing 7s only ever fires on the jackpot now, so it always has news worth telling.
     val blazing = vm.blazingWin?.takeIf { live }
     val trilux = vm.triluxWin?.takeIf { live && vm.triluxStake > 0 }
     if (blazing == null && trilux == null) return
@@ -309,8 +309,7 @@ private fun SidePills(vm: Blazing777ViewModel) {
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier.padding(top = 6.dp).widthIn(max = 400.dp),
     ) {
-        // The free bet quotes no odds — it isn't paying yet.
-        blazing?.let { HitPill(it.label, BlazeOrange) }
+        blazing?.let { HitPill("${it.label} · \$${"%,d".format(it.award)}", BlazeOrange) }
         trilux?.let { HitPill("${it.label} · ${it.payout}:1", RedNeon) }
     }
 }
@@ -640,18 +639,20 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
             PayList(
                 "BLAZING 7s · FREE",
                 BlazeOrange,
-                Blazing777Rules.BlazingWin.entries.map { it.label to it.payout },
+                Blazing777Rules.BlazingWin.entries.map {
+                    it.label to "\$${"%,d".format(it.award)}"
+                },
             )
             Spacer(Modifier.height(16.dp))
             PayList(
                 "TRILUX",
                 RedNeon,
-                Blazing777Rules.TriluxWin.entries.map { it.label to it.payout },
+                Blazing777Rules.TriluxWin.entries.map { it.label to "${it.payout} to 1" },
             )
             Spacer(Modifier.height(14.dp))
             Text(
                 "Both read your two cards plus the dealer's up card. " +
-                    "Blazing 7s rides free and pays nothing yet.",
+                    "Blazing 7s costs nothing — all three cards must be the seven of diamonds.",
                 fontSize = 10.sp,
                 color = P.OffWhite.copy(alpha = 0.6f),
             )
@@ -660,7 +661,7 @@ private fun PayTableOverlay(onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun PayList(title: String, color: Color, rows: List<Pair<String, Int>>) {
+private fun PayList(title: String, color: Color, rows: List<Pair<String, String>>) {
     Text(
         title,
         color = color,
@@ -673,7 +674,7 @@ private fun PayList(title: String, color: Color, rows: List<Pair<String, Int>>) 
         Row(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
             Text(label, fontSize = 12.sp, color = P.OffWhite.copy(alpha = 0.85f))
             Spacer(Modifier.weight(1f))
-            Text("$pays to 1", fontSize = 12.sp, fontWeight = FontWeight.Black, color = color)
+            Text(pays, fontSize = 12.sp, fontWeight = FontWeight.Black, color = color)
         }
     }
 }

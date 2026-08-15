@@ -181,7 +181,7 @@ private fun TopBar(onBack: () -> Unit, vm: FreeBetViewModel) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "‹ LOBBY",
+            "‹ BLACKJACK",
             color = P.OffWhite.copy(alpha = 0.8f),
             fontSize = 12.sp,
             fontWeight = FontWeight.Bold,

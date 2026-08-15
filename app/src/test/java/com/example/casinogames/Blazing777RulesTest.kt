@@ -17,39 +17,50 @@ class Blazing777RulesTest {
     // ---- Blazing 7s ----
 
     @Test
-    fun `three sevens all one suit is the top tier`() {
+    fun `three sevens of diamonds hit the jackpot`() {
+        val hand = listOf(
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+        )
+        assertEquals(BlazingWin.DIAMOND_777, Blazing777Rules.blazing(hand))
+        assertEquals(500_000, BlazingWin.DIAMOND_777.award)
+    }
+
+    @Test
+    fun `three sevens of another suit pay nothing`() {
         val hand = listOf(
             c(Rank.SEVEN, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS),
         )
-        assertEquals(BlazingWin.SUITED_777, Blazing777Rules.blazing(hand))
+        assertNull(Blazing777Rules.blazing(hand))
     }
 
     @Test
-    fun `three sevens sharing a colour but not a suit pay the coloured tier`() {
+    fun `one stray suit breaks the jackpot`() {
         val hand = listOf(
-            c(Rank.SEVEN, Suit.HEARTS), c(Rank.SEVEN, Suit.DIAMONDS), c(Rank.SEVEN, Suit.HEARTS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.HEARTS),
         )
-        assertEquals(BlazingWin.COLORED_777, Blazing777Rules.blazing(hand))
+        assertNull(Blazing777Rules.blazing(hand))
     }
 
     @Test
-    fun `three sevens of mixed colours pay the plain tier`() {
+    fun `two sevens of diamonds are not enough`() {
         val hand = listOf(
-            c(Rank.SEVEN, Suit.HEARTS), c(Rank.SEVEN, Suit.SPADES), c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.SEVEN, Suit.DIAMONDS),
+            c(Rank.KING, Suit.SPADES),
         )
-        assertEquals(BlazingWin.MIXED_777, Blazing777Rules.blazing(hand))
+        assertNull(Blazing777Rules.blazing(hand))
     }
 
     @Test
-    fun `two and one seven pay their own tiers`() {
-        val two = listOf(
-            c(Rank.SEVEN, Suit.HEARTS), c(Rank.SEVEN, Suit.CLUBS), c(Rank.KING, Suit.SPADES),
+    fun `a lone seven of diamonds says nothing`() {
+        val hand = listOf(
+            c(Rank.SEVEN, Suit.DIAMONDS), c(Rank.TWO, Suit.CLUBS), c(Rank.KING, Suit.SPADES),
         )
-        assertEquals(BlazingWin.TWO_SEVENS, Blazing777Rules.blazing(two))
-        val one = listOf(
-            c(Rank.SEVEN, Suit.HEARTS), c(Rank.TWO, Suit.CLUBS), c(Rank.KING, Suit.SPADES),
-        )
-        assertEquals(BlazingWin.ONE_SEVEN, Blazing777Rules.blazing(one))
+        assertNull(Blazing777Rules.blazing(hand))
     }
 
     @Test

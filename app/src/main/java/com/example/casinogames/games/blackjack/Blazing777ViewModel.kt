@@ -60,7 +60,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     var shoeCount by mutableIntStateOf(shoe.cardsRemaining)
         private set
 
-    /** Blazing 7s rides free for now — spotted and announced, but never staked. */
+    /** Blazing 7s rides free — never staked, and only the three-7♦ jackpot pays. */
     var blazingWin by mutableStateOf<Blazing777Rules.BlazingWin?>(null)
         private set
     var triluxWin by mutableStateOf<Blazing777Rules.TriluxWin?>(null)
@@ -250,7 +250,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun sideBetShout(): String {
         val hits = buildList {
-            blazingWin?.let { add(it.label) }
+            if (blazingWin != null) add("BLAZING 7♦ JACKPOT")
             if (triluxStake > 0) triluxWin?.let { add(it.label) }
         }
         return if (hits.isEmpty()) message else hits.joinToString(" · ") + "!"
@@ -426,6 +426,13 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(label, returned - h.stake))
         }
 
+        // The free bet costs nothing, so the jackpot is straight profit.
+        val jackpot = blazingWin
+        if (jackpot != null) {
+            totalReturn += jackpot.award.toDouble()
+            out.add(BjResult("Blazing ${jackpot.label}", jackpot.award.toDouble()))
+        }
+
         if (triluxStake > 0) {
             val win = triluxWin
             val ret = if (win != null) triluxStake * (win.payout + 1.0) else 0.0
@@ -439,6 +446,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         val net = totalReturn - staked
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
+            jackpot != null -> "🔥 BLAZING 7♦ JACKPOT — \$500,000!"
             dealerBj -> if (net >= 0) "Dealer blackjack — push" else "Dealer blackjack"
             net > 0 -> "You win"
             net < 0 -> "Dealer wins"
