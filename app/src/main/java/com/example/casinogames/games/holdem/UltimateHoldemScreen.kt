@@ -326,7 +326,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 color = NeonPink,
                 rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
                 width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.BottomEnd),
+                modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 12.dp),
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -351,12 +351,12 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 onClick = null,
             )
         }
-        // The spots stay centred on screen; the ladder takes whatever room is
-        // left of the Play circle, however wide the screen happens to be.
+        // The spots stay centred on screen; the two ladders take the gutters
+        // either side, sitting just above the chip rail.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
             Row(
-                Modifier.align(Alignment.Center),
+                Modifier.align(Alignment.TopCenter),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
@@ -372,11 +372,23 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                     "On the River" to "1x",
                 ),
                 width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.CenterStart),
+                modifier = Modifier.align(Alignment.BottomStart),
+            )
+            FeltPayTable(
+                title = "BLIND",
+                color = NeonPurple,
+                rows = BlindPay.entries.map { it.label to blindOdds(it) } +
+                    ("Other Hands" to "Push"),
+                width = gutter - 8.dp,
+                modifier = Modifier.align(Alignment.BottomEnd),
             )
         }
     }
 }
+
+/** The flush pays three to two; everything else on the blind is a whole number. */
+private fun blindOdds(pay: BlindPay): String =
+    if (pay.multiplier == 1.5) "3-to-2" else "${pay.multiplier.toInt()}-to-1"
 
 /** A pay table printed straight onto the felt, ruled heading and dotted leaders. */
 @Composable
