@@ -413,10 +413,14 @@ private fun FeltPayTable(
 @Composable
 private fun FeltPayRow(label: String, value: String, color: Color) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = P.OffWhite.copy(alpha = 0.88f), fontSize = 10.sp, maxLines = 1)
+        Text(
+            label,
+            color = P.OffWhite.copy(alpha = 0.88f),
+            fontSize = 10.sp, lineHeight = 11.sp, maxLines = 1,
+        )
         Box(
             Modifier
                 .weight(1f)
@@ -436,7 +440,7 @@ private fun FeltPayRow(label: String, value: String, color: Color) {
         )
         Text(
             value,
-            color = color, fontSize = 10.sp,
+            color = color, fontSize = 10.sp, lineHeight = 11.sp,
             fontWeight = FontWeight.Black, maxLines = 1,
         )
     }
