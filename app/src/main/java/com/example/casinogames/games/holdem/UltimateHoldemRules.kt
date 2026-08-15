@@ -15,13 +15,17 @@ enum class BlindPay(val label: String, val multiplier: Double) {
     STRAIGHT("Straight", 1.0),
 }
 
-/** Trips is settled on the player's own five cards, win or lose against the dealer. */
+/**
+ * Trips is settled on the player's own five cards, win or lose against the
+ * dealer. The top five rungs come from the table art; straight and three of a
+ * kind pay the usual amounts underneath them.
+ */
 enum class TripsPay(val label: String, val multiplier: Int) {
-    ROYAL_FLUSH("Royal Flush", 50),
-    STRAIGHT_FLUSH("Straight Flush", 40),
-    FOUR_KIND("Four of a Kind", 30),
-    FULL_HOUSE("Full House", 8),
-    FLUSH("Flush", 7),
+    ROYAL_FLUSH("Royal Flush", 200),
+    STRAIGHT_FLUSH("Straight Flush", 100),
+    FOUR_KIND("Four of a Kind", 50),
+    FULL_HOUSE("Full House", 20),
+    FLUSH("Flush", 10),
     STRAIGHT("Straight", 4),
     THREE_KIND("Three of a Kind", 3),
 }

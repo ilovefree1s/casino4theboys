@@ -141,7 +141,7 @@ class UltimateHoldemRulesTest {
         val s = settle("2h 7h", "As Ad", "Kh Qh 9h 4c 3s", play = 0.0, trips = 5.0, folded = true)
         assertEquals(HoldemOutcome.FOLD, s.outcome)
         assertEquals(TripsPay.FLUSH, s.tripsWin)
-        assertEquals(40.0, s.tripsReturn, 0.001)  // 7:1 plus the stake
+        assertEquals(55.0, s.tripsReturn, 0.001)  // 10:1 plus the stake
     }
 
     // ---- trips ----
@@ -179,7 +179,7 @@ class UltimateHoldemRulesTest {
         assertEquals(HoldemOutcome.WIN, s.outcome)
         assertEquals(BlindPay.ROYAL_FLUSH, s.blindWin)
         assertEquals(TripsPay.ROYAL_FLUSH, s.tripsWin)
-        // ante 20 + blind 5010 + play 80 + trips 510
-        assertEquals(5620.0, s.totalReturn, 0.001)
+        // ante 20 + blind 5010 + play 80 + trips 2010
+        assertEquals(7120.0, s.totalReturn, 0.001)
     }
 }
