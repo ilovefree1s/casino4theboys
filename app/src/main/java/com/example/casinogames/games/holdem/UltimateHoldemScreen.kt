@@ -30,9 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -297,18 +300,28 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
     val spot = 66.dp
     val gap = 34.dp
+    val placard = 134.dp
+    // Every row carries the placard's width on the left, so Trips, Ante and Play
+    // stay stacked in one column with the placard hanging off the side.
+    val lead = placard + 8.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        DiamondSpot(
-            label = "TRIPS",
-            color = NeonPink,
-            amount = if (betting) vm.trips else vm.tripsStake,
-            size = spot,
-            onClick = { vm.addTrips() }.takeIf { betting },
-        )
         Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(lead))
+            DiamondSpot(
+                label = "TRIPS",
+                color = NeonPink,
+                amount = if (betting) vm.trips else vm.tripsStake,
+                size = spot,
+                onClick = { vm.addTrips() }.takeIf { betting },
+            )
+            Spacer(Modifier.width(gap))
+            Spacer(Modifier.width(spot))
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(lead))
             CircleSpot(
                 "ANTE", NeonPurple,
                 amount = if (betting) vm.ante else vm.anteStake,
@@ -331,10 +344,68 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
+            PlayBetPlacard(placard)
+            Spacer(Modifier.width(8.dp))
             CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
             Spacer(Modifier.width(gap))
             Spacer(Modifier.width(spot))
         }
+    }
+}
+
+/** The Play bet's shrinking ladder, printed on the felt beside its spot. */
+@Composable
+private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp) {
+    Column(
+        Modifier
+            .width(width)
+            .background(Color(0xB3060409), RoundedCornerShape(6.dp))
+            .border(1.dp, FeltGreen.copy(alpha = 0.65f), RoundedCornerShape(6.dp))
+            .padding(horizontal = 7.dp, vertical = 5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
+            Text(
+                "PLAY BET",
+                color = FeltGreen, fontSize = 9.sp,
+                fontWeight = FontWeight.Black, letterSpacing = 0.1.em,
+                modifier = Modifier.padding(horizontal = 5.dp),
+            )
+            Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
+        }
+        Spacer(Modifier.height(3.dp))
+        PlayBetRow("Before the Flop", "3x or 4x")
+        PlayBetRow("After the Flop", "2x")
+        PlayBetRow("On the River", "1x")
+    }
+}
+
+@Composable
+private fun PlayBetRow(label: String, value: String) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 1.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(label, color = P.OffWhite.copy(alpha = 0.82f), fontSize = 8.sp)
+        Box(
+            Modifier
+                .weight(1f)
+                .height(3.dp)
+                .padding(horizontal = 3.dp)
+                .drawBehind {
+                    drawLine(
+                        color = Color(0x8AF5F1E8),
+                        start = Offset(0f, size.height / 2f),
+                        end = Offset(size.width, size.height / 2f),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(
+                            floatArrayOf(1.5.dp.toPx(), 2.dp.toPx())
+                        ),
+                    )
+                }
+        )
+        Text(value, color = FeltGreen, fontSize = 8.sp, fontWeight = FontWeight.Black)
     }
 }
 
