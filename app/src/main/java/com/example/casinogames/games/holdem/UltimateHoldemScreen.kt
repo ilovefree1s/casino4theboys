@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -298,18 +299,13 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    val spot = 66.dp
-    val gap = 34.dp
-    val placard = 168.dp
-    // Every row carries the placard's width on the left, so Trips, Ante and Play
-    // stay stacked in one column with the placard hanging off the side.
-    val lead = placard + 8.dp
+    val spot = 58.dp
+    val gap = 24.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(Modifier.width(lead))
             DiamondSpot(
                 label = "TRIPS",
                 color = NeonPink,
@@ -321,7 +317,6 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
             Spacer(Modifier.width(spot))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Spacer(Modifier.width(lead))
             CircleSpot(
                 "ANTE", NeonPurple,
                 amount = if (betting) vm.ante else vm.anteStake,
@@ -343,30 +338,40 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 onClick = null,
             )
         }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            PlayBetPlacard(placard)
-            Spacer(Modifier.width(8.dp))
-            CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
-            Spacer(Modifier.width(gap))
-            Spacer(Modifier.width(spot))
+        // The spots stay centred on screen; the ladder takes whatever room is
+        // left of the Play circle, however wide the screen happens to be.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val gutter = (maxWidth - (spot * 2 + gap)) / 2
+            Row(
+                Modifier.align(Alignment.Center),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
+                Spacer(Modifier.width(gap))
+                Spacer(Modifier.width(spot))
+            }
+            PlayBetPlacard(
+                width = gutter - 8.dp,
+                modifier = Modifier.align(Alignment.CenterStart),
+            )
         }
     }
 }
 
 /** The Play bet's shrinking ladder, printed on the felt beside its spot. */
 @Composable
-private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp) {
+private fun PlayBetPlacard(width: androidx.compose.ui.unit.Dp, modifier: Modifier = Modifier) {
     Column(
-        Modifier.width(width),
+        modifier.width(width),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
             Text(
                 "PLAY BET",
-                color = FeltGreen, fontSize = 13.sp,
-                fontWeight = FontWeight.Black, letterSpacing = 0.1.em,
-                modifier = Modifier.padding(horizontal = 5.dp),
+                color = FeltGreen, fontSize = 12.sp,
+                fontWeight = FontWeight.Black, letterSpacing = 0.08.em,
+                modifier = Modifier.padding(horizontal = 4.dp),
             )
             Box(Modifier.weight(1f).height(1.dp).background(FeltGreen.copy(alpha = 0.5f)))
         }
@@ -383,7 +388,7 @@ private fun PlayBetRow(label: String, value: String) {
         Modifier.fillMaxWidth().padding(vertical = 2.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(label, color = P.OffWhite.copy(alpha = 0.88f), fontSize = 11.sp)
+        Text(label, color = P.OffWhite.copy(alpha = 0.88f), fontSize = 10.sp, maxLines = 1)
         Box(
             Modifier
                 .weight(1f)
@@ -401,7 +406,11 @@ private fun PlayBetRow(label: String, value: String) {
                     )
                 }
         )
-        Text(value, color = FeltGreen, fontSize = 11.sp, fontWeight = FontWeight.Black)
+        Text(
+            value,
+            color = FeltGreen, fontSize = 10.sp,
+            fontWeight = FontWeight.Black, maxLines = 1,
+        )
     }
 }
 
