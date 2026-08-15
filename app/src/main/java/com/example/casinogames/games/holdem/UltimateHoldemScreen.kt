@@ -37,6 +37,8 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -58,11 +60,38 @@ import com.example.casinogames.ui.common.chipsFor
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
-private val TableBlack = Color(0xFF040308)
-private val NeonPurple = Color(0xFFB14BFF)
-private val NeonPurpleDim = Color(0x998B30D9)
-private val NeonPink = Color(0xFFFF3FD8)
-private val FeltGreen = Color(0xFF39D98A)
+private val TableBlack = Color(0xFF030703)
+private val NeonPurple = Color(0xFF90FF3D)
+private val NeonPurpleDim = Color(0x9962B82B)
+private val NeonPink = Color(0xFF90FF3D)
+private val FeltGreen = Color(0xFF90FF3D)
+private val LossRed = Color(0xFFFF4D4D)
+
+/**
+ * Flattens the background art to brightness and paints it back in the felt's
+ * green. Tinting the purple original directly just muddies it, because purple
+ * has almost no green in it to multiply.
+ */
+private val GreenWash = ColorFilter.colorMatrix(
+    ColorMatrix(
+        floatArrayOf(
+            0.170f, 0.333f, 0.062f, 0f, 0f,
+            0.300f, 0.590f, 0.110f, 0f, 0f,
+            0.072f, 0.141f, 0.026f, 0f, 0f,
+            0f, 0f, 0f, 1f, 0f,
+        )
+    )
+)
+
+/** The felt's own chip art, keyed by chip value. */
+private fun uthChipArt(value: Int): Int = when (value) {
+    25 -> R.drawable.uth_chip_25
+    100 -> R.drawable.uth_chip_100
+    500 -> R.drawable.uth_chip_500
+    1000 -> R.drawable.uth_chip_1k
+    5000 -> R.drawable.uth_chip_5k
+    else -> R.drawable.chip_25k
+}
 
 @Composable
 fun UltimateHoldemScreen(
@@ -78,8 +107,9 @@ fun UltimateHoldemScreen(
         Image(
             painter = painterResource(R.drawable.background),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.4f),
+            modifier = Modifier.fillMaxSize().alpha(0.5f),
             contentScale = ContentScale.Crop,
+            colorFilter = GreenWash,
         )
         Column(
             Modifier
@@ -283,7 +313,7 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
                 Spacer(Modifier.weight(1f))
                 Text(
                     if (r.net >= 0) "+${formatMoney(r.net)}" else "−${formatMoney(-r.net)}",
-                    color = if (r.net > 0) FeltGreen else if (r.net < 0) NeonPink
+                    color = if (r.net > 0) FeltGreen else if (r.net < 0) LossRed
                     else P.OffWhite.copy(alpha = 0.6f),
                     fontSize = 12.sp, fontWeight = FontWeight.Black,
                 )
@@ -519,7 +549,7 @@ private fun SpotContents(
     size: androidx.compose.ui.unit.Dp,
 ) {
     if (amount > 0) {
-        PlacedBetChip(amount, size = size * 0.74f)
+        PlacedBetChip(amount, size = size * 0.74f, artFor = ::uthChipArt)
     } else {
         Text(
             label,
@@ -539,7 +569,7 @@ private fun ChipRail(vm: UltimateHoldemViewModel) {
     ) {
         chipsFor(vm.bankroll).forEach { chip ->
             CasinoChip(
-                imageRes = chip.imageRes,
+                imageRes = uthChipArt(chip.value),
                 contentDescription = "${chip.value} chip",
                 selected = vm.selectedChip == chip.value,
                 onClick = { vm.selectedChip = chip.value },

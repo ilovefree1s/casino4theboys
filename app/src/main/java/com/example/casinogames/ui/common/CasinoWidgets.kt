@@ -124,7 +124,13 @@ fun BetAmountBadge(amount: Int, modifier: Modifier = Modifier) {
  * chip that fits, dimmed, with the total printed across it chip-sized.
  */
 @Composable
-fun PlacedBetChip(amount: Int, modifier: Modifier = Modifier, size: Dp = 50.dp) {
+fun PlacedBetChip(
+    amount: Int,
+    modifier: Modifier = Modifier,
+    size: Dp = 50.dp,
+    /** Lets a table swap in its own chip art, keyed by chip value. */
+    artFor: ((Int) -> Int)? = null,
+) {
     if (amount <= 0) return
     val chip = ALL_CHIPS.lastOrNull { it.value <= amount }
     val exact = chip != null && chip.value == amount
@@ -135,7 +141,7 @@ fun PlacedBetChip(amount: Int, modifier: Modifier = Modifier, size: Dp = 50.dp) 
     ) {
         if (chip != null) {
             Image(
-                painter = painterResource(chip.imageRes),
+                painter = painterResource(artFor?.invoke(chip.value) ?: chip.imageRes),
                 contentDescription = "$amount staked",
                 modifier = Modifier.fillMaxSize().scale(1.06f),
                 contentScale = ContentScale.Crop,
