@@ -323,97 +323,68 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
 }
 
 /**
- * The standard Ultimate layout: Trips on its own diamond, the Ante and Blind
- * paired as equals, and the Play spot below the Ante.
+ * The betting area is the table art itself. Only the chips and the hit areas
+ * are drawn on top, positioned against the spots painted into the felt.
  */
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    val spot = 62.dp
-    val gap = 24.dp
-    /** 45px right of centre. */
-    val shift = 15.dp
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val w = maxWidth
+        val h = w * BLOCK_ASPECT
+        Image(
+            painter = painterResource(R.drawable.uth_betting_block),
+            contentDescription = null,
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.FillWidth,
+        )
+        BlockSpot(
+            w, h, fx = 0.5016f, fy = 0.3551f, fSize = 0.1403f,
+            amount = if (betting) vm.trips else vm.tripsStake,
+            onClick = { vm.addTrips() }.takeIf { betting },
+        )
+        BlockSpot(
+            w, h, fx = 0.4144f, fy = 0.5758f, fSize = 0.1137f,
+            amount = if (betting) vm.ante else vm.anteStake,
+            onClick = { vm.addAnte() }.takeIf { betting },
+        )
+        // The blind always matches the ante, so it takes no chips of its own.
+        BlockSpot(
+            w, h, fx = 0.5909f, fy = 0.5758f, fSize = 0.1137f,
+            amount = if (betting) vm.ante else vm.blindStake,
+            onClick = null,
+        )
+        BlockSpot(
+            w, h, fx = 0.5016f, fy = 0.8349f, fSize = 0.1307f,
+            amount = vm.playStake,
+            onClick = null,
+        )
+    }
+}
+
+/** Height of the betting art as a fraction of its width. */
+private const val BLOCK_ASPECT = 0.5537f
+
+/** A chip resting on one of the spots painted into the felt. */
+@Composable
+private fun BlockSpot(
+    w: androidx.compose.ui.unit.Dp,
+    h: androidx.compose.ui.unit.Dp,
+    fx: Float,
+    fy: Float,
+    fSize: Float,
+    amount: Int,
+    onClick: (() -> Unit)?,
+) {
+    val size = w * fSize
+    Box(
+        Modifier
+            .offset(x = w * fx - size / 2, y = h * fy - size / 2)
+            .size(size)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
     ) {
-        // The Trips pays sit beside the diamond, resting on the Ante row below.
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val gutter = (maxWidth - (spot * 2 + gap)) / 2
-            Row(
-                Modifier.align(Alignment.BottomCenter).offset(x = shift),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                DiamondSpot(
-                    label = "TRIPS",
-                    color = NeonPink,
-                    amount = if (betting) vm.trips else vm.tripsStake,
-                    size = spot,
-                    onClick = { vm.addTrips() }.takeIf { betting },
-                )
-            }
-            FeltPayTable(
-                title = "TRIPS",
-                color = NeonPink,
-                rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
-                width = gutter - 6.dp,
-                modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 12.dp),
-            )
-        }
-        Row(
-            Modifier.offset(x = shift),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CircleSpot(
-                "ANTE", NeonPurple,
-                amount = if (betting) vm.ante else vm.anteStake,
-                size = spot,
-                onClick = { vm.addAnte() }.takeIf { betting },
-            )
-            Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
-                Text(
-                    "=",
-                    color = NeonPurple.copy(alpha = 0.85f),
-                    fontSize = 22.sp, fontWeight = FontWeight.Black,
-                )
-            }
-            // The blind always matches the ante, so it takes no chips itself.
-            CircleSpot(
-                "BLIND", NeonPurple,
-                amount = if (betting) vm.ante else vm.blindStake,
-                size = spot,
-                onClick = null,
-            )
-        }
-        // The spots stay centred on screen; the two ladders take the gutters
-        // either side, sitting just above the chip rail.
-        BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val gutter = (maxWidth - (spot * 2 + gap)) / 2
-            Row(
-                Modifier.align(Alignment.TopCenter).offset(x = shift),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
-            }
-            FeltPayTable(
-                title = "PLAY BET",
-                color = FeltGreen,
-                rows = listOf(
-                    "Before the Flop" to "3x or 4x",
-                    "After the Flop" to "2x",
-                    "On the River" to "1x",
-                ),
-                width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 7.dp),
-            )
-            FeltPayTable(
-                title = "BLIND",
-                color = NeonPurple,
-                rows = BlindPay.entries.map { it.label to blindOdds(it) },
-                width = gutter - 6.dp,
-                modifier = Modifier.align(Alignment.BottomEnd),
-            )
-        }
+        if (amount > 0) PlacedBetChip(amount, size = size * 0.84f, artFor = ::uthChipArt)
     }
 }
 
