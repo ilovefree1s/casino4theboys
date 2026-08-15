@@ -152,7 +152,7 @@ class UltimateHoldemRulesTest {
         val s = settle("9s 9h", "Ks Kh", "9d Kc 4h 2s 7c", trips = 10.0)
         assertEquals(HoldemOutcome.LOSE, s.outcome)
         assertEquals(TripsPay.THREE_KIND, s.tripsWin)
-        assertEquals(40.0, s.tripsReturn, 0.001)
+        assertEquals(30.0, s.tripsReturn, 0.001)  // 2:1 plus the stake
     }
 
     @Test

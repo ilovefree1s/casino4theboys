@@ -10,7 +10,7 @@ enum class BlindPay(val label: String, val multiplier: Double) {
     ROYAL_FLUSH("Royal Flush", 500.0),
     STRAIGHT_FLUSH("Straight Flush", 50.0),
     FOUR_KIND("Four of a Kind", 10.0),
-    FULL_HOUSE("Full House", 5.0),
+    FULL_HOUSE("Full House", 3.0),
     FLUSH("Flush", 3.0),
     STRAIGHT("Straight", 1.0),
 }
@@ -27,7 +27,7 @@ enum class TripsPay(val label: String, val multiplier: Int) {
     FULL_HOUSE("Full House", 20),
     FLUSH("Flush", 10),
     STRAIGHT("Straight", 4),
-    THREE_KIND("Three of a Kind", 3),
+    THREE_KIND("Three of a Kind", 2),
 }
 
 enum class HoldemOutcome { WIN, LOSE, PUSH, FOLD }
