@@ -98,10 +98,10 @@ class UltimateHoldemRulesTest {
     }
 
     @Test
-    fun `the flush blind pays three to two`() {
+    fun `the flush blind pays three to one`() {
         val s = settle("2s 5s", "Kd Qc", "8s Js Ks 3h 4d", blind = 10.0)
         assertEquals(BlindPay.FLUSH, s.blindWin)
-        assertEquals(25.0, s.blindReturn, 0.001)
+        assertEquals(40.0, s.blindReturn, 0.001)
     }
 
     @Test

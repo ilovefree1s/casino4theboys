@@ -383,8 +383,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
             FeltPayTable(
                 title = "BLIND",
                 color = NeonPurple,
-                rows = BlindPay.entries.map { it.label to blindOdds(it) } +
-                    ("Other Hands" to "Push"),
+                rows = BlindPay.entries.map { it.label to blindOdds(it) },
                 width = gutter - 6.dp,
                 modifier = Modifier.align(Alignment.BottomEnd),
             )
@@ -392,9 +391,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     }
 }
 
-/** The flush pays three to two; everything else on the blind is a whole number. */
-private fun blindOdds(pay: BlindPay): String =
-    if (pay.multiplier == 1.5) "3-to-2" else "${pay.multiplier.toInt()}-to-1"
+private fun blindOdds(pay: BlindPay): String = "${pay.multiplier.toInt()}-to-1"
 
 /** A pay table printed straight onto the felt, ruled heading and dotted leaders. */
 @Composable
@@ -644,9 +641,7 @@ private fun PayTables(onDismiss: () -> Unit) {
         ) {
             PayList(
                 "BLIND", NeonPurple,
-                BlindPay.entries.map {
-                    it.label to if (it.multiplier == 1.5) "3 to 2" else "${it.multiplier.toInt()} to 1"
-                },
+                BlindPay.entries.map { it.label to "${it.multiplier.toInt()} to 1" },
             )
             Spacer(Modifier.height(6.dp))
             Text(

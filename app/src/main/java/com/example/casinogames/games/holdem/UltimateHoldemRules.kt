@@ -10,8 +10,8 @@ enum class BlindPay(val label: String, val multiplier: Double) {
     ROYAL_FLUSH("Royal Flush", 500.0),
     STRAIGHT_FLUSH("Straight Flush", 50.0),
     FOUR_KIND("Four of a Kind", 10.0),
-    FULL_HOUSE("Full House", 3.0),
-    FLUSH("Flush", 1.5),
+    FULL_HOUSE("Full House", 5.0),
+    FLUSH("Flush", 3.0),
     STRAIGHT("Straight", 1.0),
 }
 
