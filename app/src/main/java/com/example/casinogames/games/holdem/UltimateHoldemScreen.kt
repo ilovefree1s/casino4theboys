@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -287,68 +288,120 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
     }
 }
 
+/**
+ * The standard Ultimate layout: Trips on its own diamond, the Ante and Blind
+ * paired as equals, and the Play spot below the Ante.
+ */
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    Row(
-        Modifier.widthIn(max = 420.dp).fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Bottom,
+    val spot = 66.dp
+    val gap = 34.dp
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Spot(
-            "TRIPS", NeonPink,
+        DiamondSpot(
+            label = "TRIPS",
+            color = NeonPink,
             amount = if (betting) vm.trips else vm.tripsStake,
-            modifier = Modifier.weight(1f),
+            size = spot,
             onClick = { vm.addTrips() }.takeIf { betting },
         )
-        Spot(
-            "ANTE", NeonPurple,
-            amount = if (betting) vm.ante else vm.anteStake,
-            modifier = Modifier.weight(1f),
-            onClick = { vm.addAnte() }.takeIf { betting },
-        )
-        Spot(
-            "BLIND", NeonPurple,
-            amount = if (betting) vm.ante else vm.blindStake,
-            modifier = Modifier.weight(1f),
-            onClick = null,
-        )
-        Spot(
-            "PLAY", FeltGreen,
-            amount = vm.playStake,
-            modifier = Modifier.weight(1f),
-            onClick = null,
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CircleSpot(
+                "ANTE", NeonPurple,
+                amount = if (betting) vm.ante else vm.anteStake,
+                size = spot,
+                onClick = { vm.addAnte() }.takeIf { betting },
+            )
+            Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
+                Text(
+                    "=",
+                    color = NeonPurple.copy(alpha = 0.85f),
+                    fontSize = 22.sp, fontWeight = FontWeight.Black,
+                )
+            }
+            // The blind always matches the ante, so it takes no chips of its own.
+            CircleSpot(
+                "BLIND", NeonPurple,
+                amount = if (betting) vm.ante else vm.blindStake,
+                size = spot,
+                onClick = null,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
+            Spacer(Modifier.width(gap))
+            Spacer(Modifier.width(spot))
+        }
     }
 }
 
 @Composable
-private fun Spot(
+private fun CircleSpot(
     label: String,
     color: Color,
     amount: Int,
-    modifier: Modifier = Modifier,
+    size: androidx.compose.ui.unit.Dp,
     onClick: (() -> Unit)?,
 ) {
-    Column(
-        modifier = modifier.then(
-            if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
-        ),
-        horizontalAlignment = Alignment.CenterHorizontally,
+    Box(
+        Modifier
+            .size(size)
+            .border(2.dp, if (amount > 0) color else color.copy(alpha = 0.4f), CircleShape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
     ) {
+        SpotContents(label, color, amount, size)
+    }
+}
+
+@Composable
+private fun DiamondSpot(
+    label: String,
+    color: Color,
+    amount: Int,
+    size: androidx.compose.ui.unit.Dp,
+    onClick: (() -> Unit)?,
+) {
+    Box(
+        Modifier
+            .size(size)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        // A square stood on its corner; the chip and label stay upright inside it.
         Box(
             Modifier
-                .size(58.dp)
-                .border(1.5.dp, if (amount > 0) color else color.copy(alpha = 0.35f), CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (amount > 0) PlacedBetChip(amount, size = 46.dp)
-        }
-        Spacer(Modifier.height(4.dp))
+                .size(size * 0.78f)
+                .rotate(45f)
+                .border(
+                    2.dp,
+                    if (amount > 0) color else color.copy(alpha = 0.4f),
+                    RoundedCornerShape(3.dp),
+                )
+        )
+        SpotContents(label, color, amount, size)
+    }
+}
+
+@Composable
+private fun SpotContents(
+    label: String,
+    color: Color,
+    amount: Int,
+    size: androidx.compose.ui.unit.Dp,
+) {
+    if (amount > 0) {
+        PlacedBetChip(amount, size = size * 0.74f)
+    } else {
         Text(
             label,
-            color = if (amount > 0) color else color.copy(alpha = 0.55f),
-            fontSize = 10.sp, fontWeight = FontWeight.Black, letterSpacing = 0.1.em,
+            color = color.copy(alpha = 0.75f),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.08.em,
         )
     }
 }
