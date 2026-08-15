@@ -325,7 +325,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                 title = "TRIPS",
                 color = NeonPink,
                 rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
-                width = gap + spot + gutter - 8.dp,
+                width = gutter - 8.dp,
                 modifier = Modifier.align(Alignment.BottomEnd),
             )
         }
