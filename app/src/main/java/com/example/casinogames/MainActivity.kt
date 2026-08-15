@@ -9,6 +9,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.example.casinogames.games.baccarat.BaccaratScreen
 import com.example.casinogames.games.blackjack.Blazing777Screen
 import com.example.casinogames.games.blackjack.BlackjackMenuScreen
@@ -25,6 +28,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // Hide the navigation bar; a swipe from the edge brings it back briefly.
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            hide(WindowInsetsCompat.Type.navigationBars())
+        }
         setContent {
             CasinoGamesTheme {
                 // Screen keys are "<mode>:<place>", mode being c(ampaign) or t(esting).
