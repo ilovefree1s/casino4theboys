@@ -383,10 +383,11 @@ private fun YourHandHeader(badge: String?, badgeColor: Color, coins: Int) {
     }
 }
 
+/** The gold logo marks a hand that took a free split or a free double. */
 @Composable
 private fun FreeBetPill() {
     Image(
-        painter = painterResource(R.drawable.fourtheboys_spot),
+        painter = painterResource(R.drawable.fourtheboys_gold),
         contentDescription = "Free bet",
         modifier = Modifier.size(30.dp),
         contentScale = ContentScale.Fit,
