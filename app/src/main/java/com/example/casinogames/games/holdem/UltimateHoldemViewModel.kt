@@ -352,7 +352,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             HoldemOutcome.WIN -> PokerEval.bestCards(playerCards + board).toSet()
             HoldemOutcome.LOSE, HoldemOutcome.FOLD ->
                 PokerEval.bestCards(dealerCards + board).toSet()
-            HoldemOutcome.PUSH -> emptySet()
+            // A tie is usually the board playing for both, so light that five.
+            HoldemOutcome.PUSH -> PokerEval.bestCards(playerCards + board).toSet()
         }
 
         val rows = mutableListOf<UthResult>()
