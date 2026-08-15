@@ -969,6 +969,118 @@
   }
   var SUITS = [["♠", 0], ["♥", 1], ["♦", 1], ["♣", 0]];
   var RANKS = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"];
+  /* ============================================================
+     Ultimate Texas Hold'em engine — mirrors PokerHand.kt and
+     UltimateHoldemRules.kt so both builds settle a hand the same way.
+     ============================================================ */
+  var UTH = (function () {
+    var CAT = ["High Card","Pair","Two Pair","Three of a Kind","Straight",
+               "Flush","Full House","Four of a Kind","Straight Flush","Royal Flush"];
+    function val(rank) {
+      if (rank === "A") return 14;
+      if (rank === "K") return 13;
+      if (rank === "Q") return 12;
+      if (rank === "J") return 11;
+      if (rank === "10") return 10;
+      return parseInt(rank, 10);
+    }
+    function straightHigh(desc) {
+      var d = desc.filter(function (v, i) { return desc.indexOf(v) === i; });
+      if (d.length !== 5) return 0;
+      if (d[0] - d[4] === 4) return d[0];
+      if (d[0] === 14 && d[1] === 5 && d[4] === 2) return 5;   // the wheel
+      return 0;
+    }
+    /** Scores exactly five cards: {cat, tie[]}. */
+    function score5(hand) {
+      var v = hand.map(function (c) { return val(c.rank); })
+                  .sort(function (a, b) { return b - a; });
+      var flush = hand.every(function (c) { return c.suit === hand[0].suit; });
+      var sh = straightHigh(v);
+      var counts = {};
+      v.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+      var grouped = Object.keys(counts).map(Number).sort(function (a, b) {
+        return counts[b] - counts[a] || b - a;
+      });
+      var shape = grouped.map(function (r) { return counts[r]; });
+      if (flush && sh === 14) return { cat: 9, tie: [14] };
+      if (flush && sh > 0) return { cat: 8, tie: [sh] };
+      if (shape[0] === 4) return { cat: 7, tie: grouped };
+      if (shape[0] === 3 && shape[1] === 2) return { cat: 6, tie: grouped };
+      if (flush) return { cat: 5, tie: v };
+      if (sh > 0) return { cat: 4, tie: [sh] };
+      if (shape[0] === 3) return { cat: 3, tie: grouped };
+      if (shape[0] === 2 && shape[1] === 2) return { cat: 2, tie: grouped };
+      if (shape[0] === 2) return { cat: 1, tie: grouped };
+      return { cat: 0, tie: v };
+    }
+    function cmp(a, b) {
+      if (a.cat !== b.cat) return a.cat - b.cat;
+      for (var i = 0; i < a.tie.length; i++) {
+        var x = a.tie[i], y = b.tie[i] || 0;
+        if (x !== y) return x - y;
+      }
+      return 0;
+    }
+    function combos5(cards) {
+      var out = [];
+      for (var a = 0; a < cards.length - 4; a++)
+      for (var b = a + 1; b < cards.length - 3; b++)
+      for (var c = b + 1; c < cards.length - 2; c++)
+      for (var d = c + 1; d < cards.length - 1; d++)
+      for (var e = d + 1; e < cards.length; e++)
+        out.push([cards[a], cards[b], cards[c], cards[d], cards[e]]);
+      return out;
+    }
+    /** Best five of seven: {cat, tie, cards, label}. */
+    function best(cards) {
+      var bestHand = null;
+      combos5(cards).forEach(function (five) {
+        var s = score5(five);
+        if (!bestHand || cmp(s, bestHand) > 0) { s.cards = five; bestHand = s; }
+      });
+      bestHand.label = CAT[bestHand.cat];
+      return bestHand;
+    }
+    var BLIND = [[9,500],[8,50],[7,10],[6,3],[5,3],[4,1]];
+    var TRIPS = [[9,200],[8,100],[7,50],[6,20],[5,10],[4,4],[3,2]];
+    function payFor(table, cat) {
+      for (var i = 0; i < table.length; i++) if (table[i][0] === cat) return table[i][1];
+      return 0;
+    }
+    function qualifies(hand) { return hand.cat >= 1; }   // a pair or better opens
+    /** Gross returns — stake plus winnings — so a push returns the stake. */
+    function settle(playerHole, dealerHole, board, ante, blind, play, trips, folded) {
+      var p = best(playerHole.concat(board));
+      var d = best(dealerHole.concat(board));
+      var q = qualifies(d);
+      var tPay = payFor(TRIPS, p.cat);
+      var tripsReturn = (trips > 0 && tPay > 0) ? trips * (tPay + 1) : 0;
+      if (folded) {
+        return { player: p, dealer: d, qualified: q, outcome: "fold",
+                 ante: 0, blind: 0, play: 0, trips: tripsReturn, blindPay: 0, tripsPay: tPay };
+      }
+      var c = cmp(p, d);
+      var outcome = c > 0 ? "win" : (c < 0 ? "lose" : "push");
+      var bPay = outcome === "win" ? payFor(BLIND, p.cat) : 0;
+      if (outcome === "win") {
+        return { player: p, dealer: d, qualified: q, outcome: outcome,
+                 ante: q ? ante * 2 : ante,
+                 blind: bPay > 0 ? blind * (bPay + 1) : blind,
+                 play: play * 2, trips: tripsReturn, blindPay: bPay, tripsPay: tPay };
+      }
+      if (outcome === "push") {
+        return { player: p, dealer: d, qualified: q, outcome: outcome,
+                 ante: ante, blind: blind, play: play, trips: tripsReturn,
+                 blindPay: 0, tripsPay: tPay };
+      }
+      return { player: p, dealer: d, qualified: q, outcome: outcome,
+               ante: 0, blind: 0, play: 0, trips: tripsReturn, blindPay: 0, tripsPay: tPay };
+    }
+    return { val: val, score5: score5, best: best, cmp: cmp, settle: settle,
+             BLIND: BLIND, TRIPS: TRIPS, qualifies: qualifies };
+  })();
+  window.UTH = UTH;   // exposed so the rules can be exercised directly
   function buildShoe(decks) {
     var shoe = [];
     for (var d = 0; d < decks; d++)
