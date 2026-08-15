@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -96,9 +97,13 @@ fun UltimateHoldemScreen(
             )
             Spacer(Modifier.height(4.dp))
             DealerRow(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
+            TableDivider()
+            Spacer(Modifier.height(12.dp))
             BoardRow(vm)
-            Spacer(Modifier.height(10.dp))
+            Spacer(Modifier.height(12.dp))
+            TableDivider()
+            Spacer(Modifier.height(26.dp))
             PlayerRow(vm)
             Spacer(Modifier.height(8.dp))
             MessageLine(vm)
@@ -157,6 +162,26 @@ private fun TopBar(vm: UltimateHoldemViewModel, onBack: () -> Unit) {
             color = P.OffWhite, fontSize = 14.sp, fontWeight = FontWeight.Black,
         )
     }
+}
+
+/** Fades in from the felt at both ends so it reads as a table marking. */
+@Composable
+private fun TableDivider() {
+    Box(
+        Modifier
+            .widthIn(max = 420.dp)
+            .fillMaxWidth()
+            .height(1.5.dp)
+            .background(
+                Brush.horizontalGradient(
+                    0f to Color.Transparent,
+                    0.15f to NeonPurpleDim,
+                    0.5f to NeonPurple,
+                    0.85f to NeonPurpleDim,
+                    1f to Color.Transparent,
+                )
+            )
+    )
 }
 
 @Composable
