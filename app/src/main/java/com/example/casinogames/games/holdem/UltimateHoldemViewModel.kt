@@ -382,7 +382,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             s.outcome == HoldemOutcome.FOLD -> "Folded — ${s.playerHand.category.label}"
             s.outcome == HoldemOutcome.PUSH -> "Push — ${s.playerHand.category.label}"
             s.outcome == HoldemOutcome.WIN ->
-                if (!s.dealerQualified) "You win — dealer didn't open"
+                if (!s.dealerQualified) "You win — dealer didn't qualify"
                 else "You win — ${s.playerHand.category.label}"
             else -> "Dealer wins — ${s.dealerHand.category.label}"
         }
