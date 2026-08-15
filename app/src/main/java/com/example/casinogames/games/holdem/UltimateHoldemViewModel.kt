@@ -82,6 +82,10 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     var settlement by mutableStateOf<HoldemSettlement?>(null)
         private set
 
+    /** The five cards that won the hand, so the table can pick them out. */
+    var winningCards by mutableStateOf<Set<Card>>(emptySet())
+        private set
+
     val totalAtRisk: Int
         get() = if (phase == UthPhase.BETTING) ante * 2 + trips
         else anteStake + blindStake + tripsStake + playStake
@@ -147,6 +151,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         folded = false
         results = emptyList()
         settlement = null
+        winningCards = emptySet()
     }
 
     private fun persist() {
@@ -248,6 +253,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         folded = false
         results = emptyList()
         settlement = null
+        winningCards = emptySet()
         ante = 0; trips = 0
         phase = UthPhase.DEALING
         message = "Dealing…"
@@ -341,6 +347,13 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             folded = folded,
         )
         settlement = s
+        // Only a decided hand has a winner worth pointing at.
+        winningCards = when (s.outcome) {
+            HoldemOutcome.WIN -> PokerEval.bestCards(playerCards + board).toSet()
+            HoldemOutcome.LOSE, HoldemOutcome.FOLD ->
+                PokerEval.bestCards(dealerCards + board).toSet()
+            HoldemOutcome.PUSH -> emptySet()
+        }
 
         val rows = mutableListOf<UthResult>()
         rows.add(UthResult("Ante", s.anteReturn - anteStake))

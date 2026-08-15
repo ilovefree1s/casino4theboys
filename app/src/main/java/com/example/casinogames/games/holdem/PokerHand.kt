@@ -47,6 +47,12 @@ object PokerEval {
         return combinations(cards, 5).map { score(it) }.max()
     }
 
+    /** The five cards that make the best hand, for showing which ones played. */
+    fun bestCards(cards: List<Card>): List<Card> {
+        require(cards.size >= 5) { "need at least five cards" }
+        return combinations(cards, 5).maxBy { score(it) }
+    }
+
     /** Scores exactly five cards. */
     fun score(hand: List<Card>): HandValue {
         require(hand.size == 5) { "score() takes five cards" }

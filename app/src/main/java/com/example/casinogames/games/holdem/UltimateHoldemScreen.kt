@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casinogames.R
+import com.example.casinogames.games.core.Card
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
 import com.example.casinogames.ui.common.CasinoChip
@@ -142,7 +143,6 @@ fun UltimateHoldemScreen(
             PlayerRow(vm)
             Spacer(Modifier.height(8.dp))
             MessageLine(vm)
-            ResultRows(vm)
             Spacer(Modifier.weight(1f))
             BetSpots(vm)
             Spacer(Modifier.height(8.dp))
@@ -219,6 +219,10 @@ private fun TableDivider() {
     )
 }
 
+/** Once a hand is decided, the five that won stay lit and the rest fall back. */
+private fun playedAlpha(vm: UltimateHoldemViewModel, card: Card): Float =
+    if (vm.winningCards.isEmpty() || card in vm.winningCards) 1f else 0.3f
+
 @Composable
 private fun DealerRow(vm: UltimateHoldemViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -229,7 +233,11 @@ private fun DealerRow(vm: UltimateHoldemViewModel) {
             if (vm.dealerCards.isEmpty()) {
                 repeat(2) { EmptyCardSlot() }
             } else {
-                vm.dealerCards.forEach { PlayingCardView(it, faceUp = vm.dealerRevealed) }
+                vm.dealerCards.forEach { card ->
+                    Box(Modifier.alpha(playedAlpha(vm, card))) {
+                        PlayingCardView(card, faceUp = vm.dealerRevealed)
+                    }
+                }
             }
         }
     }
@@ -242,7 +250,9 @@ private fun BoardRow(vm: UltimateHoldemViewModel) {
             repeat(5) { EmptyCardSlot() }
         } else {
             vm.board.forEachIndexed { i, card ->
-                PlayingCardView(card, faceUp = i < vm.boardRevealed)
+                Box(Modifier.alpha(playedAlpha(vm, card))) {
+                    PlayingCardView(card, faceUp = i < vm.boardRevealed)
+                }
             }
         }
     }
@@ -251,16 +261,55 @@ private fun BoardRow(vm: UltimateHoldemViewModel) {
 @Composable
 private fun PlayerRow(vm: UltimateHoldemViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        ResultColumn(vm, amounts = false)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (vm.playerCards.isEmpty()) {
                 repeat(2) { EmptyCardSlot() }
             } else {
-                vm.playerCards.forEach { PlayingCardView(it, faceUp = true) }
+                vm.playerCards.forEach { card ->
+                    Box(Modifier.alpha(playedAlpha(vm, card))) {
+                        PlayingCardView(card, faceUp = true)
+                    }
+                }
             }
         }
+        ResultColumn(vm, amounts = true)
+      }
         Spacer(Modifier.height(6.dp))
         val hand = vm.settlement?.playerHand?.category?.label
         Label("YOUR HAND", NeonPurple, hand)
+    }
+}
+
+/** The settlement reads down either side of the player's hand. */
+@Composable
+private fun ResultColumn(vm: UltimateHoldemViewModel, amounts: Boolean) {
+    if (vm.phase != UthPhase.RESULT) {
+        Spacer(Modifier.width(78.dp))
+        return
+    }
+    Column(
+        Modifier.width(78.dp).padding(horizontal = 6.dp),
+        horizontalAlignment = if (amounts) Alignment.End else Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        vm.results.forEach { r ->
+            if (amounts) {
+                Text(
+                    if (r.net >= 0) "+${formatMoney(r.net)}" else "−${formatMoney(-r.net)}",
+                    color = if (r.net > 0) FeltGreen else if (r.net < 0) LossRed
+                    else P.OffWhite.copy(alpha = 0.6f),
+                    fontSize = 12.sp, fontWeight = FontWeight.Black, maxLines = 1,
+                )
+            } else {
+                Text(
+                    r.label.substringBefore(" ·"),
+                    color = P.OffWhite.copy(alpha = 0.85f),
+                    fontSize = 12.sp, maxLines = 1,
+                )
+            }
+        }
     }
 }
 
