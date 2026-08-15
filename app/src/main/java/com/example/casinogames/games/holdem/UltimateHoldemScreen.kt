@@ -111,7 +111,6 @@ fun UltimateHoldemScreen(
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
-                .padding(horizontal = 14.dp)
                 .padding(bottom = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -155,7 +154,7 @@ fun UltimateHoldemScreen(
 @Composable
 private fun TopBar(vm: UltimateHoldemViewModel, onBack: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth(),
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -377,7 +376,7 @@ private fun ChipRail(vm: UltimateHoldemViewModel) {
 @Composable
 private fun Actions(vm: UltimateHoldemViewModel) {
     Row(
-        Modifier.widthIn(max = 420.dp).fillMaxWidth(),
+        Modifier.widthIn(max = 420.dp).fillMaxWidth().padding(horizontal = 14.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         when (vm.phase) {
