@@ -52,8 +52,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casinogames.R
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
-import com.example.casinogames.ui.common.CardHeight
-import com.example.casinogames.ui.common.CardWidth
 import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.EmptyCardSlot
 import com.example.casinogames.ui.common.PlacedBetChip
@@ -106,35 +104,48 @@ fun UltimateHoldemScreen(
     var showPays by remember { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(TableBlack)) {
+        Image(
+            painter = painterResource(R.drawable.background),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize().alpha(0.5f),
+            contentScale = ContentScale.Crop,
+            colorFilter = GreenWash,
+        )
         Column(
             Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
+                .padding(horizontal = 14.dp)
                 .padding(bottom = 10.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(vm, onBack)
             Text(
-                "ULTIMATE TEXAS HOLD'EM \u00B7 PAY TABLES",
+                "ULTIMATE TEXAS HOLD'EM · PAY TABLES",
                 fontSize = 11.sp,
                 letterSpacing = 0.14.em,
                 fontWeight = FontWeight.Black,
                 color = NeonPurple.copy(alpha = 0.85f),
                 modifier = Modifier
                     .clickable { showPays = true }
-                    .padding(top = 1.dp, bottom = 3.dp),
+                    .padding(top = 1.dp, bottom = 2.dp),
             )
-            Felt(vm)
+            DealerRow(vm)
+            Spacer(Modifier.height(10.dp))
+            TableDivider()
+            Spacer(Modifier.height(17.dp))
+            BoardRow(vm)
+            Spacer(Modifier.height(10.dp))
+            TableDivider()
+            Spacer(Modifier.height(22.dp))
+            PlayerRow(vm)
+            Spacer(Modifier.height(8.dp))
+            MessageLine(vm)
             ResultRows(vm)
-            // The art runs out before the screen does, so a clean strip of the
-            // same felt is stretched over whatever is left.
-            Image(
-                painter = painterResource(R.drawable.uth_felt_fill),
-                contentDescription = null,
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                contentScale = ContentScale.FillBounds,
-            )
+            Spacer(Modifier.weight(1f))
+            BetSpots(vm)
+            Spacer(Modifier.height(8.dp))
             if (vm.phase == UthPhase.BETTING) ChipRail(vm)
             Spacer(Modifier.height(8.dp))
             Actions(vm)
@@ -161,7 +172,7 @@ fun UltimateHoldemScreen(
 @Composable
 private fun TopBar(vm: UltimateHoldemViewModel, onBack: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 14.dp),
+        Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -189,90 +200,105 @@ private fun TopBar(vm: UltimateHoldemViewModel, onBack: () -> Unit) {
 }
 
 /** Fades in from the felt at both ends so it reads as a table marking. */
-/** Height of the felt art as a fraction of its width. */
-private const val FELT_ASPECT = 1.4102f
-
-private val DEALER_X = floatArrayOf(0.4325f, 0.5759f)
-private val BOARD_X = floatArrayOf(0.2136f, 0.3571f, 0.5037f, 0.6504f, 0.7917f)
-private val PLAYER_X = floatArrayOf(0.4463f, 0.5537f)
-
-/**
- * The felt is the table art itself. Cards, the message line and the chips are
- * the only things drawn on top, each placed against what the art paints.
- */
 @Composable
-private fun Felt(vm: UltimateHoldemViewModel) {
-    val betting = vm.phase == UthPhase.BETTING
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val w = maxWidth
-        val h = w * FELT_ASPECT
-        Image(
-            painter = painterResource(R.drawable.uth_felt),
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth(),
-            contentScale = ContentScale.FillWidth,
-        )
-        vm.dealerCards.forEachIndexed { i, card ->
-            FeltCard(w, h, DEALER_X.getOrElse(i) { 0.5f }, 0.1085f) {
-                PlayingCardView(card, faceUp = vm.dealerRevealed)
+private fun TableDivider() {
+    Box(
+        Modifier
+            .widthIn(max = 420.dp)
+            .fillMaxWidth()
+            .height(1.5.dp)
+            .background(
+                Brush.horizontalGradient(
+                    0f to Color.Transparent,
+                    0.15f to NeonPurpleDim,
+                    0.5f to NeonPurple,
+                    0.85f to NeonPurpleDim,
+                    1f to Color.Transparent,
+                )
+            )
+    )
+}
+
+@Composable
+private fun DealerRow(vm: UltimateHoldemViewModel) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        val sub = vm.settlement
+        Label("DEALER", NeonPink, sub?.dealerHand?.category?.label.takeIf { vm.dealerRevealed })
+        Spacer(Modifier.height(6.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (vm.dealerCards.isEmpty()) {
+                repeat(2) { EmptyCardSlot() }
+            } else {
+                vm.dealerCards.forEach { PlayingCardView(it, faceUp = vm.dealerRevealed) }
             }
         }
-        vm.board.forEachIndexed { i, card ->
-            FeltCard(w, h, BOARD_X.getOrElse(i) { 0.5f }, 0.2833f) {
+    }
+}
+
+@Composable
+private fun BoardRow(vm: UltimateHoldemViewModel) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (vm.board.isEmpty()) {
+            repeat(5) { EmptyCardSlot() }
+        } else {
+            vm.board.forEachIndexed { i, card ->
                 PlayingCardView(card, faceUp = i < vm.boardRevealed)
             }
         }
-        vm.playerCards.forEachIndexed { i, card ->
-            FeltCard(w, h, PLAYER_X.getOrElse(i) { 0.5f }, 0.6330f) {
-                PlayingCardView(card, faceUp = true)
-            }
-        }
-        Text(
-            vm.message,
-            fontSize = 15.sp,
-            fontStyle = FontStyle.Italic,
-            fontWeight = FontWeight.Medium,
-            color = if (vm.phase == UthPhase.RESULT && vm.results.sumOf { it.net } > 0) FeltGreen
-            else P.OffWhite.copy(alpha = 0.92f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().offset(y = h * 0.4500f - 11.dp),
-        )
-        BlockSpot(
-            w, h, fx = 0.5016f, fy = 0.7430f, fSize = 0.1403f,
-            amount = if (betting) vm.trips else vm.tripsStake,
-            onClick = { vm.addTrips() }.takeIf { betting },
-        )
-        BlockSpot(
-            w, h, fx = 0.4144f, fy = 0.8296f, fSize = 0.1137f,
-            amount = if (betting) vm.ante else vm.anteStake,
-            onClick = { vm.addAnte() }.takeIf { betting },
-        )
-        BlockSpot(
-            w, h, fx = 0.5909f, fy = 0.8296f, fSize = 0.1137f,
-            amount = if (betting) vm.ante else vm.blindStake,
-            onClick = null,
-        )
-        BlockSpot(
-            w, h, fx = 0.5016f, fy = 0.9314f, fSize = 0.1307f,
-            amount = vm.playStake,
-            onClick = null,
-        )
     }
 }
 
-/** Drops a card onto one of the outlines painted into the felt. */
 @Composable
-private fun FeltCard(
-    w: androidx.compose.ui.unit.Dp,
-    h: androidx.compose.ui.unit.Dp,
-    fx: Float,
-    fy: Float,
-    content: @Composable () -> Unit,
-) {
-    Box(Modifier.offset(x = w * fx - CardWidth / 2, y = h * fy - CardHeight / 2)) {
-        content()
+private fun PlayerRow(vm: UltimateHoldemViewModel) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (vm.playerCards.isEmpty()) {
+                repeat(2) { EmptyCardSlot() }
+            } else {
+                vm.playerCards.forEach { PlayingCardView(it, faceUp = true) }
+            }
+        }
+        Spacer(Modifier.height(6.dp))
+        val hand = vm.settlement?.playerHand?.category?.label
+        Label("YOUR HAND", NeonPurple, hand)
     }
 }
+
+@Composable
+private fun Label(text: String, color: Color, badge: String?) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text,
+            color = color, fontSize = 12.sp,
+            fontWeight = FontWeight.Black, letterSpacing = 0.14.em,
+        )
+        if (badge != null) {
+            Spacer(Modifier.width(8.dp))
+            Text(
+                badge,
+                color = P.OffWhite, fontSize = 11.sp, fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .background(color.copy(alpha = 0.22f), RoundedCornerShape(999.dp))
+                    .border(1.dp, color, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 9.dp, vertical = 3.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun MessageLine(vm: UltimateHoldemViewModel) {
+    val won = vm.phase == UthPhase.RESULT && vm.results.sumOf { it.net } > 0
+    Text(
+        vm.message,
+        fontSize = 15.sp,
+        fontStyle = FontStyle.Italic,
+        fontWeight = FontWeight.Medium,
+        color = if (won) FeltGreen else P.OffWhite.copy(alpha = 0.92f),
+        textAlign = TextAlign.Center,
+    )
+}
+
 @Composable
 private fun ResultRows(vm: UltimateHoldemViewModel) {
     if (vm.phase != UthPhase.RESULT) return
@@ -297,68 +323,241 @@ private fun ResultRows(vm: UltimateHoldemViewModel) {
 }
 
 /**
- * The betting area is the table art itself. Only the chips and the hit areas
- * are drawn on top, positioned against the spots painted into the felt.
+ * The standard Ultimate layout: Trips on its own diamond, the Ante and Blind
+ * paired as equals, and the Play spot below the Ante.
  */
 @Composable
 private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val w = maxWidth
-        val h = w * BLOCK_ASPECT
-        Image(
-            painter = painterResource(R.drawable.uth_betting_block),
-            contentDescription = null,
-            modifier = Modifier.fillMaxWidth(),
-            contentScale = ContentScale.FillWidth,
+    val spot = 62.dp
+    val gap = 24.dp
+    /** 45px right of centre. */
+    val shift = 15.dp
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // The Trips pays sit beside the diamond, resting on the Ante row below.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val gutter = (maxWidth - (spot * 2 + gap)) / 2
+            Row(
+                Modifier.align(Alignment.BottomCenter).offset(x = shift),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                DiamondSpot(
+                    label = "TRIPS",
+                    color = NeonPink,
+                    amount = if (betting) vm.trips else vm.tripsStake,
+                    size = spot,
+                    onClick = { vm.addTrips() }.takeIf { betting },
+                )
+                Spacer(Modifier.width(gap))
+                Spacer(Modifier.width(spot))
+            }
+            FeltPayTable(
+                title = "TRIPS",
+                color = NeonPink,
+                rows = TripsPay.entries.map { it.label to "${it.multiplier}-to-1" },
+                width = gutter - 6.dp,
+                modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 12.dp),
+            )
+        }
+        Row(
+            Modifier.offset(x = shift),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            CircleSpot(
+                "ANTE", NeonPurple,
+                amount = if (betting) vm.ante else vm.anteStake,
+                size = spot,
+                onClick = { vm.addAnte() }.takeIf { betting },
+            )
+            Box(Modifier.width(gap), contentAlignment = Alignment.Center) {
+                Text(
+                    "=",
+                    color = NeonPurple.copy(alpha = 0.85f),
+                    fontSize = 22.sp, fontWeight = FontWeight.Black,
+                )
+            }
+            // The blind always matches the ante, so it takes no chips itself.
+            CircleSpot(
+                "BLIND", NeonPurple,
+                amount = if (betting) vm.ante else vm.blindStake,
+                size = spot,
+                onClick = null,
+            )
+        }
+        // The spots stay centred on screen; the two ladders take the gutters
+        // either side, sitting just above the chip rail.
+        BoxWithConstraints(Modifier.fillMaxWidth()) {
+            val gutter = (maxWidth - (spot * 2 + gap)) / 2
+            Row(
+                Modifier.align(Alignment.TopCenter).offset(x = shift),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                CircleSpot("PLAY", FeltGreen, vm.playStake, spot, null)
+                Spacer(Modifier.width(gap))
+                Spacer(Modifier.width(spot))
+            }
+            FeltPayTable(
+                title = "PLAY BET",
+                color = FeltGreen,
+                rows = listOf(
+                    "Before the Flop" to "3x or 4x",
+                    "After the Flop" to "2x",
+                    "On the River" to "1x",
+                ),
+                width = gutter - 8.dp,
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 7.dp),
+            )
+            FeltPayTable(
+                title = "BLIND",
+                color = NeonPurple,
+                rows = BlindPay.entries.map { it.label to blindOdds(it) },
+                width = gutter - 6.dp,
+                modifier = Modifier.align(Alignment.BottomEnd),
+            )
+        }
+    }
+}
+
+private fun blindOdds(pay: BlindPay): String = "${pay.multiplier.toInt()}-to-1"
+
+/** A pay table printed straight onto the felt, ruled heading and dotted leaders. */
+@Composable
+private fun FeltPayTable(
+    title: String,
+    color: Color,
+    rows: List<Pair<String, String>>,
+    width: androidx.compose.ui.unit.Dp,
+    modifier: Modifier = Modifier,
+    fontSize: androidx.compose.ui.unit.TextUnit = 10.sp,
+) {
+    Column(
+        modifier.width(width),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(Modifier.weight(1f).height(1.dp).background(color.copy(alpha = 0.5f)))
+            Text(
+                title,
+                color = color, fontSize = 12.sp,
+                fontWeight = FontWeight.Black, letterSpacing = 0.08.em,
+                modifier = Modifier.padding(horizontal = 4.dp),
+            )
+            Box(Modifier.weight(1f).height(1.dp).background(color.copy(alpha = 0.5f)))
+        }
+        Spacer(Modifier.height(2.dp))
+        rows.forEach { (label, value) -> FeltPayRow(label, value, color, fontSize) }
+    }
+}
+
+@Composable
+private fun FeltPayRow(
+    label: String,
+    value: String,
+    color: Color,
+    fontSize: androidx.compose.ui.unit.TextUnit,
+) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            label,
+            color = P.OffWhite.copy(alpha = 0.88f),
+            fontSize = fontSize, lineHeight = fontSize * 1.1f, maxLines = 1,
         )
-        BlockSpot(
-            w, h, fx = 0.5016f, fy = 0.3551f, fSize = 0.1403f,
-            amount = if (betting) vm.trips else vm.tripsStake,
-            onClick = { vm.addTrips() }.takeIf { betting },
+        Box(
+            Modifier
+                .weight(1f)
+                .height(3.dp)
+                .padding(horizontal = 3.dp)
+                .drawBehind {
+                    drawLine(
+                        color = Color(0x8AF5F1E8),
+                        start = Offset(0f, size.height / 2f),
+                        end = Offset(size.width, size.height / 2f),
+                        strokeWidth = 1.dp.toPx(),
+                        pathEffect = PathEffect.dashPathEffect(
+                            floatArrayOf(1.5.dp.toPx(), 2.dp.toPx())
+                        ),
+                    )
+                }
         )
-        BlockSpot(
-            w, h, fx = 0.4144f, fy = 0.5758f, fSize = 0.1137f,
-            amount = if (betting) vm.ante else vm.anteStake,
-            onClick = { vm.addAnte() }.takeIf { betting },
-        )
-        // The blind always matches the ante, so it takes no chips of its own.
-        BlockSpot(
-            w, h, fx = 0.5909f, fy = 0.5758f, fSize = 0.1137f,
-            amount = if (betting) vm.ante else vm.blindStake,
-            onClick = null,
-        )
-        BlockSpot(
-            w, h, fx = 0.5016f, fy = 0.8349f, fSize = 0.1307f,
-            amount = vm.playStake,
-            onClick = null,
+        Text(
+            value,
+            color = color, fontSize = fontSize, lineHeight = fontSize * 1.1f,
+            fontWeight = FontWeight.Black, maxLines = 1,
         )
     }
 }
 
-/** Height of the betting art as a fraction of its width. */
-private const val BLOCK_ASPECT = 0.5537f
-
-/** A chip resting on one of the spots painted into the felt. */
 @Composable
-private fun BlockSpot(
-    w: androidx.compose.ui.unit.Dp,
-    h: androidx.compose.ui.unit.Dp,
-    fx: Float,
-    fy: Float,
-    fSize: Float,
+private fun CircleSpot(
+    label: String,
+    color: Color,
     amount: Int,
+    size: androidx.compose.ui.unit.Dp,
     onClick: (() -> Unit)?,
 ) {
-    val size = w * fSize
     Box(
         Modifier
-            .offset(x = w * fx - size / 2, y = h * fy - size / 2)
+            .size(size)
+            .border(2.dp, if (amount > 0) color else color.copy(alpha = 0.4f), CircleShape)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        contentAlignment = Alignment.Center,
+    ) {
+        SpotContents(label, color, amount, size)
+    }
+}
+
+@Composable
+private fun DiamondSpot(
+    label: String,
+    color: Color,
+    amount: Int,
+    size: androidx.compose.ui.unit.Dp,
+    onClick: (() -> Unit)?,
+) {
+    Box(
+        Modifier
             .size(size)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
-        if (amount > 0) PlacedBetChip(amount, size = size * 0.84f, artFor = ::uthChipArt)
+        // A square stood on its corner; the chip and label stay upright inside it.
+        Box(
+            Modifier
+                .size(size * 0.78f)
+                .rotate(45f)
+                .border(
+                    2.dp,
+                    if (amount > 0) color else color.copy(alpha = 0.4f),
+                    RoundedCornerShape(3.dp),
+                )
+        )
+        SpotContents(label, color, amount, size)
+    }
+}
+
+@Composable
+private fun SpotContents(
+    label: String,
+    color: Color,
+    amount: Int,
+    size: androidx.compose.ui.unit.Dp,
+) {
+    if (amount > 0) {
+        PlacedBetChip(amount, size = size * 0.74f, artFor = ::uthChipArt)
+    } else {
+        Text(
+            label,
+            color = color.copy(alpha = 0.75f),
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Black,
+            letterSpacing = 0.08.em,
+        )
     }
 }
 
@@ -383,7 +582,7 @@ private fun ChipRail(vm: UltimateHoldemViewModel) {
 @Composable
 private fun Actions(vm: UltimateHoldemViewModel) {
     Row(
-        Modifier.widthIn(max = 420.dp).fillMaxWidth().padding(horizontal = 14.dp),
+        Modifier.widthIn(max = 420.dp).fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         when (vm.phase) {
