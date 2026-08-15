@@ -99,7 +99,7 @@ fun UltimateHoldemScreen(
                 color = NeonPurple.copy(alpha = 0.85f),
                 modifier = Modifier
                     .clickable { showPays = true }
-                    .padding(vertical = 5.dp),
+                    .padding(top = 1.dp, bottom = 2.dp),
             )
             DealerRow(vm)
             Spacer(Modifier.height(10.dp))
@@ -142,7 +142,7 @@ fun UltimateHoldemScreen(
 @Composable
 private fun TopBar(vm: UltimateHoldemViewModel, onBack: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(top = 6.dp),
+        Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
