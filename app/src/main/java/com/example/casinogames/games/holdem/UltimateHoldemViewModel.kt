@@ -352,8 +352,11 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             HoldemOutcome.WIN -> PokerEval.bestCards(playerCards + board).toSet()
             HoldemOutcome.LOSE, HoldemOutcome.FOLD ->
                 PokerEval.bestCards(dealerCards + board).toSet()
-            // A tie is usually the board playing for both, so light that five.
-            HoldemOutcome.PUSH -> PokerEval.bestCards(playerCards + board).toSet()
+            // A tie can still use a card from each hand — A-2 against A-3 both
+            // play their ace — so light what either side actually used.
+            HoldemOutcome.PUSH ->
+                PokerEval.bestCards(playerCards + board).toSet() +
+                    PokerEval.bestCards(dealerCards + board).toSet()
         }
 
         val rows = mutableListOf<UthResult>()

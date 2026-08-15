@@ -18,6 +18,8 @@
     --neon-purple: #8B30D9;
     --hotpink: #FF1493;
     --campaign-gold: #FFD24D;
+    --uth-green: #90FF3D;
+    --uth-dim: rgba(98,184,43,.6);
     --display: "Arial Black", "Franklin Gothic Heavy", "Segoe UI", sans-serif;
     --script: "Snell Roundhand", "Brush Script MT", "Segoe Script", cursive;
     --ui: "Segoe UI", system-ui, -apple-system, sans-serif;
@@ -373,6 +375,122 @@
     border: 1.5px solid rgba(255,63,216,.6);
   }
 
+  /* ========== ULTIMATE TEXAS HOLD'EM ========== */
+  #screen-holdem { position: relative; background: #030703; }
+  /* The background art is purple; this felt is green, so the art swings hue. */
+  .uth-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .5; pointer-events: none;
+    filter: hue-rotate(168deg) saturate(1.15);
+  }
+  .uth-table {
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
+  }
+  .uth-topbar { width: 100%; display: flex; align-items: center; padding: 2px 0 6px; }
+  .uth-topbar .backlink {
+    color: var(--uth-green); font-weight: 900; font-size: 13px; padding-left: 0;
+  }
+  .uth-money { margin-left: auto; display: flex; align-items: baseline; gap: 4px; }
+  .uth-money .lbl { font-size: 10px; letter-spacing: .08em; color: rgba(245,241,232,.6); }
+  .uth-money .val { font-family: var(--display); font-size: 14px; color: var(--uth-green); }
+  .uth-money .val.risk { color: var(--bone); }
+  .uth-money .gap { width: 10px; }
+
+  /* Fades into the felt at both ends so it reads as a table marking. */
+  .uth-rule {
+    width: 100%; max-width: 420px; height: 1.5px; flex: none;
+    background: linear-gradient(90deg, transparent, var(--uth-dim) 15%,
+      var(--uth-green) 50%, var(--uth-dim) 85%, transparent);
+  }
+  .uth-label {
+    display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 22px;
+  }
+  .uth-label .nm {
+    font-family: var(--display); font-size: 12px; letter-spacing: .14em; color: var(--uth-green);
+  }
+  .uth-label .badge {
+    font-family: var(--display); font-size: 11px; color: var(--bone);
+    border: 1px solid var(--uth-green); background: rgba(144,255,61,.22);
+    border-radius: 999px; padding: 3px 9px;
+  }
+  .uth-hole { gap: 8px; }
+  .card.dim { opacity: .3; }
+  .uth-message {
+    font-style: italic; font-weight: 500; font-size: 15px; text-align: center;
+    min-height: 20px; margin-top: 5px; color: rgba(245,241,232,.92);
+  }
+  .uth-message.win { color: var(--uth-green); }
+  .uth-spacer { flex: 1; min-height: 6px; }
+
+  /* The settlement reads down either side of the player's hand. */
+  .uth-player { display: flex; align-items: center; justify-content: center; }
+  .uth-res {
+    width: 78px; flex: none; padding: 0 6px; font-size: 12px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .uth-res .lbl { color: rgba(245,241,232,.85); white-space: nowrap; }
+  .uth-res.amt { align-items: flex-end; font-family: var(--display); }
+  .uth-res .w { color: var(--uth-green); }
+  .uth-res .l { color: #FF4D4D; }
+  .uth-res .p { color: rgba(245,241,232,.6); }
+
+  .uth-spots { width: 100%; display: flex; flex-direction: column; gap: 5px; }
+  .uth-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; }
+  .uth-row .mid { display: flex; align-items: center; justify-content: center; }
+  /* The Play circle rides at the top of its row; the ladders fill the gutters. */
+  .uth-row.top .mid { align-self: start; }
+  .uth-eq {
+    width: 18px; text-align: center; font-family: var(--display);
+    font-size: 22px; color: rgba(144,255,61,.85);
+  }
+  .uth-spot {
+    position: relative; width: 52px; height: 52px; flex: none; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .uth-spot[disabled] { cursor: default; }
+  .uth-spot .ring { position: absolute; inset: 0; border: 2px solid; border-radius: 50%; }
+  /* A square stood on its corner; the chip and label stay upright inside it. */
+  .uth-spot .dia {
+    position: absolute; left: 11%; top: 11%; width: 78%; height: 78%;
+    border: 2px solid; border-radius: 3px; transform: rotate(45deg);
+  }
+  .uth-spot .cap {
+    font-family: var(--display); font-size: 10px; letter-spacing: .08em;
+    color: rgba(144,255,61,.75);
+  }
+  .uth-spot .placed { width: 38px; height: 38px; }
+
+  /* Pay tables printed straight onto the felt: ruled heading, dotted leaders. */
+  .uth-pays .hd { display: flex; align-items: center; gap: 4px; }
+  .uth-pays .hd .bar { flex: 1; height: 1px; background: var(--uth-green); opacity: .5; }
+  .uth-pays .hd .ttl {
+    font-family: var(--display); font-size: 12px; letter-spacing: .08em; color: var(--uth-green);
+  }
+  .uth-pays .row { display: flex; align-items: center; font-size: 9px; line-height: 11px; }
+  .uth-pays .row .nm { color: rgba(245,241,232,.88); white-space: nowrap; }
+  .uth-pays .row .dots {
+    flex: 1; height: 1px; margin: 0 3px;
+    background-image: linear-gradient(90deg, rgba(245,241,232,.54) 43%, transparent 0);
+    background-size: 3.5px 1px; background-repeat: repeat-x;
+  }
+  .uth-pays .row .val {
+    font-family: var(--display); white-space: nowrap; color: var(--uth-green);
+  }
+
+  .uth-rack { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
+  .uth-rack .chip-btn.sel { box-shadow: 0 0 0 3px var(--uth-green), 0 5px 12px rgba(0,0,0,.5); }
+  .uth-actions {
+    width: 100%; max-width: 420px; display: flex; gap: 8px;
+    margin-top: 6px; min-height: 44px;
+  }
+  .uth-btn {
+    flex: 1; height: 44px; border-radius: 999px; background: rgba(14,10,11,.8);
+    border: 1.5px solid; font-family: var(--display); font-size: 13px; letter-spacing: .08em;
+  }
+  .uth-btn:active { transform: scale(.98); }
+
   /* ================= BACCARAT ================= */
   #screen-baccarat { position: relative; background: var(--night); }
   /* The 4 The Boys art carries the branding, so the script watermarks retire. */
@@ -571,7 +689,7 @@
     <div class="lb-cards">
       <button class="lb-imgcard" id="lb-baccarat"><img src="__LB_BACCARAT__" alt="Baccarat — play"></button>
       <button class="lb-imgcard" id="lb-blackjack"><img src="__LB_BLACKJACK__" alt="Free Bet Blackjack — play"></button>
-      <div class="lb-imgcard soon"><img src="__LB_HOLDEM__" alt="Ultimate Texas Hold'em — coming soon"></div>
+      <button class="lb-imgcard" id="lb-holdem"><img src="__LB_HOLDEM__" alt="Ultimate Texas Hold'em — play"></button>
       <div class="lb-imgcard soon"><img src="__LB_ROULETTE__" alt="Roulette — coming soon"></div>
       <div class="lb-imgcard soon"><img src="__LB_CRAPS__" alt="Craps — coming soon"></div>
     </div>
@@ -643,6 +761,42 @@
         Blazing 7s costs nothing — all three cards must be the seven of diamonds.
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ========== ULTIMATE TEXAS HOLD'EM ========== -->
+<div class="screen" id="screen-holdem">
+  <img class="uth-bg" src="__BG__" alt="">
+  <div class="uth-table">
+    <div class="uth-topbar">
+      <button class="backlink" id="uth-back">‹ LOBBY</button>
+      <div class="uth-money">
+        <span class="lbl">BANKROLL</span><span class="val" id="uth-bankroll">5,000</span>
+        <span class="gap"></span>
+        <span class="lbl">AT RISK</span><span class="val risk" id="uth-risk">0</span>
+      </div>
+    </div>
+    <div class="uth-label" id="uth-dealer-label"><span class="nm">DEALER</span></div>
+    <div class="cards uth-hole" id="uth-dealer" style="margin-top:6px"></div>
+    <div style="height:7px"></div>
+    <div class="uth-rule"></div>
+    <div style="height:11px"></div>
+    <div class="cards" id="uth-board"></div>
+    <div style="height:7px"></div>
+    <div class="uth-rule"></div>
+    <div style="height:14px"></div>
+    <div class="uth-player">
+      <div class="uth-res" id="uth-res-labels"></div>
+      <div class="cards uth-hole" id="uth-hole"></div>
+      <div class="uth-res amt" id="uth-res-amounts"></div>
+    </div>
+    <div style="height:6px"></div>
+    <div class="uth-label" id="uth-hand-label"><span class="nm">YOUR HAND</span></div>
+    <div class="uth-message" id="uth-message">Place your ante</div>
+    <div class="uth-spacer"></div>
+    <div class="uth-spots" id="uth-spots"></div>
+    <div id="uth-rack"></div>
+    <div class="uth-actions" id="uth-actions"></div>
   </div>
 </div>
 
@@ -942,6 +1096,8 @@
   $("lb-back").addEventListener("click", function () { Shell.showMenu(); });
   $("lb-baccarat").addEventListener("click", function () { Baccarat.enter(); Shell.show("baccarat"); });
   $("lb-blackjack").addEventListener("click", function () { Shell.show("bjmenu"); });
+  $("lb-holdem").addEventListener("click", function () { Holdem.enter(); Shell.show("holdem"); });
+  $("uth-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-freebet").addEventListener("click", function () {
     Blackjack.enter("freebet"); Shell.show("blackjack");
@@ -1078,7 +1234,7 @@
                ante: 0, blind: 0, play: 0, trips: tripsReturn, blindPay: 0, tripsPay: tPay };
     }
     return { val: val, score5: score5, best: best, cmp: cmp, settle: settle,
-             BLIND: BLIND, TRIPS: TRIPS, qualifies: qualifies };
+             CAT: CAT, BLIND: BLIND, TRIPS: TRIPS, qualifies: qualifies };
   })();
   window.UTH = UTH;   // exposed so the rules can be exercised directly
   function buildShoe(decks) {
@@ -1797,6 +1953,412 @@
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     ULTIMATE TEXAS HOLD'EM
+     ============================================================ */
+  var Holdem = (function () {
+    var DECKS = 1, RESHUFFLE_AT = 20;
+    var GREEN = "#90FF3D", DIM = "rgba(98,184,43,.6)", FAINT = "rgba(144,255,61,.4)";
+    var shoe = buildShoe(DECKS);
+    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    /** Pending bets while betting; the Blind always matches the Ante. */
+    var ante = 0, trips = 0, chipHist = [], lastAnte = 0, lastTrips = 0;
+    /** Locked-in stakes once the hand is dealt. */
+    var anteStake = 0, blindStake = 0, tripsStake = 0, playStake = 0;
+    // betting | dealing | preflop | flop | river | showdown | result
+    var phase = "betting";
+    var player = [], dealer = [], board = [];
+    var boardUp = 0, dealerUp = false, folded = false;
+    var message = "Place your ante", won = false;
+    var results = [], settlement = null, winners = [], timers = [];
+
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function draw() { return shoe.pop(); }
+    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+    function atRisk() {
+      return phase === "betting" ? ante * 2 + trips
+        : anteStake + blindStake + tripsStake + playStake;
+    }
+    /** The decision point the player is facing, if any. */
+    function street() {
+      return phase === "preflop" || phase === "flop" || phase === "river" ? phase : null;
+    }
+    /** Play bet multiples of the ante, best first, for each decision point. */
+    var PLAY_OPTIONS = { preflop: [4, 3], flop: [2], river: [1] };
+    function playChoices() {
+      var s = street();
+      if (!s) return [];
+      return PLAY_OPTIONS[s].filter(function (m) { return bankroll >= anteStake * m; });
+    }
+
+    // ---------- render ----------
+    function setMessage(text, win) {
+      message = text; won = !!win;
+      var m = $("uth-message");
+      m.textContent = text;
+      m.className = "uth-message" + (won ? " win" : "");
+    }
+    function renderTop() {
+      $("uth-bankroll").textContent = fmt(bankroll);
+      $("uth-risk").textContent = fmt(atRisk());
+    }
+    /** Once a hand is decided, the five that won stay lit and the rest fall back. */
+    function lit(c) { return !winners.length || winners.indexOf(c) >= 0; }
+    function renderCards(host, cards, faceUp, empties) {
+      host.innerHTML = "";
+      if (!cards.length) {
+        for (var i = 0; i < empties; i++) {
+          var s = document.createElement("div");
+          s.className = "slot";
+          host.appendChild(s);
+        }
+        return;
+      }
+      cards.forEach(function (c, i) {
+        var el = cardEl(c, faceUp(i));
+        if (!lit(c)) el.classList.add("dim");
+        host.appendChild(el);
+      });
+    }
+    function renderLabel(id, text, badge) {
+      $(id).innerHTML = '<span class="nm">' + text + "</span>" +
+        (badge ? '<span class="badge">' + badge + "</span>" : "");
+    }
+    function renderHands() {
+      renderCards($("uth-dealer"), dealer, function () { return dealerUp; }, 2);
+      renderCards($("uth-hole"), player, function () { return true; }, 2);
+      renderLabel("uth-dealer-label", "DEALER",
+        dealerUp && settlement ? settlement.dealer.label : null);
+      renderLabel("uth-hand-label", "YOUR HAND", settlement ? settlement.player.label : null);
+    }
+    function renderBoard() {
+      renderCards($("uth-board"), board, function (i) { return i < boardUp; }, 5);
+    }
+    function renderResults() {
+      var labels = $("uth-res-labels"), amounts = $("uth-res-amounts");
+      labels.innerHTML = ""; amounts.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        labels.insertAdjacentHTML("beforeend",
+          '<span class="lbl">' + r.label.split(" ·")[0] + "</span>");
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net >= 0 ? "+" + fmt(r.net) : "−" + fmt(-r.net);
+        amounts.insertAdjacentHTML("beforeend",
+          '<span class="' + cls + '">' + txt + "</span>");
+      });
+    }
+    function odds(list) {
+      return list.map(function (row) {
+        return [UTH.CAT[row[0]], row[1] + "-to-1"];
+      });
+    }
+    function paysHtml(title, rows) {
+      var html = '<div class="uth-pays"><div class="hd"><span class="bar"></span>' +
+        '<span class="ttl">' + title + '</span><span class="bar"></span></div>';
+      rows.forEach(function (r) {
+        html += '<div class="row"><span class="nm">' + r[0] + "</span>" +
+          '<span class="dots"></span><span class="val">' + r[1] + "</span></div>";
+      });
+      return html + "</div>";
+    }
+    function spotHtml(id, shape, label, amount, live) {
+      return '<button class="uth-spot" id="' + id + '"' + (live ? "" : " disabled") + '>' +
+        '<span class="' + shape + '" style="border-color:' + (amount > 0 ? GREEN : FAINT) + '"></span>' +
+        (amount > 0
+          ? '<div class="placed" style="display:block">' + chipHtml(amount) + "</div>"
+          : '<span class="cap">' + label + "</span>") +
+        "</button>";
+    }
+    /**
+     * The standard Ultimate layout: Trips on its own diamond, the Ante and Blind
+     * paired as equals, and the Play spot below the Ante.
+     */
+    function renderSpots() {
+      var betting = phase === "betting";
+      var host = $("uth-spots");
+      host.innerHTML =
+        '<div class="uth-row"><div></div>' +
+          '<div class="mid">' +
+            spotHtml("uth-trips", "dia", "TRIPS", betting ? trips : tripsStake, betting) +
+          "</div>" +
+          '<div style="padding-bottom:12px">' + paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +
+        "</div>" +
+        '<div class="uth-row"><div></div><div class="mid">' +
+          spotHtml("uth-ante", "ring", "ANTE", betting ? ante : anteStake, betting) +
+          '<span class="uth-eq">=</span>' +
+          // The blind always matches the ante, so it takes no chips itself.
+          spotHtml("uth-blind", "ring", "BLIND", betting ? ante : blindStake, false) +
+        '</div><div></div></div>' +
+        '<div class="uth-row top">' +
+          '<div style="padding-bottom:7px">' + paysHtml("PLAY BET", [
+            ["Before the Flop", "3x or 4x"], ["After the Flop", "2x"], ["On the River", "1x"]
+          ]) + "</div>" +
+          '<div class="mid">' + spotHtml("uth-play", "ring", "PLAY", playStake, false) + "</div>" +
+          "<div>" + paysHtml("BLIND", odds(UTH.BLIND)) + "</div>" +
+        "</div>";
+      if (betting) {
+        $("uth-trips").addEventListener("click", function () { place("trips"); });
+        $("uth-ante").addEventListener("click", function () { place("ante"); });
+      }
+    }
+    function renderRack() {
+      var host = $("uth-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      chipsFor(bankroll).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("uth-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(actionBtn("UNDO", DIM, undoChip));
+        a.appendChild(actionBtn("DEAL", GREEN, deal));
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        if (Shell.mode === "testing" && bankroll < 25 && ante === 0) {
+          var buy = document.createElement("button");
+          buy.className = "btn solid";
+          buy.textContent = "Buy back in";
+          buy.addEventListener("click", function () {
+            bankroll = TESTING_BANKROLL;
+            setMessage("Place your ante");
+            renderAll();
+          });
+          a.appendChild(buy);
+        }
+      } else if (street()) {
+        playChoices().forEach(function (m) {
+          a.appendChild(actionBtn("PLAY " + m + "x", GREEN, function () { play(m); }));
+        });
+        if (phase === "preflop" || phase === "flop") a.appendChild(actionBtn("CHECK", DIM, check));
+        if (phase === "river") a.appendChild(actionBtn("FOLD", GREEN, fold));
+      } else if (phase === "result") {
+        a.appendChild(actionBtn("REBET", GREEN, function () { nextHand(true); }));
+        a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+      }
+    }
+    function renderAll() {
+      renderTop(); renderHands(); renderBoard(); renderResults();
+      renderSpots(); renderRack(); renderActions();
+    }
+
+    // ---------- betting ----------
+    /** The ante costs double, because the blind rides alongside it. */
+    function place(spot) {
+      if (phase !== "betting") return;
+      var room = Math.floor(bankroll - (ante * 2 + trips));
+      // Half the remaining room on the ante, so ante and blind can both be covered.
+      var amount = spot === "ante"
+        ? Math.min(selectedChip, Math.floor(room / 2))
+        : Math.min(selectedChip, room);
+      if (amount <= 0) { setMessage("Not enough for the ante and blind"); return; }
+      if (spot === "ante") ante += amount; else trips += amount;
+      chipHist.push({ spot: spot, v: amount });
+      setMessage(amount < selectedChip ? "All in!"
+        : spot === "trips" ? "Trips riding" : "Ante and blind posted");
+      renderTop(); renderSpots();
+    }
+    function undoChip() {
+      if (phase !== "betting" || !chipHist.length) return;
+      var last = chipHist.pop();
+      if (last.spot === "ante") ante = Math.max(0, ante - last.v);
+      else trips = Math.max(0, trips - last.v);
+      renderTop(); renderSpots();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      ante = 0; trips = 0; chipHist = [];
+      setMessage("Place your ante");
+      renderTop(); renderSpots();
+    }
+
+    // ---------- deal ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (ante <= 0) {
+        setMessage(trips > 0 ? "Trips rides with an ante" : "Place an ante first");
+        return;
+      }
+      if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
+      bankroll -= ante * 2 + trips;
+      syncWallet();
+      lastAnte = ante; lastTrips = trips;
+      anteStake = ante; blindStake = ante; tripsStake = trips; playStake = 0;
+      chipHist = [];
+      player = []; dealer = []; board = [];
+      boardUp = 0; dealerUp = false; folded = false;
+      results = []; settlement = null; winners = [];
+      ante = 0; trips = 0;
+      phase = "dealing";
+      setMessage("Dealing…");
+      renderAll();
+      // Two rounds of hole cards, then the board goes down face down.
+      t(280, function () { player.push(draw()); renderHands(); });
+      t(500, function () { dealer.push(draw()); renderHands(); });
+      t(780, function () { player.push(draw()); renderHands(); });
+      t(1000, function () { dealer.push(draw()); renderHands(); });
+      t(1250, function () {
+        for (var i = 0; i < 5; i++) board.push(draw());
+        renderBoard();
+      });
+      t(1600, function () {
+        phase = "preflop";
+        setMessage("Check, or raise 3x or 4x");
+        renderActions();
+      });
+    }
+
+    // ---------- decisions ----------
+    function play(m) {
+      var s = street();
+      if (!s || PLAY_OPTIONS[s].indexOf(m) < 0) return;
+      var cost = anteStake * m;
+      if (bankroll < cost) return;
+      bankroll -= cost;
+      syncWallet();
+      playStake = cost;
+      phase = "dealing";
+      setMessage("Play " + m + "x");
+      renderAll();
+      // Once the player is in, the rest of the board runs out and we show down.
+      var up = boardUp, at = 0;
+      if (up < 3) {
+        at += 450;
+        t(at, function () { boardUp = 3; renderBoard(); });
+        at += 650;
+      }
+      if (up < 5) {
+        at += 450;
+        t(at, function () { boardUp = 5; renderBoard(); });
+        at += 650;
+      }
+      t(at, showdown);
+    }
+    function check() {
+      if (phase !== "preflop" && phase !== "flop") return;
+      var next = phase === "preflop" ? "flop" : "river";
+      phase = "dealing";
+      setMessage("Check");
+      renderActions();
+      t(400, function () {
+        boardUp = next === "flop" ? 3 : 5;
+        renderBoard();
+      });
+      t(950, function () {
+        phase = next;
+        setMessage(next === "flop" ? "Check, or raise 2x" : "Play 1x, or fold");
+        renderActions();
+      });
+    }
+    function fold() {
+      if (phase !== "river") return;
+      folded = true;
+      phase = "dealing";
+      setMessage("Folded");
+      renderActions();
+      t(400, showdown);
+    }
+    function showdown() {
+      phase = "showdown";
+      setMessage("Showdown");
+      renderActions();
+      t(400, function () { dealerUp = true; renderHands(); });
+      t(1100, settle);
+    }
+    function settle() {
+      var s = UTH.settle(player, dealer, board,
+        anteStake, blindStake, playStake, tripsStake, folded);
+      settlement = s;
+      // Only a decided hand has a winner worth pointing at.
+      winners = s.outcome === "win" ? s.player.cards
+        : s.outcome === "push" ? [] : s.dealer.cards;
+
+      results = [{ label: "Ante", net: s.ante - anteStake }];
+      results.push({
+        label: s.blindPay > 0 ? "Blind · " + s.player.label : "Blind",
+        net: s.blind - blindStake
+      });
+      if (playStake > 0) results.push({ label: "Play", net: s.play - playStake });
+      if (tripsStake > 0) {
+        results.push({
+          label: s.tripsPay > 0 ? "Trips · " + s.player.label : "Trips",
+          net: s.trips - tripsStake
+        });
+      }
+
+      var totalReturn = s.ante + s.blind + s.play + s.trips;
+      bankroll += totalReturn;
+      syncWallet();
+      var staked = anteStake + blindStake + playStake + tripsStake;
+      var net = totalReturn - staked;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        s.outcome === "fold" ? "Folded — " + s.player.label :
+        s.outcome === "push" ? "Push — " + s.player.label :
+        s.outcome === "win"
+          ? (s.qualified ? "You win — " + s.player.label : "You win — dealer didn't qualify")
+          : "Dealer wins — " + s.dealer.label;
+      if (net > 0 && s.outcome === "fold") msg = "Folded — trips still pays";
+      setMessage(msg, net > 0);
+      renderAll();
+    }
+
+    // ---------- table ----------
+    function reset() {
+      clearTimers();
+      phase = "betting";
+      player = []; dealer = []; board = [];
+      chipHist = [];
+      ante = 0; trips = 0;
+      anteStake = 0; blindStake = 0; tripsStake = 0; playStake = 0;
+      boardUp = 0; dealerUp = false; folded = false;
+      results = []; settlement = null; winners = [];
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      reset();
+      if (repeat && lastAnte * 2 + lastTrips <= bankroll) {
+        ante = lastAnte; trips = lastTrips;
+      } else if (repeat && lastAnte * 2 <= bankroll) {
+        ante = lastAnte; trips = 0;
+      }
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      reset();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
     return { enter: enter };
   })();
 
