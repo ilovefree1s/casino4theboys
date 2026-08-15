@@ -331,8 +331,7 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
     val betting = vm.phase == UthPhase.BETTING
     val spot = 62.dp
     val gap = 24.dp
-    /** 45px right of centre. */
-    val shift = 15.dp
+    val shift = 0.dp
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(8.dp),
