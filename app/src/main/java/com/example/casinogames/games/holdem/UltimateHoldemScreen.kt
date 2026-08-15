@@ -545,7 +545,7 @@ private fun SpotContents(
     size: androidx.compose.ui.unit.Dp,
 ) {
     if (amount > 0) {
-        PlacedBetChip(amount, size = size * 0.74f, artFor = ::uthChipArt)
+        PlacedBetChip(amount, size = size * 0.74f)
     } else {
         Text(
             label,
@@ -565,7 +565,7 @@ private fun ChipRail(vm: UltimateHoldemViewModel) {
     ) {
         chipsFor(vm.bankroll).forEach { chip ->
             CasinoChip(
-                imageRes = uthChipArt(chip.value),
+                imageRes = chip.imageRes,
                 contentDescription = "${chip.value} chip",
                 selected = vm.selectedChip == chip.value,
                 onClick = { vm.selectedChip = chip.value },
