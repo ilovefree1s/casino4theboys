@@ -481,8 +481,11 @@
     font-family: var(--display); white-space: nowrap; color: var(--uth-green);
   }
 
-  .uth-rack { display: flex; gap: 6px; justify-content: center; margin-top: 6px; }
-  .uth-rack .chip-btn.sel { box-shadow: 0 0 0 3px var(--uth-green), 0 5px 12px rgba(0,0,0,.5); }
+  /* The rail's own gap stays put when the rail itself is gone, so the buttons
+     sit the same distance below the spots mid-hand as they do while betting. */
+  #uth-rack { margin-top: 6px; }
+  .uth-rack { display: flex; gap: 6px; justify-content: center; }
+  .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px var(--uth-green), 0 5px 12px rgba(0,0,0,.5); }
   .uth-actions {
     width: 100%; max-width: 420px; display: flex; gap: 8px;
     margin-top: 6px; min-height: 44px;
@@ -492,6 +495,20 @@
     border: 1.5px solid; font-family: var(--display); font-size: 13px; letter-spacing: .08em;
   }
   .uth-btn:active { transform: scale(.98); }
+
+  .uth-rebuy {
+    position: absolute; inset: 0; z-index: 30; display: none;
+    flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(0,0,0,.8);
+  }
+  .uth-rebuy.on { display: flex; }
+  .uth-rebuy .ttl {
+    font-family: var(--display); font-size: 20px; color: var(--uth-green);
+  }
+  .uth-rebuy .buy {
+    margin-top: 14px; font-family: var(--display); font-size: 14px; color: var(--bone);
+    border: 1.5px solid var(--uth-green); border-radius: 999px; padding: 12px 24px;
+  }
 
   /* ================= BACCARAT ================= */
   #screen-baccarat { position: relative; background: var(--night); }
@@ -732,7 +749,7 @@
     <div class="bj-topbar">
       <button class="backlink" id="bj-back">‹ BLACKJACK</button>
       <div class="bj-money">
-        <span><span class="lbl">BANKROLL </span><span class="val" id="bj-bankroll">1,000</span></span>
+        <span><span class="lbl">BANKROLL </span><span class="val" id="bj-bankroll">5,000</span></span>
         <span><span class="lbl">STAKED </span><span class="val staked" id="bj-staked">0</span></span>
       </div>
     </div>
@@ -800,6 +817,11 @@
     <div id="uth-rack"></div>
     <div class="uth-actions" id="uth-actions"></div>
   </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="uth-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="uth-buyin">BUY BACK IN</button>
+  </div>
 </div>
 
 <!-- ================= BACCARAT ================= -->
@@ -818,7 +840,7 @@
   <div class="topbar">
     <button class="backlink" id="bacc-back" style="padding-left:0">‹ LOBBY</button>
     <div class="money">
-      <span><span class="lbl">BANKROLL </span><span class="val" id="bankroll">1,000</span></span>
+      <span><span class="lbl">BANKROLL </span><span class="val" id="bankroll">5,000</span></span>
       <span><span class="lbl">STAKED </span><span class="val staked" id="staked">0</span></span>
     </div>
   </div>
@@ -1003,15 +1025,17 @@
     if (bankroll >= 100000) all.push(25000);
     return all;
   }
-  function chipHtml(amount) {
+  /** [size] is the spot's diameter; the printed total scales with the chip. */
+  function chipHtml(amount, size) {
     var values = [25, 100, 500, 1000, 5000, 25000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? '<img src="' + CHIP_IMG[chip] + '" alt="">' : "";
     if (!chip || chip !== amount) {
       var label = fmt(amount);
-      var size = label.length <= 3 ? 16 : label.length <= 5 ? 12 : 9;
-      html += '<div class="scrim" style="font-size:' + size + 'px">' + label + "</div>";
+      var base = label.length <= 3 ? 17 : label.length <= 5 ? 13 : 10;
+      var px = Math.round(base * ((size || 50) / 50));
+      html += '<div class="scrim" style="font-size:' + px + 'px">' + label + "</div>";
     }
     return html;
   }
@@ -1258,7 +1282,7 @@
   var Blackjack = (function () {
     var DECKS = 8, RESHUFFLE_AT = 30;
     var shoe = buildShoe(DECKS);
-    var bankroll = 1000, bet = 0, potBet = 0, potStake = 0, freeCoins = 0;
+    var bankroll = TESTING_BANKROLL, bet = 0, potBet = 0, potStake = 0, freeCoins = 0;
     var selectedChip = 25, chipHist = [], lastBet = 0, lastPotBet = 0;
     var hands = [], dealer = [], holeUp = false, active = 0;
     var phase = "betting", results = [], timers = [];
@@ -1533,7 +1557,7 @@
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
-      fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : triluxStake);
+      fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : triluxStake, 38);
       return row;
     }
     /** Once dealt, the main stake lives on the hand rather than the spot. */
@@ -1546,10 +1570,10 @@
       var el = root.querySelector(sel);
       if (el) el.addEventListener("click", fn);
     }
-    function fillPlaced(root, sel, amount) {
+    function fillPlaced(root, sel, amount, size) {
       var el = root.querySelector(sel + " .placed");
       if (!el || amount <= 0) return;
-      el.innerHTML = chipHtml(amount);
+      el.innerHTML = chipHtml(amount, size);
       el.style.display = "block";
     }
     function showSidePays() {
@@ -2072,7 +2096,7 @@
       return '<button class="uth-spot" id="' + id + '"' + (live ? "" : " disabled") + '>' +
         '<span class="' + shape + '" style="border-color:' + (amount > 0 ? GREEN : FAINT) + '"></span>' +
         (amount > 0
-          ? '<div class="placed" style="display:block">' + chipHtml(amount) + "</div>"
+          ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
           : '<span class="cap">' + label + "</span>") +
         "</button>";
     }
@@ -2088,7 +2112,7 @@
           '<div class="mid">' +
             spotHtml("uth-trips", "dia", "TRIPS", betting ? trips : tripsStake, betting) +
           "</div>" +
-          '<div style="padding-bottom:12px">' + paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +
+          '<div style="padding:0 0 12px 6px">' + paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +
         "</div>" +
         '<div class="uth-row"><div></div><div class="mid">' +
           spotHtml("uth-ante", "ring", "ANTE", betting ? ante : anteStake, betting) +
@@ -2097,11 +2121,11 @@
           spotHtml("uth-blind", "ring", "BLIND", betting ? ante : blindStake, false) +
         '</div><div></div></div>' +
         '<div class="uth-row top">' +
-          '<div style="padding-bottom:7px">' + paysHtml("PLAY BET", [
+          '<div style="padding:0 8px 7px 0">' + paysHtml("PLAY BET", [
             ["Before the Flop", "3x or 4x"], ["After the Flop", "2x"], ["On the River", "1x"]
           ]) + "</div>" +
           '<div class="mid">' + spotHtml("uth-play", "ring", "PLAY", playStake, false) + "</div>" +
-          "<div>" + paysHtml("BLIND", odds(UTH.BLIND)) + "</div>" +
+          '<div style="padding-left:6px">' + paysHtml("BLIND", odds(UTH.BLIND)) + "</div>" +
         "</div>";
       if (betting) {
         $("uth-trips").addEventListener("click", function () { place("trips"); });
@@ -2139,17 +2163,6 @@
         a.appendChild(actionBtn("UNDO", DIM, undoChip));
         a.appendChild(actionBtn("DEAL", GREEN, deal));
         a.appendChild(actionBtn("CLEAR", DIM, clearBet));
-        if (Shell.mode === "testing" && bankroll < 25 && ante === 0) {
-          var buy = document.createElement("button");
-          buy.className = "btn solid";
-          buy.textContent = "Buy back in";
-          buy.addEventListener("click", function () {
-            bankroll = TESTING_BANKROLL;
-            setMessage("Place your ante");
-            renderAll();
-          });
-          a.appendChild(buy);
-        }
       } else if (street()) {
         playChoices().forEach(function (m) {
           a.appendChild(actionBtn("PLAY " + m + "x", GREEN, function () { play(m); }));
@@ -2161,9 +2174,15 @@
         a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
       }
     }
+    /** Free play buys back in; the campaign gets the shell's bust overlay. */
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && ante === 0;
+      $("uth-rebuy").classList.toggle("on", broke);
+    }
     function renderAll() {
       renderTop(); renderHands(); renderBoard(); renderResults();
-      renderSpots(); renderRack(); renderActions();
+      renderSpots(); renderRack(); renderActions(); renderRebuy();
     }
 
     // ---------- betting ----------
@@ -2328,6 +2347,9 @@
       if (net > 0 && s.outcome === "fold") msg = "Folded — trips still pays";
       setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
       renderAll();
+      // The victory overlay lands on the winning hand itself; going bust waits
+      // for the next bet, the same way the table does.
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
     }
 
     // ---------- table ----------
@@ -2364,6 +2386,12 @@
       renderAll();
       Shell.gate(refresh);
     }
+    $("uth-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
+      bankroll = TESTING_BANKROLL;
+      setMessage("Place your ante");
+      renderAll();
+    });
     return { enter: enter };
   })();
 
@@ -2446,7 +2474,7 @@
     }
 
     var shoe = buildShoe(DECKS);
-    var bankroll = 1000, bets = {}, selectedChip = 25;
+    var bankroll = TESTING_BANKROLL, bets = {}, selectedChip = 25;
     var phase = "betting", hand = null, history = [], lastBets = null;
     var chipHistory = [], timers = [];
 
@@ -2528,8 +2556,9 @@
         btn("DEAL", true, deal);
         btn("Clear", false, clearBets);
         if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
-          btn("Buy back in (1,000)", true, function () {
-            bankroll = 1000; updateMoney(); renderActions(); renderRack(); setMessage("Place your bets");
+          btn("Buy back in (5,000)", true, function () {
+            bankroll = TESTING_BANKROLL;
+            updateMoney(); renderActions(); renderRack(); setMessage("Place your bets");
           });
         }
       } else if (phase === "result") {
@@ -2731,7 +2760,7 @@
     }
     function enter() {
       clearTimers();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : 1000;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
       bets = {}; chipHistory = []; hand = null; phase = "betting";
       $("bacc-sub").innerHTML = Shell.mode === "campaign"
         ? 'CAMPAIGN · GOAL $' + fmt(Shell.getGoal()) + ' · <span id="shoeCount">' + shoe.length + "</span> CARDS"
