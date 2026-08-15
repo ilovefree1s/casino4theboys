@@ -14,6 +14,7 @@ import com.example.casinogames.games.blackjack.Blazing777Screen
 import com.example.casinogames.games.blackjack.BlackjackMenuScreen
 import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.FreeBetScreen
+import com.example.casinogames.games.holdem.UltimateHoldemScreen
 import com.example.casinogames.lobby.GameId
 import com.example.casinogames.lobby.LobbyScreen
 import com.example.casinogames.lobby.MainMenuScreen
@@ -49,6 +50,14 @@ class MainActivity : ComponentActivity() {
                     place == GameId.BACCARAT.name -> {
                         BackHandler { screen = lobby }
                         BaccaratScreen(
+                            onBack = { screen = lobby },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == GameId.ULTIMATE_TEXAS_HOLDEM.name -> {
+                        BackHandler { screen = lobby }
+                        UltimateHoldemScreen(
                             onBack = { screen = lobby },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
