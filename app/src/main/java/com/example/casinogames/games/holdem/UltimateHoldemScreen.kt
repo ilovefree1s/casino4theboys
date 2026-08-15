@@ -127,7 +127,14 @@ fun UltimateHoldemScreen(
             )
             Felt(vm)
             ResultRows(vm)
-            Spacer(Modifier.weight(1f))
+            // The art runs out before the screen does, so a clean strip of the
+            // same felt is stretched over whatever is left.
+            Image(
+                painter = painterResource(R.drawable.uth_felt_fill),
+                contentDescription = null,
+                modifier = Modifier.fillMaxWidth().weight(1f),
+                contentScale = ContentScale.FillBounds,
+            )
             if (vm.phase == UthPhase.BETTING) ChipRail(vm)
             Spacer(Modifier.height(8.dp))
             Actions(vm)
