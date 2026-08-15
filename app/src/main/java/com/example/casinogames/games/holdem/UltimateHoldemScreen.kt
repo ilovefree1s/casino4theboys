@@ -118,7 +118,8 @@ fun UltimateHoldemScreen(
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = 14.dp)
-                .padding(bottom = 10.dp),
+                // Lifts the spots, chips and buttons clear of the bottom edge.
+                .padding(bottom = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(vm, onBack)
