@@ -1318,6 +1318,11 @@
       return cards.length === 2 && bjValue(cards[0].rank) === bjValue(cards[1].rank);
     }
     function isFreeSplit(cards) { return canSplitCards(cards) && bjValue(cards[0].rank) !== 10; }
+    /** A split ace that draws another ace may be split again, up to four hands. */
+    function canResplit(h) {
+      if (hands.length >= 4 || !canSplitCards(h.cards)) return false;
+      return (variant === "freebet" && isFreeSplit(h.cards)) || bankroll >= h.betUnit;
+    }
     /** Paid doubles are limited to hands holding an ace. */
     function hasAce(cards) { return cards.some(function (c) { return c.rank === "A"; }); }
     function potMult(coins) {
@@ -1616,12 +1621,13 @@
         }
       } else if (phase === "player") {
         var h = hands[active];
-        a.appendChild(imgBtn(ART.btnHit, "Hit", hit));
+        // A split ace keeps its one card; standing and splitting are all it has.
+        if (!h || !h.aceSplit) a.appendChild(imgBtn(ART.btnHit, "Hit", hit));
         a.appendChild(imgBtn(ART.btnStand, "Stand", stand));
         var live = h && !h.done;
         if (variant === "blazing") {
           // Doubles follow the other table's rule; splits are any pair, for cash.
-          if (live && h.cards.length === 2 && bankroll >= h.betUnit &&
+          if (live && !h.aceSplit && h.cards.length === 2 && bankroll >= h.betUnit &&
               (canFreeDouble(h.cards) || hasAce(h.cards))) {
             a.appendChild(imgBtn(ART.btnDouble, "Double", doubleDown));
           }
@@ -1630,8 +1636,8 @@
           }
         } else {
           // Free double on hard 9-11; paid double only when holding an ace.
-          var freeDbl = live && canFreeDouble(h.cards);
-          var paidDbl = live && h.cards.length === 2 && !h.isFree &&
+          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);
+          var paidDbl = live && !h.aceSplit && h.cards.length === 2 && !h.isFree &&
             h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
           if (freeDbl || paidDbl) {
             a.appendChild(imgBtn(freeDbl ? ART.badgeFreeDouble : ART.btnDouble, "Double", doubleDown));
@@ -1758,7 +1764,7 @@
     function hit() {
       if (phase !== "player") return;
       var h = hands[active];
-      if (!h || h.done) return;
+      if (!h || h.done || h.aceSplit) return;
       h.cards.push(draw());
       var bust = isBust(h.cards);
       var stop = bust || total(h.cards) === 21;
@@ -1775,7 +1781,7 @@
     function doubleDown() {
       if (phase !== "player") return;
       var h = hands[active];
-      if (!h || h.done || h.cards.length !== 2) return;
+      if (!h || h.done || h.aceSplit || h.cards.length !== 2) return;
       var free = variant === "freebet" && canFreeDouble(h.cards);
       var paidOk = variant === "blazing"
         ? (canFreeDouble(h.cards) || hasAce(h.cards)) && bankroll >= h.betUnit
@@ -1801,17 +1807,22 @@
       setMessage(free ? "Free split!" : "Split");
       var moved = h.cards[1];
       h.cards = [h.cards[0]];
+      h.aceSplit = aces;
       hands.splice(i + 1, 0, {
         cards: [moved], stake: free ? 0 : h.betUnit, betUnit: h.betUnit,
-        doubled: false, isFree: free, freeDoubled: false, done: false
+        doubled: false, isFree: free, freeDoubled: false, done: false,
+        aceSplit: aces
       });
       renderAll();
       t(450, function () { hands[i].cards.push(draw()); renderHands(); });
       t(900, function () { hands[i + 1].cards.push(draw()); renderHands(); });
       t(1200, function () {
         if (aces) {
-          hands[i].done = true;
-          hands[i + 1].done = true;
+          // Split aces receive one card each and stand — unless that card is
+          // another ace, which the player may split again.
+          [i, i + 1].forEach(function (idx) {
+            if (!canResplit(hands[idx])) hands[idx].done = true;
+          });
           advance();
         } else {
           if (total(hands[i].cards) === 21) hands[i].done = true;

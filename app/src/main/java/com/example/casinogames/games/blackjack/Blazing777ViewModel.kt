@@ -268,12 +268,17 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
 
     private val current: BjHand? get() = playerHands.getOrNull(activeHand)
 
-    val canHit: Boolean get() = phase == BjPhase.PLAYER_TURN && current?.done == false
-    val canStand: Boolean get() = canHit
+    // A split ace still takes only its one card; the one thing it may do is
+    // split again when that card is another ace, so standing stays open.
+    val canHit: Boolean
+        get() = phase == BjPhase.PLAYER_TURN && current?.done == false &&
+            current?.aceSplit != true
+    val canStand: Boolean get() = phase == BjPhase.PLAYER_TURN && current?.done == false
     val canDouble: Boolean
         get() {
             val h = current ?: return false
             if (phase != BjPhase.PLAYER_TURN || h.done || h.cards.size != 2) return false
+            if (h.aceSplit) return false
             // Same rule as the other table: hard 9-11, or any hand holding an ace.
             val eligible = FreeBetRules.canFreeDouble(h.cards) ||
                 FreeBetRules.canPaidDouble(h.cards)
@@ -286,6 +291,10 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
             if (!FreeBetRules.canSplit(h.cards)) return false
             return bankroll >= h.betUnit
         }
+
+    /** A split ace that draws another ace may be split again, up to four hands. */
+    private fun canResplit(h: BjHand): Boolean =
+        playerHands.size < 4 && FreeBetRules.canSplit(h.cards) && bankroll >= h.betUnit
 
     fun hit() {
         if (!canHit) return
@@ -331,13 +340,14 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         phase = BjPhase.DEALING
         message = "Split"
         viewModelScope.launch {
-            playerHands[i] = h.copy(cards = listOf(h.cards[0]))
+            playerHands[i] = h.copy(cards = listOf(h.cards[0]), aceSplit = aces)
             playerHands.add(
                 i + 1,
                 BjHand(
                     cards = listOf(h.cards[1]),
                     stake = h.betUnit,
                     betUnit = h.betUnit,
+                    aceSplit = aces,
                 )
             )
             delay(450)
@@ -346,8 +356,13 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
             dealToPlayer(i + 1)
             delay(300)
             if (aces) {
-                playerHands[i] = playerHands[i].copy(done = true)
-                playerHands[i + 1] = playerHands[i + 1].copy(done = true)
+                // Split aces receive one card each and stand — unless that card
+                // is another ace, which the player may split again.
+                listOf(i, i + 1).forEach { idx ->
+                    if (!canResplit(playerHands[idx])) {
+                        playerHands[idx] = playerHands[idx].copy(done = true)
+                    }
+                }
                 advance()
             } else {
                 if (BlackjackCore.total(playerHands[i].cards) == 21) {

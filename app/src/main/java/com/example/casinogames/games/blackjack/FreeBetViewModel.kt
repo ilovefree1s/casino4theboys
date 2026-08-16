@@ -26,6 +26,7 @@ data class BjHand(
     val isFree: Boolean = false,       // hand exists via a free split
     val freeDoubled: Boolean = false,  // doubled with the house's money
     val done: Boolean = false,
+    val aceSplit: Boolean = false,     // took its one card from a split of aces
 )
 
 data class BjResult(val label: String, val net: Double)
@@ -266,12 +267,17 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
 
     private val current: BjHand? get() = playerHands.getOrNull(activeHand)
 
-    val canHit: Boolean get() = phase == BjPhase.PLAYER_TURN && current?.done == false
-    val canStand: Boolean get() = canHit
+    // A split ace still takes only its one card; the one thing it may do is
+    // split again when that card is another ace, so standing stays open.
+    val canHit: Boolean
+        get() = phase == BjPhase.PLAYER_TURN && current?.done == false &&
+            current?.aceSplit != true
+    val canStand: Boolean get() = phase == BjPhase.PLAYER_TURN && current?.done == false
     val canDouble: Boolean
         get() {
             val h = current ?: return false
             if (phase != BjPhase.PLAYER_TURN || h.done || h.cards.size != 2) return false
+            if (h.aceSplit) return false
             // Free double on hard 9-11; paid double only when holding an ace.
             if (FreeBetRules.canFreeDouble(h.cards)) return true
             return FreeBetRules.canPaidDouble(h.cards) && !h.isFree && bankroll >= h.betUnit
@@ -287,6 +293,11 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         }
     val splitIsFree: Boolean
         get() = current?.let { FreeBetRules.isFreeSplit(it.cards) } == true
+
+    /** A split ace that draws another ace may be split again, up to four hands. */
+    private fun canResplit(h: BjHand): Boolean =
+        playerHands.size < 4 && FreeBetRules.canSplit(h.cards) &&
+            (FreeBetRules.isFreeSplit(h.cards) || bankroll >= h.betUnit)
 
     fun hit() {
         if (!canHit) return
@@ -340,7 +351,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         phase = BjPhase.DEALING
         message = if (free) "Free split!" else "Split"
         viewModelScope.launch {
-            playerHands[i] = h.copy(cards = listOf(h.cards[0]))
+            playerHands[i] = h.copy(cards = listOf(h.cards[0]), aceSplit = aces)
             playerHands.add(
                 i + 1,
                 BjHand(
@@ -348,6 +359,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
                     stake = if (free) 0 else h.betUnit,
                     betUnit = h.betUnit,
                     isFree = free,
+                    aceSplit = aces,
                 )
             )
             delay(450)
@@ -356,9 +368,13 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
             dealToPlayer(i + 1)
             delay(300)
             if (aces) {
-                // split aces receive one card each and stand
-                playerHands[i] = playerHands[i].copy(done = true)
-                playerHands[i + 1] = playerHands[i + 1].copy(done = true)
+                // Split aces receive one card each and stand — unless that card
+                // is another ace, which the player may split again.
+                listOf(i, i + 1).forEach { idx ->
+                    if (!canResplit(playerHands[idx])) {
+                        playerHands[idx] = playerHands[idx].copy(done = true)
+                    }
+                }
                 advance()
             } else {
                 if (BlackjackCore.total(playerHands[i].cards) == 21) {

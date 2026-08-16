@@ -593,7 +593,7 @@ private fun ActionButtons(vm: FreeBetViewModel) {
                 }
             }
             BjPhase.PLAYER_TURN -> {
-                ImgButton(R.drawable.btn_hit, "Hit", vm::hit)
+                if (vm.canHit) ImgButton(R.drawable.btn_hit, "Hit", vm::hit)
                 ImgButton(R.drawable.btn_stand, "Stand", vm::stand)
                 if (vm.canDouble) {
                     ImgButton(

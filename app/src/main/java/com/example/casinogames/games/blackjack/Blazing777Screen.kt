@@ -562,7 +562,7 @@ private fun ActionButtons(vm: Blazing777ViewModel) {
                 }
             }
             BjPhase.PLAYER_TURN -> {
-                ImgButton(R.drawable.r_btn_hit, "Hit", vm::hit)
+                if (vm.canHit) ImgButton(R.drawable.r_btn_hit, "Hit", vm::hit)
                 ImgButton(R.drawable.r_btn_stand, "Stand", vm::stand)
                 if (vm.canDouble) ImgButton(R.drawable.r_btn_double, "Double", vm::doubleDown)
                 if (vm.canSplit) ImgButton(R.drawable.r_btn_split, "Split", vm::split)
