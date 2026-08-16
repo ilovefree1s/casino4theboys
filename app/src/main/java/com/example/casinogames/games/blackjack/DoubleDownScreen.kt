@@ -488,7 +488,7 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
         val placard = minOf(
             (maxWidth - BetSpotSize) / 2 - OddsPlacardGap,
             OddsPlacardMax,
-        ) * 0.95f
+        ) * 0.90f
         Image(
             painter = painterResource(R.drawable.dd_push22_odds),
             contentDescription = "Push 22 odds",
