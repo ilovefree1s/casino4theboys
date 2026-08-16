@@ -482,13 +482,19 @@ private fun ResultPill(r: BjResult) {
  */
 @Composable
 private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+    BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        // Take every dp between the felt's edge and the bet spot: the art is
+        // far larger than it is ever drawn, so the gap is the only limit.
+        val placard = minOf(
+            (maxWidth - BetSpotSize) / 2 - OddsPlacardGap,
+            OddsPlacardMax,
+        )
         Image(
             painter = painterResource(R.drawable.dd_push22_odds),
             contentDescription = "Push 22 odds",
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .width(OddsPlacardWidth)
+                .width(placard)
                 .clip(RoundedCornerShape(8.dp))
                 .clickable(onClick = onShowOdds),
             contentScale = ContentScale.FillWidth,
@@ -517,8 +523,11 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
     }
 }
 
-/** As wide as the coin column opposite it, so the bet stays on centre. */
-private val OddsPlacardWidth = 118.dp
+private val BetSpotSize = 88.dp
+/** Breathing room between the odds and the bet spot's ring. */
+private val OddsPlacardGap = 8.dp
+/** A ceiling so the placard does not sprawl on a tablet. */
+private val OddsPlacardMax = 190.dp
 
 /** Tap the placard and the odds fill the screen, since they are set small. */
 @Composable
@@ -548,7 +557,7 @@ private fun BetSpot(vm: DoubleDownViewModel) {
             painter = painterResource(R.drawable.fb_spot_bet),
             contentDescription = "Bet spot",
             modifier = Modifier
-                .size(88.dp)
+                .size(BetSpotSize)
                 .clip(CircleShape)
                 .clickable(enabled = vm.phase == BjPhase.BETTING) { vm.addChip() },
             contentScale = ContentScale.Fit,
