@@ -65,6 +65,8 @@ private val Chalk = Color(0xFFF2F2F2)
 private val Silver = Color(0xFFB0B0B0)
 private val Ash = Color(0xFF5A5A5A)
 private val TableBlack = Color(0xFF050505)
+/** The one warm thing on this felt, borrowed from the house coin. */
+private val Gold = Color(0xFFE8C169)
 
 /**
  * The house art is neon purple and blue; this table wears the same layout in
@@ -118,7 +120,7 @@ fun DoubleDownScreen(
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
             )
             Table(vm, Modifier.weight(1f))
-            BetSpot(vm)
+            BetRow(vm)
             if (vm.phase == BjPhase.BETTING) {
                 Spacer(Modifier.height(12.dp))
                 ChipRack(vm)
@@ -463,6 +465,38 @@ private fun ResultPill(r: BjResult) {
                 else -> P.OffWhite.copy(alpha = 0.7f)
             },
         )
+    }
+}
+
+/**
+ * The bet spot keeps the artwork's centre line; the house's side of the
+ * bargain is marked off to the right, the way TriLux sits beside the bet on
+ * the Blazing felt.
+ */
+@Composable
+private fun BetRow(vm: DoubleDownViewModel) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        BetSpot(vm)
+        Column(
+            Modifier.align(Alignment.CenterEnd).width(118.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Image(
+                painter = painterResource(R.drawable.fourtheboys_gold),
+                contentDescription = "Dealer 22 pushes",
+                // Clipped round so the art's square backing never shows.
+                modifier = Modifier.size(58.dp).clip(CircleShape),
+                contentScale = ContentScale.Crop,
+            )
+            Spacer(Modifier.height(3.dp))
+            Text(
+                "PUSH 22",
+                color = Gold,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Black,
+                letterSpacing = 0.14.em,
+            )
+        }
     }
 }
 
