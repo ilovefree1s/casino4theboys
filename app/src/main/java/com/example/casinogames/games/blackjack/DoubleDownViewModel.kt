@@ -218,8 +218,11 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     private val live: BjHand? get() = hand?.takeIf { !it.done && phase == BjPhase.PLAYER_TURN }
 
     val canHit: Boolean get() = live != null
-    /** The madness: any hand, at any size, so long as the bankroll covers it. */
-    val canDouble: Boolean get() = live?.let { bankroll >= it.betUnit } == true
+    /**
+     * The madness: any hand, at any size, so long as the bankroll can match what
+     * is already out there — a double doubles the whole bet, not the first one.
+     */
+    val canDouble: Boolean get() = live?.let { bankroll >= it.stake } == true
     /** Standing on a single card is never a play, so it waits for the second. */
     val canStand: Boolean get() = live?.let { it.cards.size >= 2 } == true
 
@@ -239,15 +242,18 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * The madness: a double buys one card and raises the stake, but it does not
-     * close the hand. Keep doubling as long as the bankroll and the cards allow.
+     * A double buys one card and doubles the whole bet — 100 becomes 200, and
+     * doubling that puts 400 out, not 300. It does not close the hand: keep
+     * doubling as long as the bankroll and the cards allow.
      */
     fun doubleDown() {
         val h = live ?: return
-        if (bankroll < h.betUnit) return
-        bankroll -= h.betUnit
+        // Matching what is already staked is what doubles it.
+        val cost = h.stake
+        if (bankroll < cost) return
+        bankroll -= cost
         persist()
-        hand = h.copy(stake = h.stake + h.betUnit, doubled = true)
+        hand = h.copy(stake = h.stake + cost, doubled = true)
         message = "Double!"
         viewModelScope.launch {
             phase = BjPhase.DEALING
