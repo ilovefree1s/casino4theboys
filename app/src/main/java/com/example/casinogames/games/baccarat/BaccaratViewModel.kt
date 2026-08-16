@@ -74,9 +74,11 @@ class BaccaratViewModel(app: Application) : AndroidViewModel(app) {
     /** Switches between campaign (persistent shared wallet) and free play testing. */
     fun enterMode(campaignMode: Boolean) {
         if (modeInitialized && campaign == campaignMode) {
-            // Re-entering campaign: another game may have moved the shared wallet.
-            if (campaignMode && phase == Phase.BETTING) {
+            // One purse across the whole campaign: another table may have moved
+            // it while we were away, whatever this one was left in the middle of.
+            if (campaignMode) {
                 bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
+                goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
             }
             return
         }

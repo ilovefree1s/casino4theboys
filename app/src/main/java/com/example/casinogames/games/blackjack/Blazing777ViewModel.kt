@@ -80,7 +80,9 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
 
     fun enterMode(campaignMode: Boolean) {
         if (modeInitialized && campaign == campaignMode) {
-            if (campaignMode && phase == BjPhase.BETTING) {
+            // One purse across the whole campaign: another table may have moved
+            // it while we were away, whatever this one was left in the middle of.
+            if (campaignMode) {
                 bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
                 goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
             }
