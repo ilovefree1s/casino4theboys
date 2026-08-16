@@ -1538,9 +1538,8 @@
             rack.appendChild(cb);
           });
           b.appendChild(rack);
-        } else if (variant === "freebet" && freeCoins > 0) {
-          b.appendChild(coinsRow());
         }
+        // No coin tally beside the spot — the chart's own coins carry it.
       } else if (variant === "freebet" && (potStake > 0 || freeCoins > 0)) {
         b.appendChild(coinsRow());
       }

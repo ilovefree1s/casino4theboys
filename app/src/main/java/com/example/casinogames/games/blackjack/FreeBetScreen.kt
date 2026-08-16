@@ -526,7 +526,6 @@ private fun PayTable(
 
 @Composable
 private fun BetSpots(vm: FreeBetViewModel, onShowPayTable: () -> Unit) {
-    val inPlay = vm.phase != BjPhase.BETTING
     Box(
         Modifier
             .fillMaxWidth()
@@ -568,17 +567,6 @@ private fun BetSpots(vm: FreeBetViewModel, onShowPayTable: () -> Unit) {
                     contentScale = ContentScale.Fit,
                 )
                 PlacedBetChip(if (vm.phase == BjPhase.BETTING) vm.potBet else vm.potStake)
-            }
-            if (inPlay && vm.freeCoins > 0) {
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "COINS × ${vm.freeCoins}",
-                    fontSize = 9.sp, fontWeight = FontWeight.Black,
-                    color = P.Ink, letterSpacing = 0.05.em,
-                    modifier = Modifier
-                        .background(P.GoldTrim, RoundedCornerShape(999.dp))
-                        .padding(horizontal = 8.dp, vertical = 2.dp),
-                )
             }
         }
     }
