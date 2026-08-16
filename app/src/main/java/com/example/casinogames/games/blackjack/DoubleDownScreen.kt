@@ -193,13 +193,16 @@ private fun TopBar(onBack: () -> Unit, vm: DoubleDownViewModel) {
 @Composable
 private fun DealerArea(vm: DoubleDownViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.fb_header_dealer),
-                contentDescription = "Dealer",
-                modifier = Modifier.width(300.dp),
-                contentScale = ContentScale.FillWidth,
-                colorFilter = Monochrome,
+        Box(Modifier.width(300.dp), contentAlignment = Alignment.Center) {
+            // Black lettering with a hairline of white, drawn rather than art,
+            // so nothing but the word sits on the felt.
+            OutlinedText(
+                "DEALER",
+                fontSize = 30.sp,
+                color = Color.Black,
+                outlineColor = Chalk,
+                outlineWidth = 1.dp,
+                letterSpacing = 0.1.em,
             )
             val visible = if (vm.holeRevealed) vm.dealerCards else vm.dealerCards.take(1)
             if (visible.isNotEmpty()) {
@@ -293,13 +296,15 @@ private fun PlayerArea(vm: DoubleDownViewModel) {
 
 @Composable
 private fun YourHandHeader(badge: String?, badgeColor: Color, units: Int) {
-    Box(contentAlignment = Alignment.Center) {
-        Image(
-            painter = painterResource(R.drawable.fb_header_yourhand),
-            contentDescription = "Your hand",
-            modifier = Modifier.width(300.dp),
-            contentScale = ContentScale.FillWidth,
-            colorFilter = Monochrome,
+    Box(Modifier.width(300.dp), contentAlignment = Alignment.Center) {
+        // The player's side is the reverse: white lettering, inked outline.
+        OutlinedText(
+            "YOUR HAND",
+            fontSize = 30.sp,
+            color = Chalk,
+            outlineColor = Color.Black,
+            outlineWidth = 1.5.dp,
+            letterSpacing = 0.1.em,
         )
         Row(
             Modifier.align(Alignment.CenterEnd),
