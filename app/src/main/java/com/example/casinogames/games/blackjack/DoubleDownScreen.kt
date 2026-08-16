@@ -6,6 +6,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -35,6 +38,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
@@ -43,7 +47,6 @@ import com.example.casinogames.R
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
 import com.example.casinogames.ui.common.CasinoChip
-import com.example.casinogames.ui.common.EmptyCardSlot
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
@@ -107,13 +110,7 @@ fun DoubleDownScreen(
                 letterSpacing = 0.24.em,
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
             )
-            Spacer(Modifier.weight(1f))
-            DealerArea(vm)
-            Spacer(Modifier.height(8.dp))
-            MessageLine(vm)
-            Spacer(Modifier.weight(1f))
-            PlayerArea(vm)
-            Spacer(Modifier.weight(1f))
+            Table(vm, Modifier.weight(1f))
             BetSpot(vm)
             if (vm.phase == BjPhase.BETTING) {
                 Spacer(Modifier.height(12.dp))
@@ -190,41 +187,131 @@ private fun TopBar(onBack: () -> Unit, vm: DoubleDownViewModel) {
     }
 }
 
+/**
+ * The table is one piece of art — titles, rules and the two card slots — and
+ * everything live is positioned on top of it by where those marks fall in the
+ * artwork (1024 x 1536).
+ */
+private const val ArtWidth = 1024f
+private const val ArtHeight = 1536f
+private const val DealerSlotCentre = 471f
+private const val MessageCentre = 709f
+private const val PlayerSlotCentre = 1296f
+private const val DealerTitleCentre = 125f
+private const val PlayerTitleCentre = 963f
+
 @Composable
-private fun DealerArea(vm: DoubleDownViewModel) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.width(300.dp), contentAlignment = Alignment.Center) {
-            // Drawn rather than art, so nothing but the word sits on the felt.
-            OutlinedText(
-                "DEALER",
-                fontSize = 30.sp,
-                color = Chalk,
-                outlineColor = Color.Black,
-                outlineWidth = 1.5.dp,
-                letterSpacing = 0.1.em,
+private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        // Fit the layout whole, whichever edge runs out first.
+        val artHeight = minOf(maxHeight, maxWidth * (ArtHeight / ArtWidth))
+        val artWidth = artHeight * (ArtWidth / ArtHeight)
+        Box(
+            Modifier
+                .align(Alignment.Center)
+                .width(artWidth)
+                .height(artHeight)
+        ) {
+            Image(
+                painter = painterResource(R.drawable.doubledownmadnesslayout),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.FillBounds,
             )
-            val visible = if (vm.holeRevealed) vm.dealerCards else vm.dealerCards.take(1)
-            if (visible.isNotEmpty()) {
-                val t = BlackjackCore.total(visible)
-                val busted = vm.holeRevealed && BlackjackCore.total(vm.dealerCards) > 21 &&
-                    BlackjackCore.total(vm.dealerCards) != 22
-                TotalBadge(
-                    text = if (vm.holeRevealed && BlackjackCore.isBlackjack(vm.dealerCards)) "BJ"
-                    else "$t",
-                    color = if (busted) Ash else Chalk,
-                    modifier = Modifier.align(Alignment.CenterEnd),
-                )
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (vm.dealerCards.isEmpty()) {
-                EmptyCardSlot()
-            } else {
-                vm.dealerCards.forEachIndexed { i, card ->
-                    PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed)
+            AtMark(artHeight, DealerSlotCentre, 78.dp) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    vm.dealerCards.forEachIndexed { i, card ->
+                        PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed)
+                    }
                 }
             }
+            AtMark(artHeight, MessageCentre, 44.dp) { MessageLine(vm) }
+            AtMark(artHeight, PlayerSlotCentre, 78.dp) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (vm.hand?.cards ?: emptyList()).forEach { card ->
+                        PlayingCardView(card, faceUp = true)
+                    }
+                }
+            }
+            // The totals ride at the end of each title, where the art leaves room.
+            DealerBadge(
+                vm,
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(y = artHeight * (DealerTitleCentre / ArtHeight))
+                    .padding(end = 10.dp),
+            )
+            PlayerBadges(
+                vm,
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .offset(y = artHeight * (PlayerTitleCentre / ArtHeight))
+                    .padding(end = 10.dp),
+            )
+            if (vm.phase == BjPhase.RESULT) {
+                AtMark(artHeight, PlayerSlotCentre + 130f, 30.dp) {
+                    vm.results.firstOrNull()?.let { r -> ResultPill(r) }
+                }
+            }
+        }
+    }
+}
+
+/** Centres content on a mark in the artwork, measured in the art's own pixels. */
+@Composable
+private fun BoxScope.AtMark(
+    artHeight: Dp,
+    centre: Float,
+    height: Dp,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        Modifier
+            .align(Alignment.TopCenter)
+            .offset(y = artHeight * (centre / ArtHeight) - height / 2)
+            .height(height),
+        contentAlignment = Alignment.Center,
+    ) { content() }
+}
+
+@Composable
+private fun DealerBadge(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
+    val visible = if (vm.holeRevealed) vm.dealerCards else vm.dealerCards.take(1)
+    if (visible.isEmpty()) return
+    val full = BlackjackCore.total(vm.dealerCards)
+    val busted = vm.holeRevealed && full > 21 && full != 22
+    Box(modifier) {
+        TotalBadge(
+            text = if (vm.holeRevealed && BlackjackCore.isBlackjack(vm.dealerCards)) "BJ"
+            else "${BlackjackCore.total(visible)}",
+            color = if (busted) Ash else Chalk,
+        )
+    }
+}
+
+@Composable
+private fun PlayerBadges(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
+    val cards = vm.hand?.cards ?: return
+    if (cards.isEmpty()) return
+    val units = vm.hand?.let { if (it.betUnit > 0) it.stake / it.betUnit else 1 } ?: 1
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        TotalBadge(
+            text = if (BlackjackCore.isBlackjack(cards)) "BJ" else "${BlackjackCore.total(cards)}",
+            color = if (BlackjackCore.isBust(cards)) Ash else Chalk,
+        )
+        if (units > 1) {
+            Text(
+                "${units}×",
+                color = TableBlack, fontSize = 11.sp, fontWeight = FontWeight.Black,
+                modifier = Modifier
+                    .background(Silver, RoundedCornerShape(999.dp))
+                    .border(2.dp, P.Ink, RoundedCornerShape(999.dp))
+                    .padding(horizontal = 7.dp, vertical = 1.dp),
+            )
         }
     }
 }
@@ -260,70 +347,6 @@ private fun MessageLine(vm: DoubleDownViewModel) {
     )
 }
 
-@Composable
-private fun PlayerArea(vm: DoubleDownViewModel) {
-    val hand = vm.hand
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        val cards = hand?.cards ?: emptyList()
-        val badge = when {
-            cards.isEmpty() -> null
-            BlackjackCore.isBlackjack(cards) -> "BJ"
-            else -> "${BlackjackCore.total(cards)}"
-        }
-        // Every double adds another unit, so the header counts them off.
-        val units = hand?.let { if (it.betUnit > 0) it.stake / it.betUnit else 1 } ?: 1
-        YourHandHeader(
-            badge = badge,
-            badgeColor = if (BlackjackCore.isBust(cards)) Ash else Chalk,
-            units = units,
-        )
-        Spacer(Modifier.height(8.dp))
-        Box(contentAlignment = Alignment.Center) {
-            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                if (cards.isEmpty()) {
-                    EmptyCardSlot()
-                } else {
-                    cards.forEach { card -> PlayingCardView(card, faceUp = true) }
-                }
-            }
-            if (vm.phase == BjPhase.RESULT) {
-                vm.results.firstOrNull()?.let { r -> ResultPill(r) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun YourHandHeader(badge: String?, badgeColor: Color, units: Int) {
-    Box(Modifier.width(300.dp), contentAlignment = Alignment.Center) {
-        // The player's side is the reverse: white lettering, inked outline.
-        OutlinedText(
-            "YOUR HAND",
-            fontSize = 30.sp,
-            color = Chalk,
-            outlineColor = Color.Black,
-            outlineWidth = 1.5.dp,
-            letterSpacing = 0.1.em,
-        )
-        Row(
-            Modifier.align(Alignment.CenterEnd),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(5.dp),
-        ) {
-            if (badge != null) TotalBadge(badge, badgeColor)
-            if (units > 1) {
-                Text(
-                    "${units}×",
-                    color = TableBlack, fontSize = 11.sp, fontWeight = FontWeight.Black,
-                    modifier = Modifier
-                        .background(Silver, RoundedCornerShape(999.dp))
-                        .border(2.dp, P.Ink, RoundedCornerShape(999.dp))
-                        .padding(horizontal = 7.dp, vertical = 1.dp),
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun ResultPill(r: BjResult) {
