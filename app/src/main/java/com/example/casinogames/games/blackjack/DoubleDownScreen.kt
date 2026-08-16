@@ -72,6 +72,9 @@ private val Ash = Color(0xFF5A5A5A)
 private val TableBlack = Color(0xFF050505)
 /** The one warm thing on this felt, borrowed from the house coin. */
 private val Gold = Color(0xFFE8C169)
+/** The felt is black and white; the verdict is the one thing that is not. */
+private val WinGreen = Color(0xFF57E06A)
+private val LoseRed = Color(0xFFFF4D4D)
 
 /**
  * The house art is neon purple and blue; this table wears the same layout in
@@ -440,8 +443,8 @@ private fun MessageLine(vm: DoubleDownViewModel) {
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Medium,
         color = when {
-            settled && net > 0 -> Chalk
-            settled && net < 0 -> Ash
+            settled && net > 0 -> WinGreen
+            settled && net < 0 -> LoseRed
             else -> P.OffWhite.copy(alpha = 0.92f)
         },
         textAlign = TextAlign.Center,

@@ -109,11 +109,13 @@
     display: flex; flex-direction: column; align-items: center;
   }
   .bjm-top { width: 100%; display: flex; align-items: center; }
-  .bjm-header { width: 78%; max-width: 330px; display: block; }
-  .bjm-cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
-  .bjm-card { width: 100%; padding: 0; border-radius: 20px; overflow: hidden; }
-  .bjm-card img { width: 100%; display: block; }
-  .bjm-card:active { transform: scale(.985); }
+  .bjm-page { position: relative; width: 100%; max-width: 420px; line-height: 0; }
+  .bjm-page > img { width: 100%; display: block; }
+  .bjm-band {
+    position: absolute; left: 0; right: 0; padding: 0;
+    background: none; border: 0; border-radius: 20px;
+  }
+  .bjm-band:active { transform: scale(.985); }
 
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
@@ -382,6 +384,107 @@
     width: min(82vw, 360px); border-radius: 14px;
     border: 1.5px solid rgba(255,63,216,.6);
   }
+
+  /* ========== DOUBLE DOWN MADNESS ========== */
+  #screen-doubledown { position: relative; background: #050505; }
+  .dd-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .5; pointer-events: none;
+  }
+  .dd-table {
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 12px calc(18px + env(safe-area-inset-bottom));
+  }
+  .dd-rule { width: 100%; height: 1px; background: rgba(255,255,255,.15); }
+  .dd-sub {
+    font-size: 10px; letter-spacing: .24em; color: rgba(255,255,255,.55);
+    margin: 6px 0 2px; text-align: center;
+  }
+  .dd-sub.campaign { color: rgba(255,210,77,.8); }
+  /* The layout is one piece of art, fitted whole; everything live sits on the
+     marks it was drawn around. */
+  .dd-art {
+    flex: 1; min-height: 0; width: 100%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dd-fit { position: relative; }
+  .dd-fit > img.layout { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .dd-mark {
+    position: absolute; left: 0; right: 0; transform: translateY(-50%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* The dashed landing box the art was drawn around; it goes once a side
+     holds two cards and there is nothing left for it to mark. */
+  .dd-slot {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    border: 2px dashed rgba(255,255,255,.9); border-radius: 4px;
+  }
+  .dd-hand { position: relative; display: flex; justify-content: center; }
+  .dd-hand .cards { min-height: 0; }
+  .dd-hand.fan { display: block; height: 78px; }
+  .dd-hand.fan .card { position: absolute; left: 50%; top: 0; }
+  .dd-message {
+    font-family: var(--body); font-style: italic; font-size: 15px;
+    color: rgba(245,241,232,.92); text-align: center;
+  }
+  /* The felt is black and white; the verdict is the one thing that is not. */
+  .dd-message.win { color: #57E06A; }
+  .dd-message.lose { color: #FF4D4D; font-size: 18px; }
+  .dd-badge {
+    position: absolute; right: 10px; transform: translateY(-50%);
+    background: #F2F2F2; color: #050505; border: 2px solid var(--ink);
+    border-radius: 999px; padding: 1px 9px; font-family: var(--display); font-size: 13px;
+    display: none;
+  }
+  .dd-badge.bust { background: #5A5A5A; }
+  .dd-badge .units {
+    margin-left: 5px; background: #B0B0B0; border-radius: 999px;
+    padding: 0 6px; font-size: 11px;
+  }
+  .dd-pills { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .dd-pill {
+    display: flex; gap: 5px; align-items: center; white-space: nowrap;
+    background: rgba(7,7,7,.9); border: 1.5px solid rgba(245,241,232,.35);
+    border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800;
+    color: var(--bone);
+  }
+  .dd-pill.win { border-color: #F2F2F2; }
+  .dd-pill .amt { font-weight: 900; }
+  .dd-pill .amt.w { color: #F2F2F2; }
+  .dd-pill .amt.l { color: #5A5A5A; }
+  .dd-pill .amt.p { color: rgba(245,241,232,.7); }
+  /* Odds on the left, the house's coin on the right, bet holding the middle. */
+  .dd-spots {
+    position: relative; width: 100%; display: flex;
+    align-items: center; justify-content: center; margin-top: 4px;
+  }
+  .dd-odds {
+    position: absolute; left: 0; width: 40%; max-width: 160px;
+    padding: 0; background: none; border: 0; line-height: 0;
+  }
+  .dd-odds img { width: 100%; display: block; }
+  .dd-betspot {
+    width: 88px; height: 88px; position: relative; padding: 0;
+    background: none; border: 0; flex: none;
+  }
+  .dd-betspot > img { width: 100%; height: 100%; object-fit: contain; filter: grayscale(1); }
+  .dd-push {
+    position: absolute; right: 0; width: 112px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .dd-pushring {
+    width: 63px; height: 63px; border: 2px solid rgba(232,193,105,.9);
+    border-radius: 50%; padding: 3px; position: relative; background: none;
+  }
+  .dd-pushring > img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
+  .dd-pushring .placed { width: 38px; height: 38px; }
+  .dd-push .cap {
+    color: #E8C169; font-weight: 900; font-size: 11px;
+    letter-spacing: .14em; margin-top: 3px;
+  }
+  .dd-table .bj-imgbtn img { filter: grayscale(1); }
+  #dd-oddsmodal img { border-color: rgba(232,193,105,.6); }
 
   /* ========== ULTIMATE TEXAS HOLD'EM ========== */
   #screen-holdem { position: relative; background: #030703; }
@@ -730,10 +833,12 @@
     <div class="bjm-top">
       <button class="lb-menu" id="bjm-back" aria-label="Back to lobby">←</button>
     </div>
-    <img class="bjm-header" src="__BJ_HEADER__" alt="Blackjack variants">
-    <div class="bjm-cards">
-      <button class="bjm-card" id="bjm-freebet"><img src="__BJ_FREEBET__" alt="Free Bet Blackjack — play"></button>
-      <button class="bjm-card" id="bjm-blazing"><img src="__BJ_BLAZING__" alt="Blazing 777s with TriLux — play"></button>
+    <!-- One piece of art, as it was made; each card's band is the tap target. -->
+    <div class="bjm-page">
+      <img src="__BJ_MODES__" alt="Blackjack variants">
+      <button class="bjm-band" id="bjm-freebet" style="top:27.87%;height:23.21%" aria-label="Free Bet Blackjack — play"></button>
+      <button class="bjm-band" id="bjm-blazing" style="top:52.81%;height:20.57%" aria-label="Blazing 777s with TriLux — play"></button>
+      <button class="bjm-band" id="bjm-doubledown" style="top:75.90%;height:21.11%" aria-label="Double Down Madness — play"></button>
     </div>
   </div>
 </div>
@@ -790,6 +895,39 @@
         Blazing 7s costs nothing — all three cards must be the seven of diamonds.
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ========== DOUBLE DOWN MADNESS ========== -->
+<div class="screen" id="screen-doubledown">
+  <img class="dd-bg" src="__DD_BG__" alt="">
+  <div class="dd-table">
+    <div class="bj-topbar">
+      <button class="backlink" id="dd-back">‹ BLACKJACK</button>
+      <div class="bj-money">
+        <span><span class="lbl">BANKROLL </span><span class="val" id="dd-bankroll">5,000</span></span>
+        <span><span class="lbl">STAKED </span><span class="val staked" id="dd-staked">0</span></span>
+      </div>
+    </div>
+    <div class="dd-rule"></div>
+    <div class="dd-sub" id="dd-sub">DOUBLE DOWN MADNESS · 8 DECKS · 416 CARDS IN SHOE</div>
+    <div class="dd-art" id="dd-art">
+      <div class="dd-fit" id="dd-fit">
+        <img class="layout" src="__DD_LAYOUT__" alt="">
+        <div class="dd-mark" id="dd-dealer"></div>
+        <div class="dd-mark" id="dd-msgmark"><div class="dd-message" id="dd-message">⚡  Place your bet  ⚡</div></div>
+        <div class="dd-mark" id="dd-player"></div>
+        <div class="dd-mark" id="dd-results"></div>
+        <span class="dd-badge" id="dd-dbadge"></span>
+        <span class="dd-badge" id="dd-pbadge"></span>
+      </div>
+    </div>
+    <div class="dd-spots" id="dd-spots"></div>
+    <div id="dd-rack"></div>
+    <div class="bj-actions" id="dd-actions"></div>
+  </div>
+  <div class="bj-modal" id="dd-oddsmodal">
+    <div class="pt-wrap"><img src="__DD_ODDS__" alt="Push 22 odds"></div>
   </div>
 </div>
 
@@ -1142,6 +1280,10 @@
   $("bjm-blazing").addEventListener("click", function () {
     Blackjack.enter("blazing"); Shell.show("blackjack");
   });
+  $("bjm-doubledown").addEventListener("click", function () {
+    Shell.show("doubledown"); DoubleDown.enter();
+  });
+  $("dd-back").addEventListener("click", function () { Shell.show("bjmenu"); });
   $("bacc-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bj-back").addEventListener("click", function () { Shell.show("bjmenu"); });
 
@@ -2024,6 +2166,489 @@
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     DOUBLE DOWN MADNESS
+     One card to start, doubles that compound, and a dealer 22 that
+     pushes instead of busting. Twin of DoubleDownViewModel.kt.
+     ============================================================ */
+  var DoubleDown = (function () {
+    var DECKS = 8, RESHUFFLE_AT = 30;
+    var shoe = buildShoe(DECKS);
+    var bankroll = TESTING_BANKROLL, bet = 0, push22Bet = 0, push22Stake = 0;
+    var selectedChip = 25, chipHist = [], lastBet = 0, lastPush22 = 0;
+    var hand = null, dealer = [], holeUp = false;
+    var phase = "betting", results = [], timers = [], push22Win = null, pushed22 = false;
+
+    // The artwork's own pixels, and the marks everything live is placed on.
+    var ART_W = 1024, ART_H = 1536;
+    var DEALER_MARK = 471, MESSAGE_MARK = 709, PLAYER_MARK = 1296, RESULT_MARK = PLAYER_MARK + 200;
+    var DEALER_TITLE = 125, PLAYER_TITLE = 963;
+    var SLOT_W = 223, SLOT_H = 332, SLOT_SCALE = 0.85;
+    /** How many cards lie side by side before the hand starts to fan. */
+    var LAID_OUT = 5;
+    var cardScale = 1, artW = 0, artH = 0;
+
+    function bjValue(rank) {
+      if (rank === "A") return 1;
+      if (rank === "10" || rank === "J" || rank === "Q" || rank === "K") return 10;
+      return parseInt(rank, 10);
+    }
+    function total(cards) {
+      var hard = 0, hasAce = false;
+      cards.forEach(function (c) { hard += bjValue(c.rank); if (c.rank === "A") hasAce = true; });
+      return hasAce && hard + 10 <= 21 ? hard + 10 : hard;
+    }
+    function isSoft(cards) {
+      var hard = 0, hasAce = false;
+      cards.forEach(function (c) { hard += bjValue(c.rank); if (c.rank === "A") hasAce = true; });
+      return hasAce && hard + 10 <= 21;
+    }
+    function isBust(cards) { return total(cards) > 21; }
+    function isBJ(cards) { return cards.length === 2 && total(cards) === 21; }
+    function dealerHits(cards) { var t2 = total(cards); return t2 < 17 || (t2 === 17 && isSoft(cards)); }
+    function isRed(suit) { return suit === "♥" || suit === "♦"; }
+    /**
+     * The Push 22 side bet, read off the dealer's finished hand. Suit and
+     * colour run across the whole hand, however many cards it took.
+     */
+    function push22Of(cards) {
+      if (!cards.length || total(cards) !== 22) return null;
+      var first = cards[0].suit;
+      if (cards.every(function (c) { return c.suit === first; })) {
+        return { label: "Same-suit 22", pays: 75 };
+      }
+      if (cards.every(function (c) { return isRed(c.suit) === isRed(first); })) {
+        return { label: "Same-color 22", pays: 50 };
+      }
+      return { label: "Any combo 22", pays: 15 };
+    }
+    function draw() { return shoe.pop(); }
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function totalAtRisk() {
+      if (phase === "betting") return bet + push22Bet;
+      return (hand ? hand.stake : 0) + push22Stake;
+    }
+    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+
+    // ---------- layout ----------
+    /** Fits the layout whole, whichever edge runs out first — as Compose does. */
+    function layout() {
+      var box = $("dd-art"), fit = $("dd-fit");
+      if (!box || !box.clientHeight) return;
+      artH = Math.min(box.clientHeight, box.clientWidth * (ART_H / ART_W));
+      artW = artH * (ART_W / ART_H);
+      fit.style.width = artW + "px";
+      fit.style.height = artH + "px";
+      cardScale = (artH * (SLOT_H / ART_H) * SLOT_SCALE) / 78;
+      function at(id, mark) {
+        var el = $(id);
+        if (el) el.style.top = (mark / ART_H * 100).toFixed(3) + "%";
+      }
+      at("dd-dealer", DEALER_MARK);
+      at("dd-msgmark", MESSAGE_MARK);
+      at("dd-player", PLAYER_MARK);
+      at("dd-results", RESULT_MARK);
+      at("dd-dbadge", DEALER_TITLE);
+      at("dd-pbadge", PLAYER_TITLE);
+    }
+
+    // ---------- render ----------
+    function setMessage(text, tone) {
+      var m = $("dd-message");
+      m.textContent = phase === "betting" ? "⚡  " + text + "  ⚡" : text;
+      m.className = "dd-message" + (tone ? " " + tone : "");
+    }
+    function renderTop() {
+      $("dd-bankroll").textContent = fmt(bankroll);
+      $("dd-staked").textContent = fmt(totalAtRisk());
+      var sub = $("dd-sub");
+      if (Shell.mode === "campaign") {
+        sub.textContent = "CAMPAIGN · GOAL $" + fmt(Shell.getGoal());
+        sub.className = "dd-sub campaign";
+      } else {
+        sub.textContent = "DOUBLE DOWN MADNESS · 8 DECKS · " + shoe.length + " CARDS IN SHOE";
+        sub.className = "dd-sub";
+      }
+    }
+    /**
+     * Cards are drawn to the size of the slot the art was built around. Past
+     * five the hand fans: the leftmost card is the bottom of the pile and each
+     * new one overlaps it to the right.
+     */
+    function renderSlot(hostId, cards, faceUp) {
+      var host = $(hostId);
+      host.innerHTML = "";
+      var wrap = document.createElement("div");
+      wrap.className = "dd-hand";
+      wrap.style.transform = "scale(" + cardScale + ")";
+      if (cards.length < 2) {
+        var slot = document.createElement("div");
+        slot.className = "dd-slot";
+        slot.style.width = (SLOT_W / ART_W * artW / cardScale) + "px";
+        slot.style.height = (SLOT_H / ART_H * artH / cardScale) + "px";
+        wrap.appendChild(slot);
+      }
+      if (cards.length > LAID_OUT) {
+        wrap.classList.add("fan");
+        var avail = artW / cardScale;
+        var step = Math.min(58, (avail - 52) / (cards.length - 1));
+        cards.forEach(function (c, i) {
+          var el = cardEl(c, faceUp(i));
+          el.style.marginLeft = (step * i - step * (cards.length - 1) / 2 - 26) + "px";
+          wrap.appendChild(el);
+        });
+      } else {
+        var row = document.createElement("div");
+        row.className = "cards";
+        cards.forEach(function (c, i) { row.appendChild(cardEl(c, faceUp(i))); });
+        wrap.appendChild(row);
+      }
+      host.appendChild(wrap);
+    }
+    function renderDealer() {
+      renderSlot("dd-dealer", dealer, function (i) { return i === 0 || holeUp; });
+      var badge = $("dd-dbadge");
+      var visible = holeUp ? dealer : dealer.slice(0, 1);
+      if (!visible.length) { badge.style.display = "none"; return; }
+      var full = total(dealer);
+      badge.textContent = holeUp && isBJ(dealer) ? "BJ" : String(total(visible));
+      // A 22 is the house's own number here, so it is never shown as a bust.
+      badge.className = "dd-badge" + (holeUp && full > 21 && full !== 22 ? " bust" : "");
+      badge.style.display = "block";
+    }
+    function renderPlayer() {
+      var cards = hand ? hand.cards : [];
+      renderSlot("dd-player", cards, function () { return true; });
+      var badge = $("dd-pbadge");
+      if (!cards.length) { badge.style.display = "none"; return; }
+      var units = hand && hand.betUnit > 0 ? Math.round(hand.stake / hand.betUnit) : 1;
+      badge.innerHTML = (isBJ(cards) ? "BJ" : String(total(cards))) +
+        (units > 1 ? '<span class="units">' + units + "×</span>" : "");
+      badge.className = "dd-badge" + (isBust(cards) ? " bust" : "");
+      badge.style.display = "block";
+    }
+    function renderResults() {
+      var host = $("dd-results");
+      host.innerHTML = "";
+      if (phase !== "result" || !results.length) return;
+      var col = document.createElement("div");
+      col.className = "dd-pills";
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        var pill = document.createElement("div");
+        pill.className = "dd-pill" + (r.net > 0 ? " win" : "");
+        pill.innerHTML = "<span>" + r.label + '</span><span class="amt ' + cls + '">' + txt + "</span>";
+        col.appendChild(pill);
+      });
+      host.appendChild(col);
+    }
+    function renderSpots() {
+      var betting = phase === "betting";
+      var s = $("dd-spots");
+      s.innerHTML =
+        '<button class="dd-odds" id="dd-oddsbtn"><img src="__DD_ODDS__" alt="Push 22 odds"></button>' +
+        '<button class="dd-betspot spot" id="dd-betspot"><img src="' + BJ_ART.spotBet +
+        '" alt="Bet"><div class="placed"></div></button>' +
+        '<div class="dd-push"><button class="dd-pushring spot" id="dd-pushspot">' +
+        '<img src="' + COIN_IMG + '" alt="Push 22 side bet"><div class="placed"></div></button>' +
+        '<span class="cap">PUSH 22</span></div>';
+      s.querySelector("#dd-oddsbtn").addEventListener("click", function () {
+        $("dd-oddsmodal").classList.add("on");
+      });
+      s.querySelector("#dd-betspot").addEventListener("click", function () { addChip("main"); });
+      s.querySelector("#dd-pushspot").addEventListener("click", function () { addChip("push22"); });
+      fill(s, "#dd-betspot", betting ? bet : hand ? hand.stake : 0);
+      fill(s, "#dd-pushspot", betting ? push22Bet : push22Stake, 38);
+      var rack = $("dd-rack");
+      rack.innerHTML = "";
+      if (!betting) return;
+      var row = document.createElement("div");
+      row.className = "rack";
+      chipsFor(bankroll).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderSpots(); });
+        row.appendChild(cb);
+      });
+      rack.appendChild(row);
+    }
+    function fill(root, sel, amount, size) {
+      var el = root.querySelector(sel + " .placed");
+      if (!el || amount <= 0) return;
+      el.innerHTML = chipHtml(amount, size);
+      el.style.display = "block";
+    }
+    function imgBtn(src, alt, fn) {
+      var btn = document.createElement("button");
+      btn.className = "bj-imgbtn";
+      btn.innerHTML = '<img src="' + src + '" alt="' + alt + '">';
+      btn.addEventListener("click", fn);
+      return btn;
+    }
+    function renderActions() {
+      var a = $("dd-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(imgBtn(BJ_ART.btnUndo, "Undo", undoChip));
+        a.appendChild(imgBtn(BJ_ART.btnDeal, "Deal", deal));
+        a.appendChild(imgBtn(BJ_ART.btnClear, "Clear", clearBet));
+        if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
+          var buy = document.createElement("button");
+          buy.className = "btn solid";
+          buy.textContent = "Buy back in";
+          buy.addEventListener("click", function () {
+            bankroll = TESTING_BANKROLL; renderAll(); setMessage("Place your bet");
+          });
+          a.appendChild(buy);
+        }
+      } else if (phase === "player") {
+        a.appendChild(imgBtn(BJ_ART.btnHit, "Hit", hit));
+        // Standing on a single card is never a play, so it waits for the second.
+        if (hand && hand.cards.length >= 2) a.appendChild(imgBtn(BJ_ART.btnStand, "Stand", stand));
+        // A double matches the whole stake, so the bankroll must cover it.
+        if (hand && bankroll >= hand.stake) {
+          a.appendChild(imgBtn(BJ_ART.btnDouble, "Double", doubleDown));
+        }
+      } else if (phase === "result") {
+        a.appendChild(imgBtn(BJ_ART.btnRebet, "Rebet", function () { nextHand(true); }));
+        a.appendChild(imgBtn(BJ_ART.btnNewbet, "New bet", function () { nextHand(false); }));
+      } else {
+        var d = document.createElement("span");
+        d.className = "dealing-label";
+        d.textContent = "DEALING";
+        a.appendChild(d);
+      }
+    }
+    function renderAll() {
+      layout();
+      renderTop(); renderDealer(); renderPlayer(); renderResults();
+      renderSpots(); renderActions();
+    }
+
+    // ---------- betting ----------
+    function addChip(spot) {
+      if (phase !== "betting") return;
+      var amount = Math.min(selectedChip, Math.floor(bankroll - bet - push22Bet));
+      if (amount <= 0) { setMessage("No bankroll left"); return; }
+      if (spot === "push22") push22Bet += amount; else bet += amount;
+      chipHist.push({ spot: spot, v: amount });
+      setMessage(amount < selectedChip ? "All in!"
+        : spot === "push22" ? "Push 22 riding" : "Place your bet");
+      renderTop(); renderSpots();
+    }
+    function undoChip() {
+      if (phase !== "betting" || !chipHist.length) return;
+      var last = chipHist.pop();
+      if (last.spot === "push22") push22Bet = Math.max(0, push22Bet - last.v);
+      else bet = Math.max(0, bet - last.v);
+      renderTop(); renderSpots();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      bet = 0; push22Bet = 0; chipHist = [];
+      setMessage("Place your bet");
+      renderTop(); renderSpots();
+    }
+
+    // ---------- play ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (bet <= 0) {
+        setMessage(push22Bet > 0 ? "Push 22 rides with a main bet" : "Place a bet first");
+        return;
+      }
+      if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
+      bankroll -= bet + push22Bet;
+      syncWallet();
+      lastBet = bet; lastPush22 = push22Bet;
+      push22Stake = push22Bet; push22Win = null; pushed22 = false;
+      chipHist = [];
+      hand = { cards: [], stake: bet, betUnit: bet, doubled: false, done: false };
+      dealer = []; holeUp = false; results = [];
+      bet = 0; push22Bet = 0;
+      phase = "dealing";
+      setMessage("Dealing…");
+      renderAll();
+      // One card to the player, two to the dealer.
+      t(350, function () { hand.cards.push(draw()); renderPlayer(); });
+      t(750, function () { dealer.push(draw()); renderDealer(); });
+      t(1150, function () {
+        dealer.push(draw());
+        renderDealer(); renderTop();
+        var up = dealer[0];
+        if (up.rank === "A" || bjValue(up.rank) === 10) {
+          t(450, function () { setMessage("Dealer checks for blackjack…"); });
+          t(1350, function () {
+            if (isBJ(dealer)) {
+              holeUp = true;
+              renderDealer();
+              t(700, settle);
+            } else {
+              setMessage("No blackjack");
+              t(450, live);
+            }
+          });
+        } else t(400, live);
+      });
+      function live() {
+        phase = "player";
+        setMessage("One card down — hit or double");
+        renderAll();
+      }
+    }
+    function hit() {
+      if (phase !== "player" || !hand || hand.done) return;
+      hand.cards.push(draw());
+      var bust = isBust(hand.cards), twentyOne = total(hand.cards) === 21;
+      if (bust || twentyOne) hand.done = true;
+      setMessage(bust ? "Bust" : twentyOne ? "Twenty-one" : "Hit or double");
+      renderAll();
+      if (bust || twentyOne) dealerTurn();
+    }
+    /**
+     * A double buys one card and doubles the whole bet — 100 becomes 200, and
+     * doubling that puts 400 out, not 300. It does not close the hand: keep
+     * doubling as long as the bankroll and the cards allow.
+     */
+    function doubleDown() {
+      if (phase !== "player" || !hand || hand.done) return;
+      var cost = hand.stake;              // matching what is staked is what doubles it
+      if (bankroll < cost) return;
+      bankroll -= cost;
+      hand.stake += cost;
+      hand.doubled = true;
+      syncWallet();
+      phase = "dealing";
+      setMessage("Double!");
+      renderAll();
+      t(400, function () {
+        hand.cards.push(draw());
+        var bust = isBust(hand.cards), twentyOne = total(hand.cards) === 21;
+        if (bust || twentyOne) {
+          hand.done = true;
+          setMessage(bust ? "Bust" : "Twenty-one");
+          renderAll();
+          t(500, dealerTurn);
+        } else {
+          phase = "player";
+          setMessage("Hit or double again");
+          renderAll();
+        }
+      });
+    }
+    function stand() {
+      if (phase !== "player" || !hand || hand.cards.length < 2) return;
+      hand.done = true;
+      dealerTurn();
+    }
+    function dealerTurn() {
+      phase = "dealer";
+      setMessage("Dealer plays…");
+      renderAll();
+      t(450, function () {
+        holeUp = true;
+        renderDealer();
+        var cards = hand ? hand.cards : [];
+        // A live Push 22 keeps the dealer drawing even when the main bet is
+        // already decided: the side bet is owed its answer.
+        var playOut = push22Stake > 0 || (!isBust(cards) && !isBJ(cards));
+        (function maybeHit() {
+          if (playOut && dealerHits(dealer)) {
+            t(650, function () {
+              dealer.push(draw());
+              renderDealer(); renderTop();
+              maybeHit();
+            });
+          } else t(1200, settle);
+        })();
+      });
+    }
+    function settle() {
+      var dealerBj = isBJ(dealer), dTotal = total(dealer);
+      // The dealer's 22 pays for all that doubling: it pushes rather than loses.
+      var push22 = dTotal === 22;
+      var totalReturn = 0;
+      results = [];
+      if (hand) {
+        var pTotal = total(hand.cards);
+        var playerBj = !hand.doubled && isBJ(hand.cards);
+        var returned;
+        if (playerBj && dealerBj) returned = hand.stake;
+        else if (playerBj) returned = hand.stake + 1.5 * hand.betUnit;
+        else if (dealerBj) returned = 0;
+        else if (isBust(hand.cards)) returned = 0;
+        else if (push22) returned = hand.stake;
+        else if (dTotal > 21) returned = hand.stake * 2;
+        else if (pTotal > dTotal) returned = hand.stake * 2;
+        else if (pTotal === dTotal) returned = hand.stake;
+        else returned = 0;
+        pushed22 = push22 && !isBust(hand.cards) && !dealerBj;
+        totalReturn += returned;
+        results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand.stake });
+      }
+      if (push22Stake > 0) {
+        push22Win = push22Of(dealer);
+        var sideRet = push22Win ? push22Stake * (push22Win.pays + 1) : 0;
+        totalReturn += sideRet;
+        results.push({
+          label: push22Win ? push22Win.label : "Push 22",
+          net: sideRet - push22Stake
+        });
+      }
+      bankroll += totalReturn;
+      syncWallet();
+      var staked = (hand ? hand.stake : 0) + push22Stake;
+      var net = totalReturn - staked;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        push22Win ? push22Win.label + " — " + push22Win.pays + ":1" :
+        pushed22 ? "Dealer 22 — push" :
+        dealerBj ? (net >= 0 ? "Dealer blackjack — push" : "Dealer blackjack") :
+        net > 0 ? "You win" : net < 0 ? "Dealer wins" : "Push";
+      setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
+      renderAll();
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      phase = "betting";
+      hand = null; dealer = []; holeUp = false;
+      results = []; chipHist = []; push22Stake = 0; push22Win = null; pushed22 = false;
+      if (repeat && lastBet + lastPush22 <= bankroll) {
+        bet = lastBet; push22Bet = lastPush22;
+      } else if (repeat && lastBet <= bankroll) {
+        bet = lastBet; push22Bet = 0;
+      } else {
+        bet = 0; push22Bet = 0;
+      }
+      setMessage("Place your bet");
+      renderAll();
+      Shell.gate(function () { renderAll(); });
+    }
+    function enter() {
+      clearTimers();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bet = 0; push22Bet = 0; push22Stake = 0; push22Win = null; pushed22 = false;
+      chipHist = []; hand = null; dealer = []; holeUp = false; results = [];
+      phase = "betting";
+      setMessage("Place your bet");
+      // The art has to be on screen before it can be measured.
+      setTimeout(renderAll, 0);
+      renderAll();
+      Shell.gate(function () { renderAll(); });
+    }
+    $("dd-oddsmodal").addEventListener("click", function () {
+      $("dd-oddsmodal").classList.remove("on");
+    });
+    window.addEventListener("resize", function () {
+      if ($("screen-doubledown").classList.contains("on")) renderAll();
+    });
     return { enter: enter };
   })();
 
