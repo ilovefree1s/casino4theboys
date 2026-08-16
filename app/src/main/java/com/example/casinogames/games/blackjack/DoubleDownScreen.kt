@@ -21,11 +21,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -82,6 +87,7 @@ fun DoubleDownScreen(
     vm: DoubleDownViewModel = viewModel(),
 ) {
     LaunchedEffect(campaign) { vm.enterMode(campaign) }
+    var showOdds by remember { mutableStateOf(false) }
     Box(
         Modifier
             .fillMaxSize()
@@ -120,7 +126,7 @@ fun DoubleDownScreen(
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
             )
             Table(vm, Modifier.weight(1f))
-            BetRow(vm)
+            BetRow(vm, onShowOdds = { showOdds = true })
             if (vm.phase == BjPhase.BETTING) {
                 Spacer(Modifier.height(12.dp))
                 ChipRack(vm)
@@ -128,6 +134,7 @@ fun DoubleDownScreen(
             Spacer(Modifier.height(10.dp))
             ActionButtons(vm)
         }
+        if (showOdds) OddsOverlay { showOdds = false }
         if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll < 25 && vm.bet == 0) {
             CampaignGameOver(onStartOver = {
                 vm.buyBackIn()
@@ -469,13 +476,23 @@ private fun ResultPill(r: BjResult) {
 }
 
 /**
- * The bet spot keeps the artwork's centre line; the house's side of the
- * bargain is marked off to the right, the way TriLux sits beside the bet on
- * the Blazing felt.
+ * The bet spot keeps the artwork's centre line; the odds placard sits to its
+ * left and the house's side of the bargain to its right — the way TriLux
+ * flanks the bet on the Blazing felt.
  */
 @Composable
-private fun BetRow(vm: DoubleDownViewModel) {
+private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+        Image(
+            painter = painterResource(R.drawable.dd_push22_odds),
+            contentDescription = "Push 22 odds",
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .width(OddsPlacardWidth)
+                .clip(RoundedCornerShape(8.dp))
+                .clickable(onClick = onShowOdds),
+            contentScale = ContentScale.FillWidth,
+        )
         BetSpot(vm)
         Column(
             Modifier.align(Alignment.CenterEnd).width(118.dp),
@@ -497,6 +514,30 @@ private fun BetRow(vm: DoubleDownViewModel) {
                 letterSpacing = 0.14.em,
             )
         }
+    }
+}
+
+/** As wide as the coin column opposite it, so the bet stays on centre. */
+private val OddsPlacardWidth = 118.dp
+
+/** Tap the placard and the odds fill the screen, since they are set small. */
+@Composable
+private fun OddsOverlay(onDismiss: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xE6000000))
+            .clickable(onClick = onDismiss),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.dd_push22_odds),
+            contentDescription = "Push 22 odds",
+            modifier = Modifier
+                .padding(horizontal = 24.dp)
+                .widthIn(max = 420.dp),
+            contentScale = ContentScale.FillWidth,
+        )
     }
 }
 
