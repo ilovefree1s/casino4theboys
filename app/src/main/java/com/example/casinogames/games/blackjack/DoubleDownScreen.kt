@@ -194,14 +194,13 @@ private fun TopBar(onBack: () -> Unit, vm: DoubleDownViewModel) {
 private fun DealerArea(vm: DoubleDownViewModel) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Box(Modifier.width(300.dp), contentAlignment = Alignment.Center) {
-            // Black lettering with a hairline of white, drawn rather than art,
-            // so nothing but the word sits on the felt.
+            // Drawn rather than art, so nothing but the word sits on the felt.
             OutlinedText(
                 "DEALER",
                 fontSize = 30.sp,
-                color = Color.Black,
-                outlineColor = Chalk,
-                outlineWidth = 1.dp,
+                color = Chalk,
+                outlineColor = Color.Black,
+                outlineWidth = 1.5.dp,
                 letterSpacing = 0.1.em,
             )
             val visible = if (vm.holeRevealed) vm.dealerCards else vm.dealerCards.take(1)
