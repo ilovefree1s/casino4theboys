@@ -207,6 +207,8 @@ private const val PlayerTitleCentre = 963f
 /** The card slots the artwork was drawn around; cards are cut to fit them. */
 private const val SlotWidth = 223f
 private const val SlotHeight = 332f
+/** Dealt a little under the drawn slot, so a long hand has room to spread. */
+private const val SlotScale = 0.85f
 
 @Composable
 private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
@@ -227,8 +229,8 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
                 contentScale = ContentScale.FillBounds,
             )
             // Cards are drawn to the size of the slot the art was built around.
-            val slotHeight = artHeight * (SlotHeight / ArtHeight)
-            val slotWidth = artWidth * (SlotWidth / ArtWidth)
+            val slotHeight = artHeight * (SlotHeight / ArtHeight) * SlotScale
+            val slotWidth = artWidth * (SlotWidth / ArtWidth) * SlotScale
             val cardScale = slotHeight / CardHeight
 
             AtMark(artHeight, DealerSlotCentre, slotHeight) {
