@@ -283,8 +283,15 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
                     .padding(end = 10.dp),
             )
             if (vm.phase == BjPhase.RESULT) {
-                AtMark(artHeight, PlayerSlotCentre + 130f, 30.dp) {
-                    vm.results.firstOrNull()?.let { r -> ResultPill(r) }
+                // Below the deepest a card reaches, so a two-line settlement
+                // never sits on the hand it is reporting.
+                AtMark(artHeight, PlayerSlotCentre + 200f, 30.dp * vm.results.size) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        vm.results.forEach { r -> ResultPill(r) }
+                    }
                 }
             }
         }
@@ -500,17 +507,31 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
             contentScale = ContentScale.FillWidth,
         )
         BetSpot(vm)
+        val betting = vm.phase == BjPhase.BETTING
         Column(
             Modifier.align(Alignment.CenterEnd).width(118.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Image(
-                painter = painterResource(R.drawable.fourtheboys_gold),
-                contentDescription = "Dealer 22 pushes",
-                // Clipped round so the art's square backing never shows.
-                modifier = Modifier.size(58.dp).clip(CircleShape),
-                contentScale = ContentScale.Crop,
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Box(
+                    Modifier
+                        .size(63.dp)
+                        .border(2.dp, Gold.copy(alpha = 0.9f), CircleShape)
+                        .padding(3.dp)
+                        .clip(CircleShape)
+                        .clickable(enabled = betting) { vm.addPush22Chip() },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.fourtheboys_gold),
+                        contentDescription = "Push 22 side bet",
+                        // Clipped round so the art's square backing never shows.
+                        modifier = Modifier.fillMaxSize().clip(CircleShape),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
+                PlacedBetChip(if (betting) vm.push22Bet else vm.push22Stake, size = 38.dp)
+            }
             Spacer(Modifier.height(3.dp))
             Text(
                 "PUSH 22",

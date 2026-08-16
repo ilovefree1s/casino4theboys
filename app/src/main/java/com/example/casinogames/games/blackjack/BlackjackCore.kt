@@ -35,6 +35,33 @@ object BlackjackCore {
     }
 }
 
+/** Rules specific to Double Down Madness. */
+object DoubleDownRules {
+
+    /** The Push 22 side bet, read off the dealer's finished hand. */
+    enum class Push22Win(val label: String, val payout: Int) {
+        SUITED("Same-suit 22", 75),
+        COLORED("Same-color 22", 50),
+        ANY("Any combo 22", 15),
+    }
+
+    /**
+     * Pays when the dealer lands on 22 — the same 22 that pushes the main bet.
+     * Suit and colour are read across the whole dealer hand, however many cards
+     * it took to get there.
+     */
+    fun push22(dealerCards: List<Card>): Push22Win? {
+        if (dealerCards.isEmpty()) return null
+        if (BlackjackCore.total(dealerCards) != 22) return null
+        val first = dealerCards.first().suit
+        return when {
+            dealerCards.all { it.suit == first } -> Push22Win.SUITED
+            dealerCards.all { it.suit.isRed == first.isRed } -> Push22Win.COLORED
+            else -> Push22Win.ANY
+        }
+    }
+}
+
 /** Rules specific to Free Bet Blackjack. */
 object FreeBetRules {
 

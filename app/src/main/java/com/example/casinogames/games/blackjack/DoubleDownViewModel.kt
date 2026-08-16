@@ -40,6 +40,13 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     var selectedChip by mutableIntStateOf(25)
     var bet by mutableIntStateOf(0)
         private set
+    /** The Push 22 side bet, before and after the cards come out. */
+    var push22Bet by mutableIntStateOf(0)
+        private set
+    var push22Stake by mutableIntStateOf(0)
+        private set
+    var push22Win by mutableStateOf<DoubleDownRules.Push22Win?>(null)
+        private set
     var shoeCount by mutableIntStateOf(shoe.cardsRemaining)
         private set
 
@@ -61,9 +68,14 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         private set
 
     private var lastBet = 0
-    private val chipHistory = mutableListOf<Int>()
+    private var lastPush22 = 0
+    private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
-    val totalStaked: Int get() = if (phase == BjPhase.BETTING) bet else hand?.stake ?: 0
+    enum class Spot { BET, PUSH_22 }
+
+    val totalStaked: Int
+        get() = if (phase == BjPhase.BETTING) bet + push22Bet
+        else (hand?.stake ?: 0) + push22Stake
 
     // ---- campaign ----
 
@@ -90,6 +102,9 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         dealerCards.clear()
         chipHistory.clear()
         bet = 0
+        push22Bet = 0
+        push22Stake = 0
+        push22Win = null
         results = emptyList()
         holeRevealed = false
         pushed22 = false
@@ -130,27 +145,42 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
     // ---- betting ----
 
-    fun addChip() {
+    fun addChip() = addChip(Spot.BET)
+
+    fun addPush22Chip() = addChip(Spot.PUSH_22)
+
+    private fun addChip(spot: Spot) {
         if (phase != BjPhase.BETTING) return
-        val amount = minOf(selectedChip, (bankroll - bet).toInt())
+        val amount = minOf(selectedChip, (bankroll - bet - push22Bet).toInt())
         if (amount <= 0) {
             message = "No bankroll left"
             return
         }
-        bet += amount
-        chipHistory.add(amount)
-        message = if (amount < selectedChip) "All in!" else "Place your bet"
+        when (spot) {
+            Spot.BET -> bet += amount
+            Spot.PUSH_22 -> push22Bet += amount
+        }
+        chipHistory.add(spot to amount)
+        message = when {
+            amount < selectedChip -> "All in!"
+            spot == Spot.PUSH_22 -> "Push 22 riding"
+            else -> "Place your bet"
+        }
     }
 
     fun undoChip() {
         if (phase != BjPhase.BETTING) return
         val last = chipHistory.removeLastOrNull() ?: return
-        bet = (bet - last).coerceAtLeast(0)
+        when (last.first) {
+            Spot.BET -> bet = (bet - last.second).coerceAtLeast(0)
+            Spot.PUSH_22 -> push22Bet = (push22Bet - last.second).coerceAtLeast(0)
+        }
     }
 
     fun clearBet() {
         if (phase != BjPhase.BETTING) return
         bet = 0
+        push22Bet = 0
         chipHistory.clear()
         message = "Place your bet"
     }
@@ -160,13 +190,16 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     fun deal() {
         if (phase != BjPhase.BETTING) return
         if (bet <= 0) {
-            message = "Place a bet first"
+            message = if (push22Bet > 0) "Push 22 rides with a main bet" else "Place a bet first"
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        bankroll -= bet
+        bankroll -= bet + push22Bet
         persist()
         lastBet = bet
+        lastPush22 = push22Bet
+        push22Stake = push22Bet
+        push22Win = null
         chipHistory.clear()
         dealerCards.clear()
         holeRevealed = false
@@ -176,6 +209,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         message = "Dealing…"
         val wager = bet
         bet = 0
+        push22Bet = 0
 
         viewModelScope.launch {
             // One card to the player, two to the dealer.
@@ -288,7 +322,10 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             holeRevealed = true
             delay(650)
             val cards = hand?.cards ?: emptyList()
-            if (!BlackjackCore.isBust(cards) && !BlackjackCore.isBlackjack(cards)) {
+            // A live Push 22 keeps the dealer drawing even when the main bet is
+            // already decided: the side bet is owed its answer.
+            val sideBetLive = push22Stake > 0
+            if (sideBetLive || (!BlackjackCore.isBust(cards) && !BlackjackCore.isBlackjack(cards))) {
                 while (BlackjackCore.dealerShouldHit(dealerCards)) {
                     delay(650)
                     dealerCards.add(shoe.draw())
@@ -328,12 +365,22 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(if (playerBj) "Blackjack" else "Hand", returned - h.stake))
         }
 
+        if (push22Stake > 0) {
+            val win = DoubleDownRules.push22(dealerCards)
+            push22Win = win
+            val ret = if (win != null) push22Stake * (win.payout + 1.0) else 0.0
+            totalReturn += ret
+            out.add(BjResult(win?.label ?: "Push 22", ret - push22Stake))
+        }
+
         bankroll += totalReturn
         persist()
-        val staked = h?.stake ?: 0
+        val staked = (h?.stake ?: 0) + push22Stake
         val net = totalReturn - staked
+        val sideWin = push22Win
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
+            sideWin != null -> "${sideWin.label} — ${sideWin.payout}:1"
             pushed22 -> "Dealer 22 — push"
             dealerBj -> if (net >= 0) "Dealer blackjack — push" else "Dealer blackjack"
             net > 0 -> "You win"
@@ -353,7 +400,15 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         pushed22 = false
         results = emptyList()
         chipHistory.clear()
-        bet = if (repeat && lastBet <= bankroll) lastBet else 0
+        push22Stake = 0
+        push22Win = null
+        if (repeat && lastBet + lastPush22 <= bankroll) {
+            bet = lastBet
+            push22Bet = lastPush22
+        } else {
+            bet = 0
+            push22Bet = 0
+        }
         message = "Place your bet"
     }
 }
