@@ -30,9 +30,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -46,6 +50,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casinogames.R
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
+import com.example.casinogames.ui.common.CardHeight
 import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
@@ -199,6 +204,9 @@ private const val MessageCentre = 709f
 private const val PlayerSlotCentre = 1296f
 private const val DealerTitleCentre = 125f
 private const val PlayerTitleCentre = 963f
+/** The card slots the artwork was drawn around; cards are cut to fit them. */
+private const val SlotWidth = 223f
+private const val SlotHeight = 332f
 
 @Composable
 private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
@@ -218,18 +226,24 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.FillBounds,
             )
-            AtMark(artHeight, DealerSlotCentre, 78.dp) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            // Cards are drawn to the size of the slot the art was built around.
+            val slotHeight = artHeight * (SlotHeight / ArtHeight)
+            val slotWidth = artWidth * (SlotWidth / ArtWidth)
+            val cardScale = slotHeight / CardHeight
+
+            AtMark(artHeight, DealerSlotCentre, slotHeight) {
+                CardSlot(vm.dealerCards.size, slotWidth, slotHeight, cardScale) {
                     vm.dealerCards.forEachIndexed { i, card ->
-                        PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed)
+                        PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed, scale = cardScale)
                     }
                 }
             }
             AtMark(artHeight, MessageCentre, 44.dp) { MessageLine(vm) }
-            AtMark(artHeight, PlayerSlotCentre, 78.dp) {
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    (vm.hand?.cards ?: emptyList()).forEach { card ->
-                        PlayingCardView(card, faceUp = true)
+            AtMark(artHeight, PlayerSlotCentre, slotHeight) {
+                val cards = vm.hand?.cards ?: emptyList()
+                CardSlot(cards.size, slotWidth, slotHeight, cardScale) {
+                    cards.forEach { card ->
+                        PlayingCardView(card, faceUp = true, scale = cardScale)
                     }
                 }
             }
@@ -254,6 +268,45 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
                 }
             }
         }
+    }
+}
+
+/**
+ * The dashed landing box, drawn only while a side is short of its second card:
+ * one card fills it exactly, and once the hand spreads there is nothing left
+ * for the box to mark.
+ */
+@Composable
+private fun CardSlot(
+    cardCount: Int,
+    width: Dp,
+    height: Dp,
+    scale: Float,
+    cards: @Composable RowScope.() -> Unit,
+) {
+    Box(contentAlignment = Alignment.Center) {
+        if (cardCount < 2) {
+            Box(
+                Modifier
+                    .size(width, height)
+                    .drawBehind {
+                        drawRoundRect(
+                            color = Color(0xE6FFFFFF),
+                            style = Stroke(
+                                width = 2.dp.toPx() * scale,
+                                pathEffect = PathEffect.dashPathEffect(
+                                    floatArrayOf(9.dp.toPx() * scale, 6.dp.toPx() * scale)
+                                ),
+                            ),
+                            cornerRadius = CornerRadius(4.dp.toPx() * scale),
+                        )
+                    }
+            )
+        }
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp * scale),
+            content = cards,
+        )
     }
 }
 

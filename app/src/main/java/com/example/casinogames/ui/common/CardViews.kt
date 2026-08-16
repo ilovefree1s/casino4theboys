@@ -58,8 +58,9 @@ fun EmptyCardSlot() {
     )
 }
 
+/** [scale] draws the same card larger, pips and all, for tables with room. */
 @Composable
-fun PlayingCardView(card: Card, faceUp: Boolean) {
+fun PlayingCardView(card: Card, faceUp: Boolean, scale: Float = 1f) {
     val rotation by animateFloatAsState(
         targetValue = if (faceUp) 0f else 180f,
         animationSpec = tween(480),
@@ -67,40 +68,44 @@ fun PlayingCardView(card: Card, faceUp: Boolean) {
     )
     Box(
         Modifier
-            .size(CardWidth, CardHeight)
+            .size(CardWidth * scale, CardHeight * scale)
             .graphicsLayer {
                 rotationY = rotation
                 cameraDistance = 16f * density
             }
     ) {
         if (rotation <= 90f) {
-            CardFront(card)
+            CardFront(card, scale)
         } else {
-            CardBack(Modifier.graphicsLayer { rotationY = 180f })
+            CardBack(Modifier.graphicsLayer { rotationY = 180f }, scale)
         }
     }
 }
 
 @Composable
-private fun CardFront(card: Card) {
+private fun CardFront(card: Card, scale: Float = 1f) {
     val ink = if (card.suit.isRed) Color(0xFFB3222E) else Color(0xFF141014)
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xFFFAF6EC), RoundedCornerShape(6.dp))
-            .border(1.dp, Color(0x66000000), RoundedCornerShape(6.dp))
-            .padding(horizontal = 5.dp, vertical = 4.dp)
+            .background(Color(0xFFFAF6EC), RoundedCornerShape(6.dp * scale))
+            .border(1.dp * scale, Color(0x66000000), RoundedCornerShape(6.dp * scale))
+            .padding(horizontal = 5.dp * scale, vertical = 4.dp * scale)
     ) {
         Text(
             card.rank.label,
-            color = ink, fontSize = 13.sp,
-            fontWeight = FontWeight.Black, lineHeight = 13.sp,
+            color = ink, fontSize = 13.sp * scale,
+            fontWeight = FontWeight.Black, lineHeight = 13.sp * scale,
             modifier = Modifier.align(Alignment.TopStart),
         )
-        Text(card.suit.symbol, color = ink, fontSize = 20.sp, modifier = Modifier.align(Alignment.Center))
+        Text(
+            card.suit.symbol,
+            color = ink, fontSize = 20.sp * scale,
+            modifier = Modifier.align(Alignment.Center),
+        )
         Text(
             card.rank.label,
-            color = ink, fontSize = 10.sp, fontWeight = FontWeight.Black,
+            color = ink, fontSize = 10.sp * scale, fontWeight = FontWeight.Black,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .graphicsLayer { rotationZ = 180f },
@@ -109,13 +114,13 @@ private fun CardFront(card: Card) {
 }
 
 @Composable
-private fun CardBack(modifier: Modifier = Modifier) {
+private fun CardBack(modifier: Modifier = Modifier, scale: Float = 1f) {
     Image(
         painter = painterResource(R.drawable.card_back),
         contentDescription = null,
         modifier = modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(6.dp)),
+            .clip(RoundedCornerShape(6.dp * scale)),
         contentScale = ContentScale.Crop,
     )
 }
