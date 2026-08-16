@@ -48,9 +48,11 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.casinogames.R
+import com.example.casinogames.games.core.Card
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
 import com.example.casinogames.ui.common.CardHeight
+import com.example.casinogames.ui.common.CardWidth
 import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
@@ -209,6 +211,8 @@ private const val SlotWidth = 223f
 private const val SlotHeight = 332f
 /** Dealt a little under the drawn slot, so a long hand has room to spread. */
 private const val SlotScale = 0.85f
+/** How many cards the felt lays out side by side before the hand starts to fan. */
+private const val LaidOutCards = 5
 
 @Composable
 private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
@@ -234,20 +238,25 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
             val cardScale = slotHeight / CardHeight
 
             AtMark(artHeight, DealerSlotCentre, slotHeight) {
-                CardSlot(vm.dealerCards.size, slotWidth, slotHeight, cardScale) {
-                    vm.dealerCards.forEachIndexed { i, card ->
-                        PlayingCardView(card, faceUp = i == 0 || vm.holeRevealed, scale = cardScale)
-                    }
-                }
+                CardSlot(
+                    cards = vm.dealerCards,
+                    faceUp = { i -> i == 0 || vm.holeRevealed },
+                    slotWidth = slotWidth,
+                    slotHeight = slotHeight,
+                    scale = cardScale,
+                    available = artWidth,
+                )
             }
             AtMark(artHeight, MessageCentre, 44.dp) { MessageLine(vm) }
             AtMark(artHeight, PlayerSlotCentre, slotHeight) {
-                val cards = vm.hand?.cards ?: emptyList()
-                CardSlot(cards.size, slotWidth, slotHeight, cardScale) {
-                    cards.forEach { card ->
-                        PlayingCardView(card, faceUp = true, scale = cardScale)
-                    }
-                }
+                CardSlot(
+                    cards = vm.hand?.cards ?: emptyList(),
+                    faceUp = { true },
+                    slotWidth = slotWidth,
+                    slotHeight = slotHeight,
+                    scale = cardScale,
+                    available = artWidth,
+                )
             }
             // The totals ride at the end of each title, where the art leaves room.
             DealerBadge(
@@ -280,17 +289,18 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
  */
 @Composable
 private fun CardSlot(
-    cardCount: Int,
-    width: Dp,
-    height: Dp,
+    cards: List<Card>,
+    faceUp: (Int) -> Boolean,
+    slotWidth: Dp,
+    slotHeight: Dp,
     scale: Float,
-    cards: @Composable RowScope.() -> Unit,
+    available: Dp,
 ) {
     Box(contentAlignment = Alignment.Center) {
-        if (cardCount < 2) {
+        if (cards.size < 2) {
             Box(
                 Modifier
-                    .size(width, height)
+                    .size(slotWidth, slotHeight)
                     .drawBehind {
                         drawRoundRect(
                             color = Color(0xE6FFFFFF),
@@ -305,10 +315,30 @@ private fun CardSlot(
                     }
             )
         }
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(6.dp * scale),
-            content = cards,
-        )
+        val gap = 6.dp * scale
+        if (cards.size <= LaidOutCards) {
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                cards.forEachIndexed { i, card ->
+                    PlayingCardView(card, faceUp = faceUp(i), scale = scale)
+                }
+            }
+        } else {
+            // Five is as wide as the felt goes, so beyond that the hand fans:
+            // the leftmost card is the bottom of the pile and each new one
+            // overlaps it to the right, however long the run gets.
+            val cardWidth = CardWidth * scale
+            val step = minOf(
+                cardWidth + gap,
+                (available - cardWidth) / (cards.size - 1).toFloat(),
+            )
+            Box {
+                cards.forEachIndexed { i, card ->
+                    Box(Modifier.offset(x = step * i.toFloat() - step * (cards.size - 1) / 2f)) {
+                        PlayingCardView(card, faceUp = faceUp(i), scale = scale)
+                    }
+                }
+            }
+        }
     }
 }
 
