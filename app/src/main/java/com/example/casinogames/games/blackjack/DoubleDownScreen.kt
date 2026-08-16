@@ -268,10 +268,12 @@ private fun PlayerArea(vm: DoubleDownViewModel) {
             BlackjackCore.isBlackjack(cards) -> "BJ"
             else -> "${BlackjackCore.total(cards)}"
         }
+        // Every double adds another unit, so the header counts them off.
+        val units = hand?.let { if (it.betUnit > 0) it.stake / it.betUnit else 1 } ?: 1
         YourHandHeader(
             badge = badge,
             badgeColor = if (BlackjackCore.isBust(cards)) Ash else Chalk,
-            doubled = hand?.doubled == true,
+            units = units,
         )
         Spacer(Modifier.height(8.dp))
         Box(contentAlignment = Alignment.Center) {
@@ -290,7 +292,7 @@ private fun PlayerArea(vm: DoubleDownViewModel) {
 }
 
 @Composable
-private fun YourHandHeader(badge: String?, badgeColor: Color, doubled: Boolean) {
+private fun YourHandHeader(badge: String?, badgeColor: Color, units: Int) {
     Box(contentAlignment = Alignment.Center) {
         Image(
             painter = painterResource(R.drawable.fb_header_yourhand),
@@ -305,9 +307,9 @@ private fun YourHandHeader(badge: String?, badgeColor: Color, doubled: Boolean) 
             horizontalArrangement = Arrangement.spacedBy(5.dp),
         ) {
             if (badge != null) TotalBadge(badge, badgeColor)
-            if (doubled) {
+            if (units > 1) {
                 Text(
-                    "2×",
+                    "${units}×",
                     color = TableBlack, fontSize = 11.sp, fontWeight = FontWeight.Black,
                     modifier = Modifier
                         .background(Silver, RoundedCornerShape(999.dp))

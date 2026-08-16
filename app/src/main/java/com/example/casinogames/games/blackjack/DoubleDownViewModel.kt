@@ -238,6 +238,10 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         if (bust || twentyOne) dealerTurn()
     }
 
+    /**
+     * The madness: a double buys one card and raises the stake, but it does not
+     * close the hand. Keep doubling as long as the bankroll and the cards allow.
+     */
     fun doubleDown() {
         val h = live ?: return
         if (bankroll < h.betUnit) return
@@ -249,10 +253,18 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             phase = BjPhase.DEALING
             delay(400)
             draw()
-            hand = hand?.copy(done = true)
-            if (BlackjackCore.isBust(hand?.cards ?: emptyList())) message = "Bust"
-            delay(500)
-            dealerTurn()
+            val cards = hand?.cards ?: emptyList()
+            val bust = BlackjackCore.isBust(cards)
+            val twentyOne = BlackjackCore.total(cards) == 21
+            if (bust || twentyOne) {
+                hand = hand?.copy(done = true)
+                message = if (bust) "Bust" else "Twenty-one"
+                delay(500)
+                dealerTurn()
+            } else {
+                phase = BjPhase.PLAYER_TURN
+                message = "Hit or double again"
+            }
         }
     }
 
