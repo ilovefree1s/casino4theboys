@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -35,6 +36,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -138,15 +140,13 @@ fun FreeBetScreen(
                     .clickable { showPayTable = false },
                 contentAlignment = Alignment.Center,
             ) {
-                Image(
-                    painter = painterResource(R.drawable.fb_paytable),
-                    contentDescription = "4 The Boys pay table",
+                PayTable(
+                    coins = vm.freeCoins,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(34.dp)
-                        .clip(RoundedCornerShape(14.dp))
-                        .border(1.5.dp, NeonMagenta.copy(alpha = 0.6f), RoundedCornerShape(14.dp)),
-                    contentScale = ContentScale.FillWidth,
+                        .padding(40.dp),
+                    coinSize = 40.dp,
+                    bordered = true,
                 )
             }
         }
@@ -467,6 +467,63 @@ private fun PlayerHeader(
     }
 }
 
+/**
+ * Row bands measured off fb_paytable.png (200 x 221): the top of each payout
+ * line, keyed by the number of coins it pays for, plus the line's own height.
+ */
+private val PayRowTop = mapOf(
+    1 to 158f, 2 to 136f, 3 to 113f, 4 to 90f, 5 to 68f, 6 to 45f, 7 to 22f,
+)
+private const val PayArtWidth = 200f
+private const val PayArtHeight = 221f
+private const val PayRowHeight = 14f
+
+/**
+ * The pay table, with a gold coin sitting either side of the line the player's
+ * coins are currently worth. Each new coin walks the pair up a rung; seven is
+ * the top one, so anything beyond it stays there.
+ */
+@Composable
+private fun PayTable(
+    coins: Int,
+    modifier: Modifier = Modifier,
+    coinSize: Dp = 20.dp,
+    bordered: Boolean = false,
+) {
+    BoxWithConstraints(modifier) {
+        val shape = RoundedCornerShape(if (bordered) 14.dp else 8.dp)
+        Image(
+            painter = painterResource(R.drawable.fb_paytable),
+            contentDescription = "4 The Boys pay table",
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(shape)
+                .then(
+                    if (bordered) Modifier.border(1.5.dp, NeonMagenta.copy(alpha = 0.6f), shape)
+                    else Modifier
+                ),
+            contentScale = ContentScale.FillWidth,
+        )
+        val top = PayRowTop[coins.coerceAtMost(7)]
+        if (coins > 0 && top != null) {
+            // The art is drawn to width, so its height follows from the aspect.
+            val artHeight = maxWidth * (PayArtHeight / PayArtWidth)
+            val centre = artHeight * ((top + PayRowHeight / 2f) / PayArtHeight)
+            // A coin straddles each edge of the chart, level with that line.
+            listOf(-coinSize / 2, maxWidth - coinSize / 2).forEach { x ->
+                Image(
+                    painter = painterResource(R.drawable.fourtheboys_gold),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(coinSize)
+                        .offset(x = x, y = centre - coinSize / 2),
+                    contentScale = ContentScale.Fit,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun BetSpots(vm: FreeBetViewModel, onShowPayTable: () -> Unit) {
     val inPlay = vm.phase != BjPhase.BETTING
@@ -475,15 +532,12 @@ private fun BetSpots(vm: FreeBetViewModel, onShowPayTable: () -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 10.dp)
     ) {
-        Image(
-            painter = painterResource(R.drawable.fb_paytable),
-            contentDescription = "4 The Boys pay table",
+        PayTable(
+            coins = vm.freeCoins,
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .width(110.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .width(121.dp)
                 .clickable(onClick = onShowPayTable),
-            contentScale = ContentScale.FillWidth,
         )
         Box(Modifier.align(Alignment.Center), contentAlignment = Alignment.Center) {
             Image(
