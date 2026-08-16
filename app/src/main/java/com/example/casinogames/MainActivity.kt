@@ -16,6 +16,7 @@ import com.example.casinogames.games.baccarat.BaccaratScreen
 import com.example.casinogames.games.blackjack.Blazing777Screen
 import com.example.casinogames.games.blackjack.BlackjackMenuScreen
 import com.example.casinogames.games.blackjack.BlackjackVariant
+import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
 import com.example.casinogames.lobby.GameId
@@ -92,6 +93,15 @@ class MainActivity : ComponentActivity() {
                         val back = "$mode:${GameId.BLACKJACK.name}"
                         BackHandler { screen = back }
                         Blazing777Screen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == BlackjackVariant.DOUBLE_DOWN.name -> {
+                        val back = "$mode:${GameId.BLACKJACK.name}"
+                        BackHandler { screen = back }
+                        DoubleDownScreen(
                             onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
