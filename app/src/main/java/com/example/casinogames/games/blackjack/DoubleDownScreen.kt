@@ -214,7 +214,6 @@ private fun TopBar(onBack: () -> Unit, vm: DoubleDownViewModel) {
 private const val ArtWidth = 1024f
 private const val ArtHeight = 1536f
 private const val DealerSlotCentre = 471f
-private const val MessageCentre = 709f
 private const val PlayerSlotCentre = 1296f
 /** The card slots the artwork was drawn around; cards are cut to fit them. */
 private const val SlotWidth = 223f
@@ -223,6 +222,8 @@ private const val SlotHeight = 332f
 private const val SlotScale = 0.85f
 /** How many cards the felt lays out side by side before the hand starts to fan. */
 private const val LaidOutCards = 5
+/** The verdict speaks right under the dealer's cards. */
+private const val MessageCentre = DealerSlotCentre + SlotHeight * SlotScale / 2f + 32f
 /** Just under the player's cards, where the hand's verdict is laid. */
 private const val PlayerCardsUnder = PlayerSlotCentre + SlotHeight * SlotScale / 2f + 30f
 /** The totals ride on centre, in the gap the art leaves above each hand. */

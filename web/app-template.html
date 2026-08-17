@@ -2184,8 +2184,10 @@
 
     // The artwork's own pixels, and the marks everything live is placed on.
     var ART_W = 1024, ART_H = 1536;
-    var DEALER_MARK = 471, MESSAGE_MARK = 709, PLAYER_MARK = 1296;
+    var DEALER_MARK = 471, PLAYER_MARK = 1296;
     var SLOT_W = 223, SLOT_H = 332, SLOT_SCALE = 0.85;
+    /** The verdict speaks right under the dealer's cards. */
+    var MESSAGE_MARK = DEALER_MARK + SLOT_H * SLOT_SCALE / 2 + 32;
     /** Just under the player's cards, where the hand's verdict is laid. */
     var RESULT_MARK = PLAYER_MARK + SLOT_H * SLOT_SCALE / 2 + 30;
     /** The totals ride on centre, in the gap the art leaves above each hand. */
