@@ -347,30 +347,24 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         val out = mutableListOf<BjResult>()
 
         if (h != null) {
-            val pTotal = BlackjackCore.total(h.cards)
             val playerBj = !h.doubled && BlackjackCore.isBlackjack(h.cards)
-            val returned: Double = when {
-                playerBj && dealerBj -> h.stake.toDouble()
-                playerBj -> h.stake + 1.5 * h.betUnit
-                dealerBj -> 0.0
-                BlackjackCore.isBust(h.cards) -> 0.0
-                push22 -> h.stake.toDouble()
-                dTotal > 21 -> h.stake * 2.0
-                pTotal > dTotal -> h.stake * 2.0
-                pTotal == dTotal -> h.stake.toDouble()
-                else -> 0.0
-            }
+            val returned = DoubleDownRules.settleHand(
+                player = h.cards,
+                dealer = dealerCards,
+                stake = h.stake,
+                betUnit = h.betUnit,
+                doubled = h.doubled,
+            )
             pushed22 = push22 && !BlackjackCore.isBust(h.cards) && !dealerBj
             totalReturn += returned
             out.add(BjResult(if (playerBj) "Blackjack" else "Hand", returned - h.stake))
         }
 
         if (push22Stake > 0) {
-            val win = DoubleDownRules.push22(dealerCards)
-            push22Win = win
-            val ret = if (win != null) push22Stake * (win.payout + 1.0) else 0.0
+            push22Win = DoubleDownRules.push22(dealerCards)
+            val ret = DoubleDownRules.settlePush22(dealerCards, push22Stake)
             totalReturn += ret
-            out.add(BjResult(win?.label ?: "Push 22", ret - push22Stake))
+            out.add(BjResult(push22Win?.label ?: "Push 22", ret - push22Stake))
         }
 
         bankroll += totalReturn

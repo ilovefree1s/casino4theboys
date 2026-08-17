@@ -1,0 +1,119 @@
+<!doctype html>
+<title>Double Down parity · web engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { background: #050505; color: #F5F1E8; font: 13px "Segoe UI", system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 16px; letter-spacing: .1em; color: #F2F2F2; margin: 0 0 4px; }
+  .sub { color: rgba(245,241,232,.6); margin-bottom: 16px; }
+  #tally { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .ok { color: #57E06A; }
+  .bad { color: #FF4D4D; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(245,241,232,.12); vertical-align: top; }
+  th { color: rgba(245,241,232,.55); font-weight: 600; font-size: 11px; letter-spacing: .08em; }
+  td.hand { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .why { color: #FF9C8A; font-size: 12px; }
+  iframe { display: none; }
+</style>
+<h1>DOUBLE DOWN PARITY · WEB ENGINE</h1>
+<div class="sub">
+  Runs <code>doubledown-parity.txt</code> — the same fixture DoubleDownParityTest.kt runs against
+  Compose — through <code>window.DD</code> inside the shipped app.html.
+</div>
+<div id="tally">Loading…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody></tbody></table>
+<iframe id="app" src="app.html"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  var SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
+  var RED = { h: 1, d: 1 };
+
+  function cards(spec) {
+    return spec.trim().split(/\s+/).map(function (token) {
+      var r = token[0] === "T" ? "10" : token[0];
+      var s = token[1];
+      return { rank: r, suit: SUIT[s], red: !!RED[s] };
+    });
+  }
+
+  function parse(text) {
+    return text.split("\n")
+      .map(function (l) { return l.split("#")[0].trim(); })
+      .filter(function (l) { return l.length; })
+      .map(function (line) {
+        var c = line.split("|").map(function (x) { return x.trim(); });
+        var stakes = c[2].split(/\s+/);
+        var want = c[3].split(/\s+/);
+        return {
+          line: line,
+          player: cards(c[0]), dealer: cards(c[1]),
+          stake: +stakes[0], betUnit: +stakes[1],
+          doubled: stakes[2] === "dbl", push22: +stakes[3],
+          handReturn: +want[0], push22Return: +want[1],
+          side: c[4] === "-" ? null : c[4]
+        };
+      });
+  }
+
+  function check(DD, c) {
+    var bad = [];
+    function eq(what, got, want) {
+      if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
+    }
+    eq("hand", DD.settleHand(c.player, c.dealer, c.stake, c.betUnit, c.doubled), c.handReturn);
+    eq("push 22", DD.settlePush22(c.dealer, c.push22), c.push22Return);
+    var win = DD.push22(c.dealer);
+    eq("side bet", win ? win.label : null, c.side);
+    return bad;
+  }
+
+  function run(DD, cases) {
+    var body = document.querySelector("#rows tbody");
+    var failed = 0;
+    cases.forEach(function (c) {
+      var bad = check(DD, c);
+      if (bad.length) failed++;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="hand">' + c.line.split("|").slice(0, 3).join(" | ") + "</td>" +
+        '<td class="' + (bad.length ? "bad" : "ok") + '">' +
+        (bad.length ? '<span class="why">' + bad.join("<br>") + "</span>" : "match") +
+        "</td>";
+      body.appendChild(tr);
+    });
+    var tally = document.getElementById("tally");
+    tally.className = failed ? "bad" : "ok";
+    tally.textContent = failed
+      ? failed + " of " + cases.length + " cases disagree with the Compose engine"
+      : "All " + cases.length + " cases match the Compose engine";
+    // So a runner can read the verdict without scraping the table.
+    window.PARITY = { total: cases.length, failed: failed };
+  }
+
+  function fail(msg) {
+    var tally = document.getElementById("tally");
+    tally.className = "bad";
+    tally.textContent = msg;
+    window.PARITY = { total: 0, failed: -1, error: msg };
+  }
+
+  var frame = document.getElementById("app");
+  var text = null, ready = false;
+  function start() {
+    if (!ready || text === null) return;
+    var DD = frame.contentWindow && frame.contentWindow.DD;
+    if (!DD) { fail("app.html did not expose window.DD — is the build current?"); return; }
+    run(DD, parse(text));
+  }
+  frame.addEventListener("load", function () { ready = true; start(); });
+  fetch("doubledown-parity.txt")
+    .then(function (r) {
+      if (!r.ok) throw new Error("doubledown-parity.txt: HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (t) { text = t; start(); })
+    .catch(function (e) { fail(String(e)); });
+})();
+</script>

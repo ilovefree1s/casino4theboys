@@ -50,6 +50,44 @@ object DoubleDownRules {
      * Suit and colour are read across the whole dealer hand, however many cards
      * it took to get there.
      */
+    /**
+     * What comes back on the main bet, stake included — so a push returns
+     * exactly the stake and a loss returns nothing. [stake] is everything out
+     * there after any doubling; [betUnit] is the bet it started as, which is
+     * what a blackjack is paid 3:2 on.
+     */
+    fun settleHand(
+        player: List<Card>,
+        dealer: List<Card>,
+        stake: Int,
+        betUnit: Int,
+        doubled: Boolean,
+    ): Double {
+        val dealerBj = BlackjackCore.isBlackjack(dealer)
+        val dTotal = BlackjackCore.total(dealer)
+        val pTotal = BlackjackCore.total(player)
+        // A hand that took a card can no longer be a blackjack, however it adds up.
+        val playerBj = !doubled && BlackjackCore.isBlackjack(player)
+        return when {
+            playerBj && dealerBj -> stake.toDouble()
+            playerBj -> stake + 1.5 * betUnit
+            dealerBj -> 0.0
+            BlackjackCore.isBust(player) -> 0.0
+            // The dealer's 22 pays for all that doubling: it pushes rather than loses.
+            dTotal == 22 -> stake.toDouble()
+            dTotal > 21 -> stake * 2.0
+            pTotal > dTotal -> stake * 2.0
+            pTotal == dTotal -> stake.toDouble()
+            else -> 0.0
+        }
+    }
+
+    /** What comes back on the Push 22 side bet, stake included. */
+    fun settlePush22(dealer: List<Card>, stake: Int): Double {
+        val win = push22(dealer) ?: return 0.0
+        return stake * (win.payout + 1.0)
+    }
+
     fun push22(dealerCards: List<Card>): Push22Win? {
         if (dealerCards.isEmpty()) return null
         if (BlackjackCore.total(dealerCards) != 22) return null

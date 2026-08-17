@@ -1,0 +1,55 @@
+# Double Down Madness settlement cases, shared by both builds.
+#
+# The Compose engine (DoubleDownRules) and the web engine (window.DD) are two
+# hand-written copies of the same maths. This file is the referee:
+# DoubleDownParityTest.kt runs it against Kotlin, web/dd-parity.html runs it
+# against the JavaScript, and both must agree with every line here.
+#
+# Cards are rank + suit: 2-9, T, J, Q, K, A and s h d c.
+#
+# player | dealer | stake betUnit doubled push22 | handReturn push22Return | side bet
+#
+# Returns are gross — stake plus winnings — so a push returns exactly the stake
+# and a loss returns nothing. "dbl" marks a hand that has doubled at least once,
+# which is what stops it counting as a blackjack. The last column is the side
+# bet's name, or "-" when the dealer never reached 22.
+
+# ---- blackjack ----
+As Kd | Th 9c | 100 100 -   0 | 250 0 | -
+As Kd | Ah Kc | 100 100 -   0 | 100 0 | -
+Ts Kd | Ah Kc | 100 100 -   0 | 0   0 | -
+# A hand that has taken a card is not a blackjack, however it adds up.
+As Kd | Th 9c | 200 100 dbl 0 | 400 0 | -
+
+# ---- the plain hand ----
+Ts 9d | Th 9c | 100 100 -   0 | 100 0 | -
+Ts Qd | Th 9c | 100 100 -   0 | 200 0 | -
+Ts 8d | Th 9c | 100 100 -   0 | 0   0 | -
+Ts 9d 5c | Th 9c | 100 100 -  0 | 0 0 | -
+
+# ---- the dealer busting, and the 22 that does not ----
+Ts 2d | Th 9c 8s | 100 100 -   0 | 200 0 | -
+# The dealer's 22 is named whether or not anyone bet on it.
+Ts 8d | Th 9c 3s | 100 100 -   0 | 100 0 | Any combo 22
+Ts 9d 5c | Th 9c 3s | 100 100 - 0 | 0 0 | Any combo 22
+# 22 pushes whatever the hand is worth, so a doubled 18 comes back whole.
+Ts 8d | Th 9c 3s | 400 100 dbl 0 | 400 0 | Any combo 22
+
+# ---- doubles compound: 100 becomes 200, and doubling that puts 400 out ----
+Ts Qd | Th 9c | 200 100 dbl 0 | 400 0 | -
+Ts Qd | Th 9c | 400 100 dbl 0 | 800 0 | -
+Ts 5d 8c | Th 9c | 400 100 dbl 0 | 0 0 | -
+
+# ---- the Push 22 side bet ----
+Ts 8d | 8h 9h 5h | 100 100 - 25 | 100 1900 | Same-suit 22
+Ts 8d | 8h 9d 5h | 100 100 - 25 | 100 1275 | Same-color 22
+Ts 8d | 8c 9s 5c | 100 100 - 25 | 100 1275 | Same-color 22
+Ts 8d | 8h 9s 5h | 100 100 - 25 | 100 400  | Any combo 22
+# Four cards to 22, all one suit, still suited.
+Ts 8d | Ac Kc Ac Kc | 100 100 - 25 | 100 1900 | Same-suit 22
+# The side bet pays on the dealer's 22 even when the hand went bust.
+Ts 9d 5c | 8h 9h 5h | 100 100 - 25 | 0 1900 | Same-suit 22
+# No 22, no side bet — including the dealer's blackjack at 21.
+Ts 8d | Th 9c | 100 100 - 25 | 0 0 | -
+Ts 8d | Ah Kc | 100 100 - 25 | 0 0 | -
+Ts 8d | Th 9c 4s | 100 100 - 25 | 200 0 | -

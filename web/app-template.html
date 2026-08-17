@@ -2229,6 +2229,32 @@
       }
       return { label: "Any combo 22", pays: 15 };
     }
+    /**
+     * What comes back on the main bet, stake included — so a push returns
+     * exactly the stake and a loss returns nothing. [stake] is everything out
+     * there after any doubling; [betUnit] is the bet it started as, which is
+     * what a blackjack is paid 3:2 on.
+     */
+    function settleHand(player, dealer, stake, betUnit, doubled) {
+      var dealerBj = isBJ(dealer), dTotal = total(dealer), pTotal = total(player);
+      // A hand that took a card can no longer be a blackjack, however it adds up.
+      var playerBj = !doubled && isBJ(player);
+      if (playerBj && dealerBj) return stake;
+      if (playerBj) return stake + 1.5 * betUnit;
+      if (dealerBj) return 0;
+      if (isBust(player)) return 0;
+      // The dealer's 22 pays for all that doubling: it pushes rather than loses.
+      if (dTotal === 22) return stake;
+      if (dTotal > 21) return stake * 2;
+      if (pTotal > dTotal) return stake * 2;
+      if (pTotal === dTotal) return stake;
+      return 0;
+    }
+    /** What comes back on the Push 22 side bet, stake included. */
+    function settlePush22(dealer, stake) {
+      var win = push22Of(dealer);
+      return win ? stake * (win.pays + 1) : 0;
+    }
     function draw() { return shoe.pop(); }
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
@@ -2576,25 +2602,15 @@
       var totalReturn = 0;
       results = [];
       if (hand) {
-        var pTotal = total(hand.cards);
         var playerBj = !hand.doubled && isBJ(hand.cards);
-        var returned;
-        if (playerBj && dealerBj) returned = hand.stake;
-        else if (playerBj) returned = hand.stake + 1.5 * hand.betUnit;
-        else if (dealerBj) returned = 0;
-        else if (isBust(hand.cards)) returned = 0;
-        else if (push22) returned = hand.stake;
-        else if (dTotal > 21) returned = hand.stake * 2;
-        else if (pTotal > dTotal) returned = hand.stake * 2;
-        else if (pTotal === dTotal) returned = hand.stake;
-        else returned = 0;
+        var returned = settleHand(hand.cards, dealer, hand.stake, hand.betUnit, hand.doubled);
         pushed22 = push22 && !isBust(hand.cards) && !dealerBj;
         totalReturn += returned;
         results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand.stake });
       }
       if (push22Stake > 0) {
         push22Win = push22Of(dealer);
-        var sideRet = push22Win ? push22Stake * (push22Win.pays + 1) : 0;
+        var sideRet = settlePush22(dealer, push22Stake);
         totalReturn += sideRet;
         results.push({
           label: push22Win ? push22Win.label : "Push 22",
@@ -2651,8 +2667,10 @@
     window.addEventListener("resize", function () {
       if ($("screen-doubledown").classList.contains("on")) renderAll();
     });
-    return { enter: enter };
+    // The rules are exposed so the parity page can referee them directly.
+    return { enter: enter, settleHand: settleHand, settlePush22: settlePush22, push22: push22Of };
   })();
+  window.DD = DoubleDown;
 
   /* ============================================================
      ULTIMATE TEXAS HOLD'EM
