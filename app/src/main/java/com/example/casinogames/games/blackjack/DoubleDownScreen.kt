@@ -216,8 +216,6 @@ private const val ArtHeight = 1536f
 private const val DealerSlotCentre = 471f
 private const val MessageCentre = 709f
 private const val PlayerSlotCentre = 1296f
-private const val DealerTitleCentre = 125f
-private const val PlayerTitleCentre = 963f
 /** The card slots the artwork was drawn around; cards are cut to fit them. */
 private const val SlotWidth = 223f
 private const val SlotHeight = 332f
@@ -225,6 +223,11 @@ private const val SlotHeight = 332f
 private const val SlotScale = 0.85f
 /** How many cards the felt lays out side by side before the hand starts to fan. */
 private const val LaidOutCards = 5
+/** Just under the player's cards, where the hand's verdict is laid. */
+private const val PlayerCardsUnder = PlayerSlotCentre + SlotHeight * SlotScale / 2f + 30f
+/** The totals ride on centre, in the gap the art leaves above each hand. */
+private const val DealerTotalMark = DealerSlotCentre - SlotHeight * SlotScale / 2f - 26f
+private const val PlayerTotalMark = PlayerSlotCentre - SlotHeight * SlotScale / 2f - 26f
 
 @Composable
 private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
@@ -270,31 +273,12 @@ private fun Table(vm: DoubleDownViewModel, modifier: Modifier = Modifier) {
                     available = artWidth,
                 )
             }
-            // The totals ride at the end of each title, where the art leaves room.
-            DealerBadge(
-                vm,
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(y = artHeight * (DealerTitleCentre / ArtHeight))
-                    .padding(end = 10.dp),
-            )
-            PlayerBadges(
-                vm,
-                Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(y = artHeight * (PlayerTitleCentre / ArtHeight))
-                    .padding(end = 10.dp),
-            )
+            AtMark(artHeight, DealerTotalMark, 24.dp) { DealerBadge(vm) }
+            AtMark(artHeight, PlayerTotalMark, 24.dp) { PlayerBadges(vm) }
             if (vm.phase == BjPhase.RESULT) {
-                // Below the deepest a card reaches, so a two-line settlement
-                // never sits on the hand it is reporting.
-                AtMark(artHeight, PlayerSlotCentre + 200f, 30.dp * vm.results.size) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                    ) {
-                        vm.results.forEach { r -> ResultPill(r) }
-                    }
+                // Laid under the hand it is reporting, clear of the cards.
+                AtMark(artHeight, PlayerCardsUnder, 30.dp) {
+                    vm.handResult?.let { r -> ResultPill(r) }
                 }
             }
         }
@@ -434,17 +418,17 @@ private fun TotalBadge(text: String, color: Color, modifier: Modifier = Modifier
 
 @Composable
 private fun MessageLine(vm: DoubleDownViewModel) {
-    val net = vm.results.sumOf { it.net }
     val settled = vm.phase == BjPhase.RESULT
+    val verdict = if (settled) vm.verdict else 0
     val text = if (vm.phase == BjPhase.BETTING) "⚡  ${vm.message}  ⚡" else vm.message
     Text(
         text,
-        fontSize = if (settled && net < 0) 18.sp else 15.sp,
+        fontSize = if (verdict < 0) 18.sp else 15.sp,
         fontStyle = FontStyle.Italic,
         fontWeight = FontWeight.Medium,
         color = when {
-            settled && net > 0 -> WinGreen
-            settled && net < 0 -> LoseRed
+            verdict > 0 -> WinGreen
+            verdict < 0 -> LoseRed
             else -> P.OffWhite.copy(alpha = 0.92f)
         },
         textAlign = TextAlign.Center,
@@ -467,7 +451,8 @@ private fun ResultPill(r: BjResult) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(5.dp),
     ) {
-        Text(r.label, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = P.OffWhite)
+        // Everything inside the pill reads white; only its ring marks a win.
+        Text(r.label, fontSize = 11.sp, fontWeight = FontWeight.ExtraBold, color = Chalk)
         Text(
             when {
                 r.net > 0 -> "+${formatMoney(r.net)}"
@@ -476,11 +461,7 @@ private fun ResultPill(r: BjResult) {
             },
             fontSize = 11.sp,
             fontWeight = FontWeight.Black,
-            color = when {
-                r.net > 0 -> Chalk
-                r.net < 0 -> Ash
-                else -> P.OffWhite.copy(alpha = 0.7f)
-            },
+            color = Chalk,
         )
     }
 }
@@ -515,6 +496,13 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
             Modifier.align(Alignment.CenterEnd).width(118.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // The side bet's verdict sits on the coin it was staked against.
+            if (vm.phase == BjPhase.RESULT) {
+                vm.push22Result?.let { r ->
+                    ResultPill(r)
+                    Spacer(Modifier.height(4.dp))
+                }
+            }
             Box(contentAlignment = Alignment.Center) {
                 Box(
                     Modifier

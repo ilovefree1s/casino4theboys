@@ -431,29 +431,29 @@
   /* The felt is black and white; the verdict is the one thing that is not. */
   .dd-message.win { color: #57E06A; }
   .dd-message.lose { color: #FF4D4D; font-size: 18px; }
+  /* The totals ride on centre, in the gap the art leaves above each hand. */
   .dd-badge {
-    position: absolute; right: 10px; transform: translateY(-50%);
+    position: absolute; left: 0; right: 0; transform: translateY(-50%);
+    display: none; justify-content: center; gap: 5px;
+  }
+  .dd-badge.on { display: flex; }
+  .dd-badge b, .dd-badge .units {
     background: #F2F2F2; color: #050505; border: 2px solid var(--ink);
-    border-radius: 999px; padding: 1px 9px; font-family: var(--display); font-size: 13px;
-    display: none;
+    border-radius: 999px; padding: 1px 9px;
+    font-family: var(--display); font-size: 13px; font-weight: 400;
   }
-  .dd-badge.bust { background: #5A5A5A; }
-  .dd-badge .units {
-    margin-left: 5px; background: #B0B0B0; border-radius: 999px;
-    padding: 0 6px; font-size: 11px;
-  }
-  .dd-pills { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .dd-badge.bust b { background: #5A5A5A; }
+  .dd-badge .units { background: #B0B0B0; font-size: 11px; }
   .dd-pill {
     display: flex; gap: 5px; align-items: center; white-space: nowrap;
     background: rgba(7,7,7,.9); border: 1.5px solid rgba(245,241,232,.35);
     border-radius: 999px; padding: 4px 10px; font-size: 11px; font-weight: 800;
-    color: var(--bone);
+    color: #F2F2F2;
   }
+  /* Everything inside the pill reads white; only its ring marks a win. */
   .dd-pill.win { border-color: #F2F2F2; }
-  .dd-pill .amt { font-weight: 900; }
-  .dd-pill .amt.w { color: #F2F2F2; }
-  .dd-pill .amt.l { color: #5A5A5A; }
-  .dd-pill .amt.p { color: rgba(245,241,232,.7); }
+  .dd-pill .amt { font-weight: 900; color: #F2F2F2; }
+  .dd-push .dd-pill { margin-bottom: 4px; }
   /* Odds on the left, the house's coin on the right, bet holding the middle. */
   .dd-spots {
     position: relative; width: 100%; display: flex;
@@ -2184,9 +2184,13 @@
 
     // The artwork's own pixels, and the marks everything live is placed on.
     var ART_W = 1024, ART_H = 1536;
-    var DEALER_MARK = 471, MESSAGE_MARK = 709, PLAYER_MARK = 1296, RESULT_MARK = PLAYER_MARK + 200;
-    var DEALER_TITLE = 125, PLAYER_TITLE = 963;
+    var DEALER_MARK = 471, MESSAGE_MARK = 709, PLAYER_MARK = 1296;
     var SLOT_W = 223, SLOT_H = 332, SLOT_SCALE = 0.85;
+    /** Just under the player's cards, where the hand's verdict is laid. */
+    var RESULT_MARK = PLAYER_MARK + SLOT_H * SLOT_SCALE / 2 + 30;
+    /** The totals ride on centre, in the gap the art leaves above each hand. */
+    var DEALER_TOTAL = DEALER_MARK - SLOT_H * SLOT_SCALE / 2 - 26;
+    var PLAYER_TOTAL = PLAYER_MARK - SLOT_H * SLOT_SCALE / 2 - 26;
     /** How many cards lie side by side before the hand starts to fan. */
     var LAID_OUT = 5;
     var cardScale = 1, artW = 0, artH = 0;
@@ -2252,8 +2256,8 @@
       at("dd-msgmark", MESSAGE_MARK);
       at("dd-player", PLAYER_MARK);
       at("dd-results", RESULT_MARK);
-      at("dd-dbadge", DEALER_TITLE);
-      at("dd-pbadge", PLAYER_TITLE);
+      at("dd-dbadge", DEALER_TOTAL);
+      at("dd-pbadge", PLAYER_TOTAL);
     }
 
     // ---------- render ----------
@@ -2313,39 +2317,33 @@
       renderSlot("dd-dealer", dealer, function (i) { return i === 0 || holeUp; });
       var badge = $("dd-dbadge");
       var visible = holeUp ? dealer : dealer.slice(0, 1);
-      if (!visible.length) { badge.style.display = "none"; return; }
+      if (!visible.length) { badge.className = "dd-badge"; return; }
       var full = total(dealer);
-      badge.textContent = holeUp && isBJ(dealer) ? "BJ" : String(total(visible));
+      badge.innerHTML = "<b>" + (holeUp && isBJ(dealer) ? "BJ" : total(visible)) + "</b>";
       // A 22 is the house's own number here, so it is never shown as a bust.
-      badge.className = "dd-badge" + (holeUp && full > 21 && full !== 22 ? " bust" : "");
-      badge.style.display = "block";
+      badge.className = "dd-badge on" + (holeUp && full > 21 && full !== 22 ? " bust" : "");
     }
     function renderPlayer() {
       var cards = hand ? hand.cards : [];
       renderSlot("dd-player", cards, function () { return true; });
       var badge = $("dd-pbadge");
-      if (!cards.length) { badge.style.display = "none"; return; }
+      if (!cards.length) { badge.className = "dd-badge"; return; }
       var units = hand && hand.betUnit > 0 ? Math.round(hand.stake / hand.betUnit) : 1;
-      badge.innerHTML = (isBJ(cards) ? "BJ" : String(total(cards))) +
+      badge.innerHTML = "<b>" + (isBJ(cards) ? "BJ" : total(cards)) + "</b>" +
         (units > 1 ? '<span class="units">' + units + "×</span>" : "");
-      badge.className = "dd-badge" + (isBust(cards) ? " bust" : "");
-      badge.style.display = "block";
+      badge.className = "dd-badge on" + (isBust(cards) ? " bust" : "");
+    }
+    /** settle() files the hand first and the side bet after it, if it rode. */
+    function pillHtml(r) {
+      var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
+      return '<div class="dd-pill' + (r.net > 0 ? " win" : "") + '"><span>' + r.label +
+        '</span><span class="amt">' + txt + "</span></div>";
     }
     function renderResults() {
+      // The hand's verdict lies under the hand it reports; the side bet's
+      // goes up on the coin it was staked against.
       var host = $("dd-results");
-      host.innerHTML = "";
-      if (phase !== "result" || !results.length) return;
-      var col = document.createElement("div");
-      col.className = "dd-pills";
-      results.forEach(function (r) {
-        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
-        var pill = document.createElement("div");
-        pill.className = "dd-pill" + (r.net > 0 ? " win" : "");
-        pill.innerHTML = "<span>" + r.label + '</span><span class="amt ' + cls + '">' + txt + "</span>";
-        col.appendChild(pill);
-      });
-      host.appendChild(col);
+      host.innerHTML = phase === "result" && results[0] ? pillHtml(results[0]) : "";
     }
     function renderSpots() {
       var betting = phase === "betting";
@@ -2354,7 +2352,9 @@
         '<button class="dd-odds" id="dd-oddsbtn"><img src="__DD_ODDS__" alt="Push 22 odds"></button>' +
         '<button class="dd-betspot spot" id="dd-betspot"><img src="' + BJ_ART.spotBet +
         '" alt="Bet"><div class="placed"></div></button>' +
-        '<div class="dd-push"><button class="dd-pushring spot" id="dd-pushspot">' +
+        '<div class="dd-push">' +
+        (phase === "result" && results[1] ? pillHtml(results[1]) : "") +
+        '<button class="dd-pushring spot" id="dd-pushspot">' +
         '<img src="' + COIN_IMG + '" alt="Push 22 side bet"><div class="placed"></div></button>' +
         '<span class="cap">PUSH 22</span></div>';
       s.querySelector("#dd-oddsbtn").addEventListener("click", function () {
@@ -2603,8 +2603,9 @@
       }
       bankroll += totalReturn;
       syncWallet();
-      var staked = (hand ? hand.stake : 0) + push22Stake;
-      var net = totalReturn - staked;
+      // The verdict speaks for the hand: a won hand beside a lost side bet
+      // still won, whatever the two of them net out to.
+      var net = results.length ? results[0].net : 0;
       phase = "result";
       var msg =
         Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
@@ -2612,7 +2613,8 @@
         pushed22 ? "Dealer 22 — push" :
         dealerBj ? (net >= 0 ? "Dealer blackjack — push" : "Dealer blackjack") :
         net > 0 ? "You win" : net < 0 ? "Dealer wins" : "Push";
-      setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
+      // The colour agrees with what the message says, not with the money.
+      setMessage(msg, push22Win || net > 0 ? "win" : pushed22 || net === 0 ? "" : "lose");
       renderAll();
     }
     function nextHand(repeat) {

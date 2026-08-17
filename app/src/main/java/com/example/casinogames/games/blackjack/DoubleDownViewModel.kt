@@ -375,8 +375,9 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
         bankroll += totalReturn
         persist()
-        val staked = (h?.stake ?: 0) + push22Stake
-        val net = totalReturn - staked
+        // The verdict speaks for the hand: a won hand beside a lost side bet
+        // still won, whatever the two of them net out to.
+        val net = out.firstOrNull()?.net ?: 0.0
         val sideWin = push22Win
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
@@ -390,6 +391,18 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         results = out
         phase = BjPhase.RESULT
     }
+
+    /** settle() files the hand first and the side bet after it, if it rode. */
+    val handResult: BjResult? get() = results.firstOrNull()
+    val push22Result: BjResult? get() = results.getOrNull(1)
+
+    /** +1 won, −1 lost, 0 neither — what the message says, so its colour agrees. */
+    val verdict: Int
+        get() = when {
+            push22Win != null -> 1
+            pushed22 -> 0
+            else -> (handResult?.net ?: 0.0).let { if (it > 0) 1 else if (it < 0) -1 else 0 }
+        }
 
     fun nextHand(repeat: Boolean) {
         if (phase != BjPhase.RESULT) return
