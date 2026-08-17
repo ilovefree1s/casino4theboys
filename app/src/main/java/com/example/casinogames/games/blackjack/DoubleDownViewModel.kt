@@ -135,8 +135,11 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         message = "Place your bet"
     }
 
+    /** Nothing on the felt, either spot — the table is only busted then. */
+    val nothingAtStake: Boolean get() = bet == 0 && push22Bet == 0
+
     fun buyBackIn() {
-        if (phase == BjPhase.BETTING && bet == 0 && bankroll < 25) {
+        if (phase == BjPhase.BETTING && nothingAtStake && bankroll < 25) {
             bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
             persist()
             message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bet"

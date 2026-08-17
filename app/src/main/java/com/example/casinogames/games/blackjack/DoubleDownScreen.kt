@@ -138,13 +138,13 @@ fun DoubleDownScreen(
             ActionButtons(vm)
         }
         if (showOdds) OddsOverlay { showOdds = false }
-        if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll < 25 && vm.bet == 0) {
+        if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll < 25 && vm.nothingAtStake) {
             CampaignGameOver(onStartOver = {
                 vm.buyBackIn()
                 onGameOverExit()
             })
         }
-        if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll >= vm.goal && vm.bet == 0) {
+        if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll >= vm.goal && vm.nothingAtStake) {
             CampaignComplete(
                 goal = vm.goal,
                 nextGoal = vm.goal * 100,
@@ -609,7 +609,7 @@ private fun ActionButtons(vm: DoubleDownViewModel) {
                 ImgButton(R.drawable.btn_undo, "Undo", vm::undoChip)
                 ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
                 ImgButton(R.drawable.btn_clear, "Clear", vm::clearBet)
-                if (!vm.campaign && vm.bankroll < 25 && vm.bet == 0) {
+                if (!vm.campaign && vm.bankroll < 25 && vm.nothingAtStake) {
                     PillButton("Buy back in", onClick = vm::buyBackIn)
                 }
             }
