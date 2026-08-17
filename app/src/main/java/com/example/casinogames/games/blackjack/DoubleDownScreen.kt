@@ -128,7 +128,9 @@ fun DoubleDownScreen(
                 letterSpacing = 0.24.em,
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
             )
-            Table(vm, Modifier.weight(1f))
+            // The felt takes only the height its art needs, so everything under
+            // it rides up and the slack collects at the bottom of the screen.
+            Table(vm, Modifier.weight(1f, fill = false))
             BetRow(vm, onShowOdds = { showOdds = true })
             if (vm.phase == BjPhase.BETTING) {
                 Spacer(Modifier.height(12.dp))
@@ -212,9 +214,9 @@ private fun TopBar(onBack: () -> Unit, vm: DoubleDownViewModel) {
  * artwork (1024 x 1536).
  */
 private const val ArtWidth = 1024f
-private const val ArtHeight = 1536f
+private const val ArtHeight = 1368f
 private const val DealerSlotCentre = 471f
-private const val PlayerSlotCentre = 1296f
+private const val PlayerSlotCentre = 1128f
 /** The card slots the artwork was drawn around; cards are cut to fit them. */
 private const val SlotWidth = 223f
 private const val SlotHeight = 332f

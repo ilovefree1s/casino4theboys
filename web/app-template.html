@@ -2183,8 +2183,8 @@
     var phase = "betting", results = [], timers = [], push22Win = null, pushed22 = false;
 
     // The artwork's own pixels, and the marks everything live is placed on.
-    var ART_W = 1024, ART_H = 1536;
-    var DEALER_MARK = 471, PLAYER_MARK = 1296;
+    var ART_W = 1024, ART_H = 1368;
+    var DEALER_MARK = 471, PLAYER_MARK = 1128;
     var SLOT_W = 223, SLOT_H = 332, SLOT_SCALE = 0.85;
     /** The verdict speaks right under the dealer's cards. */
     var MESSAGE_MARK = DEALER_MARK + SLOT_H * SLOT_SCALE / 2 + 32;
@@ -2270,8 +2270,15 @@
     /** Fits the layout whole, whichever edge runs out first — as Compose does. */
     function layout() {
       var box = $("dd-art"), fit = $("dd-fit");
-      if (!box || !box.clientHeight) return;
+      if (!box) return;
+      // Measure the slack the felt is offered, then take only what the art
+      // needs of it, so everything under the felt rides up.
+      box.style.height = "";
+      box.style.flexGrow = "1";
+      if (!box.clientHeight) return;
       artH = Math.min(box.clientHeight, box.clientWidth * (ART_H / ART_W));
+      box.style.flexGrow = "0";
+      box.style.height = artH + "px";
       artW = artH * (ART_W / ART_H);
       fit.style.width = artW + "px";
       fit.style.height = artH + "px";
