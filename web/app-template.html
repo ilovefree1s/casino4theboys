@@ -404,8 +404,10 @@
   .dd-sub.campaign { color: rgba(255,210,77,.8); }
   /* The layout is one piece of art, fitted whole; everything live sits on the
      marks it was drawn around. */
+  /* The felt claims the slack first — its max-height caps it — and what it
+     leaves goes to the spacers either side of the betting block. */
   .dd-art {
-    flex: 1; min-height: 0; width: 100%;
+    flex: 100 1 auto; min-height: 0; width: 100%;
     display: flex; align-items: center; justify-content: center;
   }
   .dd-fit { position: relative; }
@@ -483,6 +485,9 @@
     color: #E8C169; font-weight: 900; font-size: 11px;
     letter-spacing: .14em; margin-top: 3px;
   }
+  /* The same drop above the buttons in every phase, so they do not jump when
+     the chip rack comes and goes. */
+  .dd-table .bj-actions { margin-top: 30px; }
   .dd-table .bj-imgbtn img { filter: grayscale(1); }
   #dd-oddsmodal img { border-color: rgba(232,193,105,.6); }
 
@@ -922,9 +927,14 @@
         <span class="dd-badge" id="dd-pbadge"></span>
       </div>
     </div>
+    <!-- The slack under the felt is shared out, a third above the betting
+         block and the rest under it, so the block sits low without touching
+         the edge. -->
+    <div class="dd-slack" style="flex:1"></div>
     <div class="dd-spots" id="dd-spots"></div>
     <div id="dd-rack"></div>
     <div class="bj-actions" id="dd-actions"></div>
+    <div class="dd-slack" style="flex:2"></div>
   </div>
   <div class="bj-modal" id="dd-oddsmodal">
     <div class="pt-wrap"><img src="__DD_ODDS__" alt="Push 22 odds"></div>
@@ -2270,15 +2280,13 @@
     /** Fits the layout whole, whichever edge runs out first — as Compose does. */
     function layout() {
       var box = $("dd-art"), fit = $("dd-fit");
-      if (!box) return;
-      // Measure the slack the felt is offered, then take only what the art
-      // needs of it, so everything under the felt rides up.
-      box.style.height = "";
-      box.style.flexGrow = "1";
-      if (!box.clientHeight) return;
-      artH = Math.min(box.clientHeight, box.clientWidth * (ART_H / ART_W));
-      box.style.flexGrow = "0";
-      box.style.height = artH + "px";
+      if (!box || !box.clientWidth) return;
+      // The felt grows into the slack but no further than its art is tall;
+      // flexbox hands whatever is left to the spacers either side of the
+      // betting block. Capping by width alone keeps this from chasing itself.
+      box.style.maxHeight = (box.clientWidth * (ART_H / ART_W)) + "px";
+      artH = box.clientHeight;
+      if (!artH) return;
       artW = artH * (ART_W / ART_H);
       fit.style.width = artW + "px";
       fit.style.height = artH + "px";
@@ -2401,6 +2409,8 @@
       fill(s, "#dd-pushspot", betting ? push22Bet : push22Stake, 38);
       var rack = $("dd-rack");
       rack.innerHTML = "";
+      // With the rack gone the action row jumps up; hold a little of its place.
+      rack.style.height = betting ? "" : "20px";
       if (!betting) return;
       var row = document.createElement("div");
       row.className = "rack";

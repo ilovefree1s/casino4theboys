@@ -128,16 +128,21 @@ fun DoubleDownScreen(
                 letterSpacing = 0.24.em,
                 color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
             )
-            // The felt takes only the height its art needs, so everything under
-            // it rides up and the slack collects at the bottom of the screen.
-            Table(vm, Modifier.weight(1f, fill = false))
+            // The felt takes only the height its art needs; what is left over
+            // is shared out, a third above the betting block and the rest
+            // under it, so the block sits low without touching the edge.
+            Table(vm)
+            Spacer(Modifier.weight(1f))
             BetRow(vm, onShowOdds = { showOdds = true })
             if (vm.phase == BjPhase.BETTING) {
                 Spacer(Modifier.height(12.dp))
                 ChipRack(vm)
             }
-            Spacer(Modifier.height(10.dp))
+            // The same drop above the buttons in every phase, so they do not
+            // jump when the chip rack comes and goes.
+            Spacer(Modifier.height(30.dp))
             ActionButtons(vm)
+            Spacer(Modifier.weight(2f))
         }
         if (showOdds) OddsOverlay { showOdds = false }
         if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll < 25 && vm.nothingAtStake) {
