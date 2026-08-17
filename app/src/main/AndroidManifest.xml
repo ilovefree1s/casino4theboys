@@ -11,10 +11,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CasinoGames">
+        <!-- Every felt is drawn tall; landscape has nowhere to put a table. -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
+            android:screenOrientation="portrait"
             android:theme="@style/Theme.CasinoGames"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
