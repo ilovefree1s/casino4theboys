@@ -26,8 +26,8 @@ enum class TripsPay(val label: String, val multiplier: Int) {
     FOUR_KIND("Four of a Kind", 50),
     FULL_HOUSE("Full House", 20),
     FLUSH("Flush", 10),
-    STRAIGHT("Straight", 4),
-    THREE_KIND("Three of a Kind", 2),
+    STRAIGHT("Straight", 8),
+    THREE_KIND("Three of a Kind", 4),
 }
 
 enum class HoldemOutcome { WIN, LOSE, PUSH, FOLD }
