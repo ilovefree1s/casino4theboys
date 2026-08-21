@@ -396,8 +396,8 @@
         <div class="ttl outline-1">BLAZING 7s</div>
         <div class="cjk outline-1">燒倍烈火 7s</div>
         <div class="cols">
-          <div class="col">P &amp; B Have<br>3-Card 7s<br>PAYS 125 to 1</div>
-          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 25 to 1</div>
+          <div class="col">P &amp; B Have<br>3-Card 7s<br>PAYS 200 to 1</div>
+          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 75 to 1</div>
         </div>
         <div class="placed"></div>
       </button>
@@ -537,7 +537,7 @@
     var p9 = p3 && pT === 9, b9 = b3 && bT === 9;
     if (p9 && b9) pay("heavenly9", 76); else if (p9 || b9) pay("heavenly9", 11);
     var p7 = p3 && pT === 7, b7 = b3 && bT === 7;
-    if (p7 && b7) pay("blazing7s", 126); else if (p7 || b7) pay("blazing7s", 26);
+    if (p7 && b7) pay("blazing7s", 201); else if (p7 || b7) pay("blazing7s", 76);
     // Cover All: 6 to 1 when any fortune event occurs
     if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay("coverAll", 7);
     return out;
