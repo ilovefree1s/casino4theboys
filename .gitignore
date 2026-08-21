@@ -15,3 +15,6 @@ captures/
 local.properties
 *.keystore
 *.jks
+
+# Kotlin compiler crash logs
+.kotlin/

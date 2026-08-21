@@ -30,11 +30,12 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        // Hide the navigation bar; a swipe from the edge brings it back briefly.
+        // Hide both system bars — the clock and battery sit on the felt
+        // otherwise. A swipe from either edge brings them back briefly.
         WindowCompat.getInsetsController(window, window.decorView).apply {
             systemBarsBehavior =
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-            hide(WindowInsetsCompat.Type.navigationBars())
+            hide(WindowInsetsCompat.Type.systemBars())
         }
         setContent {
             CasinoGamesTheme {

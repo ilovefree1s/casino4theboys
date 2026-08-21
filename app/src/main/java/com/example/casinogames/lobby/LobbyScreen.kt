@@ -76,13 +76,19 @@ fun LobbyScreen(
                 .padding(top = 8.dp, bottom = 26.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            // The menu rides at the foot of the logo rather than above it, so
+            // nothing sits in the strip the system bars used to own.
+            Box(Modifier.fillMaxWidth()) {
+                Image(
+                    painter = painterResource(R.drawable.lobby_logo),
+                    contentDescription = "4 The Boys — for the boys Hotel & Casino",
+                    modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.TopCenter),
+                    contentScale = ContentScale.FillWidth,
+                )
                 if (onBack != null) {
                     Box(
                         Modifier
+                            .align(Alignment.BottomStart)
                             .size(44.dp)
                             .border(1.5.dp, NeonPurpleDim, CircleShape)
                             .clip(CircleShape)
@@ -92,14 +98,7 @@ fun LobbyScreen(
                         Text("☰", color = Color(0xFFB98CFF), fontSize = 18.sp)
                     }
                 }
-                Spacer(Modifier.weight(1f))
             }
-            Image(
-                painter = painterResource(R.drawable.lobby_logo),
-                contentDescription = "4 The Boys — for the boys Hotel & Casino",
-                modifier = Modifier.fillMaxWidth(0.9f),
-                contentScale = ContentScale.FillWidth,
-            )
             if (campaign) {
                 val ctx = LocalContext.current
                 val prefs = remember { ctx.getSharedPreferences("campaign", Context.MODE_PRIVATE) }
