@@ -45,7 +45,7 @@ enum class GameId(val available: Boolean) {
     /** Opens the blackjack variants page rather than a table directly. */
     BLACKJACK(true),
     ULTIMATE_TEXAS_HOLDEM(true),
-    ROULETTE(false),
+    ROULETTE(true),
     CRAPS(false),
 }
 
@@ -125,7 +125,7 @@ fun LobbyScreen(
                 GameCard(R.drawable.lobby_card_holdem, "Ultimate Texas Hold'em") {
                     onOpenGame(GameId.ULTIMATE_TEXAS_HOLDEM)
                 }
-                GameCard(R.drawable.lobby_card_roulette, "Roulette — coming soon", null)
+                GameCard(R.drawable.lobby_card_roulette, "Roulette") { onOpenGame(GameId.ROULETTE) }
                 GameCard(R.drawable.lobby_card_craps, "Craps — coming soon", null)
             }
         }
