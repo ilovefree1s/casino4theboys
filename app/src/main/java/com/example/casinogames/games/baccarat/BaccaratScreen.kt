@@ -551,8 +551,8 @@ private fun SidePlacards(vm: BaccaratViewModel, winningSpots: Set<BetType>) {
             BetType.BLAZING_7S, "BLAZING 7s", "燒倍烈火 7s",
             listOf(Color(0xFFD6402A), Color(0xFFB02415)),
             listOf(
-                listOf("P & B Have", "3-Card 7s", "PAYS 125 to 1"),
-                listOf("P or B Has", "3-Card 7s", "PAYS 60 to 1"),
+                listOf("P & B Have", "3-Card 7s", "PAYS 200 to 1"),
+                listOf("P or B Has", "3-Card 7s", "PAYS 75 to 1"),
             ),
             textDark = false,
         ),
