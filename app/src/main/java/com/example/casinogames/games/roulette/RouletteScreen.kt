@@ -1,16 +1,18 @@
 package com.example.casinogames.games.roulette
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,13 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.CubicBezierEasing
-import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,38 +39,46 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlin.math.floor
+import com.example.casinogames.R
+import com.example.casinogames.games.roulette.RouletteArt as A
 import com.example.casinogames.games.roulette.RouletteEngine.DOUBLE_ZERO
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
-import com.example.casinogames.ui.common.CasinoChip
-import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.chipsFor
 import com.example.casinogames.ui.common.formatMoney
-import com.example.casinogames.ui.theme.CasinoPalette as P
+import kotlin.math.floor
 
-/** The classic colours: green baize, red and black pockets, green zeroes. */
-private val Baize = Color(0xFF0E3B1A)
-private val BaizeDeep = Color(0xFF0A2B13)
+private val TableBlack = Color(0xFF080509)
 private val PocketRed = Color(0xFFB3222E)
 private val PocketBlack = Color(0xFF15121A)
 private val ZeroGreen = Color(0xFF1D7A34)
-private val Line = Color(0xB3F5F1E8)
+private val NeonPurple = Color(0xFFB98CFF)
 private val WinGreen = Color(0xFF57E06A)
 /** The marker that takes whichever pocket stops under it. */
 private val MarkerGold = Color(0xFFFFD24D)
 
+private fun pocketColor(pocket: Int): Color = when {
+    pocket == 0 || pocket == DOUBLE_ZERO -> ZeroGreen
+    RouletteEngine.isRed(pocket) -> PocketRed
+    else -> PocketBlack
+}
+
+/**
+ * The table is one piece of art, measured in [RouletteArt]. Everything live —
+ * the money, the spin belt, the chips and every tap target — is laid on the
+ * marks the art was drawn around.
+ */
 @Composable
 fun RouletteScreen(
     onBack: () -> Unit,
@@ -83,44 +87,37 @@ fun RouletteScreen(
     vm: RouletteViewModel = viewModel(),
 ) {
     LaunchedEffect(campaign) { vm.enterMode(campaign) }
-    Box(Modifier.fillMaxSize().background(BaizeDeep)) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .padding(horizontal = 10.dp)
-                .navigationBarsPadding()
-                .padding(bottom = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+    Box(Modifier.fillMaxSize().background(TableBlack)) {
+        BoxWithConstraints(
+            Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding(),
         ) {
-            TopBar(onBack, vm)
-            Box(Modifier.fillMaxWidth().height(1.dp).background(Color(0x26FFFFFF)))
-            Spacer(Modifier.height(4.dp))
-            Text(
-                if (vm.campaign) "CAMPAIGN · GOAL \$${formatMoney(vm.goal)}"
-                else "AMERICAN ROULETTE · 0 AND 00",
-                fontSize = 10.sp,
-                letterSpacing = 0.24.em,
-                color = if (vm.campaign) Color(0xCCFFD24D) else Color(0x8CFFFFFF),
-            )
-            Spacer(Modifier.height(4.dp))
-            HistoryRail(vm)
-            Reel(vm)
-            BallAndMessage(vm)
-            Spacer(Modifier.height(6.dp))
-            Felt(vm, Modifier.weight(1f))
-            Spacer(Modifier.height(8.dp))
-            if (vm.phase != RoulettePhase.SPINNING) ChipRack(vm)
-            Spacer(Modifier.height(8.dp))
-            ActionButtons(vm)
+            // Fit the table whole, whichever edge runs out first.
+            val artHeight = minOf(maxHeight, maxWidth * (A.H / A.W))
+            val artWidth = artHeight * (A.W / A.H)
+            // One art pixel, in dp.
+            val k = artWidth.value / A.W
+            Box(Modifier.align(Alignment.Center).width(artWidth).height(artHeight)) {
+                Image(
+                    painter = painterResource(R.drawable.roulette_felt),
+                    contentDescription = "Roulette table",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
+                Money(vm, k)
+                Belt(vm, k)
+                Felt(vm, k)
+                Outside(vm, k)
+                Rack(vm, k)
+                Buttons(vm, k)
+                Message(vm, k)
+                // The art paints the back arrow; this only catches the press.
+                Box(Modifier.artBox(k, 0f, 0f, A.BACK_RIGHT, A.BACK_BOTTOM).tap(onBack))
+            }
         }
         if (vm.campaign && vm.phase != RoulettePhase.SPINNING &&
             vm.bankroll < 25 && vm.totalStaked == 0
         ) {
-            CampaignGameOver(onStartOver = {
-                vm.buyBackIn()
-                onGameOverExit()
-            })
+            CampaignGameOver(onStartOver = { vm.buyBackIn(); onGameOverExit() })
         }
         if (vm.campaign && vm.phase != RoulettePhase.SPINNING &&
             vm.bankroll >= vm.goal && vm.totalStaked == 0
@@ -129,105 +126,60 @@ fun RouletteScreen(
                 goal = vm.goal,
                 nextGoal = vm.goal * 100,
                 onGoBigger = vm::raiseGoal,
-                onStartOver = {
-                    vm.restartCampaign()
-                    onGameOverExit()
-                },
+                onStartOver = { vm.restartCampaign(); onGameOverExit() },
             )
         }
     }
 }
 
+/** Places a box on the art's own coordinates. */
+private fun Modifier.artBox(k: Float, x0: Float, y0: Float, x1: Float, y1: Float): Modifier =
+    this.offset(x = (x0 * k).dp, y = (y0 * k).dp)
+        .size(width = ((x1 - x0) * k).dp, height = ((y1 - y0) * k).dp)
+
+/** A press with no ripple: the art already shows what is being pressed. */
 @Composable
-private fun TopBar(onBack: () -> Unit, vm: RouletteViewModel) {
-    Row(
-        Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "‹ LOBBY",
-            color = P.OffWhite.copy(alpha = 0.8f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.1.em,
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .clickable(onClick = onBack)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-        )
-        Spacer(Modifier.weight(1f))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-            verticalAlignment = Alignment.CenterVertically,
+private fun Modifier.tap(onClick: () -> Unit): Modifier = this.clickable(
+    interactionSource = remember { MutableInteractionSource() },
+    indication = null,
+    onClick = onClick,
+)
+
+@Composable
+private fun Money(vm: RouletteViewModel, k: Float) {
+    // The art leaves this corner blank, labels and all: a figure that grew
+    // would otherwise run into a painted word.
+    listOf(
+        A.BANKROLL_MID to "BANKROLL  ${formatMoney(vm.bankroll)}",
+        A.STAKED_MID to "STAKED  ${formatMoney(vm.totalStaked.toDouble())}",
+    ).forEach { (mid, text) ->
+        Box(
+            Modifier.artBox(k, 0f, mid - 22f, A.MONEY_RIGHT, mid + 22f),
+            contentAlignment = Alignment.CenterEnd,
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "BANKROLL ",
-                    fontSize = 9.sp, letterSpacing = 0.12.em,
-                    color = P.OffWhite.copy(alpha = 0.6f),
-                )
-                OutlinedText(
-                    formatMoney(vm.bankroll),
-                    fontSize = 14.sp, color = Color(0xFFF2E28A), outlineWidth = 1.dp,
-                )
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    "STAKED ",
-                    fontSize = 9.sp, letterSpacing = 0.12.em,
-                    color = P.OffWhite.copy(alpha = 0.6f),
-                )
-                OutlinedText(
-                    formatMoney(vm.totalStaked.toDouble()),
-                    fontSize = 14.sp, color = P.OffWhite, outlineWidth = 1.dp,
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun pocketColor(pocket: Int): Color = when {
-    pocket == 0 || pocket == DOUBLE_ZERO -> ZeroGreen
-    RouletteEngine.isRed(pocket) -> PocketRed
-    else -> PocketBlack
-}
-
-@Composable
-private fun HistoryRail(vm: RouletteViewModel) {
-    if (vm.history.isEmpty()) { Spacer(Modifier.height(20.dp)); return }
-    Row(
-        Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(5.dp),
-    ) {
-        vm.history.forEach { p ->
-            Box(
-                Modifier
-                    .size(20.dp)
-                    .background(pocketColor(p), CircleShape)
-                    .border(1.dp, Color(0x66FFFFFF), CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    RouletteEngine.label(p),
-                    color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Black,
-                )
-            }
+            Text(
+                text,
+                color = Color.White,
+                fontSize = (26f * k).sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+            )
         }
     }
 }
 
 /** Cells either side of the marker; enough to fill the belt and overhang it. */
-private const val ReelHalf = 6
-private val ReelCellWidth = 46.dp
+private const val BeltHalf = 6
+private const val BeltCellW = 92f
+private const val BeltPointer = 24f
 
 /**
- * The wheel unrolled: pockets ride past in their real order and the marker in
- * the middle takes whichever one stops under it. The view model says where the
- * belt must come to rest; the run itself lives here.
+ * The wheel unrolled, in the strip the table leaves above the zero row:
+ * pockets ride past in their real order and the marker in the middle takes
+ * whichever one stops under it.
  */
 @Composable
-private fun Reel(vm: RouletteViewModel) {
+private fun Belt(vm: RouletteViewModel, k: Float) {
     val travel = remember { Animatable(vm.reelStop.toFloat()) }
     LaunchedEffect(vm.spinId) {
         if (vm.spinId == 0) return@LaunchedEffect
@@ -237,17 +189,21 @@ private fun Reel(vm: RouletteViewModel) {
             tween(SPIN_MILLIS, easing = CubicBezierEasing(0.08f, 0.82f, 0.16f, 1f)),
         )
     }
-    val cellPx = with(LocalDensity.current) { ReelCellWidth.toPx() }
+    val cellPx = with(LocalDensity.current) { (BeltCellW * k).dp.toPx() }
     val base = floor(travel.value).toInt()
     val frac = travel.value - base
+    val cellTop = A.BELT_TOP + BeltPointer
 
-    Box(Modifier.fillMaxWidth().height(52.dp), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier.artBox(k, 0f, A.BELT_TOP, A.W, A.BELT_BOTTOM),
+        contentAlignment = Alignment.Center,
+    ) {
         Box(
             Modifier
-                .fillMaxWidth()
-                .height(42.dp)
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color(0x59000000)),
+                .artBox(k, 0f, 0f, A.W, A.BELT_BOTTOM - cellTop)
+                .offset(y = (BeltPointer * k).dp)
+                .clip(RoundedCornerShape((8f * k).dp))
+                .background(Color(0x66000000)),
             contentAlignment = Alignment.Center,
         ) {
             // Measured unbounded: the belt is wider than the screen, and if it
@@ -258,21 +214,24 @@ private fun Reel(vm: RouletteViewModel) {
                     .wrapContentWidth(unbounded = true)
                     .graphicsLayer { translationX = -frac * cellPx }
             ) {
-                for (i in -ReelHalf..ReelHalf) {
+                for (i in -BeltHalf..BeltHalf) {
                     val pocket = RouletteEngine.WHEEL[
                         Math.floorMod(base + i, RouletteEngine.WHEEL.size)
                     ]
                     Box(
                         Modifier
-                            .width(ReelCellWidth)
-                            .height(42.dp)
-                            .padding(horizontal = 2.dp)
-                            .background(pocketColor(pocket), RoundedCornerShape(4.dp)),
+                            .width((BeltCellW * k).dp)
+                            .height(((A.BELT_BOTTOM - cellTop) * k).dp)
+                            .padding(horizontal = (4f * k).dp)
+                            .background(pocketColor(pocket), RoundedCornerShape((6f * k).dp)),
                         contentAlignment = Alignment.Center,
                     ) {
                         Text(
                             RouletteEngine.label(pocket),
-                            color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            fontSize = (34f * k).sp,
+                            fontWeight = FontWeight.Black,
+                            fontStyle = FontStyle.Italic,
                         )
                     }
                 }
@@ -281,15 +240,19 @@ private fun Reel(vm: RouletteViewModel) {
         // The marker: a frame on the pocket under it and a pointer above.
         Box(
             Modifier
-                .width(ReelCellWidth)
-                .height(52.dp)
-                .border(2.dp, MarkerGold, RoundedCornerShape(6.dp))
+                .width((BeltCellW * k).dp)
+                .height(((A.BELT_BOTTOM - A.BELT_TOP) * k).dp)
+                .border((3f * k).dp, MarkerGold, RoundedCornerShape((8f * k).dp))
         )
-        Canvas(Modifier.size(width = 16.dp, height = 52.dp)) {
+        Canvas(
+            Modifier
+                .width((30f * k).dp)
+                .height(((A.BELT_BOTTOM - A.BELT_TOP) * k).dp)
+        ) {
             val w = size.width
             drawPath(
                 androidx.compose.ui.graphics.Path().apply {
-                    moveTo(w / 2f, 9.dp.toPx())
+                    moveTo(w / 2f, (BeltPointer * k).dp.toPx())
                     lineTo(0f, 0f)
                     lineTo(w, 0f)
                     close()
@@ -300,133 +263,32 @@ private fun Reel(vm: RouletteViewModel) {
     }
 }
 
-@Composable
-private fun BallAndMessage(vm: RouletteViewModel) {
-    Row(
-        Modifier.height(56.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        val net = vm.lastWin - vm.totalStaked
-        Text(
-            vm.message,
-            fontSize = 15.sp,
-            fontStyle = FontStyle.Italic,
-            fontWeight = FontWeight.Medium,
-            textAlign = TextAlign.Center,
-            color = when {
-                vm.phase == RoulettePhase.RESULT && net > 0 -> WinGreen
-                vm.phase == RoulettePhase.RESULT && vm.lastWin <= 0.0 -> Color(0xFFFF4D4D)
-                else -> P.OffWhite.copy(alpha = 0.92f)
-            },
-        )
-    }
-}
-
 /**
- * The number grid: the zero row, twelve rows of three, and every bet between
- * them. One tap surface maps presses to the nearest spot — a cell's middle is
- * a straight-up, a shared edge is a split, a crossing is a corner, the left
- * rail takes streets and six-lines — the way chips find their place on a real
- * felt. Placed chips are drawn back over the same geometry.
+ * The number grid: one surface that maps a press to the nearest spot, and the
+ * chips already placed drawn back over the same marks.
  */
 @Composable
-private fun Felt(vm: RouletteViewModel, modifier: Modifier = Modifier) {
-    // The grid takes whatever height the screen can give it, never more:
-    // sized off the space left after the outside rows, not off the width.
-    Column(modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().weight(1f)) {
-            NumberGrid(vm, Modifier.weight(3f).fillMaxSize())
-            Spacer(Modifier.width(6.dp))
-            // Dozens ride beside the grid, each level with its third.
-            Column(Modifier.weight(0.55f).fillMaxSize()) {
-                (0..2).forEach { d ->
-                    OutsideCell(
-                        vm, "dz-$d", RouletteEngine.dozen(d),
-                        listOf("1st", "2nd", "3rd")[d] + " 12",
-                        Modifier.fillMaxWidth().weight(1f),
-                    )
-                    if (d < 2) Spacer(Modifier.height(3.dp))
-                }
-            }
-        }
-        Spacer(Modifier.height(3.dp))
-        // The three column bets under their columns, then the even-money row.
-        Row(Modifier.fillMaxWidth()) {
-            Row(Modifier.weight(3f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                (0..2).forEach { c ->
-                    OutsideCell(
-                        vm, "col-$c", RouletteEngine.column(c), "2 TO 1",
-                        Modifier.weight(1f).height(30.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.width(6.dp))
-            Spacer(Modifier.weight(0.55f))
-        }
-        Spacer(Modifier.height(3.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-            OutsideCell(vm, "low", RouletteEngine.LOW, "1-18", Modifier.weight(1f).height(34.dp))
-            OutsideCell(vm, "even", RouletteEngine.EVEN, "EVEN", Modifier.weight(1f).height(34.dp))
-            OutsideCell(
-                vm, "red", RouletteEngine.RED, "RED",
-                Modifier.weight(1f).height(34.dp), fill = PocketRed,
-            )
-            OutsideCell(
-                vm, "black", RouletteEngine.BLACK, "BLACK",
-                Modifier.weight(1f).height(34.dp), fill = PocketBlack,
-            )
-            OutsideCell(vm, "odd", RouletteEngine.ODD, "ODD", Modifier.weight(1f).height(34.dp))
-            OutsideCell(vm, "high", RouletteEngine.HIGH, "19-36", Modifier.weight(1f).height(34.dp))
-        }
-    }
-}
-
-@Composable
-private fun OutsideCell(
-    vm: RouletteViewModel,
-    id: String,
-    def: RouletteEngine.Bet,
-    label: String,
-    modifier: Modifier,
-    fill: Color = Baize,
-) {
-    Box(
-        modifier
-            .background(fill, RoundedCornerShape(4.dp))
-            .border(1.dp, Line, RoundedCornerShape(4.dp))
-            .clickable { vm.addChip(id, def) },
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            label,
-            color = Color.White, fontSize = 10.sp, fontWeight = FontWeight.Black,
-            letterSpacing = 0.04.em, textAlign = TextAlign.Center,
-        )
-        vm.bets[id]?.let { PlacedBetChip(it, size = 24.dp) }
-    }
-}
-
-/** Where a chip sits on the grid, in cell units — (column, row) of its anchor. */
-private data class Anchor(val x: Float, val y: Float)
-
-@Composable
-private fun NumberGrid(vm: RouletteViewModel, modifier: Modifier = Modifier) {
-    var sizePx by remember { mutableStateOf(Offset.Zero) }
-    // Chips keyed by spot id, anchored where the tap resolved. Entries whose
-    // bets are gone simply stop drawing — the amount lookup comes up empty.
+private fun Felt(vm: RouletteViewModel, k: Float) {
     val anchors = remember { mutableStateOf(mapOf<String, Anchor>()) }
-    val density = LocalDensity.current
+    val gridBottom = A.GRID_TOP + A.ROWS * A.ROW_PITCH
+    val cellW = (A.GRID_RIGHT - A.GRID_LEFT) / 3f
 
     Box(
-        modifier
-            .background(Baize, RoundedCornerShape(6.dp))
-            .onSizeChanged { sizePx = Offset(it.width.toFloat(), it.height.toFloat()) }
-            .pointerInput(Unit) {
+        Modifier
+            .artBox(k, A.GRID_LEFT, A.ZERO_TOP, A.GRID_RIGHT, gridBottom)
+            .pointerInput(k) {
                 detectTapGestures { tap ->
-                    val cellW = size.width / 3f
-                    val cellH = size.height / 13f
-                    val hit = resolveTap(tap, cellW, cellH) ?: return@detectTapGestures
+                    // Into the resolver's own space: the zero row is its first
+                    // row, the twelve number rows follow at one row each.
+                    val artX = tap.x / size.width * (A.GRID_RIGHT - A.GRID_LEFT)
+                    val artY = A.ZERO_TOP + tap.y / size.height * (gridBottom - A.ZERO_TOP)
+                    val y = if (artY < A.GRID_TOP) {
+                        (artY - A.ZERO_TOP) / (A.ZERO_BOTTOM - A.ZERO_TOP) * A.ROW_PITCH
+                    } else {
+                        A.ROW_PITCH + (artY - A.GRID_TOP)
+                    }
+                    val hit = resolveTap(Offset(artX, y), cellW, A.ROW_PITCH)
+                        ?: return@detectTapGestures
                     vm.addChip(hit.first, hit.second)
                     if (vm.bets.containsKey(hit.first)) {
                         anchors.value =
@@ -434,58 +296,138 @@ private fun NumberGrid(vm: RouletteViewModel, modifier: Modifier = Modifier) {
                     }
                 }
             },
-    ) {
-        GridLines()
-        val cellW = with(density) { (sizePx.x / 3f).toDp() }
-        val cellH = with(density) { (sizePx.y / 13f).toDp() }
-        anchors.value.forEach { (id, a) ->
-            vm.bets[id]?.let { amount ->
-                Box(
-                    Modifier
-                        .offset(x = cellW * a.x - 12.dp, y = cellH * a.y - 12.dp)
-                        .size(24.dp),
-                ) {
-                    PlacedBetChip(amount, size = 24.dp)
-                }
+    )
+    anchors.value.forEach { (id, a) ->
+        vm.bets[id]?.let { amount ->
+            // Anchors come back in grid rows, the zero row counting as one.
+            val x = A.GRID_LEFT + a.x * cellW
+            val y = if (a.y <= 1f) {
+                A.ZERO_TOP + a.y * (A.ZERO_BOTTOM - A.ZERO_TOP)
+            } else {
+                A.GRID_TOP + (a.y - 1f) * A.ROW_PITCH
+            }
+            val d = 46f
+            Box(Modifier.artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)) {
+                PlacedBetChip(amount, size = (d * k).dp)
             }
         }
     }
 }
 
-/** The painted grid: zero row on top, then 1-36 in twelve rows of three. */
+/** Dozens down the side, the 2-to-1 row, and the even-money row. */
 @Composable
-private fun GridLines() {
-    Column(Modifier.fillMaxSize().padding(1.dp)) {
-        Row(Modifier.fillMaxWidth().weight(1f)) {
-            NumberCell(0, Modifier.weight(1.5f))
-            NumberCell(DOUBLE_ZERO, Modifier.weight(1.5f))
-        }
-        (0 until 12).forEach { r ->
-            Row(Modifier.fillMaxWidth().weight(1f)) {
-                (0 until 3).forEach { c ->
-                    NumberCell(r * 3 + c + 1, Modifier.weight(1f))
-                }
-            }
-        }
+private fun Outside(vm: RouletteViewModel, k: Float) {
+    A.DOZEN_BANDS.forEachIndexed { i, (top, bottom) ->
+        OutsideSpot(
+            vm, k, "dz-$i", RouletteEngine.dozen(i),
+            A.DOZENS_LEFT, top, A.DOZENS_RIGHT, bottom,
+        )
     }
-}
-
-@Composable
-private fun RowScope.NumberCell(pocket: Int, modifier: Modifier) {
-    Box(
-        modifier
-            .fillMaxSize()
-            .padding(0.75.dp)
-            .background(pocketColor(pocket), RoundedCornerShape(2.dp))
-            .border(0.75.dp, Line.copy(alpha = 0.5f), RoundedCornerShape(2.dp)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            RouletteEngine.label(pocket),
-            color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Black,
+    (0..2).forEach { c ->
+        OutsideSpot(
+            vm, k, "col-$c", RouletteEngine.column(c),
+            A.COLUMN_EDGES[c], A.COLUMN_BETS_TOP, A.COLUMN_EDGES[c + 1], A.COLUMN_BETS_BOTTOM,
+        )
+    }
+    val even = listOf(
+        "low" to RouletteEngine.LOW,
+        "even" to RouletteEngine.EVEN,
+        "red" to RouletteEngine.RED,
+        "black" to RouletteEngine.BLACK,
+        "odd" to RouletteEngine.ODD,
+        "high" to RouletteEngine.HIGH,
+    )
+    even.forEachIndexed { i, (id, def) ->
+        OutsideSpot(
+            vm, k, id, def,
+            A.EVEN_MONEY_EDGES[i], A.EVEN_MONEY_TOP, A.EVEN_MONEY_EDGES[i + 1], A.EVEN_MONEY_BOTTOM,
         )
     }
 }
+
+@Composable
+private fun OutsideSpot(
+    vm: RouletteViewModel,
+    k: Float,
+    id: String,
+    def: RouletteEngine.Bet,
+    x0: Float,
+    y0: Float,
+    x1: Float,
+    y1: Float,
+) {
+    Box(
+        Modifier.artBox(k, x0, y0, x1, y1).tap { vm.addChip(id, def) },
+        contentAlignment = Alignment.Center,
+    ) {
+        vm.bets[id]?.let { PlacedBetChip(it, size = (46f * k).dp) }
+    }
+}
+
+/** The rack is painted; this rings whichever chip is chosen and takes taps. */
+@Composable
+private fun Rack(vm: RouletteViewModel, k: Float) {
+    chipsFor(vm.bankroll).forEachIndexed { i, chip ->
+        val mid = A.CHIP_FIRST_MID + i * A.CHIP_PITCH
+        val r = A.CHIP_DIAMETER / 2f
+        Box(
+            Modifier
+                .artBox(k, mid - r, A.CHIPS_TOP, mid + r, A.CHIPS_BOTTOM)
+                .tap { vm.selectedChip = chip.value }
+        ) {
+            if (vm.selectedChip == chip.value) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .border((4f * k).dp, MarkerGold, CircleShape)
+                )
+            }
+        }
+    }
+}
+
+/** Undo, spin and rebet, over the buttons the art paints. */
+@Composable
+private fun Buttons(vm: RouletteViewModel, k: Float) {
+    val actions = listOf<() -> Unit>(vm::undoChip, vm::spin, vm::rebet)
+    A.BUTTON_EDGES.forEachIndexed { i, (x0, x1) ->
+        Box(
+            Modifier
+                .artBox(k, x0, A.BUTTONS_TOP, x1, A.BUTTONS_BOTTOM)
+                .tap { if (vm.phase != RoulettePhase.SPINNING) actions[i]() }
+        )
+    }
+}
+
+/** What the table is saying, over the felt while it is not being bet on. */
+@Composable
+private fun Message(vm: RouletteViewModel, k: Float) {
+    if (vm.phase == RoulettePhase.BETTING && vm.message.isBlank()) return
+    if (vm.phase == RoulettePhase.BETTING) return
+    val net = vm.lastWin - vm.totalStaked
+    Box(
+        Modifier.artBox(k, A.GRID_LEFT, A.GRID_TOP + 10f, A.GRID_RIGHT, A.GRID_TOP + 90f),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            vm.message,
+            fontSize = (30f * k).sp,
+            fontStyle = FontStyle.Italic,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center,
+            color = when {
+                vm.phase == RoulettePhase.RESULT && net > 0 -> WinGreen
+                vm.phase == RoulettePhase.RESULT && vm.lastWin <= 0.0 -> Color(0xFFFF4D4D)
+                else -> Color.White
+            },
+            modifier = Modifier
+                .background(Color(0xD9000000), RoundedCornerShape((999f * k).dp))
+                .padding(horizontal = (24f * k).dp, vertical = (8f * k).dp),
+        )
+    }
+}
+
+private data class Anchor(val x: Float, val y: Float)
 
 /**
  * Turns a press into (spot id, bet, chip anchor). Distances are measured to
@@ -534,7 +476,6 @@ private fun resolveTap(
     val yInRow = (tap.y - cellH) % cellH
     val nearTop = yInRow < snapY
     val nearBottom = yInRow > cellH - snapY && r < 11
-    val gridY = (tap.y - cellH) / cellH + 1f   // in grid rows, zero row included
 
     // The left rail: a street on the row, a six-line on the seam between rows.
     if (tap.x < snapX) {
@@ -579,87 +520,5 @@ private fun resolveTap(
             )
         }
         else -> Triple("s-$n", e.straight(n), Anchor(c + 0.5f, r + 1.5f))
-    }
-}
-
-@Composable
-private fun ChipRack(vm: RouletteViewModel) {
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        chipsFor(vm.bankroll).forEach { chip ->
-            CasinoChip(
-                imageRes = chip.imageRes,
-                contentDescription = "${chip.value} chip",
-                selected = vm.selectedChip == chip.value,
-                onClick = { vm.selectedChip = chip.value },
-                selectedColor = Color(0xFFF2E28A),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ActionButtons(vm: RouletteViewModel) {
-    Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).height(46.dp),
-    ) {
-        when (vm.phase) {
-            RoulettePhase.BETTING -> {
-                PillButton("UNDO", Modifier.weight(1f), onClick = vm::undoChip)
-                PillButton("SPIN", Modifier.weight(1.4f), solid = true, onClick = vm::spin)
-                if (vm.bets.isEmpty()) {
-                    PillButton("REBET", Modifier.weight(1f), onClick = vm::rebet)
-                } else {
-                    PillButton("CLEAR", Modifier.weight(1f), onClick = vm::clearBets)
-                }
-                if (!vm.campaign && vm.bankroll < 25 && vm.totalStaked == 0) {
-                    PillButton("BUY IN", Modifier.weight(1f), onClick = vm::buyBackIn)
-                }
-            }
-            RoulettePhase.RESULT -> {
-                PillButton("NEW BETS", Modifier.weight(1f), solid = true, onClick = vm::nextSpin)
-            }
-            RoulettePhase.SPINNING -> {
-                Spacer(Modifier.weight(1f))
-                Text(
-                    "NO MORE BETS",
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 0.15.em,
-                    color = P.OffWhite.copy(alpha = 0.8f),
-                )
-                Spacer(Modifier.weight(1f))
-            }
-        }
-    }
-}
-
-@Composable
-private fun PillButton(
-    text: String,
-    modifier: Modifier = Modifier,
-    solid: Boolean = false,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier
-            .height(44.dp)
-            .clip(RoundedCornerShape(999.dp))
-            .background(if (solid) Color(0xFFF2E28A) else Color(0x22FFFFFF))
-            .border(
-                1.5.dp,
-                if (solid) Color(0xFFF2E28A) else Color(0x66F5F1E8),
-                RoundedCornerShape(999.dp),
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text,
-            color = if (solid) Color(0xFF1A1508) else P.OffWhite,
-            fontWeight = FontWeight.Black,
-            fontSize = 13.sp,
-            letterSpacing = 0.08.em,
-        )
     }
 }
