@@ -17,6 +17,17 @@ object RouletteEngine {
         19, 21, 23, 25, 27, 30, 32, 34, 36,
     )
 
+    /**
+     * The pockets in the order they sit on an American wheel, so a reel built
+     * from this reads like the rim unrolled rather than a shuffled list.
+     */
+    val WHEEL = listOf(
+        0, 28, 9, 26, 30, 11, 7, 20, 32, 17,
+        5, 22, 34, 15, 3, 24, 36, 13, 1, DOUBLE_ZERO,
+        27, 10, 25, 29, 12, 8, 19, 31, 18, 6,
+        21, 33, 16, 4, 23, 35, 14, 2,
+    )
+
     fun isRed(pocket: Int): Boolean = pocket in RED_NUMBERS
     fun isBlack(pocket: Int): Boolean = pocket in 1..36 && pocket !in RED_NUMBERS
 

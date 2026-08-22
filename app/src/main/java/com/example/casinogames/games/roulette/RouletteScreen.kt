@@ -20,9 +20,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -47,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlin.math.floor
 import com.example.casinogames.games.roulette.RouletteEngine.DOUBLE_ZERO
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
@@ -65,6 +72,8 @@ private val PocketBlack = Color(0xFF15121A)
 private val ZeroGreen = Color(0xFF1D7A34)
 private val Line = Color(0xB3F5F1E8)
 private val WinGreen = Color(0xFF57E06A)
+/** The marker that takes whichever pocket stops under it. */
+private val MarkerGold = Color(0xFFFFD24D)
 
 @Composable
 fun RouletteScreen(
@@ -96,6 +105,7 @@ fun RouletteScreen(
             )
             Spacer(Modifier.height(4.dp))
             HistoryRail(vm)
+            Reel(vm)
             BallAndMessage(vm)
             Spacer(Modifier.height(6.dp))
             Felt(vm, Modifier.weight(1f))
@@ -207,6 +217,89 @@ private fun HistoryRail(vm: RouletteViewModel) {
     }
 }
 
+/** Cells either side of the marker; enough to fill the belt and overhang it. */
+private const val ReelHalf = 6
+private val ReelCellWidth = 46.dp
+
+/**
+ * The wheel unrolled: pockets ride past in their real order and the marker in
+ * the middle takes whichever one stops under it. The view model says where the
+ * belt must come to rest; the run itself lives here.
+ */
+@Composable
+private fun Reel(vm: RouletteViewModel) {
+    val travel = remember { Animatable(vm.reelStop.toFloat()) }
+    LaunchedEffect(vm.spinId) {
+        if (vm.spinId == 0) return@LaunchedEffect
+        travel.animateTo(
+            vm.reelStop.toFloat(),
+            // Away hard, then a long die-out into the pocket.
+            tween(SPIN_MILLIS, easing = CubicBezierEasing(0.08f, 0.82f, 0.16f, 1f)),
+        )
+    }
+    val cellPx = with(LocalDensity.current) { ReelCellWidth.toPx() }
+    val base = floor(travel.value).toInt()
+    val frac = travel.value - base
+
+    Box(Modifier.fillMaxWidth().height(52.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .height(42.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .background(Color(0x59000000)),
+            contentAlignment = Alignment.Center,
+        ) {
+            // Measured unbounded: the belt is wider than the screen, and if it
+            // were capped to fit, its middle cell would not be the one the
+            // marker sits over.
+            Row(
+                Modifier
+                    .wrapContentWidth(unbounded = true)
+                    .graphicsLayer { translationX = -frac * cellPx }
+            ) {
+                for (i in -ReelHalf..ReelHalf) {
+                    val pocket = RouletteEngine.WHEEL[
+                        Math.floorMod(base + i, RouletteEngine.WHEEL.size)
+                    ]
+                    Box(
+                        Modifier
+                            .width(ReelCellWidth)
+                            .height(42.dp)
+                            .padding(horizontal = 2.dp)
+                            .background(pocketColor(pocket), RoundedCornerShape(4.dp)),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            RouletteEngine.label(pocket),
+                            color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black,
+                        )
+                    }
+                }
+            }
+        }
+        // The marker: a frame on the pocket under it and a pointer above.
+        Box(
+            Modifier
+                .width(ReelCellWidth)
+                .height(52.dp)
+                .border(2.dp, MarkerGold, RoundedCornerShape(6.dp))
+        )
+        Canvas(Modifier.size(width = 16.dp, height = 52.dp)) {
+            val w = size.width
+            drawPath(
+                androidx.compose.ui.graphics.Path().apply {
+                    moveTo(w / 2f, 9.dp.toPx())
+                    lineTo(0f, 0f)
+                    lineTo(w, 0f)
+                    close()
+                },
+                MarkerGold,
+            )
+        }
+    }
+}
+
 @Composable
 private fun BallAndMessage(vm: RouletteViewModel) {
     Row(
@@ -214,20 +307,6 @@ private fun BallAndMessage(vm: RouletteViewModel) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        vm.pocket?.let { p ->
-            Box(
-                Modifier
-                    .size(44.dp)
-                    .background(pocketColor(p), CircleShape)
-                    .border(2.dp, Color.White, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    RouletteEngine.label(p),
-                    color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Black,
-                )
-            }
-        }
         val net = vm.lastWin - vm.totalStaked
         Text(
             vm.message,

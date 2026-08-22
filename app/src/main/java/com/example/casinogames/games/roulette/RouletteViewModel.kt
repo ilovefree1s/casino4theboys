@@ -17,6 +17,10 @@ private const val STARTING_BANKROLL = 5000.0
 private const val CAMPAIGN_START = 5000.0
 private const val CAMPAIGN_GOAL = 1_000_000.0
 
+/** How long the reel runs, and how far it travels before it starts to die. */
+const val SPIN_MILLIS = 3400
+private const val TURNS_PER_SPIN = 5
+
 enum class RoulettePhase { BETTING, SPINNING, RESULT }
 
 class RouletteViewModel(app: Application) : AndroidViewModel(app) {
@@ -32,6 +36,16 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     private val chipHistory = mutableListOf<Pair<String, Int>>()
     private var lastBets: Map<String, Int> = emptyMap()
     private var lastDefs: Map<String, RouletteEngine.Bet> = emptyMap()
+
+    /**
+     * The reel is one long belt of wheel pockets; [reelStop] is the cell the
+     * marker must come to rest on, and [spinId] tells the screen a new run has
+     * started. The screen owns the motion, this owns where it ends.
+     */
+    var reelStop by mutableIntStateOf(0)
+        private set
+    var spinId by mutableIntStateOf(0)
+        private set
 
     var phase by mutableStateOf(RoulettePhase.BETTING)
         private set
@@ -162,16 +176,17 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         message = "No more bets"
         val result = RouletteEngine.spin()
 
+        // Wind the reel several whole turns on and stop it where the result
+        // sits, so the belt always travels forward and lands under the marker.
+        val slot = RouletteEngine.WHEEL.indexOf(result)
+        var stop = reelStop + TURNS_PER_SPIN * RouletteEngine.WHEEL.size
+        stop += Math.floorMod(slot - Math.floorMod(stop, RouletteEngine.WHEEL.size), RouletteEngine.WHEEL.size)
+        reelStop = stop
+        spinId++
+
         viewModelScope.launch {
-            // The ball rattles through pockets, slowing as it dies out.
-            var wait = 60L
-            while (wait < 420L) {
-                pocket = RouletteEngine.spin()
-                delay(wait)
-                wait = (wait * 1.28).toLong()
-            }
+            delay(SPIN_MILLIS.toLong() + 350)
             pocket = result
-            delay(650)
             settle(result)
         }
     }
