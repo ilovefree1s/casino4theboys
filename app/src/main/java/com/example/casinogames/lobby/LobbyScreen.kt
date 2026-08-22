@@ -5,29 +5,23 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -51,8 +45,29 @@ enum class GameId(val available: Boolean) {
 
 private val LobbyBlack = Color(0xFF040308)
 private val NeonPurpleDim = Color(0x998B30D9)
-private val CampaignGold = Color(0xFFFFD24D)
+private val CampaignPink = Color(0xFFE24BC8)
 
+/** The page art, and where each card's band sits inside it (851 x 1785). */
+private const val PageWidth = 851f
+private const val PageHeight = 1785f
+private val CardBands = listOf(
+    GameId.BACCARAT to (676f to 871f),
+    GameId.BLACKJACK to (887f to 1081f),
+    GameId.ULTIMATE_TEXAS_HOLDEM to (1099f to 1291f),
+    GameId.ROULETTE to (1309f to 1481f),
+    GameId.CRAPS to (1498f to 1670f),
+)
+/** The menu button and the campaign line, painted out of the art so they can live. */
+private const val MenuCentreX = 80f
+private const val MenuCentreY = 556f
+private const val CampaignCentreY = 625f
+
+/**
+ * The lobby is one piece of art. Rather than rebuilding the cards, it is drawn
+ * as it was made and each card's band is a tap target — with the menu button
+ * and the campaign line put back live, since one moves and the other is the
+ * player's own bankroll.
+ */
 @Composable
 fun LobbyScreen(
     onOpenGame: (GameId) -> Unit,
@@ -60,88 +75,77 @@ fun LobbyScreen(
     onBack: (() -> Unit)? = null,
 ) {
     Box(Modifier.fillMaxSize().background(LobbyBlack)) {
-        Image(
-            painter = painterResource(R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.35f),
-            contentScale = ContentScale.Crop,
-        )
-        Column(
+        BoxWithConstraints(
             Modifier
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
                 .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(horizontal = 18.dp)
-                .padding(top = 8.dp, bottom = 26.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                .navigationBarsPadding(),
         ) {
-            // The menu rides at the foot of the logo rather than above it, so
-            // nothing sits in the strip the system bars used to own.
-            Box(Modifier.fillMaxWidth()) {
+            // Fit the page whole, whichever edge runs out first.
+            val artWidth = minOf(maxWidth, maxHeight * (PageWidth / PageHeight))
+            val artHeight = artWidth * (PageHeight / PageWidth)
+            Box(
+                Modifier
+                    .align(Alignment.Center)
+                    .width(artWidth)
+                    .height(artHeight)
+            ) {
                 Image(
-                    painter = painterResource(R.drawable.lobby_logo),
-                    contentDescription = "4 The Boys — for the boys Hotel & Casino",
-                    modifier = Modifier.fillMaxWidth(0.9f).align(Alignment.TopCenter),
-                    contentScale = ContentScale.FillWidth,
+                    painter = painterResource(R.drawable.lobby_page),
+                    contentDescription = "4 The Boys — Hotel & Casino",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
                 )
+                if (campaign) {
+                    val ctx = LocalContext.current
+                    val prefs = remember {
+                        ctx.getSharedPreferences("campaign", Context.MODE_PRIVATE)
+                    }
+                    val saved = remember { prefs.getFloat("bankroll", 5000f).toDouble() }
+                    val goal = remember { prefs.getFloat("goal", 1_000_000f).toDouble() }
+                    Text(
+                        "CAMPAIGN · ${formatMoney(saved)} / ${formatMoney(goal)}",
+                        fontSize = (artWidth.value * 0.033f).sp,
+                        letterSpacing = 0.1.em,
+                        fontWeight = FontWeight.Black,
+                        color = CampaignPink,
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = artHeight * (CampaignCentreY / PageHeight) - 12.dp),
+                    )
+                }
                 if (onBack != null) {
+                    val menu = artWidth * 0.105f
                     Box(
                         Modifier
-                            .align(Alignment.BottomStart)
-                            .size(44.dp)
+                            .offset(
+                                x = artWidth * (MenuCentreX / PageWidth) - menu / 2,
+                                y = artHeight * (MenuCentreY / PageHeight) - menu / 2,
+                            )
+                            .size(menu)
                             .border(1.5.dp, NeonPurpleDim, CircleShape)
                             .clip(CircleShape)
                             .clickable(onClick = onBack),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Text("☰", color = Color(0xFFB98CFF), fontSize = 18.sp)
+                        Text("☰", color = Color(0xFFB98CFF), fontSize = (menu.value * 0.4f).sp)
                     }
                 }
-            }
-            if (campaign) {
-                val ctx = LocalContext.current
-                val prefs = remember { ctx.getSharedPreferences("campaign", Context.MODE_PRIVATE) }
-                val saved = remember { prefs.getFloat("bankroll", 5000f).toDouble() }
-                val goal = remember { prefs.getFloat("goal", 1_000_000f).toDouble() }
-                Text(
-                    "CAMPAIGN · ${formatMoney(saved)} / ${formatMoney(goal)}",
-                    fontSize = 13.sp,
-                    letterSpacing = 0.12.em,
-                    fontWeight = FontWeight.Black,
-                    color = CampaignGold,
-                )
-                Spacer(Modifier.height(14.dp))
-            } else {
-                Spacer(Modifier.height(6.dp))
-            }
-            Column(
-                Modifier.widthIn(max = 420.dp).fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                GameCard(R.drawable.lobby_card_baccarat, "Baccarat") { onOpenGame(GameId.BACCARAT) }
-                GameCard(R.drawable.lobby_card_blackjack, "Blackjack") { onOpenGame(GameId.BLACKJACK) }
-                GameCard(R.drawable.lobby_card_holdem, "Ultimate Texas Hold'em") {
-                    onOpenGame(GameId.ULTIMATE_TEXAS_HOLDEM)
+                CardBands.forEach { (game, band) ->
+                    val (top, bottom) = band
+                    Box(
+                        Modifier
+                            .offset(y = artHeight * (top / PageHeight))
+                            .fillMaxWidth()
+                            .height(artHeight * ((bottom - top) / PageHeight))
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                enabled = game.available,
+                            ) { onOpenGame(game) }
+                    )
                 }
-                GameCard(R.drawable.lobby_card_roulette, "Roulette") { onOpenGame(GameId.ROULETTE) }
-                GameCard(R.drawable.lobby_card_craps, "Craps — coming soon", null)
             }
         }
     }
-}
-
-@Composable
-private fun GameCard(res: Int, desc: String, onClick: (() -> Unit)?) {
-    Image(
-        painter = painterResource(res),
-        contentDescription = desc,
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .then(
-                if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
-            ),
-        contentScale = ContentScale.FillWidth,
-    )
 }
