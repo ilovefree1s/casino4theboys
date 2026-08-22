@@ -498,20 +498,26 @@ private fun resolveTap(
     cellH: Float,
 ): Triple<String, RouletteEngine.Bet, Anchor>? {
     val e = RouletteEngine
-    val snap = minOf(cellW, cellH) * 0.24f
+    // A share of each side, not of the shorter one: cells are far wider
+    // than they are tall, and one figure for both turned the top and bottom
+    // quarter of every pocket into a split.
+    val snapX = cellW * 0.18f
+    // Tighter still down the short side: a row is barely a finger tall, so the
+    // seam has to be aimed at rather than fallen into.
+    val snapY = cellH * 0.15f
 
     // The zero row answers by itself: 0, 00, their split, and the top line.
-    if (tap.y < cellH + snap) {
-        val onBoundary = tap.y > cellH - snap
+    if (tap.y < cellH + snapY) {
+        val onBoundary = tap.y > cellH - snapY
         return when {
-            !onBoundary && kotlin.math.abs(tap.x - cellW * 1.5f) < snap ->
+            !onBoundary && kotlin.math.abs(tap.x - cellW * 1.5f) < snapX ->
                 Triple("sp-0-00", e.split(0, DOUBLE_ZERO), Anchor(1.5f, 0.5f))
             !onBoundary && tap.x < cellW * 1.5f ->
                 Triple("s-0", e.straight(0), Anchor(0.75f, 0.5f))
             !onBoundary ->
                 Triple("s-00", e.straight(DOUBLE_ZERO), Anchor(2.25f, 0.5f))
             // On the seam under the zeroes.
-            tap.x < snap -> Triple("tl", e.TOP_LINE, Anchor(0f, 1f))
+            tap.x < snapX -> Triple("tl", e.TOP_LINE, Anchor(0f, 1f))
             tap.x < cellW -> Triple("sp-0-1", e.split(0, 1), Anchor(0.5f, 1f))
             tap.x < cellW * 2f ->
                 Triple("st-z", e.street(setOf(0, DOUBLE_ZERO, 2)), Anchor(1.5f, 1f))
@@ -523,15 +529,15 @@ private fun resolveTap(
     val r = ((tap.y - cellH) / cellH).toInt().coerceIn(0, 11)
     val c = (tap.x / cellW).toInt().coerceIn(0, 2)
     val n = r * 3 + c + 1
-    val nearLeft = tap.x % cellW < snap && c > 0
-    val nearRight = tap.x % cellW > cellW - snap && c < 2
+    val nearLeft = tap.x % cellW < snapX && c > 0
+    val nearRight = tap.x % cellW > cellW - snapX && c < 2
     val yInRow = (tap.y - cellH) % cellH
-    val nearTop = yInRow < snap
-    val nearBottom = yInRow > cellH - snap && r < 11
+    val nearTop = yInRow < snapY
+    val nearBottom = yInRow > cellH - snapY && r < 11
     val gridY = (tap.y - cellH) / cellH + 1f   // in grid rows, zero row included
 
     // The left rail: a street on the row, a six-line on the seam between rows.
-    if (tap.x < snap) {
+    if (tap.x < snapX) {
         return if (nearBottom || (nearTop && r > 0)) {
             val top = if (nearTop) r - 1 else r
             val six = ((top * 3 + 1)..(top * 3 + 6)).toSet()
