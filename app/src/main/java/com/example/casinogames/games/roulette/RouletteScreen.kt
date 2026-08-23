@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
@@ -170,8 +171,9 @@ private fun Money(vm: RouletteViewModel, k: Float) {
 
 /** Cells either side of the marker; enough to fill the belt and overhang it. */
 private const val BeltHalf = 6
-private const val BeltCellW = 92f
-private const val BeltPointer = 24f
+private const val BeltCellW = 96f
+/** How far the marker's pointer bites down into the strip. */
+private const val BeltPointer = 22f
 
 /**
  * The wheel unrolled, in the strip the table leaves above the zero row:
@@ -192,62 +194,71 @@ private fun Belt(vm: RouletteViewModel, k: Float) {
     val cellPx = with(LocalDensity.current) { (BeltCellW * k).dp.toPx() }
     val base = floor(travel.value).toInt()
     val frac = travel.value - base
-    val cellTop = A.BELT_TOP + BeltPointer
+    val strip = A.BELT_BOTTOM - A.BELT_TOP
+    val corner = RoundedCornerShape((10f * k).dp)
 
     Box(
-        Modifier.artBox(k, 0f, A.BELT_TOP, A.W, A.BELT_BOTTOM),
+        Modifier
+            .artBox(k, A.BELT_LEFT, A.BELT_TOP, A.BELT_RIGHT, A.BELT_BOTTOM)
+            .clip(corner)
+            .background(Color(0xCC05030A)),
         contentAlignment = Alignment.Center,
     ) {
-        Box(
+        // Measured unbounded: the belt is wider than the strip, and if it were
+        // capped to fit, its middle cell would not be the one the marker sits
+        // over.
+        Row(
             Modifier
-                .artBox(k, 0f, 0f, A.W, A.BELT_BOTTOM - cellTop)
-                .offset(y = (BeltPointer * k).dp)
-                .clip(RoundedCornerShape((8f * k).dp))
-                .background(Color(0x66000000)),
-            contentAlignment = Alignment.Center,
+                .wrapContentWidth(unbounded = true)
+                .graphicsLayer { translationX = -frac * cellPx }
         ) {
-            // Measured unbounded: the belt is wider than the screen, and if it
-            // were capped to fit, its middle cell would not be the one the
-            // marker sits over.
-            Row(
-                Modifier
-                    .wrapContentWidth(unbounded = true)
-                    .graphicsLayer { translationX = -frac * cellPx }
-            ) {
-                for (i in -BeltHalf..BeltHalf) {
-                    val pocket = RouletteEngine.WHEEL[
-                        Math.floorMod(base + i, RouletteEngine.WHEEL.size)
-                    ]
-                    Box(
-                        Modifier
-                            .width((BeltCellW * k).dp)
-                            .height(((A.BELT_BOTTOM - cellTop) * k).dp)
-                            .padding(horizontal = (4f * k).dp)
-                            .background(pocketColor(pocket), RoundedCornerShape((6f * k).dp)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            RouletteEngine.label(pocket),
-                            color = Color.White,
-                            fontSize = (34f * k).sp,
-                            fontWeight = FontWeight.Black,
-                            fontStyle = FontStyle.Italic,
-                        )
-                    }
+            for (i in -BeltHalf..BeltHalf) {
+                val pocket = RouletteEngine.WHEEL[
+                    Math.floorMod(base + i, RouletteEngine.WHEEL.size)
+                ]
+                Box(
+                    Modifier
+                        .width((BeltCellW * k).dp)
+                        .height((strip * k).dp)
+                        .padding(horizontal = (3f * k).dp, vertical = (6f * k).dp)
+                        .background(pocketColor(pocket), RoundedCornerShape((8f * k).dp)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        RouletteEngine.label(pocket),
+                        color = Color.White,
+                        fontSize = (46f * k).sp,
+                        fontWeight = FontWeight.Black,
+                        fontStyle = FontStyle.Italic,
+                    )
                 }
             }
         }
-        // The marker: a frame on the pocket under it and a pointer above.
+        // Pockets run in and out of the dark rather than being cut off square.
+        Box(
+            Modifier.fillMaxSize().background(
+                Brush.horizontalGradient(
+                    0f to TableBlack,
+                    0.11f to Color.Transparent,
+                    0.89f to Color.Transparent,
+                    1f to TableBlack,
+                )
+            )
+        )
+        // The rail the rest of the table is drawn with, over the fade.
+        Box(Modifier.fillMaxSize().border((2f * k).dp, NeonPurple.copy(alpha = 0.55f), corner))
+        // The marker: a frame on the pocket under it and a pointer biting in.
         Box(
             Modifier
                 .width((BeltCellW * k).dp)
-                .height(((A.BELT_BOTTOM - A.BELT_TOP) * k).dp)
+                .height((strip * k).dp)
+                .padding(vertical = (3f * k).dp)
                 .border((3f * k).dp, MarkerGold, RoundedCornerShape((8f * k).dp))
         )
         Canvas(
             Modifier
-                .width((30f * k).dp)
-                .height(((A.BELT_BOTTOM - A.BELT_TOP) * k).dp)
+                .width((34f * k).dp)
+                .height((strip * k).dp)
         ) {
             val w = size.width
             drawPath(

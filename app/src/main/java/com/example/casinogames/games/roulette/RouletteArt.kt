@@ -15,8 +15,14 @@ object RouletteArt {
     const val BANKROLL_MID = 50f
     const val STAKED_MID = 98f
 
-    /** The strip opened up between the header and the zero row. */
-    const val BELT_TOP = 152f
+    /**
+     * The strip opened up between the header and the zero row. It runs the
+     * table's own margins, so the wheel reads as another rail of the layout;
+     * the top edge sits just under where the logo's glow dies out.
+     */
+    const val BELT_LEFT = 22f
+    const val BELT_RIGHT = 816f
+    const val BELT_TOP = 150f
     const val BELT_BOTTOM = 282f
 
     /** The zero row, then twelve rows of three below it. */
