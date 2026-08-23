@@ -47,6 +47,20 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var push22Win by mutableStateOf<DoubleDownRules.Push22Win?>(null)
         private set
+    /**
+     * The Pair Square side bet. It is read off the first two cards, and on
+     * this table the second card comes mid-hand, so it is answered the moment
+     * that card lands rather than at the settle.
+     */
+    var pairSquareBet by mutableIntStateOf(0)
+        private set
+    var pairSquareStake by mutableIntStateOf(0)
+        private set
+    var pairSquareWin by mutableStateOf<DoubleDownRules.PairSquareWin?>(null)
+        private set
+    /** Set once the first two cards are in and the side bet has its answer. */
+    var pairSquareSettled by mutableStateOf(false)
+        private set
     var shoeCount by mutableIntStateOf(shoe.cardsRemaining)
         private set
 
@@ -66,16 +80,20 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     /** True when the dealer's 22 saved the hand, so the table can say so. */
     var pushed22 by mutableStateOf(false)
         private set
+    /** Pair Square files its own verdict: it is settled before the hand is. */
+    var pairSquareResult by mutableStateOf<BjResult?>(null)
+        private set
 
     private var lastBet = 0
     private var lastPush22 = 0
+    private var lastPairSquare = 0
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
-    enum class Spot { BET, PUSH_22 }
+    enum class Spot { BET, PUSH_22, PAIR_SQUARE }
 
     val totalStaked: Int
-        get() = if (phase == BjPhase.BETTING) bet + push22Bet
-        else (hand?.stake ?: 0) + push22Stake
+        get() = if (phase == BjPhase.BETTING) bet + push22Bet + pairSquareBet
+        else (hand?.stake ?: 0) + push22Stake + pairSquareStake
 
     // ---- campaign ----
 
@@ -105,6 +123,11 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         push22Bet = 0
         push22Stake = 0
         push22Win = null
+        pairSquareBet = 0
+        pairSquareStake = 0
+        pairSquareWin = null
+        pairSquareResult = null
+        pairSquareSettled = false
         results = emptyList()
         holeRevealed = false
         pushed22 = false
@@ -136,7 +159,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /** Nothing on the felt, either spot — the table is only busted then. */
-    val nothingAtStake: Boolean get() = bet == 0 && push22Bet == 0
+    val nothingAtStake: Boolean get() = bet == 0 && push22Bet == 0 && pairSquareBet == 0
 
     fun buyBackIn() {
         if (phase == BjPhase.BETTING && nothingAtStake && bankroll < 25) {
@@ -152,9 +175,11 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addPush22Chip() = addChip(Spot.PUSH_22)
 
+    fun addPairSquareChip() = addChip(Spot.PAIR_SQUARE)
+
     private fun addChip(spot: Spot) {
         if (phase != BjPhase.BETTING) return
-        val amount = minOf(selectedChip, (bankroll - bet - push22Bet).toInt())
+        val amount = minOf(selectedChip, (bankroll - bet - push22Bet - pairSquareBet).toInt())
         if (amount <= 0) {
             message = "No bankroll left"
             return
@@ -162,11 +187,13 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         when (spot) {
             Spot.BET -> bet += amount
             Spot.PUSH_22 -> push22Bet += amount
+            Spot.PAIR_SQUARE -> pairSquareBet += amount
         }
         chipHistory.add(spot to amount)
         message = when {
             amount < selectedChip -> "All in!"
             spot == Spot.PUSH_22 -> "Push 22 riding"
+            spot == Spot.PAIR_SQUARE -> "Pair Square riding"
             else -> "Place your bet"
         }
     }
@@ -177,6 +204,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         when (last.first) {
             Spot.BET -> bet = (bet - last.second).coerceAtLeast(0)
             Spot.PUSH_22 -> push22Bet = (push22Bet - last.second).coerceAtLeast(0)
+            Spot.PAIR_SQUARE -> pairSquareBet = (pairSquareBet - last.second).coerceAtLeast(0)
         }
     }
 
@@ -184,6 +212,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         if (phase != BjPhase.BETTING) return
         bet = 0
         push22Bet = 0
+        pairSquareBet = 0
         chipHistory.clear()
         message = "Place your bet"
     }
@@ -193,16 +222,22 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
     fun deal() {
         if (phase != BjPhase.BETTING) return
         if (bet <= 0) {
-            message = if (push22Bet > 0) "Push 22 rides with a main bet" else "Place a bet first"
+            message = if (push22Bet > 0 || pairSquareBet > 0) "Side bets ride with a main bet"
+            else "Place a bet first"
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        bankroll -= bet + push22Bet
+        bankroll -= bet + push22Bet + pairSquareBet
         persist()
         lastBet = bet
         lastPush22 = push22Bet
+        lastPairSquare = pairSquareBet
         push22Stake = push22Bet
         push22Win = null
+        pairSquareStake = pairSquareBet
+        pairSquareWin = null
+        pairSquareResult = null
+        pairSquareSettled = false
         chipHistory.clear()
         dealerCards.clear()
         holeRevealed = false
@@ -213,6 +248,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         val wager = bet
         bet = 0
         push22Bet = 0
+        pairSquareBet = 0
 
         viewModelScope.launch {
             // One card to the player, two to the dealer.
@@ -248,6 +284,24 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         val h = hand ?: return
         hand = h.copy(cards = h.cards + shoe.draw())
         shoeCount = shoe.cardsRemaining
+        if (hand?.cards?.size == 2) settlePairSquare()
+    }
+
+    /**
+     * Pair Square is decided by the second card, whenever it comes: it pays
+     * out there and then rather than waiting on the dealer, and the hand
+     * carries on with the main bet.
+     */
+    private fun settlePairSquare() {
+        if (pairSquareSettled || pairSquareStake <= 0) return
+        pairSquareSettled = true
+        val cards = hand?.cards ?: return
+        pairSquareWin = DoubleDownRules.pairSquare(cards)
+        val ret = DoubleDownRules.settlePairSquare(cards, pairSquareStake)
+        bankroll += ret
+        persist()
+        pairSquareResult = BjResult(pairSquareWin?.label ?: "Pair Square", ret - pairSquareStake)
+        pairSquareWin?.let { message = "${it.label} — ${it.payout}:1" }
     }
 
     // ---- player actions ----
@@ -270,9 +324,11 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         val bust = BlackjackCore.isBust(cards)
         val twentyOne = BlackjackCore.total(cards) == 21
         if (bust || twentyOne) hand = hand?.copy(done = true)
+        val pair = pairSquareWin?.takeIf { cards.size == 2 && pairSquareStake > 0 }
         message = when {
             bust -> "Bust"
             twentyOne -> "Twenty-one"
+            pair != null -> "${pair.label} — ${pair.payout}:1"
             else -> "Hit or double"
         }
         if (bust || twentyOne) dealerTurn()
@@ -306,7 +362,8 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
                 dealerTurn()
             } else {
                 phase = BjPhase.PLAYER_TURN
-                message = "Hit or double again"
+                val pair = pairSquareWin?.takeIf { cards.size == 2 && pairSquareStake > 0 }
+                message = pair?.let { "${it.label} — ${it.payout}:1" } ?: "Hit or double again"
             }
         }
     }
@@ -363,6 +420,14 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(if (playerBj) "Blackjack" else "Hand", returned - h.stake))
         }
 
+        // A dealer blackjack ends the hand on one card. The bet was never
+        // decided, so it goes back — there was no second card to read.
+        if (pairSquareStake > 0 && !pairSquareSettled) {
+            pairSquareSettled = true
+            totalReturn += pairSquareStake
+            pairSquareResult = BjResult("Pair Square", 0.0)
+        }
+
         if (push22Stake > 0) {
             push22Win = DoubleDownRules.push22(dealerCards)
             val ret = DoubleDownRules.settlePush22(dealerCards, push22Stake)
@@ -412,12 +477,18 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         chipHistory.clear()
         push22Stake = 0
         push22Win = null
-        if (repeat && lastBet + lastPush22 <= bankroll) {
+        pairSquareStake = 0
+        pairSquareWin = null
+        pairSquareResult = null
+        pairSquareSettled = false
+        if (repeat && lastBet + lastPush22 + lastPairSquare <= bankroll) {
             bet = lastBet
             push22Bet = lastPush22
+            pairSquareBet = lastPairSquare
         } else {
             bet = 0
             push22Bet = 0
+            pairSquareBet = 0
         }
         message = "Place your bet"
     }

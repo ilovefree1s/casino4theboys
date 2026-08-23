@@ -98,6 +98,30 @@ object DoubleDownRules {
             else -> Push22Win.ANY
         }
     }
+
+    /** The Pair Square side bet, read off the player's first two cards. */
+    enum class PairSquareWin(val label: String, val payout: Int) {
+        PERFECT("Perfect pair", 25),
+        PAIR("Pair", 10),
+    }
+
+    /**
+     * Same rank in the first two cards. Same suit as well is a perfect pair.
+     * On this table the second card may be a double's card; it counts the
+     * same — the bet is on the first two, however the second was bought.
+     */
+    fun pairSquare(playerCards: List<Card>): PairSquareWin? {
+        if (playerCards.size < 2) return null
+        val (a, b) = playerCards
+        if (a.rank != b.rank) return null
+        return if (a.suit == b.suit) PairSquareWin.PERFECT else PairSquareWin.PAIR
+    }
+
+    /** What comes back on Pair Square, stake included. */
+    fun settlePairSquare(playerCards: List<Card>, stake: Int): Double {
+        val win = pairSquare(playerCards) ?: return 0.0
+        return stake * (win.payout + 1.0)
+    }
 }
 
 /** Rules specific to Free Bet Blackjack. */
