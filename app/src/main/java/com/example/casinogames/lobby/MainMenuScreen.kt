@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.example.casinogames.R
 
-private val MenuBlack = Color(0xFF040308)
+// Dead flat black: the page art runs to black at its own edges, so any tint
+// behind it shows as a band where the image stops.
+private val MenuBlack = Color(0xFF000000)
 
 @Composable
 fun MainMenuScreen(

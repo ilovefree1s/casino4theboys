@@ -30,7 +30,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.casinogames.R
 
-private val MenuBlack = Color(0xFF040308)
+// Dead flat black: the page art runs to black at its own edges, so any tint
+// behind it shows as a band where the image stops.
+private val MenuBlack = Color(0xFF000000)
 private val NeonPurpleDim = Color(0x998B30D9)
 
 enum class BlackjackVariant { FREE_BET, BLAZING_777, DOUBLE_DOWN }

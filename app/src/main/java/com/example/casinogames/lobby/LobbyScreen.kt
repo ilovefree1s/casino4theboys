@@ -53,7 +53,9 @@ enum class GameId(val available: Boolean) {
     CRAPS(false),
 }
 
-private val LobbyBlack = Color(0xFF040308)
+// Dead flat black: the page art runs to black at its own edges, and any
+// tint behind it showed as a band where the image stops.
+private val LobbyBlack = Color(0xFF000000)
 private val NeonPurpleDim = Color(0x998B30D9)
 private val CampaignPink = Color(0xFFE24BC8)
 
@@ -61,10 +63,11 @@ private val CampaignPink = Color(0xFFE24BC8)
 private const val PageWidth = 851f
 private const val PageHeight = 1785f
 /**
- * The cards sit 80px lower than they were drawn: the room plate needed the
- * gap under the campaign line, and the page had dead space at the foot.
+ * The cards sit this far below where they were drawn: the room plate needed
+ * the gap under the campaign line, and the page had dead space at its foot.
+ * 113 is the ceiling — beyond that the last card runs off the page.
  */
-private const val CardDrop = 80f
+private const val CardDrop = 108f
 private val CardBands = listOf(
     GameId.BACCARAT to (676f + CardDrop to 871f + CardDrop),
     GameId.BLACKJACK to (887f + CardDrop to 1081f + CardDrop),
