@@ -51,6 +51,15 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var message by mutableStateOf("Place your bets")
         private set
+
+    /**
+     * The one thing worth interrupting a betting round to say. [message] is
+     * hidden while bets are going down — it would flash the name of every
+     * chip laid — so a refusal has to travel separately or the press looks
+     * like it did nothing at all.
+     */
+    var notice by mutableStateOf<String?>(null)
+        private set
     /** The pocket the ball is over — flickers during the spin, then settles. */
     var pocket by mutableStateOf<Int?>(null)
         private set
@@ -89,6 +98,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
             prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
         } else STARTING_BANKROLL
         goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
+        notice = null
         message = "Place your bets"
     }
 
@@ -99,6 +109,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     fun raiseGoal() {
         goal *= 100
         prefs.edit().putFloat("goal", goal.toFloat()).apply()
+        notice = null
         message = "Place your bets"
     }
 
@@ -109,15 +120,20 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
             .putFloat("bankroll", bankroll.toFloat())
             .putFloat("goal", goal.toFloat())
             .apply()
+        notice = null
         message = "Place your bets"
     }
 
     fun buyBackIn() {
-        if (phase != RoulettePhase.SPINNING && totalStaked == 0 && bankroll < 25) {
-            bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
-            persist()
-            message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bets"
-        }
+        if (phase == RoulettePhase.SPINNING) return
+        // The chips still showing after a result are spent, not staked; sweep
+        // them or they read as a live bet and the refill never lands.
+        if (phase == RoulettePhase.RESULT) nextSpin()
+        if (totalStaked > 0 || bankroll >= 25) return
+        bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
+        persist()
+        notice = null
+        message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bets"
     }
 
     // ---- betting ----
@@ -127,12 +143,13 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         if (phase == RoulettePhase.RESULT) nextSpin()
         val amount = minOf(selectedChip, (bankroll - totalStaked).toInt())
         if (amount <= 0) {
-            message = "No bankroll left"
+            notice = "No bankroll left"
             return
         }
         bets[id] = (bets[id] ?: 0) + amount
         defs[id] = def
         chipHistory.add(id to amount)
+        notice = null
         message = if (amount < selectedChip) "All in!" else def.name
     }
 
@@ -146,26 +163,37 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     fun clearBets() {
         if (phase != RoulettePhase.BETTING) return
         bets.clear(); defs.clear(); chipHistory.clear()
+        notice = null
         message = "Place your bets"
     }
 
     fun rebet() {
-        if (phase != RoulettePhase.BETTING || bets.isNotEmpty()) return
-        if (lastBets.isEmpty() || lastBets.values.sum() > bankroll) return
+        if (phase == RoulettePhase.SPINNING) return
+        if (phase == RoulettePhase.RESULT) nextSpin()
+        if (bets.isNotEmpty()) return
+        if (lastBets.isEmpty()) return
+        if (lastBets.values.sum() > bankroll) {
+            notice = "Not enough for that bet"
+            return
+        }
         lastBets.forEach { (id, amount) ->
             bets[id] = amount
             defs[id] = lastDefs.getValue(id)
             chipHistory.add(id to amount)
         }
+        notice = null
         message = "Bets repeated"
     }
 
     // ---- the spin ----
 
     fun spin() {
-        if (phase != RoulettePhase.BETTING) return
+        if (phase == RoulettePhase.SPINNING) return
+        // Pressing spin on a finished round clears the felt for the next one,
+        // the same as reaching for a chip does — it used to do nothing at all.
+        if (phase == RoulettePhase.RESULT) nextSpin()
         if (totalStaked <= 0) {
-            message = "Place a bet first"
+            notice = "Place a bet first"
             return
         }
         bankroll -= totalStaked
@@ -173,6 +201,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         lastBets = bets.toMap()
         lastDefs = defs.toMap()
         phase = RoulettePhase.SPINNING
+        notice = null
         message = "No more bets"
         val result = RouletteEngine.spin()
 
@@ -216,6 +245,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         phase = RoulettePhase.BETTING
         bets.clear(); defs.clear(); chipHistory.clear()
         lastWin = 0.0
+        notice = null
         message = "Place your bets"
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -117,14 +119,18 @@ fun RouletteScreen(
                 Box(Modifier.artBox(k, 0f, 0f, A.BACK_RIGHT, A.BACK_BOTTOM).tap(onBack))
             }
         }
-        if (vm.campaign && vm.phase != RoulettePhase.SPINNING &&
-            vm.bankroll < 25 && vm.totalStaked == 0
-        ) {
-            CampaignGameOver(onStartOver = { vm.buyBackIn(); onGameOverExit() })
-        }
-        if (vm.campaign && vm.phase != RoulettePhase.SPINNING &&
-            vm.bankroll >= vm.goal && vm.totalStaked == 0
-        ) {
+        // A finished round still has its chips showing, but they are spent
+        // and settled — waiting for them to clear left a broke player looking
+        // at a table that answered nothing they pressed.
+        val settled = vm.phase == RoulettePhase.RESULT ||
+            (vm.phase == RoulettePhase.BETTING && vm.totalStaked == 0)
+        if (settled && vm.bankroll < 25) {
+            if (vm.campaign) {
+                CampaignGameOver(onStartOver = { vm.buyBackIn(); onGameOverExit() })
+            } else {
+                RebuyPrompt(onBuyIn = vm::buyBackIn)
+            }
+        } else if (vm.campaign && settled && vm.bankroll >= vm.goal) {
             CampaignComplete(
                 goal = vm.goal,
                 nextGoal = vm.goal * 100,
@@ -147,6 +153,44 @@ private fun Modifier.tap(onClick: () -> Unit): Modifier = this.clickable(
     indication = null,
     onClick = onClick,
 )
+
+/**
+ * Free play has no campaign to lose, so a bust is just a refill — but it
+ * still has to be offered, or the table sits there refusing every press.
+ */
+@Composable
+private fun RebuyPrompt(onBuyIn: () -> Unit) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xCC050308))
+            .tap {},
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                "OUT OF CHIPS",
+                color = Color(0xFFFF3B5C),
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+            )
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "BUY BACK IN",
+                color = Color(0xFFE4D7FF),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(999.dp))
+                    .border(1.5.dp, NeonPurple, RoundedCornerShape(999.dp))
+                    .tap(onBuyIn)
+                    .padding(horizontal = 26.dp, vertical = 13.dp),
+            )
+        }
+    }
+}
 
 /** The house badge, clipped round: the art it came on has black corners. */
 @Composable
@@ -466,20 +510,24 @@ private fun Buttons(vm: RouletteViewModel, k: Float) {
 /** What the table is saying, over the felt while it is not being bet on. */
 @Composable
 private fun Message(vm: RouletteViewModel, k: Float) {
-    if (vm.phase == RoulettePhase.BETTING && vm.message.isBlank()) return
-    if (vm.phase == RoulettePhase.BETTING) return
+    val betting = vm.phase == RoulettePhase.BETTING
+    // Betting is silent — the name of every chip laid would strobe over the
+    // felt — but a refusal has to be seen or the press reads as a dead table.
+    if (betting && vm.notice == null) return
+    val text = if (betting) vm.notice.orEmpty() else vm.message
     val net = vm.lastWin - vm.totalStaked
     Box(
         Modifier.artBox(k, A.GRID_LEFT, A.GRID_TOP + 10f, A.GRID_RIGHT, A.GRID_TOP + 90f),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            vm.message,
+            text,
             fontSize = (30f * k).sp,
             fontStyle = FontStyle.Italic,
             fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
             color = when {
+                betting -> MarkerGold
                 vm.phase == RoulettePhase.RESULT && net > 0 -> WinGreen
                 vm.phase == RoulettePhase.RESULT && vm.lastWin <= 0.0 -> Color(0xFFFF4D4D)
                 else -> Color.White
