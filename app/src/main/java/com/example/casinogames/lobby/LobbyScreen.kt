@@ -60,12 +60,17 @@ private val CampaignPink = Color(0xFFE24BC8)
 /** The page art, and where each card's band sits inside it (851 x 1785). */
 private const val PageWidth = 851f
 private const val PageHeight = 1785f
+/**
+ * The cards sit 80px lower than they were drawn: the room plate needed the
+ * gap under the campaign line, and the page had dead space at the foot.
+ */
+private const val CardDrop = 80f
 private val CardBands = listOf(
-    GameId.BACCARAT to (676f to 871f),
-    GameId.BLACKJACK to (887f to 1081f),
-    GameId.ULTIMATE_TEXAS_HOLDEM to (1099f to 1291f),
-    GameId.ROULETTE to (1309f to 1481f),
-    GameId.CRAPS to (1498f to 1670f),
+    GameId.BACCARAT to (676f + CardDrop to 871f + CardDrop),
+    GameId.BLACKJACK to (887f + CardDrop to 1081f + CardDrop),
+    GameId.ULTIMATE_TEXAS_HOLDEM to (1099f + CardDrop to 1291f + CardDrop),
+    GameId.ROULETTE to (1309f + CardDrop to 1481f + CardDrop),
+    GameId.CRAPS to (1498f + CardDrop to 1670f + CardDrop),
 )
 /** The menu button and the campaign line, painted out of the art so they can live. */
 private const val MenuCentreX = 80f
@@ -143,6 +148,20 @@ fun LobbyScreen(
                             if (owing) MarkerPlate(scale = artWidth.value)
                         }
                     }
+                } else {
+                    // The cards sit low enough now for the campaign's two
+                    // lines; free play would leave a hole there, so it says
+                    // what it is instead.
+                    Text(
+                        "PLAY TESTING  ·  NO LIMITS  ·  NOTHING SAVED",
+                        fontSize = (artWidth.value * 0.026f).sp,
+                        letterSpacing = 0.12.em,
+                        fontWeight = FontWeight.Black,
+                        color = Color(0x73B98CFF),
+                        modifier = Modifier
+                            .align(Alignment.TopCenter)
+                            .offset(y = artHeight * (CampaignCentreY / PageHeight)),
+                    )
                 }
                 if (onBack != null) {
                     val menu = artWidth * 0.105f
