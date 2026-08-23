@@ -110,7 +110,7 @@ fun DoubleDownScreen(
                 .statusBarsPadding()
                 .padding(horizontal = 12.dp)
                 .navigationBarsPadding()
-                .padding(bottom = 30.dp),
+                .padding(bottom = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             TopBar(onBack, vm)
@@ -135,12 +135,12 @@ fun DoubleDownScreen(
             Spacer(Modifier.weight(1f))
             BetRow(vm, onShowOdds = { showOdds = true })
             if (vm.phase == BjPhase.BETTING) {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
                 ChipRack(vm)
             }
             // The same drop above the buttons in every phase, so they do not
             // jump when the chip rack comes and goes.
-            Spacer(Modifier.height(30.dp))
+            Spacer(Modifier.height(18.dp))
             ActionButtons(vm)
             Spacer(Modifier.weight(2f))
         }
@@ -476,8 +476,8 @@ private fun ResultPill(r: BjResult) {
 
 /**
  * The bet spot keeps the artwork's centre line. Push 22 sits to its left —
- * the house coin laid over its own odds, the whole block one spot — and
- * Pair Square to its right, a pair of squares, the way the name says.
+ * the house coin, then its odds under it — and Pair Square to its right, a
+ * pair of squares, the way the name says.
  */
 @Composable
 private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
@@ -487,7 +487,7 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
         val wing = minOf((maxWidth - BetSpotSize) / 2 - OddsPlacardGap, OddsPlacardMax)
         val betting = vm.phase == BjPhase.BETTING
         Box(Modifier.align(Alignment.CenterStart).width(wing)) {
-            Push22Spot(vm, placard = wing * 0.90f, onShowOdds = onShowOdds)
+            Push22Spot(vm, placard = wing * 0.92f, onShowOdds = onShowOdds)
         }
         BetSpot(vm)
         Box(Modifier.align(Alignment.CenterEnd).width(wing), contentAlignment = Alignment.Center) {
@@ -497,8 +497,8 @@ private fun BetRow(vm: DoubleDownViewModel, onShowOdds: () -> Unit) {
 }
 
 /**
- * The odds placard with the coin on it. The coin takes the chip; the odds
- * around it open the full table — they are set too small to read here.
+ * The coin, then the odds it pays. The coin takes the chip; the odds under
+ * it open the full table, since they are set too small to read here.
  */
 @Composable
 private fun Push22Spot(vm: DoubleDownViewModel, placard: Dp, onShowOdds: () -> Unit) {
@@ -507,42 +507,41 @@ private fun Push22Spot(vm: DoubleDownViewModel, placard: Dp, onShowOdds: () -> U
         if (vm.phase == BjPhase.RESULT) {
             vm.push22Result?.let { r ->
                 ResultPill(r)
-                Spacer(Modifier.height(4.dp))
+                Spacer(Modifier.height(3.dp))
             }
         }
         Box(contentAlignment = Alignment.Center) {
-            Image(
-                painter = painterResource(R.drawable.dd_push22_odds),
-                contentDescription = "Push 22 odds",
-                modifier = Modifier
-                    .width(placard)
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable(onClick = onShowOdds),
-                contentScale = ContentScale.FillWidth,
-            )
-            Box(contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier
-                        .size(SideSpotSize)
-                        .border(2.dp, Gold.copy(alpha = 0.9f), CircleShape)
-                        .padding(3.dp)
-                        .clip(CircleShape)
-                        .clickable(enabled = betting) { vm.addPush22Chip() },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Image(
-                        painter = painterResource(R.drawable.fourtheboys_gold),
-                        contentDescription = "Push 22 side bet",
-                        // Clipped round so the art's square backing never shows.
-                        modifier = Modifier.fillMaxSize().clip(CircleShape),
-                        contentScale = ContentScale.Crop,
-                    )
-                }
-                PlacedBetChip(if (betting) vm.push22Bet else vm.push22Stake, size = 38.dp)
+            Box(
+                Modifier
+                    .size(SideSpotSize)
+                    .border(2.dp, Gold.copy(alpha = 0.9f), CircleShape)
+                    .padding(3.dp)
+                    .clip(CircleShape)
+                    .clickable(enabled = betting) { vm.addPush22Chip() },
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.fourtheboys_gold),
+                    contentDescription = "Push 22 side bet",
+                    // Clipped round so the art's square backing never shows.
+                    modifier = Modifier.fillMaxSize().clip(CircleShape),
+                    contentScale = ContentScale.Crop,
+                )
             }
+            PlacedBetChip(if (betting) vm.push22Bet else vm.push22Stake, size = SideChipSize)
         }
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(2.dp))
         SideLabel("PUSH 22")
+        Spacer(Modifier.height(2.dp))
+        Image(
+            painter = painterResource(R.drawable.dd_push22_odds),
+            contentDescription = "Push 22 odds",
+            modifier = Modifier
+                .width(placard)
+                .clip(RoundedCornerShape(6.dp))
+                .clickable(onClick = onShowOdds),
+            contentScale = ContentScale.FillWidth,
+        )
     }
 }
 
@@ -557,7 +556,7 @@ private fun PairSquareSpot(vm: DoubleDownViewModel, betting: Boolean) {
         val verdict = vm.pairSquareResult
         if (verdict != null) {
             ResultPill(verdict)
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(3.dp))
         }
         Box(
             Modifier
@@ -571,7 +570,11 @@ private fun PairSquareSpot(vm: DoubleDownViewModel, betting: Boolean) {
                 Modifier
                     .align(Alignment.TopStart)
                     .size(square)
-                    .border(2.dp, Chalk.copy(alpha = if (won) 1f else 0.55f), RoundedCornerShape(4.dp))
+                    .border(
+                        2.dp,
+                        Chalk.copy(alpha = if (won) 1f else 0.55f),
+                        RoundedCornerShape(4.dp),
+                    )
             )
             Box(
                 Modifier
@@ -580,16 +583,16 @@ private fun PairSquareSpot(vm: DoubleDownViewModel, betting: Boolean) {
                     .background(Color(0xCC050505), RoundedCornerShape(4.dp))
                     .border(2.dp, if (won) Gold else Chalk, RoundedCornerShape(4.dp))
             )
-            PlacedBetChip(if (betting) vm.pairSquareBet else vm.pairSquareStake, size = 38.dp)
+            PlacedBetChip(if (betting) vm.pairSquareBet else vm.pairSquareStake, size = SideChipSize)
         }
-        Spacer(Modifier.height(3.dp))
+        Spacer(Modifier.height(2.dp))
         SideLabel("PAIR SQUARE")
         Text(
             "PERFECT 25:1 · PAIR 10:1",
             color = P.OffWhite.copy(alpha = 0.55f),
-            fontSize = 8.sp,
+            fontSize = 7.sp,
             fontWeight = FontWeight.Bold,
-            letterSpacing = 0.08.em,
+            letterSpacing = 0.06.em,
         )
     }
 }
@@ -599,22 +602,24 @@ private fun SideLabel(text: String) {
     Text(
         text,
         color = Gold,
-        fontSize = 11.sp,
+        fontSize = 10.sp,
         fontWeight = FontWeight.Black,
-        letterSpacing = 0.14.em,
+        letterSpacing = 0.12.em,
     )
 }
 
 /** Both side spots are the coin's size, so the row reads as a matched pair. */
-private val SideSpotSize = 63.dp
+private val SideSpotSize = 54.dp
 /** How far the second square is pushed off the first. */
-private val PairSquareOverlap = 14.dp
+private val PairSquareOverlap = 12.dp
+/** The chip laid on a side spot, small enough not to swallow it. */
+private val SideChipSize = 32.dp
 
-private val BetSpotSize = 88.dp
+private val BetSpotSize = 76.dp
 /** Breathing room between the odds and the bet spot's ring. */
-private val OddsPlacardGap = 8.dp
+private val OddsPlacardGap = 6.dp
 /** A ceiling so the placard does not sprawl on a tablet. */
-private val OddsPlacardMax = 190.dp
+private val OddsPlacardMax = 170.dp
 
 /** Tap the placard and the odds fill the screen, since they are set small. */
 @Composable
@@ -677,7 +682,7 @@ private fun ActionButtons(vm: DoubleDownViewModel) {
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp)
-            .height(50.dp),
+            .height(44.dp),
     ) {
         when (vm.phase) {
             BjPhase.BETTING -> {
