@@ -105,6 +105,7 @@ fun RouletteScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.FillBounds,
                 )
+                Badge(k)
                 Money(vm, k)
                 Belt(vm, k)
                 Felt(vm, k)
@@ -146,6 +147,24 @@ private fun Modifier.tap(onClick: () -> Unit): Modifier = this.clickable(
     indication = null,
     onClick = onClick,
 )
+
+/** The house badge, clipped round: the art it came on has black corners. */
+@Composable
+private fun Badge(k: Float) {
+    val r = A.LOGO_SIZE / 2f
+    Image(
+        painter = painterResource(R.drawable.fourtheboys_spot),
+        contentDescription = "4 The Boys",
+        modifier = Modifier
+            .artBox(
+                k,
+                A.LOGO_MID_X - r, A.LOGO_MID_Y - r,
+                A.LOGO_MID_X + r, A.LOGO_MID_Y + r,
+            )
+            .clip(CircleShape),
+        contentScale = ContentScale.Fit,
+    )
+}
 
 @Composable
 private fun Money(vm: RouletteViewModel, k: Float) {

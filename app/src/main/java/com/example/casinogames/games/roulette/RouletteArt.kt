@@ -16,6 +16,14 @@ object RouletteArt {
     const val STAKED_MID = 98f
 
     /**
+     * The badge the header wears, sized to clear the back arrow on one side
+     * and the money on the other, and to leave the belt its strip below.
+     */
+    const val LOGO_MID_X = 418f
+    const val LOGO_MID_Y = 76f
+    const val LOGO_SIZE = 132f
+
+    /**
      * The strip opened up between the header and the zero row. It runs the
      * table's own margins, so the wheel reads as another rail of the layout;
      * the top edge sits just under where the logo's glow dies out.
