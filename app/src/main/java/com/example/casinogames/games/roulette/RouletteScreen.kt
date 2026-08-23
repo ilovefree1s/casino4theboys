@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -397,16 +398,49 @@ private fun Rack(vm: RouletteViewModel, k: Float) {
     }
 }
 
-/** Undo, spin and rebet, over the buttons the art paints. */
+/**
+ * Undo, spin and rebet. The art leaves this band bare so the three can go
+ * dead while the wheel is running rather than sitting there looking live.
+ */
 @Composable
 private fun Buttons(vm: RouletteViewModel, k: Float) {
+    val live = vm.phase != RoulettePhase.SPINNING
     val actions = listOf<() -> Unit>(vm::undoChip, vm::spin, vm::rebet)
+    val labels = listOf("UNDO", "SPIN", "REBET")
     A.BUTTON_EDGES.forEachIndexed { i, (x0, x1) ->
+        val spin = i == 1
+        val pill = RoundedCornerShape(50)
         Box(
             Modifier
                 .artBox(k, x0, A.BUTTONS_TOP, x1, A.BUTTONS_BOTTOM)
-                .tap { if (vm.phase != RoulettePhase.SPINNING) actions[i]() }
-        )
+                .alpha(if (live) 1f else 0.4f)
+                .clip(pill)
+                .background(
+                    if (spin) {
+                        Brush.verticalGradient(
+                            listOf(Color(0xFF6B32B8), Color(0xFF32135F)),
+                        )
+                    } else {
+                        Brush.verticalGradient(listOf(Color(0xCC170E24), Color(0xCC0B0713)))
+                    }
+                )
+                .border(
+                    ((if (spin) 3.5f else 2.5f) * k).dp,
+                    if (spin) Color(0xFFD9BBFF) else NeonPurple.copy(alpha = 0.7f),
+                    pill,
+                )
+                .tap { if (live) actions[i]() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                labels[i],
+                color = if (spin) Color.White else Color(0xFFE4D7FF),
+                fontSize = ((if (spin) 44f else 36f) * k).sp,
+                fontWeight = FontWeight.Black,
+                fontStyle = FontStyle.Italic,
+                letterSpacing = (2f * k).sp,
+            )
+        }
     }
 }
 

@@ -29,7 +29,8 @@ object RouletteArt {
     const val ZERO_TOP = 284f
     const val ZERO_BOTTOM = 367f
     const val GRID_TOP = 371f
-    const val ROW_PITCH = 79.5f
+    /** Measured off the twelve seams: the last row's floor is 1330. */
+    const val ROW_PITCH = 79.92f
     const val ROWS = 12
 
     /** The grid's three columns, and the dozens rail beside them. */
@@ -38,8 +39,15 @@ object RouletteArt {
     val COLUMN_EDGES = floatArrayOf(22f, 237f, 453f, 669f)
     const val DOZENS_LEFT = 680f
     const val DOZENS_RIGHT = 816f
-    /** Each dozen's band, level with its third of the grid. */
-    val DOZEN_BANDS = arrayOf(284f to 690f, 700f to 1100f, 1110f to 1500f)
+    /**
+     * Each dozen takes exactly the four rows it pays on, seam to seam, so a
+     * press anywhere beside 1-12 is the first dozen and never the second.
+     */
+    val DOZEN_BANDS = arrayOf(
+        GRID_TOP to GRID_TOP + 4 * ROW_PITCH,
+        GRID_TOP + 4 * ROW_PITCH to GRID_TOP + 8 * ROW_PITCH,
+        GRID_TOP + 8 * ROW_PITCH to GRID_TOP + 12 * ROW_PITCH,
+    )
 
     /** The 2-to-1 column bets, then the even-money row. */
     const val COLUMN_BETS_TOP = 1337f
@@ -50,16 +58,21 @@ object RouletteArt {
     /** The six even-money cells, edge to edge. */
     val EVEN_MONEY_EDGES = floatArrayOf(22f, 153f, 286f, 422f, 551f, 683f, 816f)
 
-    /** The chip rack and the three buttons, as the art painted them. */
+    /** The chip rack, as the art painted it. */
     const val CHIPS_TOP = 1512f
     const val CHIPS_BOTTOM = 1611f
     const val CHIP_FIRST_MID = 162f
     const val CHIP_PITCH = 127.5f
     const val CHIP_DIAMETER = 104f
+
+    /**
+     * The art leaves this band empty: the buttons are drawn in code so they
+     * can grey out while the wheel is running. Even spans, evenly spaced.
+     */
     const val BUTTONS_TOP = 1630f
     const val BUTTONS_BOTTOM = 1716f
     /** Left, centre and right button spans: undo, spin, rebet. */
-    val BUTTON_EDGES = arrayOf(22f to 250f, 259f to 587f, 603f to 816f)
+    val BUTTON_EDGES = arrayOf(22f to 250f, 268f to 570f, 588f to 816f)
 
     /** The back arrow the art paints at the top left. */
     const val BACK_RIGHT = 200f
