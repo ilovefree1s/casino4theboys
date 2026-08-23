@@ -88,6 +88,21 @@ object DjWildEval {
     }
 
     /**
+     * The hand read with every card playing as itself — a deuce counting two,
+     * not wild. The felt is explicit about this: "hands containing a '2' NOT
+     * used as a wild are considered natural", and Trips pays far more for a
+     * natural than a wild one.
+     *
+     * Null when the hand holds the joker, which has no face of its own and so
+     * can never be part of a natural hand.
+     */
+    fun naturalScore(hand: List<Card>): WildHandValue? {
+        require(hand.size == 5) { "naturalScore() takes five cards" }
+        if (hand.any { it.isJoker }) return null
+        return scoreNatural(hand)
+    }
+
+    /**
      * Walks every way the wilds could be filled. Substitutions are taken in
      * non-decreasing deck order so the same multiset is never tried twice —
      * wilds are interchangeable, and without that the four-wild case would be

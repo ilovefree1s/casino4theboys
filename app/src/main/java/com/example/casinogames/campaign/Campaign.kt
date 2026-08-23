@@ -29,12 +29,13 @@ enum class Room(
     val minBet: Int,
     val maxBet: Int,
     val sideMax: Int,
+    val badBeatMax: Int,
 ) {
-    BASEMENT("The Basement", 0.0, 25, 500, 100),
-    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500),
-    HIGH_LIMIT("High Limit", 50_000.0, 500, 10_000, 2_000),
-    SALON("The Salon", 250_000.0, 2_500, 50_000, 10_000),
-    WHALE("Whale Room", 1_000_000.0, 10_000, 250_000, 50_000);
+    BASEMENT("The Basement", 0.0, 25, 500, 100, 5),
+    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500, 10),
+    HIGH_LIMIT("High Limit", 50_000.0, 500, 10_000, 2_000, 25),
+    SALON("The Salon", 250_000.0, 2_500, 50_000, 10_000, 50),
+    WHALE("Whale Room", 1_000_000.0, 10_000, 250_000, 50_000, 100);
 
     /** How the limits read on a table sign. */
     val sign: String get() = "$${fmt(minBet)} – $${fmt(maxBet)}"
@@ -210,20 +211,34 @@ data class TableLimits(
     val max: Int,
     val sideMax: Int,
     val enforced: Boolean,
+    /**
+     * DJ Wild's Bad Beat pays 10,000 to 1, so it is capped far below the
+     * ordinary side bets — the way a real pit caps a bad beat — or one royal
+     * on the cheapest table would be the whole campaign.
+     */
+    val badBeatMax: Int = sideMax,
 ) {
     /**
      * How much of [wanted] a spot will actually take, given what is on it
      * already. Zero means the chip does not go down.
      */
-    fun allow(wanted: Int, alreadyOn: Int, side: Boolean = false): Int {
+    fun allow(wanted: Int, alreadyOn: Int, side: Boolean = false): Int =
+        allowUpTo(if (side) sideMax else max, wanted, alreadyOn)
+
+    /** The same, against the Bad Beat's own much lower ceiling. */
+    fun allowBadBeat(wanted: Int, alreadyOn: Int): Int =
+        allowUpTo(badBeatMax, wanted, alreadyOn)
+
+    private fun allowUpTo(cap: Int, wanted: Int, alreadyOn: Int): Int {
         if (!enforced) return wanted
-        val cap = if (side) sideMax else max
         return wanted.coerceAtMost((cap - alreadyOn).coerceAtLeast(0))
     }
 
     /** What the table says when it will not take any more. */
     fun refusal(side: Boolean): String =
         if (side) "Side bet max $${money(sideMax)}" else "Table max $${money(max)}"
+
+    fun badBeatRefusal(): String = "Bad Beat max $${money(badBeatMax)}"
 
     private fun money(v: Int) = String.format(java.util.Locale.US, "%,d", v)
 }
@@ -233,4 +248,6 @@ val FreePlayLimits = TableLimits(0, Int.MAX_VALUE, Int.MAX_VALUE, enforced = fal
 
 fun limitsFor(campaign: Boolean): TableLimits =
     if (!campaign) FreePlayLimits
-    else Campaign.room.let { TableLimits(it.minBet, it.maxBet, it.sideMax, enforced = true) }
+    else Campaign.room.let {
+        TableLimits(it.minBet, it.maxBet, it.sideMax, enforced = true, badBeatMax = it.badBeatMax)
+    }
