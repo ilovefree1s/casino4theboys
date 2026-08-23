@@ -95,6 +95,43 @@
     letter-spacing: .12em; color: var(--campaign-gold);
   }
   #screen-lobby.campaign .lb-campaign { display: block; }
+  /* The room you are playing, and what its tables will take. */
+  .lb-roomrow { display: none; gap: 6px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
+  #screen-lobby.campaign .lb-roomrow { display: flex; }
+  .lb-plate {
+    display: flex; align-items: center; gap: 7px;
+    border-radius: 999px; padding: 4px 12px; background: rgba(11,7,19,.8);
+    font-family: var(--display); line-height: 1.5;
+  }
+  .lb-plate.room { border: 1px solid rgba(232,193,105,.7); }
+  .lb-plate.room .nm { color: #E8C169; font-size: 11px; letter-spacing: .1em; }
+  .lb-plate.room .lim { color: rgba(255,255,255,.7); font-size: 10px; }
+  .lb-plate.room .arrow { color: #E8C169; font-size: 10px; }
+  /* A marker takes the room plate's limits rather than a row of its own. */
+  #screen-lobby.owing .lb-plate.room .lim { display: none; }
+  .lb-plate.marker { display: none; border: 1px solid rgba(255,59,92,.8); background: rgba(26,4,9,.85); }
+  #screen-lobby.owing .lb-plate.marker { display: flex; }
+  .lb-plate.marker .owed { color: #FF3B5C; font-size: 11px; letter-spacing: .08em; }
+  .lb-plate.marker .pay {
+    border-radius: 999px; padding: 2px 9px; font-family: var(--display);
+    font-size: 10px; letter-spacing: .08em; background: #E8C169; color: #050408;
+  }
+  .lb-plate.marker .pay:disabled { background: rgba(255,255,255,.1); color: rgba(255,255,255,.4); }
+  /* ---- the floor ---- */
+  .floor-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+  .floor-row {
+    width: 100%; text-align: left; border-radius: 10px; padding: 9px 13px;
+    background: rgba(11,7,19,.8); border: 1px solid rgba(185,140,255,.35);
+  }
+  .floor-row.here { background: rgba(232,193,105,.12); border: 1.5px solid #E8C169; }
+  .floor-row.shut { border-color: rgba(255,255,255,.1); }
+  .floor-row .hd { display: flex; align-items: center; justify-content: space-between; }
+  .floor-row .nm { font-family: var(--display); font-size: 13px; letter-spacing: .1em; color: #E8C169; }
+  .floor-row.shut .nm { color: rgba(255,255,255,.35); }
+  .floor-row .tag { font-family: var(--display); font-size: 9px; letter-spacing: .08em; color: rgba(255,255,255,.6); }
+  .floor-row.shut .tag { color: rgba(255,59,92,.45); }
+  .floor-row .lim { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); margin-top: 3px; }
+  .floor-row.shut .lim { color: rgba(255,255,255,.25); }
   .lb-cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
   .lb-imgcard { width: 100%; padding: 0; border-radius: 18px; overflow: hidden; }
   .lb-imgcard img { width: 100%; display: block; }
@@ -474,41 +511,70 @@
   .dd-pill.win { border-color: #F2F2F2; }
   .dd-pill .amt { font-weight: 900; color: #F2F2F2; }
   .dd-push .dd-pill { margin-bottom: 4px; }
-  /* Odds on the left, the house's coin on the right, bet holding the middle. */
+  /* Push 22 on the left — the coin, then the odds it pays — Pair Square on
+     the right, and the bet holding the middle. */
   .dd-spots {
     position: relative; width: 100%; display: flex;
     align-items: center; justify-content: center; margin-top: 4px;
   }
-  /* Every dp between the felt's edge and the bet spot, less a hair, and then
-     10% back — the same measure the app takes, so the odds never reach the
+  /* Every px between the felt's edge and the bet spot, less a hair, and then
+     8% back — the same measure the app takes, so the wings never reach the
      spot however wide the phone is. */
-  .dd-odds {
+  .dd-push {
     position: absolute; left: 0;
-    width: calc(((100% - 88px) / 2 - 8px) * 0.9); max-width: 171px;
-    padding: 0; background: none; border: 0; line-height: 0;
+    width: calc((100% - 76px) / 2 - 6px); max-width: 170px;
+    display: flex; flex-direction: column; align-items: center;
   }
-  .dd-odds img { width: 100%; display: block; }
+  .dd-odds {
+    width: 92%; padding: 0; background: none; border: 0; line-height: 0;
+    margin-top: 2px;
+  }
+  .dd-odds img { width: 100%; display: block; border-radius: 6px; }
   .dd-betspot {
-    width: 88px; height: 88px; position: relative; padding: 0;
+    width: 76px; height: 76px; position: relative; padding: 0;
     background: none; border: 0; flex: none;
   }
   .dd-betspot > img {
     width: 100%; height: 100%; object-fit: contain;
     border-radius: 50%; filter: grayscale(1);
   }
-  .dd-push {
-    position: absolute; right: 0; width: 112px;
-    display: flex; flex-direction: column; align-items: center;
-  }
   .dd-pushring {
-    width: 63px; height: 63px; border: 2px solid rgba(232,193,105,.9);
+    width: 54px; height: 54px; border: 2px solid rgba(232,193,105,.9);
     border-radius: 50%; padding: 3px; position: relative; background: none;
   }
   .dd-pushring > img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
-  .dd-pushring .placed { width: 38px; height: 38px; }
-  .dd-push .cap {
-    color: #E8C169; font-weight: 900; font-size: 11px;
-    letter-spacing: .14em; margin-top: 3px;
+  .dd-pushring .placed, .dd-pairspot .placed { width: 32px; height: 32px; }
+  .dd-push .cap, .dd-pair .cap {
+    color: #E8C169; font-weight: 900; font-size: 10px;
+    letter-spacing: .12em; margin-top: 2px;
+  }
+  /* Pair Square: two squares, one laid over the other's corner. */
+  .dd-pair {
+    position: absolute; right: 0;
+    width: calc((100% - 76px) / 2 - 6px); max-width: 170px;
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .dd-pairspot {
+    width: 66px; height: 66px; position: relative;
+    padding: 0; background: none; border: 0;
+  }
+  .dd-pairspot .sq {
+    position: absolute; width: 42px; height: 42px; border-radius: 4px;
+    border: 2px solid rgba(242,242,242,.55);
+  }
+  .dd-pairspot .sq.back { top: 0; left: 0; }
+  .dd-pairspot .sq.front {
+    bottom: 0; right: 0; background: rgba(5,5,5,.8);
+    border-color: #F2F2F2;
+  }
+  .dd-pairspot.won .sq.back { border-color: #F2F2F2; }
+  .dd-pairspot.won .sq.front { border-color: #E8C169; }
+  .dd-pairspot .placed {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  }
+  .dd-pair .pays {
+    color: rgba(245,241,232,.55); font-weight: 700;
+    font-size: 7px; letter-spacing: .06em;
   }
   /* The same drop above the buttons in every phase, so they do not jump when
      the chip rack comes and goes. */
@@ -853,6 +919,17 @@
     </div>
     <img class="lb-logo" src="__LOBBY_LOGO__" alt="4 The Boys — for the boys Hotel &amp; Casino">
     <div class="lb-campaign" id="lb-campaign-line">CAMPAIGN · 5,000 / 1,000,000</div>
+    <div class="lb-roomrow" id="lb-roomrow">
+      <button class="lb-plate room" id="lb-roomplate">
+        <span class="nm" id="lb-roomname">THE BASEMENT</span>
+        <span class="lim" id="lb-roomlimits">$25 – $500 · SIDE $100</span>
+        <span class="arrow">▸</span>
+      </button>
+      <div class="lb-plate marker" id="lb-markerplate">
+        <span class="owed" id="lb-markerowed">MARKER 7,500</span>
+        <button class="pay" id="lb-paymarker">PAY IT</button>
+      </div>
+    </div>
     <div class="lb-cards">
       <button class="lb-imgcard" id="lb-baccarat"><img src="__LB_BACCARAT__" alt="Baccarat — play"></button>
       <button class="lb-imgcard" id="lb-blackjack"><img src="__LB_BLACKJACK__" alt="Free Bet Blackjack — play"></button>
@@ -1158,9 +1235,17 @@
 <!-- ================= OVERLAYS ================= -->
 <div class="ov" id="ov-gameover">
   <div class="box">
-    <div class="big dead">GAME OVER</div>
-    <div class="sub">The bankroll's gone — campaign busted.</div>
-    <button class="gold-btn" id="ov-loan">GO TO THE BANK AND GET A LOAN</button>
+    <div class="big dead">TAPPED OUT</div>
+    <div class="sub" id="ov-gameover-sub">The purse is gone. The house will cover you.</div>
+    <button class="gold-btn" id="ov-loan">SIGN A $5,000 MARKER</button>
+    <div class="terms" id="ov-loan-terms">$7,500 to clear · no moving up until you do</div>
+  </div>
+</div>
+<div class="ov" id="ov-floor">
+  <div class="box">
+    <div class="big" style="color:#E8C169;font-size:22px;letter-spacing:.16em">THE FLOOR</div>
+    <div class="sub" id="ov-floor-sub">Higher rooms pay faster and bust quicker</div>
+    <div class="floor-list" id="ov-floor-list"></div>
   </div>
 </div>
 <div class="ov" id="ov-complete">
@@ -1211,12 +1296,24 @@
     btnRebet: "__R_REBET__", btnNewbet: "__R_NEWBET__",
     badgeFreeSplit: "__BADGE_FSPLIT__", badgeFreeDouble: "__BADGE_FDOUBLE__"
   };
-  function chipsFor(bankroll) {
-    var all = [25, 100, 500, 1000, 5000];
-    if (bankroll >= 100000) all.push(25000);
-    return all;
+  /**
+   * The rack a table lays out. In the campaign the room decides: no chip is
+   * put out that the table would refuse, so the rack tells you where you are.
+   * Free play has no room, so it goes on the purse as it always did.
+   */
+  function chipsFor(bankroll, limits) {
+    var all = [25, 100, 500, 1000, 5000, 25000];
+    var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);
+    var out = all.filter(function (v) { return v <= ceiling; });
+    return out.length ? out : [all[0]];
   }
   /** [size] is the spot's diameter; the printed total scales with the chip. */
+  /** Keeps a picked chip on the rack the room actually lays out. */
+  function clampChip(selected, bankroll) {
+    var rack = chipsFor(bankroll, Shell.limits());
+    return rack.indexOf(selected) >= 0 ? selected : rack[rack.length - 1];
+  }
+  /** [size] is the spot.s diameter; the printed total scales with the chip. */
   function chipHtml(amount, size) {
     var values = [25, 100, 500, 1000, 5000, 25000];
     var chip = null;
@@ -1229,6 +1326,42 @@
       html += '<div class="scrim" style="font-size:' + px + 'px">' + label + "</div>";
     }
     return html;
+  }
+
+  // ---------- the floor ----------
+  /**
+   * A room on the floor, mirroring Room in the Kotlin app. The buy-in is what
+   * it takes to get in; min is printed but never enforced, max and sideMax are
+   * hard — the house will not take the chip.
+   */
+  var ROOMS = [
+    { key: "BASEMENT",   name: "The Basement", buyIn: 0,       min: 25,    max: 500,    sideMax: 100 },
+    { key: "MAIN_FLOOR", name: "Main Floor",   buyIn: 10000,   min: 100,   max: 2500,   sideMax: 500 },
+    { key: "HIGH_LIMIT", name: "High Limit",   buyIn: 50000,   min: 500,   max: 10000,  sideMax: 2000 },
+    { key: "SALON",      name: "The Salon",    buyIn: 250000,  min: 2500,  max: 50000,  sideMax: 10000 },
+    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: 250000, sideMax: 50000 }
+  ];
+  function roomShort(v) { return v >= 1000 ? (v / 1000) + "K" : String(v); }
+  function roomSign(r) { return "$" + roomShort(r.min) + " – $" + roomShort(r.max); }
+  function roomSideSign(r) { return "SIDE $" + roomShort(r.sideMax); }
+
+  /** What the house hands over on a marker, and what it costs to clear it. */
+  var MARKER_AMOUNT = 5000, MARKER_INTEREST = 0.5;
+
+  /** No house, no limits — play testing is uncapped. */
+  var FREE_LIMITS = { min: 0, max: Infinity, sideMax: Infinity, enforced: false };
+
+  /**
+   * How much of [wanted] a spot will take, given what is on it already.
+   * Zero means the chip does not go down.
+   */
+  function allow(limits, wanted, alreadyOn, side) {
+    if (!limits.enforced) return wanted;
+    var cap = side ? limits.sideMax : limits.max;
+    return Math.min(wanted, Math.max(0, cap - alreadyOn));
+  }
+  function refusal(limits, side) {
+    return side ? "Side bet max $" + fmt(limits.sideMax) : "Table max $" + fmt(limits.max);
   }
 
   // ---------- wallet & shell ----------
@@ -1245,7 +1378,15 @@
       mem[k] = v;
       try { localStorage.setItem(k, String(v)); } catch (e) {}
     }
-    return { get: get, set: set };
+    function getStr(k, dflt) {
+      try { var v = localStorage.getItem(k); return v === null ? (k in mem ? mem[k] : dflt) : v; }
+      catch (e) { return k in mem ? mem[k] : dflt; }
+    }
+    function setStr(k, v) {
+      mem[k] = v;
+      try { localStorage.setItem(k, v); } catch (e) {}
+    }
+    return { get: get, set: set, getStr: getStr, setStr: setStr };
   })();
 
   var Shell = {
@@ -1254,6 +1395,61 @@
     setBankroll: function (v) { store.set("ftb.bankroll", v); },
     getGoal: function () { return store.get("ftb.goal", CAMPAIGN_GOAL); },
     setGoal: function (v) { store.set("ftb.goal", v); },
+
+    // ---- the floor ----
+    getRoom: function () {
+      var key = store.getStr("ftb.room", "BASEMENT");
+      for (var i = 0; i < ROOMS.length; i++) if (ROOMS[i].key === key) return ROOMS[i];
+      return ROOMS[0];
+    },
+    roomIndex: function () { return ROOMS.indexOf(this.getRoom()); },
+    getDebt: function () { return store.get("ftb.debt", 0); },
+    setDebt: function (v) { store.set("ftb.debt", v); },
+
+    /** What the table will take this hand. Play testing has no house. */
+    limits: function () {
+      if (this.mode !== "campaign") return FREE_LIMITS;
+      var r = this.getRoom();
+      return { min: r.min, max: r.max, sideMax: r.sideMax, enforced: true };
+    },
+
+    canEnter: function (room) {
+      if (ROOMS.indexOf(room) <= this.roomIndex()) return true;
+      if (this.getDebt() > 0) return false;
+      return this.getBankroll() >= room.buyIn;
+    },
+    blockedReason: function (room) {
+      if (this.canEnter(room)) return null;
+      if (this.getDebt() > 0) return "Square the marker first";
+      return "Buy-in $" + fmt(room.buyIn);
+    },
+    enter: function (room) {
+      if (!this.canEnter(room)) return;
+      store.setStr("ftb.room", room.key);
+    },
+    /**
+     * A purse that cannot cover the room minimum has no business at its
+     * tables. Drops to the highest room it can still play.
+     */
+    demoteIfBroke: function () {
+      var i = this.roomIndex(), b = this.getBankroll();
+      while (i > 0 && b < ROOMS[i].min) i--;
+      store.setStr("ftb.room", ROOMS[i].key);
+    },
+
+    // ---- markers ----
+    takeMarker: function () {
+      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);
+      this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));
+    },
+    canPayMarker: function () {
+      return this.getDebt() > 0 && this.getBankroll() >= this.getDebt();
+    },
+    payMarker: function () {
+      if (!this.canPayMarker()) return;
+      this.setBankroll(this.getBankroll() - this.getDebt());
+      this.setDebt(0);
+    },
     show: function (name) {
       document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("on"); });
       $("screen-" + name).classList.add("on");
@@ -1267,7 +1463,52 @@
       scr.classList.toggle("campaign", this.mode === "campaign");
       $("lb-campaign-line").textContent =
         "CAMPAIGN · " + fmt(this.getBankroll()) + " / " + fmt(this.getGoal());
+      this.renderRoomRow();
       this.show("lobby");
+    },
+    renderRoomRow: function () {
+      var r = this.getRoom(), owed = this.getDebt();
+      $("screen-lobby").classList.toggle("owing", owed > 0);
+      $("lb-roomname").textContent = r.name.toUpperCase();
+      $("lb-roomlimits").textContent = roomSign(r) + " · " + roomSideSign(r);
+      $("lb-markerowed").textContent = "MARKER " + fmt(owed);
+      var pay = $("lb-paymarker"), can = this.canPayMarker();
+      pay.disabled = !can;
+      pay.textContent = can ? "PAY IT" : "SHORT";
+    },
+    /**
+     * The floor, room by room. Anything at or below where you are is always
+     * open — walking down is free — and going up wants the buy-in and a clean
+     * slate with the house.
+     */
+    showFloor: function () {
+      var self = this;
+      $("ov-floor-sub").textContent = this.getDebt() > 0
+        ? "Square the marker before moving up"
+        : "Higher rooms pay faster and bust quicker";
+      var list = $("ov-floor-list");
+      list.innerHTML = "";
+      ROOMS.forEach(function (room) {
+        var here = self.getRoom() === room;
+        var open = self.canEnter(room);
+        var shut = self.blockedReason(room);
+        var row = document.createElement("button");
+        row.className = "floor-row" + (here ? " here" : "") + (open ? "" : " shut");
+        row.innerHTML =
+          '<div class="hd"><span class="nm">' + room.name.toUpperCase() + "</span>" +
+          '<span class="tag">' +
+          (here ? "YOU ARE HERE" : shut ? shut : "WALK IN") + "</span></div>" +
+          '<div class="lim">' + roomSign(room) + " · " + roomSideSign(room) + "</div>";
+        if (open && !here) {
+          row.addEventListener("click", function () {
+            self.enter(room);
+            $("ov-floor").classList.remove("on");
+            self.showLobby();
+          });
+        }
+        list.appendChild(row);
+      });
+      $("ov-floor").classList.add("on");
     },
     // Shows bust / victory overlays. Returns true when one is up.
     gate: function (onDone) {
@@ -1275,9 +1516,17 @@
       if (this.mode !== "campaign") return false;
       var b = this.getBankroll(), g = this.getGoal();
       if (b < 25) {
+        // Broke in the campaign is a marker, not a free reset.
+        var owed = self.getDebt();
+        $("ov-gameover-sub").textContent = owed > 0
+          ? "The purse is gone. Already owing $" + fmt(owed) + "."
+          : "The purse is gone. The house will cover you.";
+        $("ov-loan").textContent = "SIGN A $" + fmt(MARKER_AMOUNT) + " MARKER";
+        $("ov-loan-terms").textContent =
+          "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · no moving up until you do";
         $("ov-gameover").classList.add("on");
         $("ov-loan").onclick = function () {
-          self.setBankroll(CAMPAIGN_START);
+          self.takeMarker();
           $("ov-gameover").classList.remove("on");
           self.showMenu();
           if (onDone) onDone();
@@ -1311,6 +1560,15 @@
   $("mm-settings").addEventListener("click", function () { Shell.show("settings"); });
   $("st-back").addEventListener("click", function () { Shell.showMenu(); });
   $("lb-back").addEventListener("click", function () { Shell.showMenu(); });
+  $("lb-roomplate").addEventListener("click", function () { Shell.showFloor(); });
+  $("lb-paymarker").addEventListener("click", function (e) {
+    e.stopPropagation();
+    Shell.payMarker();
+    Shell.showLobby();
+  });
+  $("ov-floor").addEventListener("click", function (e) {
+    if (e.target === this) this.classList.remove("on");
+  });
   $("lb-baccarat").addEventListener("click", function () { Baccarat.enter(); Shell.show("baccarat"); });
   $("lb-blackjack").addEventListener("click", function () { Shell.show("bjmenu"); });
   $("lb-holdem").addEventListener("click", function () { Holdem.enter(); Shell.show("holdem"); });
@@ -1564,7 +1822,12 @@
       hands.forEach(function (h) { s += h.stake; });
       return s;
     }
-    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+    /** A purse that can no longer cover the room minimum walks down a room. */
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
 
     // ---------- render ----------
     /** Blazing 777s dresses the same table in its own red art. */
@@ -1714,7 +1977,8 @@
         if (betting) {
           var rack = document.createElement("div");
           rack.className = "rack";
-          chipsFor(bankroll).forEach(function (v) {
+          selectedChip = clampChip(selectedChip, bankroll);
+          chipsFor(bankroll, Shell.limits()).forEach(function (v) {
             var cb = document.createElement("button");
             cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
             cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
@@ -1891,8 +2155,13 @@
     };
     function addChip(spot) {
       if (phase !== "betting") return;
-      var amount = chipAmount();
-      if (amount <= 0) { setMessage("No bankroll left"); return; }
+      var affordable = chipAmount();
+      if (affordable <= 0) { setMessage("No bankroll left"); return; }
+      var side = spot === "pot" || spot === "trilux";
+      var on = spot === "pot" ? potBet : spot === "trilux" ? triluxBet : bet;
+      var lim = Shell.limits();
+      var amount = allow(lim, affordable, on, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
       if (spot === "pot") potBet += amount;
       else if (spot === "trilux") triluxBet += amount;
       else bet += amount;
@@ -2220,7 +2489,12 @@
     var DECKS = 8, RESHUFFLE_AT = 30;
     var shoe = buildShoe(DECKS);
     var bankroll = TESTING_BANKROLL, bet = 0, push22Bet = 0, push22Stake = 0;
-    var selectedChip = 25, chipHist = [], lastBet = 0, lastPush22 = 0;
+    /**
+     * Pair Square. It is read off the first two cards, and on this table the
+     * second comes mid-hand, so it is answered the moment that card lands.
+     */
+    var pairBet = 0, pairStake = 0, pairWin = null, pairSettled = false, pairResult = null;
+    var selectedChip = 25, chipHist = [], lastBet = 0, lastPush22 = 0, lastPair = 0;
     var hand = null, dealer = [], holeUp = false;
     var phase = "betting", results = [], timers = [], push22Win = null, pushed22 = false;
 
@@ -2262,6 +2536,18 @@
      * The Push 22 side bet, read off the dealer's finished hand. Suit and
      * colour run across the whole hand, however many cards it took.
      */
+    /**
+     * Same rank in the first two cards. Same suit as well is a perfect pair.
+     * The second card may be a double.s card; it counts the same.
+     */
+    function pairSquareOf(cards) {
+      if (cards.length < 2) return null;
+      var a = cards[0], b = cards[1];
+      if (a.rank !== b.rank) return null;
+      return a.suit === b.suit
+        ? { label: "Perfect pair", pays: 25 }
+        : { label: "Pair", pays: 10 };
+    }
     function push22Of(cards) {
       if (!cards.length || total(cards) !== 22) return null;
       var first = cards[0].suit;
@@ -2303,10 +2589,18 @@
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
     function totalAtRisk() {
-      if (phase === "betting") return bet + push22Bet;
-      return (hand ? hand.stake : 0) + push22Stake;
+      if (phase === "betting") return bet + push22Bet + pairBet;
+      // Pair Square is paid out mid-hand, so once it is settled it is no
+      // longer at risk — only the stake still riding counts.
+      var pair = pairSettled ? 0 : pairStake;
+      return (hand ? hand.stake : 0) + push22Stake + pair;
     }
-    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+    /** A purse that can no longer cover the room minimum walks down a room. */
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
 
     // ---------- layout ----------
     /** Fits the layout whole, whichever edge runs out first — as Compose does. */
@@ -2423,22 +2717,35 @@
     function renderSpots() {
       var betting = phase === "betting";
       var s = $("dd-spots");
+      var pairWon = pairResult && pairResult.net > 0;
       s.innerHTML =
-        '<button class="dd-odds" id="dd-oddsbtn"><img src="__DD_ODDS__" alt="Push 22 odds"></button>' +
-        '<button class="dd-betspot spot" id="dd-betspot"><img src="' + BJ_ART.spotBet +
-        '" alt="Bet"><div class="placed"></div></button>' +
+        // Push 22: the coin, then the odds it pays under it.
         '<div class="dd-push">' +
         (phase === "result" && results[1] ? pillHtml(results[1]) : "") +
         '<button class="dd-pushring spot" id="dd-pushspot">' +
         '<img src="' + COIN_IMG + '" alt="Push 22 side bet"><div class="placed"></div></button>' +
-        '<span class="cap">PUSH 22</span></div>';
+        '<span class="cap">PUSH 22</span>' +
+        '<button class="dd-odds" id="dd-oddsbtn"><img src="__DD_ODDS__" alt="Push 22 odds"></button>' +
+        '</div>' +
+        '<button class="dd-betspot spot" id="dd-betspot"><img src="' + BJ_ART.spotBet +
+        '" alt="Bet"><div class="placed"></div></button>' +
+        // Pair Square: a pair of squares, the way the name says.
+        '<div class="dd-pair">' +
+        (pairResult ? pillHtml(pairResult) : "") +
+        '<button class="dd-pairspot spot' + (pairWon ? " won" : "") + '" id="dd-pairspot">' +
+        '<span class="sq back"></span><span class="sq front"></span>' +
+        '<div class="placed"></div></button>' +
+        '<span class="cap">PAIR SQUARE</span>' +
+        '<span class="pays">PERFECT 25:1 · PAIR 10:1</span></div>';
       s.querySelector("#dd-oddsbtn").addEventListener("click", function () {
         $("dd-oddsmodal").classList.add("on");
       });
       s.querySelector("#dd-betspot").addEventListener("click", function () { addChip("main"); });
       s.querySelector("#dd-pushspot").addEventListener("click", function () { addChip("push22"); });
+      s.querySelector("#dd-pairspot").addEventListener("click", function () { addChip("pair"); });
       fill(s, "#dd-betspot", betting ? bet : hand ? hand.stake : 0);
-      fill(s, "#dd-pushspot", betting ? push22Bet : push22Stake, 38);
+      fill(s, "#dd-pushspot", betting ? push22Bet : push22Stake, 32);
+      fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);
       var rack = $("dd-rack");
       rack.innerHTML = "";
       // With the rack gone the action row jumps up; hold a little of its place.
@@ -2446,7 +2753,8 @@
       if (!betting) return;
       var row = document.createElement("div");
       row.className = "rack";
-      chipsFor(bankroll).forEach(function (v) {
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
         var cb = document.createElement("button");
         cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
         cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
@@ -2511,24 +2819,33 @@
     // ---------- betting ----------
     function addChip(spot) {
       if (phase !== "betting") return;
-      var amount = Math.min(selectedChip, Math.floor(bankroll - bet - push22Bet));
-      if (amount <= 0) { setMessage("No bankroll left"); return; }
-      if (spot === "push22") push22Bet += amount; else bet += amount;
+      var affordable = Math.min(selectedChip, Math.floor(bankroll - bet - push22Bet - pairBet));
+      if (affordable <= 0) { setMessage("No bankroll left"); return; }
+      var side = spot !== "main";
+      var on = spot === "push22" ? push22Bet : spot === "pair" ? pairBet : bet;
+      var lim = Shell.limits();
+      var amount = allow(lim, affordable, on, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
+      if (spot === "push22") push22Bet += amount;
+      else if (spot === "pair") pairBet += amount;
+      else bet += amount;
       chipHist.push({ spot: spot, v: amount });
       setMessage(amount < selectedChip ? "All in!"
-        : spot === "push22" ? "Push 22 riding" : "Place your bet");
+        : spot === "push22" ? "Push 22 riding"
+        : spot === "pair" ? "Pair Square riding" : "Place your bet");
       renderTop(); renderSpots();
     }
     function undoChip() {
       if (phase !== "betting" || !chipHist.length) return;
       var last = chipHist.pop();
       if (last.spot === "push22") push22Bet = Math.max(0, push22Bet - last.v);
+      else if (last.spot === "pair") pairBet = Math.max(0, pairBet - last.v);
       else bet = Math.max(0, bet - last.v);
       renderTop(); renderSpots();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      bet = 0; push22Bet = 0; chipHist = [];
+      bet = 0; push22Bet = 0; pairBet = 0; chipHist = [];
       setMessage("Place your bet");
       renderTop(); renderSpots();
     }
@@ -2537,18 +2854,20 @@
     function deal() {
       if (phase !== "betting") return;
       if (bet <= 0) {
-        setMessage(push22Bet > 0 ? "Push 22 rides with a main bet" : "Place a bet first");
+        setMessage(push22Bet > 0 || pairBet > 0
+          ? "Side bets ride with a main bet" : "Place a bet first");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
-      bankroll -= bet + push22Bet;
+      bankroll -= bet + push22Bet + pairBet;
       syncWallet();
-      lastBet = bet; lastPush22 = push22Bet;
+      lastBet = bet; lastPush22 = push22Bet; lastPair = pairBet;
       push22Stake = push22Bet; push22Win = null; pushed22 = false;
+      pairStake = pairBet; pairWin = null; pairSettled = false; pairResult = null;
       chipHist = [];
       hand = { cards: [], stake: bet, betUnit: bet, doubled: false, done: false };
       dealer = []; holeUp = false; results = [];
-      bet = 0; push22Bet = 0;
+      bet = 0; push22Bet = 0; pairBet = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -2579,12 +2898,33 @@
         renderAll();
       }
     }
+    /**
+     * Pair Square is decided by the second card, whenever it comes: it pays
+     * out there and then rather than waiting on the dealer, and the hand
+     * carries on with the main bet.
+     */
+    function settlePairSquare() {
+      if (pairSettled || pairStake <= 0 || !hand || hand.cards.length < 2) return;
+      pairSettled = true;
+      pairWin = pairSquareOf(hand.cards);
+      var ret = pairWin ? pairStake * (pairWin.pays + 1) : 0;
+      bankroll += ret;
+      syncWallet();
+      pairResult = { label: pairWin ? pairWin.label : "Pair Square", net: ret - pairStake };
+    }
+    /** What the table shouts when the second card has just landed a pair. */
+    function pairShout() {
+      if (!pairWin || pairStake <= 0 || !hand || hand.cards.length !== 2) return null;
+      return pairWin.label + " — " + pairWin.pays + ":1";
+    }
     function hit() {
       if (phase !== "player" || !hand || hand.done) return;
       hand.cards.push(draw());
+      settlePairSquare();
       var bust = isBust(hand.cards), twentyOne = total(hand.cards) === 21;
       if (bust || twentyOne) hand.done = true;
-      setMessage(bust ? "Bust" : twentyOne ? "Twenty-one" : "Hit or double");
+      setMessage(bust ? "Bust" : twentyOne ? "Twenty-one"
+        : pairShout() || "Hit or double");
       renderAll();
       if (bust || twentyOne) dealerTurn();
     }
@@ -2606,6 +2946,7 @@
       renderAll();
       t(400, function () {
         hand.cards.push(draw());
+        settlePairSquare();
         var bust = isBust(hand.cards), twentyOne = total(hand.cards) === 21;
         if (bust || twentyOne) {
           hand.done = true;
@@ -2614,7 +2955,7 @@
           t(500, dealerTurn);
         } else {
           phase = "player";
-          setMessage("Hit or double again");
+          setMessage(pairShout() || "Hit or double again");
           renderAll();
         }
       });
@@ -2659,6 +3000,13 @@
         totalReturn += returned;
         results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand.stake });
       }
+      // A dealer blackjack can end the hand on one card. Pair Square was
+      // never decided, so its stake goes back — there was no second card.
+      if (pairStake > 0 && !pairSettled) {
+        pairSettled = true;
+        totalReturn += pairStake;
+        pairResult = { label: "Pair Square", net: 0 };
+      }
       if (push22Stake > 0) {
         push22Win = push22Of(dealer);
         var sideRet = settlePush22(dealer, push22Stake);
@@ -2689,12 +3037,13 @@
       phase = "betting";
       hand = null; dealer = []; holeUp = false;
       results = []; chipHist = []; push22Stake = 0; push22Win = null; pushed22 = false;
-      if (repeat && lastBet + lastPush22 <= bankroll) {
-        bet = lastBet; push22Bet = lastPush22;
+      pairStake = 0; pairWin = null; pairResult = null; pairSettled = false;
+      if (repeat && lastBet + lastPush22 + lastPair <= bankroll) {
+        bet = lastBet; push22Bet = lastPush22; pairBet = lastPair;
       } else if (repeat && lastBet <= bankroll) {
-        bet = lastBet; push22Bet = 0;
+        bet = lastBet; push22Bet = 0; pairBet = 0;
       } else {
-        bet = 0; push22Bet = 0;
+        bet = 0; push22Bet = 0; pairBet = 0;
       }
       setMessage("Place your bet");
       renderAll();
@@ -2719,7 +3068,14 @@
       if ($("screen-doubledown").classList.contains("on")) renderAll();
     });
     // The rules are exposed so the parity page can referee them directly.
-    return { enter: enter, settleHand: settleHand, settlePush22: settlePush22, push22: push22Of };
+    return {
+      enter: enter, settleHand: settleHand, settlePush22: settlePush22, push22: push22Of,
+      pairSquare: pairSquareOf,
+      settlePairSquare: function (cards, stake) {
+        var w = pairSquareOf(cards);
+        return w ? stake * (w.pays + 1) : 0;
+      }
+    };
   })();
   window.DD = DoubleDown;
 
@@ -2745,7 +3101,12 @@
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
     function draw() { return shoe.pop(); }
-    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+    /** A purse that can no longer cover the room minimum walks down a room. */
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
     function atRisk() {
       return phase === "betting" ? ante * 2 + trips
         : anteStake + blindStake + tripsStake + playStake;
@@ -2879,7 +3240,8 @@
       if (phase !== "betting") return;
       var rack = document.createElement("div");
       rack.className = "uth-rack";
-      chipsFor(bankroll).forEach(function (v) {
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
         var cb = document.createElement("button");
         cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
         cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
@@ -2932,10 +3294,13 @@
       if (phase !== "betting") return;
       var room = Math.floor(bankroll - (ante * 2 + trips));
       // Half the remaining room on the ante, so ante and blind can both be covered.
-      var amount = spot === "ante"
+      var affordable = spot === "ante"
         ? Math.min(selectedChip, Math.floor(room / 2))
         : Math.min(selectedChip, room);
-      if (amount <= 0) { setMessage("Not enough for the ante and blind"); return; }
+      if (affordable <= 0) { setMessage("Not enough for the ante and blind"); return; }
+      var side = spot === "trips", lim = Shell.limits();
+      var amount = allow(lim, affordable, side ? trips : ante, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
       if (spot === "ante") ante += amount; else trips += amount;
       chipHist.push({ spot: spot, v: amount });
       setMessage(amount < selectedChip ? "All in!"
@@ -3220,7 +3585,12 @@
     var chipHistory = [], timers = [];
 
     function totalStaked() { var t = 0, k; for (k in bets) t += bets[k]; return t; }
-    function syncWallet() { if (Shell.mode === "campaign") Shell.setBankroll(bankroll); }
+    /** A purse that can no longer cover the room minimum walks down a room. */
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
     function setMessage(text, win) {
       var m = $("message");
       m.textContent = text;
@@ -3273,7 +3643,8 @@
     function renderRack() {
       var rack = $("rack");
       rack.innerHTML = "";
-      chipsFor(bankroll).forEach(function (v) {
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
         var b = document.createElement("button");
         b.className = "chip-btn" + (selectedChip === v ? " sel" : "");
         b.setAttribute("aria-label", "Select " + v + " chip");
@@ -3389,10 +3760,17 @@
       $("totalP").style.display = "none";
       $("totalB").style.display = "none";
     }
+    /** Player, Banker and Tie are the table bets; the rest ride beside them. */
+    function isSideBet(key) {
+      return key !== "player" && key !== "banker" && key !== "tie";
+    }
     function addBet(key) {
       if (phase !== "betting") return;
-      var amount = Math.min(selectedChip, Math.floor(bankroll - totalStaked()));
-      if (amount <= 0) { setMessage("No bankroll left"); return; }
+      var affordable = Math.min(selectedChip, Math.floor(bankroll - totalStaked()));
+      if (affordable <= 0) { setMessage("No bankroll left"); return; }
+      var side = isSideBet(key), lim = Shell.limits();
+      var amount = allow(lim, affordable, bets[key] || 0, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
       bets[key] = (bets[key] || 0) + amount;
       chipHistory.push({ k: key, v: amount });
       setMessage(amount < selectedChip ? "All in!" : "Place your bets");

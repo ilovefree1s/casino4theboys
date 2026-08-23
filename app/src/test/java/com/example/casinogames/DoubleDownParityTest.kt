@@ -42,8 +42,34 @@ class DoubleDownParityTest {
     }
 
     @Test
+    fun `every shared pair square case settles the way the fixture says`() {
+        // Pair Square keeps its own section: it reads the player's first two
+        // cards and knows nothing about the dealer.
+        val lines = fixture().filter { it.startsWith("pair |") }
+        assertTrue("the fixture should carry some pair square cases", lines.size >= 8)
+
+        lines.forEach { line ->
+            val cols = line.split("|").map { it.trim() }
+            require(cols.size == 5) { "expected 5 columns, got ${cols.size} in: $line" }
+            val player = cards(cols[1])
+            val stake = cols[2].toInt()
+            assertEquals(
+                "pair square · $line",
+                cols[3].toDouble(),
+                DoubleDownRules.settlePairSquare(player, stake),
+                0.001,
+            )
+            assertEquals(
+                "pair square name · $line",
+                cols[4].takeIf { it != "-" },
+                DoubleDownRules.pairSquare(player)?.label,
+            )
+        }
+    }
+
+    @Test
     fun `every shared case settles the way the fixture says`() {
-        val lines = fixture()
+        val lines = fixture().filterNot { it.startsWith("pair |") }
         assertTrue("the fixture should carry some cases", lines.size >= 15)
 
         lines.forEach { line ->

@@ -44,10 +44,19 @@
       .filter(function (l) { return l.length; })
       .map(function (line) {
         var c = line.split("|").map(function (x) { return x.trim(); });
+        // Pair Square keeps its own section: it reads the player's first two
+        // cards and knows nothing about the dealer.
+        if (c[0] === "pair") {
+          return {
+            line: line, kind: "pair",
+            player: cards(c[1]), stake: +c[2],
+            pairReturn: +c[3], pairName: c[4] === "-" ? null : c[4]
+          };
+        }
         var stakes = c[2].split(/\s+/);
         var want = c[3].split(/\s+/);
         return {
-          line: line,
+          line: line, kind: "hand",
           player: cards(c[0]), dealer: cards(c[1]),
           stake: +stakes[0], betUnit: +stakes[1],
           doubled: stakes[2] === "dbl", push22: +stakes[3],
@@ -61,6 +70,16 @@
     var bad = [];
     function eq(what, got, want) {
       if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
+    }
+    if (c.kind === "pair") {
+      if (!DD.settlePairSquare) {
+        bad.push("app.html exposes no settlePairSquare — is the build current?");
+        return bad;
+      }
+      eq("pair square", DD.settlePairSquare(c.player, c.stake), c.pairReturn);
+      var p = DD.pairSquare(c.player);
+      eq("pair name", p ? p.label : null, c.pairName);
+      return bad;
     }
     eq("hand", DD.settleHand(c.player, c.dealer, c.stake, c.betUnit, c.doubled), c.handReturn);
     eq("push 22", DD.settlePush22(c.dealer, c.push22), c.push22Return);

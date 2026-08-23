@@ -53,3 +53,25 @@ Ts 9d 5c | 8h 9h 5h | 100 100 - 25 | 0 1900 | Same-suit 22
 Ts 8d | Th 9c | 100 100 - 25 | 0 0 | -
 Ts 8d | Ah Kc | 100 100 - 25 | 0 0 | -
 Ts 8d | Th 9c 4s | 100 100 - 25 | 200 0 | -
+
+# ============================================================
+# PAIR SQUARE
+#
+# Its own format, since it reads the player's first two cards and knows
+# nothing about the dealer:
+#
+#   pair | player cards | stake | return | win name
+#
+# Return is gross, so a losing pair returns nothing and the name is "-".
+# Only the first two cards count, however long the hand runs on.
+# ============================================================
+pair | 8h 8h       | 100 | 2600 | Perfect pair
+pair | 8h 8d       | 100 | 1100 | Pair
+pair | 8h 8s       | 100 | 1100 | Pair
+pair | Ac Ac       | 25  | 650  | Perfect pair
+pair | Kh Ks       | 25  | 275  | Pair
+pair | 8h 9h       | 100 | 0    | -
+pair | Kh Td       | 100 | 0    | -
+pair | 8h          | 100 | 0    | -
+pair | 8h 8h 5c    | 100 | 2600 | Perfect pair
+pair | 8h 5c 8h    | 100 | 0    | -
