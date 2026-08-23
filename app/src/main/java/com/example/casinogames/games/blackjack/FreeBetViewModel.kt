@@ -1,13 +1,14 @@
 package com.example.casinogames.games.blackjack
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.limitsFor
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinogames.games.core.Card
@@ -34,18 +35,27 @@ data class BjResult(val label: String, val net: Double)
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
 private const val STARTING_BANKROLL = 5000.0
-private const val CAMPAIGN_START = 5000.0
-private const val CAMPAIGN_GOAL = 1_000_000.0
 
 class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
-    private val prefs = app.getSharedPreferences("campaign", Context.MODE_PRIVATE)
     private val shoe = Shoe(decks = DECKS)
     private var lastBet = 0
     private var lastPotBet = 0
     private val chipHistory = mutableListOf<Pair<Boolean, Int>>() // isPot to amount
 
-    var bankroll by mutableDoubleStateOf(STARTING_BANKROLL)
-        private set
+    /** Play testing has its own purse; the campaign shares one with every table. */
+    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
+
+    private fun spend(amount: Double) {
+        if (campaign) Campaign.stake(amount) else freePurse -= amount
+    }
+
+    private fun collect(amount: Double) {
+        if (campaign) Campaign.payOut(amount) else freePurse += amount
+    }
+
+    /** What this table will take on a spot, this hand. */
+    val limits get() = limitsFor(campaign)
     var selectedChip by mutableIntStateOf(25)
     var bet by mutableIntStateOf(0)
         private set
@@ -78,21 +88,14 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
 
     var campaign by mutableStateOf(false)
         private set
-    var goal by mutableDoubleStateOf(CAMPAIGN_GOAL)
-        private set
+    val goal: Double get() = Campaign.goal
     private var modeInitialized = false
 
     /** Switches between campaign (persistent 5k→1M run) and free play testing. */
     fun enterMode(campaignMode: Boolean) {
-        if (modeInitialized && campaign == campaignMode) {
-            // One purse across the whole campaign: another table may have moved
-            // it while we were away, whatever this one was left in the middle of.
-            if (campaignMode) {
-                bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-                goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
-            }
-            return
-        }
+        // The campaign purse is shared and live, so there is nothing to read
+        // back when another table has been at it — only free play needs a fill.
+        if (modeInitialized && campaign == campaignMode) return
         campaign = campaignMode
         modeInitialized = true
         phase = BjPhase.BETTING
@@ -106,32 +109,19 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         results = emptyList()
         holeRevealed = false
         activeHand = 0
-        bankroll = if (campaignMode) {
-            prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-        } else STARTING_BANKROLL
-        goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
+        if (!campaignMode) freePurse = STARTING_BANKROLL
         message = "Place your bet"
-    }
-
-    private fun persist() {
-        if (campaign) prefs.edit().putFloat("bankroll", bankroll.toFloat()).apply()
     }
 
     /** Bank the win and chase a goal 100× bigger. */
     fun raiseGoal() {
-        goal *= 100
-        prefs.edit().putFloat("goal", goal.toFloat()).apply()
+        Campaign.raiseGoal()
         message = "Place your bet"
     }
 
     /** Cash out the campaign and restart from scratch. */
     fun restartCampaign() {
-        bankroll = CAMPAIGN_START
-        goal = CAMPAIGN_GOAL
-        prefs.edit()
-            .putFloat("bankroll", bankroll.toFloat())
-            .putFloat("goal", goal.toFloat())
-            .apply()
+        Campaign.restart()
         message = "Place your bet"
     }
 
@@ -145,9 +135,14 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addChip() {
         if (phase != BjPhase.BETTING) return
-        val amount = chipAmount()
-        if (amount <= 0) {
+        val affordable = chipAmount()
+        if (affordable <= 0) {
             message = "No bankroll left"
+            return
+        }
+        val amount = limits.allow(affordable, bet)
+        if (amount <= 0) {
+            message = limits.refusal(side = false)
             return
         }
         bet += amount
@@ -157,9 +152,14 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addPotChip() {
         if (phase != BjPhase.BETTING) return
-        val amount = chipAmount()
-        if (amount <= 0) {
+        val affordable = chipAmount()
+        if (affordable <= 0) {
             message = "No bankroll left"
+            return
+        }
+        val amount = limits.allow(affordable, potBet, side = true)
+        if (amount <= 0) {
+            message = limits.refusal(side = true)
             return
         }
         potBet += amount
@@ -185,9 +185,10 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
 
     fun buyBackIn() {
         if (phase == BjPhase.BETTING && bet == 0 && bankroll < 25) {
-            bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
-            persist()
-            message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bet"
+            // Broke in the campaign is a marker, not a free reset: five
+            // thousand over the table, seven and a half written down.
+            if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+            message = if (campaign) "Marker signed — dig out" else "Place your bet"
         }
     }
 
@@ -200,8 +201,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        bankroll -= bet + potBet
-        persist()
+        spend((bet + potBet).toDouble())
         lastBet = bet
         lastPotBet = potBet
         potStake = potBet
@@ -327,9 +327,8 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         if (free) {
             freeCoins++
         } else {
-            bankroll -= h.betUnit
+            spend(h.betUnit.toDouble())
             stake += h.betUnit
-            persist()
         }
         val cards = h.cards + shoe.draw()
         shoeCount = shoe.cardsRemaining
@@ -346,7 +345,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         val i = activeHand
         val h = playerHands[i]
         val free = FreeBetRules.isFreeSplit(h.cards)
-        if (free) freeCoins++ else { bankroll -= h.betUnit; persist() }
+        if (free) freeCoins++ else spend(h.betUnit.toDouble())
         val aces = h.cards[0].rank == Rank.ACE && h.cards[1].rank == Rank.ACE
         phase = BjPhase.DEALING
         message = if (free) "Free split!" else "Split"
@@ -469,8 +468,7 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(label, potReturn - potStake))
         }
 
-        bankroll += totalReturn
-        persist()
+        collect(totalReturn.toDouble())
         val net = totalReturn - playerHands.sumOf { it.stake } - potStake
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"

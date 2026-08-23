@@ -1,13 +1,14 @@
 package com.example.casinogames.games.holdem
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.limitsFor
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinogames.games.core.Card
@@ -18,8 +19,6 @@ import kotlinx.coroutines.launch
 private const val DECKS = 1
 private const val RESHUFFLE_AT = 20
 private const val STARTING_BANKROLL = 5000.0
-private const val CAMPAIGN_START = 5000.0
-private const val CAMPAIGN_GOAL = 1_000_000.0
 
 enum class UthPhase { BETTING, DEALING, PRE_FLOP, FLOP, RIVER, SHOWDOWN, RESULT }
 
@@ -35,14 +34,25 @@ private enum class Spot { ANTE, TRIPS }
  * river), and Trips rides on the player's own five cards.
  */
 class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
-    private val prefs = app.getSharedPreferences("campaign", Context.MODE_PRIVATE)
     private val shoe = Shoe(decks = DECKS)
     private var lastAnte = 0
     private var lastTrips = 0
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
-    var bankroll by mutableDoubleStateOf(STARTING_BANKROLL)
-        private set
+    /** Play testing has its own purse; the campaign shares one with every table. */
+    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
+
+    private fun spend(amount: Double) {
+        if (campaign) Campaign.stake(amount) else freePurse -= amount
+    }
+
+    private fun collect(amount: Double) {
+        if (campaign) Campaign.payOut(amount) else freePurse += amount
+    }
+
+    /** What this table will take on a spot, this hand. */
+    val limits get() = limitsFor(campaign)
     var selectedChip by mutableIntStateOf(25)
 
     /** Pending bets while betting; the Blind always matches the Ante. */
@@ -116,27 +126,17 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
 
     var campaign by mutableStateOf(false)
         private set
-    var goal by mutableDoubleStateOf(CAMPAIGN_GOAL)
-        private set
+    val goal: Double get() = Campaign.goal
     private var modeInitialized = false
 
     fun enterMode(campaignMode: Boolean) {
-        if (modeInitialized && campaign == campaignMode) {
-            // One purse across the whole campaign: another table may have moved
-            // it while we were away, whatever this one was left in the middle of.
-            if (campaignMode) {
-                bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-                goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
-            }
-            return
-        }
+        // The campaign purse is shared and live, so there is nothing to read
+        // back when another table has been at it — only free play needs a fill.
+        if (modeInitialized && campaign == campaignMode) return
         campaign = campaignMode
         modeInitialized = true
         resetTable()
-        bankroll = if (campaignMode) {
-            prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-        } else STARTING_BANKROLL
-        goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
+        if (!campaignMode) freePurse = STARTING_BANKROLL
         message = "Place your ante"
     }
 
@@ -156,31 +156,22 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         winningCards = emptySet()
     }
 
-    private fun persist() {
-        if (campaign) prefs.edit().putFloat("bankroll", bankroll.toFloat()).apply()
-    }
-
     fun raiseGoal() {
-        goal *= 100
-        prefs.edit().putFloat("goal", goal.toFloat()).apply()
+        Campaign.raiseGoal()
         message = "Place your ante"
     }
 
     fun restartCampaign() {
-        bankroll = CAMPAIGN_START
-        goal = CAMPAIGN_GOAL
-        prefs.edit()
-            .putFloat("bankroll", bankroll.toFloat())
-            .putFloat("goal", goal.toFloat())
-            .apply()
+        Campaign.restart()
         message = "Place your ante"
     }
 
     fun buyBackIn() {
         if (phase == UthPhase.BETTING && ante == 0 && bankroll < 25) {
-            bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
-            persist()
-            message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your ante"
+            // Broke in the campaign is a marker, not a free reset: five
+            // thousand over the table, seven and a half written down.
+            if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+            message = if (campaign) "Marker signed — dig out" else "Place your ante"
         }
     }
 
@@ -191,13 +182,20 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         if (phase != UthPhase.BETTING) return
         val committed = ante * 2 + trips
         val room = (bankroll - committed).toInt()
-        val amount = when (spot) {
+        val affordable = when (spot) {
             // Half the remaining room, so ante and blind can both be covered.
             Spot.ANTE -> minOf(selectedChip, room / 2)
             Spot.TRIPS -> minOf(selectedChip, room)
         }
-        if (amount <= 0) {
+        if (affordable <= 0) {
             message = "Not enough for the ante and blind"
+            return
+        }
+        // The ante is the table bet; trips is the side bet beside it.
+        val side = spot == Spot.TRIPS
+        val amount = limits.allow(affordable, if (side) trips else ante, side)
+        if (amount <= 0) {
+            message = limits.refusal(side)
             return
         }
         when (spot) {
@@ -241,8 +239,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
         val posted = ante * 2 + trips
-        bankroll -= posted
-        persist()
+        spend(posted.toDouble())
         lastAnte = ante; lastTrips = trips
         anteStake = ante; blindStake = ante; tripsStake = trips
         playStake = 0
@@ -282,8 +279,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         if (multiple !in UltimateHoldemRules.playOptions(s)) return
         val cost = anteStake * multiple
         if (bankroll < cost) return
-        bankroll -= cost
-        persist()
+        spend(cost.toDouble())
         playStake = cost
         viewModelScope.launch {
             message = "Play ${multiple}x"
@@ -379,8 +375,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             )
         }
 
-        bankroll += s.totalReturn
-        persist()
+        collect(s.totalReturn.toDouble())
         val staked = anteStake + blindStake + playStake + tripsStake
         val net = s.totalReturn - staked
         message = when {

@@ -1,13 +1,14 @@
 package com.example.casinogames.games.blackjack
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.limitsFor
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinogames.games.core.Card
@@ -19,8 +20,6 @@ import kotlinx.coroutines.launch
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
 private const val STARTING_BANKROLL = 5000.0
-private const val CAMPAIGN_START = 5000.0
-private const val CAMPAIGN_GOAL = 1_000_000.0
 
 /**
  * Double Down Madness. The player is dealt a single card and then chooses,
@@ -32,11 +31,22 @@ private const val CAMPAIGN_GOAL = 1_000_000.0
  * who lands on it pushes a live hand instead of losing to it.
  */
 class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
-    private val prefs = app.getSharedPreferences("campaign", Context.MODE_PRIVATE)
     private val shoe = Shoe(decks = DECKS)
 
-    var bankroll by mutableDoubleStateOf(STARTING_BANKROLL)
-        private set
+    /** Play testing has its own purse; the campaign shares one with every table. */
+    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
+
+    private fun spend(amount: Double) {
+        if (campaign) Campaign.stake(amount) else freePurse -= amount
+    }
+
+    private fun collect(amount: Double) {
+        if (campaign) Campaign.payOut(amount) else freePurse += amount
+    }
+
+    /** What this table will take on a spot, this hand. */
+    val limits get() = limitsFor(campaign)
     var selectedChip by mutableIntStateOf(25)
     var bet by mutableIntStateOf(0)
         private set
@@ -99,20 +109,13 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
     var campaign by mutableStateOf(false)
         private set
-    var goal by mutableDoubleStateOf(CAMPAIGN_GOAL)
-        private set
+    val goal: Double get() = Campaign.goal
     private var modeInitialized = false
 
     fun enterMode(campaignMode: Boolean) {
-        if (modeInitialized && campaign == campaignMode) {
-            // One purse across the whole campaign: another table may have moved
-            // it while we were away, whatever this one was left in the middle of.
-            if (campaignMode) {
-                bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-                goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
-            }
-            return
-        }
+        // The campaign purse is shared and live, so there is nothing to read
+        // back when another table has been at it — only free play needs a fill.
+        if (modeInitialized && campaign == campaignMode) return
         campaign = campaignMode
         modeInitialized = true
         phase = BjPhase.BETTING
@@ -131,30 +134,17 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         results = emptyList()
         holeRevealed = false
         pushed22 = false
-        bankroll = if (campaignMode) {
-            prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-        } else STARTING_BANKROLL
-        goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
+        if (!campaignMode) freePurse = STARTING_BANKROLL
         message = "Place your bet"
     }
 
-    private fun persist() {
-        if (campaign) prefs.edit().putFloat("bankroll", bankroll.toFloat()).apply()
-    }
-
     fun raiseGoal() {
-        goal *= 100
-        prefs.edit().putFloat("goal", goal.toFloat()).apply()
+        Campaign.raiseGoal()
         message = "Place your bet"
     }
 
     fun restartCampaign() {
-        bankroll = CAMPAIGN_START
-        goal = CAMPAIGN_GOAL
-        prefs.edit()
-            .putFloat("bankroll", bankroll.toFloat())
-            .putFloat("goal", goal.toFloat())
-            .apply()
+        Campaign.restart()
         message = "Place your bet"
     }
 
@@ -163,9 +153,10 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
     fun buyBackIn() {
         if (phase == BjPhase.BETTING && nothingAtStake && bankroll < 25) {
-            bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
-            persist()
-            message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bet"
+            // Broke in the campaign is a marker, not a free reset: five
+            // thousand over the table, seven and a half written down.
+            if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+            message = if (campaign) "Marker signed — dig out" else "Place your bet"
         }
     }
 
@@ -179,9 +170,20 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun addChip(spot: Spot) {
         if (phase != BjPhase.BETTING) return
-        val amount = minOf(selectedChip, (bankroll - bet - push22Bet - pairSquareBet).toInt())
-        if (amount <= 0) {
+        val affordable = minOf(selectedChip, (bankroll - bet - push22Bet - pairSquareBet).toInt())
+        if (affordable <= 0) {
             message = "No bankroll left"
+            return
+        }
+        val side = spot != Spot.BET
+        val on = when (spot) {
+            Spot.BET -> bet
+            Spot.PUSH_22 -> push22Bet
+            Spot.PAIR_SQUARE -> pairSquareBet
+        }
+        val amount = limits.allow(affordable, on, side)
+        if (amount <= 0) {
+            message = limits.refusal(side)
             return
         }
         when (spot) {
@@ -227,8 +229,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        bankroll -= bet + push22Bet + pairSquareBet
-        persist()
+        spend((bet + push22Bet + pairSquareBet).toDouble())
         lastBet = bet
         lastPush22 = push22Bet
         lastPairSquare = pairSquareBet
@@ -298,8 +299,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         val cards = hand?.cards ?: return
         pairSquareWin = DoubleDownRules.pairSquare(cards)
         val ret = DoubleDownRules.settlePairSquare(cards, pairSquareStake)
-        bankroll += ret
-        persist()
+        collect(ret.toDouble())
         pairSquareResult = BjResult(pairSquareWin?.label ?: "Pair Square", ret - pairSquareStake)
         pairSquareWin?.let { message = "${it.label} — ${it.payout}:1" }
     }
@@ -344,8 +344,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
         // Matching what is already staked is what doubles it.
         val cost = h.stake
         if (bankroll < cost) return
-        bankroll -= cost
-        persist()
+        spend(cost.toDouble())
         hand = h.copy(stake = h.stake + cost, doubled = true)
         message = "Double!"
         viewModelScope.launch {
@@ -435,8 +434,7 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             out.add(BjResult(push22Win?.label ?: "Push 22", ret - push22Stake))
         }
 
-        bankroll += totalReturn
-        persist()
+        collect(totalReturn.toDouble())
         // The verdict speaks for the hand: a won hand beside a lost side bet
         // still won, whatever the two of them net out to.
         val net = out.firstOrNull()?.net ?: 0.0

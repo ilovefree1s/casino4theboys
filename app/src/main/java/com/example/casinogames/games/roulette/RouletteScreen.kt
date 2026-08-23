@@ -59,6 +59,7 @@ import com.example.casinogames.games.roulette.RouletteEngine.DOUBLE_ZERO
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
 import com.example.casinogames.ui.common.PlacedBetChip
+import com.example.casinogames.ui.common.CASINO_CHIPS
 import com.example.casinogames.ui.common.chipsFor
 import com.example.casinogames.ui.common.formatMoney
 import kotlin.math.floor
@@ -442,16 +443,32 @@ private fun OutsideSpot(
 /** The rack is painted; this rings whichever chip is chosen and takes taps. */
 @Composable
 private fun Rack(vm: RouletteViewModel, k: Float) {
-    chipsFor(vm.bankroll).forEachIndexed { i, chip ->
+    // The five chips are painted into the felt, so a room that will not take
+    // one cannot simply have it left off the rack — it gets covered over
+    // instead, and stops answering.
+    val rack = chipsFor(vm.bankroll, vm.limits)
+    val racked = rack.map { it.value }.toSet()
+    // A chip picked in a richer room must not follow the player down.
+    LaunchedEffect(racked) {
+        if (vm.selectedChip !in racked) vm.selectedChip = rack.last().value
+    }
+    CASINO_CHIPS.forEachIndexed { i, chip ->
         val mid = A.CHIP_FIRST_MID + i * A.CHIP_PITCH
         val r = A.CHIP_DIAMETER / 2f
+        val out = chip.value !in racked
         Box(
             Modifier
                 .artBox(k, mid - r, A.CHIPS_TOP, mid + r, A.CHIPS_BOTTOM)
-                .tap { vm.selectedChip = chip.value }
+                .tap { if (!out) vm.selectedChip = chip.value }
         ) {
-            if (vm.selectedChip == chip.value) {
-                Box(
+            when {
+                out -> Box(
+                    Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(Color(0xCC05030A))
+                )
+                vm.selectedChip == chip.value -> Box(
                     Modifier
                         .fillMaxSize()
                         .border((4f * k).dp, MarkerGold, CircleShape)

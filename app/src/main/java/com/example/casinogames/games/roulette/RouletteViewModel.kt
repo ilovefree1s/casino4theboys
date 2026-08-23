@@ -1,7 +1,6 @@
 package com.example.casinogames.games.roulette
 
 import android.app.Application
-import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -11,11 +10,11 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
+import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.limitsFor
 import kotlinx.coroutines.launch
 
 private const val STARTING_BANKROLL = 5000.0
-private const val CAMPAIGN_START = 5000.0
-private const val CAMPAIGN_GOAL = 1_000_000.0
 
 /** How long the reel runs, and how far it travels before it starts to die. */
 const val SPIN_MILLIS = 3400
@@ -24,10 +23,20 @@ private const val TURNS_PER_SPIN = 5
 enum class RoulettePhase { BETTING, SPINNING, RESULT }
 
 class RouletteViewModel(app: Application) : AndroidViewModel(app) {
-    private val prefs = app.getSharedPreferences("campaign", Context.MODE_PRIVATE)
+    /** Play testing has its own purse; the campaign shares one with every table. */
+    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
 
-    var bankroll by mutableDoubleStateOf(STARTING_BANKROLL)
-        private set
+    private fun spend(amount: Double) {
+        if (campaign) Campaign.stake(amount) else freePurse -= amount
+    }
+
+    private fun collect(amount: Double) {
+        if (campaign) Campaign.payOut(amount) else freePurse += amount
+    }
+
+    /** What this table will take on a spot, this hand. */
+    val limits get() = limitsFor(campaign)
     var selectedChip by mutableIntStateOf(25)
 
     /** Chips on the felt, keyed by the spot they sit on. */
@@ -75,65 +84,48 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
 
     var campaign by mutableStateOf(false)
         private set
-    var goal by mutableDoubleStateOf(CAMPAIGN_GOAL)
-        private set
+    val goal: Double get() = Campaign.goal
     private var modeInitialized = false
 
     fun enterMode(campaignMode: Boolean) {
-        if (modeInitialized && campaign == campaignMode) {
-            // One purse across the whole campaign: another table may have moved
-            // it while we were away, whatever this one was left in the middle of.
-            if (campaignMode) {
-                bankroll = prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-                goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
-            }
-            return
-        }
+        // The campaign purse is shared and live, so there is nothing to read
+        // back when another table has been at it — only free play needs a fill.
+        if (modeInitialized && campaign == campaignMode) return
         campaign = campaignMode
         modeInitialized = true
         phase = RoulettePhase.BETTING
         bets.clear(); defs.clear(); chipHistory.clear()
         pocket = null; lastWin = 0.0; history = emptyList()
-        bankroll = if (campaignMode) {
-            prefs.getFloat("bankroll", CAMPAIGN_START.toFloat()).toDouble()
-        } else STARTING_BANKROLL
-        goal = prefs.getFloat("goal", CAMPAIGN_GOAL.toFloat()).toDouble()
+        if (!campaignMode) freePurse = STARTING_BANKROLL
         notice = null
         message = "Place your bets"
     }
 
-    private fun persist() {
-        if (campaign) prefs.edit().putFloat("bankroll", bankroll.toFloat()).apply()
-    }
-
     fun raiseGoal() {
-        goal *= 100
-        prefs.edit().putFloat("goal", goal.toFloat()).apply()
+        Campaign.raiseGoal()
         notice = null
         message = "Place your bets"
     }
 
     fun restartCampaign() {
-        bankroll = CAMPAIGN_START
-        goal = CAMPAIGN_GOAL
-        prefs.edit()
-            .putFloat("bankroll", bankroll.toFloat())
-            .putFloat("goal", goal.toFloat())
-            .apply()
+        Campaign.restart()
         notice = null
         message = "Place your bets"
     }
 
+    /**
+     * Broke in the campaign is a marker, not a free reset: the house hands
+     * over five thousand and writes down seven and a half.
+     */
     fun buyBackIn() {
         if (phase == RoulettePhase.SPINNING) return
         // The chips still showing after a result are spent, not staked; sweep
         // them or they read as a live bet and the refill never lands.
         if (phase == RoulettePhase.RESULT) nextSpin()
         if (totalStaked > 0 || bankroll >= 25) return
-        bankroll = if (campaign) CAMPAIGN_START else STARTING_BANKROLL
-        persist()
+        if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
         notice = null
-        message = if (campaign) "Fresh start — road to \$1,000,000" else "Place your bets"
+        message = if (campaign) "Marker signed — dig out" else "Place your bets"
     }
 
     // ---- betting ----
@@ -141,9 +133,16 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     fun addChip(id: String, def: RouletteEngine.Bet) {
         if (phase == RoulettePhase.SPINNING) return
         if (phase == RoulettePhase.RESULT) nextSpin()
-        val amount = minOf(selectedChip, (bankroll - totalStaked).toInt())
-        if (amount <= 0) {
+        val affordable = minOf(selectedChip, (bankroll - totalStaked).toInt())
+        if (affordable <= 0) {
             notice = "No bankroll left"
+            return
+        }
+        // Every roulette spot is a bet in its own right, so the table max is
+        // read against what is already sitting on this one.
+        val amount = limits.allow(affordable, bets[id] ?: 0)
+        if (amount <= 0) {
+            notice = limits.refusal(side = false)
             return
         }
         bets[id] = (bets[id] ?: 0) + amount
@@ -196,8 +195,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
             notice = "Place a bet first"
             return
         }
-        bankroll -= totalStaked
-        persist()
+        spend(totalStaked.toDouble())
         lastBets = bets.toMap()
         lastDefs = defs.toMap()
         phase = RoulettePhase.SPINNING
@@ -225,8 +223,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         bets.forEach { (id, stake) ->
             totalReturn += RouletteEngine.settle(defs.getValue(id), stake.toDouble(), result)
         }
-        bankroll += totalReturn
-        persist()
+        collect(totalReturn)
         lastWin = totalReturn
         history = (listOf(result) + history).take(12)
         val net = totalReturn - totalStaked

@@ -16,6 +16,10 @@ enum class BetType(val displayName: String) {
     HEAVENLY_9("Heavenly 9"),
     BLAZING_7S("Blazing 7s"),
     COVER_ALL("Cover All"),
+    ;
+
+    /** Player, Banker and Tie are the table bets; the rest ride beside them. */
+    val isSide: Boolean get() = this != PLAYER && this != BANKER && this != TIE
 }
 
 data class BaccaratHand(

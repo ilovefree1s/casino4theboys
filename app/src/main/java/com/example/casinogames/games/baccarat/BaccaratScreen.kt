@@ -37,6 +37,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -810,7 +811,14 @@ private fun ArchedLabel(text: String, color: Color, modifier: Modifier) {
 @Composable
 private fun ChipRack(vm: BaccaratViewModel) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        chipsFor(vm.bankroll).forEach { chip ->
+        val racked = chipsFor(vm.bankroll, vm.limits)
+        // A chip picked in a richer room must not follow the player down.
+        LaunchedEffect(racked) {
+            if (racked.none { it.value == vm.selectedChip }) {
+                vm.selectedChip = racked.last().value
+            }
+        }
+        racked.forEach { chip ->
             CasinoChip(
                 imageRes = chip.imageRes,
                 contentDescription = "${chip.value} chip",

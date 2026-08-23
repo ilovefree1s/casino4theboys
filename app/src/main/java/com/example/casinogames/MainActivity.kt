@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.example.casinogames.campaign.Campaign
 import com.example.casinogames.games.baccarat.BaccaratScreen
 import com.example.casinogames.games.blackjack.Blazing777Screen
 import com.example.casinogames.games.blackjack.BlackjackMenuScreen
@@ -29,6 +30,8 @@ import com.example.casinogames.ui.theme.CasinoGamesTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // One campaign, read off disk once and shared by every table.
+        Campaign.init(this)
         enableEdgeToEdge()
         // Hide both system bars — the clock and battery sit on the felt
         // otherwise. A swipe from either edge brings them back briefly.

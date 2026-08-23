@@ -533,7 +533,14 @@ private fun BottomRow(vm: Blazing777ViewModel, onShowPayTable: () -> Unit) {
 @Composable
 private fun ChipRack(vm: Blazing777ViewModel) {
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        chipsFor(vm.bankroll).forEach { chip ->
+        val racked = chipsFor(vm.bankroll, vm.limits)
+        // A chip picked in a richer room must not follow the player down.
+        LaunchedEffect(racked) {
+            if (racked.none { it.value == vm.selectedChip }) {
+                vm.selectedChip = racked.last().value
+            }
+        }
+        racked.forEach { chip ->
             CasinoChip(
                 imageRes = chip.imageRes,
                 contentDescription = "${chip.value} chip",

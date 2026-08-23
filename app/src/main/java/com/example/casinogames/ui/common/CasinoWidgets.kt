@@ -37,6 +37,11 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.FreePlayLimits
+import com.example.casinogames.campaign.MARKER_AMOUNT
+import com.example.casinogames.campaign.MARKER_INTEREST
+import com.example.casinogames.campaign.TableLimits
 import com.example.casinogames.R
 import com.example.casinogames.ui.theme.CasinoPalette
 import java.util.Locale
@@ -52,12 +57,23 @@ val CASINO_CHIPS = listOf(
     ChipDef(5000, R.drawable.chip_5k),
 )
 
-/** Gold 25K chip — joins the rack once a 100k bankroll is reached. */
+/** Gold 25K chip — the top of the rack, and only the top rooms rack it. */
 val GOLD_CHIP = ChipDef(25_000, R.drawable.chip_25k)
 private val ALL_CHIPS = CASINO_CHIPS + GOLD_CHIP
 
-fun chipsFor(bankroll: Double): List<ChipDef> =
-    if (bankroll >= 100_000) ALL_CHIPS else CASINO_CHIPS
+/**
+ * The rack a table lays out. In the campaign the room decides: no chip is
+ * put out that the table would refuse, so the rack itself tells you where
+ * you are. Free play has no room, so it goes on the purse as it always did.
+ */
+fun chipsFor(bankroll: Double, limits: TableLimits = FreePlayLimits): List<ChipDef> {
+    val ceiling = when {
+        limits.enforced -> limits.max
+        bankroll >= 100_000 -> GOLD_CHIP.value
+        else -> CASINO_CHIPS.last().value
+    }
+    return ALL_CHIPS.filter { it.value <= ceiling }.ifEmpty { listOf(ALL_CHIPS.first()) }
+}
 
 /** Formats a bankroll amount: whole numbers without decimals, otherwise 2 places. */
 fun formatMoney(value: Double): String =
@@ -168,7 +184,11 @@ fun PlacedBetChip(
     }
 }
 
-/** Full-screen campaign bust overlay: the run is dead until they start over. */
+/**
+ * Full-screen campaign bust overlay. The run is not dead — the house will
+ * always cover a player — but the marker it writes has to be cleared before
+ * they are allowed upstairs again.
+ */
 @Composable
 fun CampaignGameOver(onStartOver: () -> Unit) {
     Box(
@@ -183,21 +203,30 @@ fun CampaignGameOver(onStartOver: () -> Unit) {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
-                "GAME OVER",
-                fontSize = 42.sp,
+                "TAPPED OUT",
+                fontSize = 40.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.14.em,
                 color = Color(0xFFFF3B5C),
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "The bankroll's gone — campaign busted.",
+                "The purse is gone. The house will cover you.",
                 fontSize = 13.sp,
                 color = Color(0xB3FFFFFF),
             )
-            Spacer(Modifier.height(30.dp))
+            if (Campaign.debt > 0) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Already owing ${formatMoney(Campaign.debt)}",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF3B5C),
+                )
+            }
+            Spacer(Modifier.height(26.dp))
             Text(
-                "GO TO THE BANK AND GET A LOAN",
+                "SIGN A ${formatMoney(MARKER_AMOUNT)} MARKER",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.08.em,
@@ -207,6 +236,15 @@ fun CampaignGameOver(onStartOver: () -> Unit) {
                     .background(Color(0xFFFFD24D))
                     .clickable(onClick = onStartOver)
                     .padding(horizontal = 28.dp, vertical = 14.dp),
+            )
+            Spacer(Modifier.height(10.dp))
+            // The whole point of the marker: it is not a free reset.
+            Text(
+                "${formatMoney(MARKER_AMOUNT * (1 + MARKER_INTEREST))} to clear · " +
+                    "no moving up until you do",
+                fontSize = 10.sp,
+                letterSpacing = 0.04.em,
+                color = Color(0x8CFFFFFF),
             )
         }
     }
