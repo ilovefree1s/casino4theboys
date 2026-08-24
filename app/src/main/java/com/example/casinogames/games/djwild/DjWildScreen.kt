@@ -87,7 +87,7 @@ fun DjWildScreen(
         Image(
             painter = painterResource(R.drawable.dj4theboys),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.42f),
+            modifier = Modifier.fillMaxSize().alpha(0.28f),
             contentScale = ContentScale.Crop,
         )
         Column(
@@ -369,25 +369,22 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
         }
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
-            Row(
+            // One decision on this table, not three streets, so the play bet
+            // needs a line rather than a ladder.
+            Column(
                 Modifier.align(Alignment.TopCenter),
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 CircleSpot("PLAY", IceBlue, vm.playStake, spot, null)
+                Text(
+                    "PLAY = 2X ANTE",
+                    color = IceBlue.copy(alpha = 0.8f),
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
             }
-            FeltPayTable(
-                title = "PLAY BET",
-                color = IceBlue,
-                // One decision on this table, not three streets.
-                rows = listOf(
-                    "Play the hand" to "2x",
-                    "Or fold" to "—",
-                    "Dealer always qualifies" to "",
-                ),
-                width = gutter - 8.dp,
-                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 6.dp),
-                onClick = onShowPays,
-            )
             FeltPayTable(
                 title = "BLIND",
                 color = NeonBlue,
