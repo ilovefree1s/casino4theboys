@@ -41,9 +41,14 @@ private val PageBlack = Color(0xFF000000)
 /** The page art, and the marks measured off it (853 x 1844). */
 private const val PageWidth = 853f
 private const val PageHeight = 1844f
+/**
+ * Both cards were dropped 48px down the page: the room plate is drawn live and
+ * its pill sat over the top edge of the UTH card, which the art could not know
+ * about. There is black to spare below them.
+ */
 private val CardBands = listOf(
-    PokerVariant.ULTIMATE_TEXAS_HOLDEM to (886f to 1166f),
-    PokerVariant.DJ_WILD to (1202f to 1490f),
+    PokerVariant.ULTIMATE_TEXAS_HOLDEM to (934f to 1214f),
+    PokerVariant.DJ_WILD to (1250f to 1538f),
 )
 /** The art paints the menu button; only its press is caught. */
 private const val MenuCentreX = 74f
