@@ -319,7 +319,8 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
                 // Each spot stands under its own ladder — Bad Beat left,
                 // Trips right — so the chips sit beside what they pay.
                 DiamondSpot(
-                    "BAD BEAT", NeonBlue,
+                    // Two lines: the diamond is taller than it is wide inside.
+                    "BAD\nBEAT", NeonBlue,
                     amount = if (betting) vm.badBeat else vm.badBeatStake,
                     size = spot,
                     onClick = { vm.addBadBeat() }.takeIf { betting },
@@ -515,9 +516,11 @@ private fun SpotContents(label: String, color: Color, amount: Int, size: Dp) {
         Text(
             label,
             color = color.copy(alpha = 0.75f),
-            fontSize = if (label.length > 6) 8.sp else 10.sp,
+            // Sized off the longest line, so a stacked label keeps full size.
+            fontSize = if (label.lines().maxOf { it.length } > 6) 8.sp else 10.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.06.em,
+            lineHeight = 11.sp,
             textAlign = TextAlign.Center,
         )
     }
