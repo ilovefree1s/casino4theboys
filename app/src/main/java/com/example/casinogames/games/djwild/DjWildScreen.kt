@@ -103,7 +103,7 @@ fun DjWildScreen(
             TopBar(vm, onBack)
             // Drops both hands off the top bar and into the felt, taken out of
             // the slack above the bet spots so nothing below moves.
-            Spacer(Modifier.height(90.dp))
+            Spacer(Modifier.height(130.dp))
             HandRow(vm, dealer = true)
             Spacer(Modifier.height(6.dp))
             TableDivider()
@@ -207,7 +207,7 @@ private fun HandRow(vm: DjWildViewModel, dealer: Boolean) {
                             else Modifier
                         )
                     ) {
-                        PlayingCardView(card, faceUp = faceUp, scale = 0.95f)
+                        PlayingCardView(card, faceUp = faceUp, scale = 1.045f)
                     }
                 }
             }
@@ -221,7 +221,7 @@ private fun EmptySlot() {
         Modifier
             // Matches a dealt card at the row's scale, so the row does not
             // jump width as the cards land.
-            .size(width = 49.dp, height = 74.dp)
+            .size(width = 54.dp, height = 81.dp)
             .drawBehind {
                 drawRoundRect(
                     color = Color(0x59FFFFFF),

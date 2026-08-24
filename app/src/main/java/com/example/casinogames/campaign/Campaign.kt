@@ -32,7 +32,7 @@ enum class Room(
     val badBeatMax: Int,
 ) {
     BASEMENT("The Basement", 0.0, 25, 500, 100, 5),
-    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500, 10),
+    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500, 25),
     HIGH_LIMIT("High Limit", 50_000.0, 500, 10_000, 2_000, 25),
     SALON("The Salon", 250_000.0, 2_500, 50_000, 10_000, 50),
     WHALE("Whale Room", 1_000_000.0, 10_000, 250_000, 50_000, 100);
