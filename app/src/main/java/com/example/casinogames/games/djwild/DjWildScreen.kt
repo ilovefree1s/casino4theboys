@@ -90,7 +90,11 @@ fun DjWildScreen(
             modifier = Modifier.fillMaxSize().alpha(0.19f),
             contentScale = ContentScale.Crop,
         )
-        Column(
+        // The table is two blocks, not one column: the hands hang off the top
+        // bar and the spots, chips and buttons stand on the bottom edge. Run as
+        // one column, a tall result — five pills on a short phone — pushed the
+        // buttons off the screen entirely, with no way back to a new hand.
+        BoxWithConstraints(
             Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
@@ -98,26 +102,35 @@ fun DjWildScreen(
                 .padding(horizontal = 14.dp)
                 // Lifts the spots, chips and buttons clear of the bottom edge.
                 .padding(bottom = 18.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            TopBar(vm, onBack)
-            // Drops both hands off the top bar and into the felt, taken out of
-            // the slack above the bet spots so nothing below moves.
-            Spacer(Modifier.height(130.dp))
-            HandRow(vm, dealer = true)
-            Spacer(Modifier.height(6.dp))
-            TableDivider()
-            Spacer(Modifier.height(10.dp))
-            HandRow(vm, dealer = false)
-            Spacer(Modifier.height(4.dp))
-            MessageLine(vm)
-            ResultRows(vm)
-            Spacer(Modifier.weight(1f))
-            BetSpots(vm, onShowPays = { showPays = true })
-            Spacer(Modifier.height(6.dp))
-            if (vm.phase == DjPhase.BETTING) ChipRail(vm)
-            Spacer(Modifier.height(6.dp))
-            Actions(vm)
+            // The hands sit off the top bar, but only as far as the screen can
+            // spare — a short one gives the felt below it back.
+            val drop = (maxHeight * 0.07f).coerceAtMost(60.dp)
+            Column(
+                Modifier.fillMaxWidth().align(Alignment.TopCenter),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                TopBar(vm, onBack)
+                Spacer(Modifier.height(drop))
+                HandRow(vm, dealer = true)
+                Spacer(Modifier.height(6.dp))
+                TableDivider()
+                Spacer(Modifier.height(10.dp))
+                HandRow(vm, dealer = false)
+                Spacer(Modifier.height(4.dp))
+                MessageLine(vm)
+                ResultRows(vm)
+            }
+            Column(
+                Modifier.fillMaxWidth().align(Alignment.BottomCenter),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                BetSpots(vm, onShowPays = { showPays = true })
+                Spacer(Modifier.height(6.dp))
+                if (vm.phase == DjPhase.BETTING) ChipRail(vm)
+                Spacer(Modifier.height(6.dp))
+                Actions(vm)
+            }
         }
 
         if (showPays) PayTables { showPays = false }
