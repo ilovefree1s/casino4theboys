@@ -31,11 +31,11 @@ enum class Room(
     val sideMax: Int,
     val badBeatMax: Int,
 ) {
-    BASEMENT("The Basement", 0.0, 25, 500, 100, 5),
-    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500, 25),
-    HIGH_LIMIT("High Limit", 50_000.0, 500, 10_000, 2_000, 25),
-    SALON("The Salon", 250_000.0, 2_500, 50_000, 10_000, 50),
-    WHALE("Whale Room", 1_000_000.0, 10_000, 250_000, 50_000, 100);
+    BASEMENT("The Basement", 0.0, 25, 500, 100, 25),
+    MAIN_FLOOR("Main Floor", 10_000.0, 100, 2_500, 500, 50),
+    HIGH_LIMIT("High Limit", 50_000.0, 500, 10_000, 2_000, 75),
+    SALON("The Salon", 250_000.0, 2_500, 50_000, 10_000, 100),
+    WHALE("Whale Room", 1_000_000.0, 10_000, 250_000, 50_000, 125);
 
     /** How the limits read on a table sign. */
     val sign: String get() = "$${fmt(minBet)} – $${fmt(maxBet)}"

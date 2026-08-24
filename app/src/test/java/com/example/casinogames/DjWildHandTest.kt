@@ -306,10 +306,17 @@ class DjWildBadBeatTest {
                 room.badBeatMax < room.sideMax,
             )
         }
+        // Every rung is a whole $25 chip, so the house never takes a clipped bet.
+        Room.entries.forEach { room ->
+            assertEquals(
+                "${room.roomName} should cap the bad beat on a whole chip",
+                0, room.badBeatMax % 25,
+            )
+        }
         // The point of the cap: a royal on the cheapest table is a great night,
         // not the whole million-dollar campaign in one hand.
         val basementRoyal = Room.BASEMENT.badBeatMax * DjWildRules.BadBeatPay.ROYAL_FLUSH.payout
-        assertEquals(50_000, basementRoyal)
+        assertEquals(250_000, basementRoyal)
         assertTrue("a Basement royal must not win the campaign", basementRoyal < CAMPAIGN_GOAL)
     }
 
@@ -317,9 +324,9 @@ class DjWildBadBeatTest {
     fun `the table will not take more than the bad beat cap`() {
         val basement = limitsFor(campaign = true)
         // limitsFor reads the live campaign, which starts in the Basement.
-        assertEquals(5, basement.badBeatMax)
-        assertEquals(5, basement.allowBadBeat(wanted = 25, alreadyOn = 0))
-        assertEquals(0, basement.allowBadBeat(wanted = 25, alreadyOn = 5))
+        assertEquals(25, basement.badBeatMax)
+        assertEquals(25, basement.allowBadBeat(wanted = 25, alreadyOn = 0))
+        assertEquals(0, basement.allowBadBeat(wanted = 25, alreadyOn = 25))
         // Play testing has no house behind it, so nothing is capped.
         assertEquals(25, FreePlayLimits.allowBadBeat(wanted = 25, alreadyOn = 500))
     }
