@@ -1,0 +1,33 @@
+# DJ Wild settlement cases, shared by both builds.
+#
+# The Compose engine (DjWildRules.settle) and the web engine
+# (window.DJ.settle) are two hand-written copies of the same maths. This
+# file is the referee: DjWildParityTest.kt runs it against Kotlin,
+# web/dj-parity.html runs it against the JavaScript, and both must agree
+# with every line here.
+#
+# Cards are rank + suit: 2-9, T, J, Q, K, A and s h d c. W is the joker,
+# which carries a suit only because every card has to.
+#
+# player | dealer | ante blind play trips badbeat folded |
+#   outcome anteReturn blindReturn playReturn tripsReturn badBeatReturn |
+#   player hand | dealer hand
+#
+# Returns are gross - stake plus winnings - so a push returns exactly the
+# stake. "fold" in the stakes column is a fold; "-" is a hand played on.
+
+Ah Kh Qh Jh Th | 9s 8d 7c 6h 5s | 25 25 50 25 25 - | win 50 1275 100 25025 2525 | Royal Flush | Straight
+7c 7d 7h 3s 4c | Ac Kd Qh Js 9c | 25 25 50 25 25 - | win 50 25 100 175 0 | Three of a Kind | High Card
+9h 9d 9c 4s 5h | Ah Kd Qc Js 3h | 25 25 0 25 25 fold | fold 0 0 0 175 250 | Three of a Kind | High Card
+Ah Kh 7c 4d 3s | Ad Kd 7h 4c 3h | 25 25 50 25 25 - | push 25 25 50 0 0 | High Card | High Card
+2s Ah Ad Ac Ks | Qh Qd Qc 5s 6h | 25 25 50 25 25 - | win 50 125 100 175 250 | Four of a Kind | Three of a Kind
+Ws Ah Ad Ac Ks | Qh Qd Qc 5s 6h | 25 25 50 25 25 - | win 50 125 100 175 250 | Four of a Kind | Three of a Kind
+2s 2h 2d 2c Ws | Ah Kd Qc Js 9h | 25 25 50 25 25 - | win 50 25025 100 50025 0 | Five Wilds | High Card
+2s 3s 4s 5s 6s | Ah Kd Qc Js 9h | 25 25 50 25 25 - | win 50 250 100 5025 0 | Straight Flush | High Card
+5h 6h 7h 8h 9h | Kc Kd Ks Kh 3c | 25 25 50 25 25 - | win 50 250 100 5025 12525 | Straight Flush | Four of a Kind
+Ah 3s 4d 5c 2h | Kc Qd Js 9h 8c | 25 25 50 25 25 - | win 50 50 100 525 0 | Straight | High Card
+9h 8d 7c 6s 5h | Ac Kh Qd Js 3c | 25 25 50 25 25 - | win 50 50 100 525 0 | Straight | High Card
+2s Ah Ad Ac As | Kc Kd Ks 5h 6c | 25 25 50 25 25 - | win 50 275 100 1775 250 | Five of a Kind | Three of a Kind
+Ah Jh 9h 7h 5h | Kc Kd Ks Kh 3c | 25 25 50 25 25 - | lose 0 0 0 650 7525 | Flush | Four of a Kind
+Ah Kd 9c 7s 5h | Ac Qh Jd 8s 6c | 100 100 200 0 0 - | win 200 100 400 0 0 | High Card | High Card
+2s 8s 9s Ts Js | Ah Ad Ac Kh Kd | 25 25 50 25 25 - | win 50 250 100 650 10025 | Straight Flush | Full House

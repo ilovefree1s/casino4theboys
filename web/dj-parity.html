@@ -1,0 +1,132 @@
+<!doctype html>
+<title>DJ Wild parity · web engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { background: #02050A; color: #F5F1E8; font: 13px "Segoe UI", system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 16px; letter-spacing: .1em; color: #9BE3FB; margin: 0 0 4px; }
+  .sub { color: rgba(245,241,232,.6); margin-bottom: 16px; }
+  #tally { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .ok { color: #9BE3FB; }
+  .bad { color: #FF4D4D; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(245,241,232,.12); vertical-align: top; }
+  th { color: rgba(245,241,232,.55); font-weight: 600; font-size: 11px; letter-spacing: .08em; }
+  td.hand { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .why { color: #FF9C8A; font-size: 12px; }
+  iframe { display: none; }
+</style>
+<h1>DJ WILD PARITY · WEB ENGINE</h1>
+<div class="sub">
+  Runs <code>djwild-parity.txt</code> — the same fixture DjWildParityTest.kt runs against Compose —
+  through <code>window.DJ</code> inside the shipped app.html.
+</div>
+<div id="tally">Loading…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody></tbody></table>
+<iframe id="app" src="app.html"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  var SUIT = { s: "♠", h: "♥", d: "♦", c: "♣" };
+  var RED = { h: 1, d: 1 };
+
+  function cards(spec) {
+    return spec.trim().split(/\s+/).map(function (token) {
+      var r = token[0] === "T" ? "10" : token[0];
+      var s = token[1];
+      // W is the joker: it carries a suit only because every card has to.
+      if (token[0] === "W") {
+        return { rank: "★", suit: "★", red: false, joker: true };
+      }
+      return { rank: r, suit: SUIT[s], red: !!RED[s] };
+    });
+  }
+
+  function parse(text) {
+    return text.split("\n")
+      .map(function (l) { return l.split("#")[0].trim(); })
+      .filter(function (l) { return l.length; })
+      .map(function (line) {
+        var c = line.split("|").map(function (x) { return x.trim(); });
+        var stakes = c[2].split(/\s+/);
+        var want = c[3].split(/\s+/);
+        return {
+          line: line,
+          player: cards(c[0]), dealer: cards(c[1]),
+          ante: +stakes[0], blind: +stakes[1], play: +stakes[2],
+          trips: +stakes[3], badBeat: +stakes[4],
+          folded: stakes[5] === "fold",
+          outcome: want[0],
+          anteReturn: +want[1], blindReturn: +want[2], playReturn: +want[3],
+          tripsReturn: +want[4], badBeatReturn: +want[5],
+          playerHand: c[4], dealerHand: c[5]
+        };
+      });
+  }
+
+  function check(DJ, c) {
+    var s = DJ.settle(c.player, c.dealer, c.ante, c.blind, c.play,
+                      c.trips, c.badBeat, c.folded);
+    var bad = [];
+    function eq(what, got, want) {
+      if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
+    }
+    eq("outcome", s.outcome, c.outcome);
+    eq("ante", s.ante, c.anteReturn);
+    eq("blind", s.blind, c.blindReturn);
+    eq("play", s.play, c.playReturn);
+    eq("trips", s.trips, c.tripsReturn);
+    eq("bad beat", s.badBeat, c.badBeatReturn);
+    eq("player hand", DJ.CAT[s.player.cat], c.playerHand);
+    eq("dealer hand", DJ.CAT[s.dealer.cat], c.dealerHand);
+    return bad;
+  }
+
+  function run(DJ, cases) {
+    var body = document.querySelector("#rows tbody");
+    var failed = 0;
+    cases.forEach(function (c) {
+      var bad = check(DJ, c);
+      if (bad.length) failed++;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="hand">' + c.line.split("|").slice(0, 3).join(" | ") + "</td>" +
+        '<td class="' + (bad.length ? "bad" : "ok") + '">' +
+        (bad.length ? '<span class="why">' + bad.join("<br>") + "</span>" : "match") +
+        "</td>";
+      body.appendChild(tr);
+    });
+    var tally = document.getElementById("tally");
+    tally.className = failed ? "bad" : "ok";
+    tally.textContent = failed
+      ? failed + " of " + cases.length + " cases disagree with the Compose engine"
+      : "All " + cases.length + " cases match the Compose engine";
+    // So a runner can read the verdict without scraping the table.
+    window.PARITY = { total: cases.length, failed: failed };
+  }
+
+  function fail(msg) {
+    var tally = document.getElementById("tally");
+    tally.className = "bad";
+    tally.textContent = msg;
+    window.PARITY = { total: 0, failed: -1, error: msg };
+  }
+
+  var frame = document.getElementById("app");
+  var text = null, ready = false;
+  function start() {
+    if (!ready || text === null) return;
+    var DJ = frame.contentWindow && frame.contentWindow.DJ;
+    if (!DJ) { fail("app.html did not expose window.DJ — is the build current?"); return; }
+    run(DJ, parse(text));
+  }
+  frame.addEventListener("load", function () { ready = true; start(); });
+  fetch("djwild-parity.txt")
+    .then(function (r) {
+      if (!r.ok) throw new Error("djwild-parity.txt: HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (t) { text = t; start(); })
+    .catch(function (e) { fail(String(e)); });
+})();
+</script>

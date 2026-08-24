@@ -703,6 +703,60 @@
   }
   .uth-btn:active { transform: scale(.98); }
 
+  /* ========== DJ WILD ==========
+     The Ultimate layout in the felt's own colours, taken off dj4theboys.png
+     rather than picked by eye: the neon ring for the bets that ride on the
+     hand, its bright core for the two side bets. Redefining the one variable
+     recolours every rule the hold'em table already has. */
+  #screen-djwild { position: relative; background: #02050A; --uth-green: #2097F9; }
+  .dj-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .19; pointer-events: none;
+  }
+  /* Two blocks, not one column: hands off the top bar, spots and buttons on
+     the bottom edge, so neither can shove the other off the screen. */
+  .dj-table { justify-content: space-between; }
+  .dj-top, .dj-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .dj-drop { height: 7vh; max-height: 60px; }
+  .dj-hand { gap: 4px; }
+  /* Spotting the wilds is the game, so they are ringed in the hand. */
+  .dj-hand .card.wild .front { box-shadow: inset 0 0 0 2px #9BE3FB; }
+  .dj-hand .card .joker { display: flex; flex-direction: column; height: 100%; }
+  .dj-hand .card .joker .nm { font-size: 8px; letter-spacing: .04em; text-align: center; }
+  .dj-hand .card .joker .star { flex: 1; display: grid; place-items: center; font-size: 22px; }
+  .dj-hand .card .joker .nm.up { transform: rotate(180deg); }
+  #screen-djwild .uth-spot .cap { color: rgba(32,151,249,.75); line-height: 1.15; }
+  #screen-djwild .dj-side .uth-spot .cap { color: rgba(155,227,251,.75); }
+  #screen-djwild .uth-eq { color: rgba(32,151,249,.85); }
+  .dj-side .mid { gap: 14px; }
+  .dj-side .uth-pays .hd .ttl, .dj-side .uth-pays .row .val { color: #9BE3FB; }
+  .dj-side .uth-pays .hd .bar { background: #9BE3FB; }
+  .dj-play { font-family: var(--display); font-size: 10px; letter-spacing: .1em;
+    color: rgba(32,151,249,.8); margin-top: 4px; }
+  .dj-pills { display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
+  .dj-pill {
+    display: flex; align-items: center; gap: 8px; padding: 3px 12px;
+    border: 1px solid rgba(245,241,232,.25); border-radius: 999px;
+    background: rgba(2,5,10,.55); font-size: 11px;
+  }
+  .dj-pill .nm { color: rgba(245,241,232,.9); }
+  .dj-pill .amt { font-family: var(--display); }
+  .dj-pill.w { border-color: #9BE3FB; }
+  .dj-pill.w .amt { color: #57E06A; }
+  .dj-pill.l .amt { color: #FF4D4D; }
+  .dj-pill.p .amt { color: rgba(245,241,232,.6); }
+  /* Five cards a side and up to five result pills is the tallest table here.
+     On a short window it gives back the drop and tightens the pills, rather
+     than pushing the buttons further under the fold. */
+  @media (max-height: 860px) {
+    .dj-drop { height: 0; }
+    .dj-pills { gap: 2px; }
+    .dj-pill { padding: 2px 10px; font-size: 10px; }
+    #screen-djwild .card { width: 46px; height: 69px; }
+    #screen-djwild .cards { min-height: 69px; }
+    #screen-djwild .card .mid { font-size: 18px; }
+  }
+
   .uth-rebuy {
     position: absolute; inset: 0; z-index: 30; display: none;
     flex-direction: column; align-items: center; justify-content: center;
@@ -933,7 +987,7 @@
     <div class="lb-cards">
       <button class="lb-imgcard" id="lb-baccarat"><img src="__LB_BACCARAT__" alt="Baccarat — play"></button>
       <button class="lb-imgcard" id="lb-blackjack"><img src="__LB_BLACKJACK__" alt="Free Bet Blackjack — play"></button>
-      <button class="lb-imgcard" id="lb-holdem"><img src="__LB_HOLDEM__" alt="Ultimate Texas Hold'em — play"></button>
+      <button class="lb-imgcard" id="lb-poker"><img src="__LB_POKER__" alt="Poker — Ultimate Texas Hold'em or DJ Wild"></button>
       <div class="lb-imgcard soon"><img src="__LB_ROULETTE__" alt="Roulette — coming soon"></div>
       <div class="lb-imgcard soon"><img src="__LB_CRAPS__" alt="Craps — coming soon"></div>
     </div>
@@ -953,6 +1007,22 @@
       <button class="bjm-band" id="bjm-freebet" style="top:27.87%;height:23.21%" aria-label="Free Bet Blackjack — play"></button>
       <button class="bjm-band" id="bjm-blazing" style="top:52.81%;height:20.57%" aria-label="Blazing 777s with TriLux — play"></button>
       <button class="bjm-band" id="bjm-doubledown" style="top:75.90%;height:21.11%" aria-label="Double Down Madness — play"></button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= POKER VARIANTS ================= -->
+<div class="screen" id="screen-poker">
+  <img class="mm-bg" src="__BG__" alt="" style="opacity:.35">
+  <div class="bjm-col">
+    <div class="bjm-top">
+      <button class="lb-menu" id="pk-back" aria-label="Back to lobby">←</button>
+    </div>
+    <!-- The same page art the app draws, with each card's band as its tap target. -->
+    <div class="bjm-page">
+      <img src="__POKER_PAGE__" alt="Poker variants">
+      <button class="bjm-band" id="pk-uth" style="top:50.65%;height:15.18%" aria-label="Ultimate Texas Hold'em — play"></button>
+      <button class="bjm-band" id="pk-djwild" style="top:67.79%;height:15.62%" aria-label="DJ Wild — play"></button>
     </div>
   </div>
 </div>
@@ -1055,7 +1125,7 @@
   <img class="uth-bg" src="__BG__" alt="">
   <div class="uth-table">
     <div class="uth-topbar">
-      <button class="backlink" id="uth-back">‹ LOBBY</button>
+      <button class="backlink" id="uth-back">‹ POKER</button>
       <div class="uth-money">
         <span class="lbl">BANKROLL</span><span class="val" id="uth-bankroll">5,000</span>
         <span class="gap"></span>
@@ -1088,6 +1158,46 @@
   <div class="uth-rebuy" id="uth-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="uth-buyin">BUY BACK IN</button>
+  </div>
+</div>
+
+<!-- ================= DJ WILD ================= -->
+<div class="screen" id="screen-djwild">
+  <!-- The felt art is already blue, so unlike hold'em it takes no hue swing. -->
+  <img class="dj-bg" src="__DJ_BG__" alt="">
+  <div class="uth-table dj-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="backlink" id="dj-back">‹ POKER</button>
+        <div class="uth-money">
+          <span class="lbl">BANKROLL</span><span class="val" id="dj-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="dj-risk">0</span>
+        </div>
+      </div>
+      <div class="dj-drop"></div>
+      <div class="uth-label" id="dj-dealer-label"><span class="nm">DEALER</span></div>
+      <div class="cards dj-hand" id="dj-dealer" style="margin-top:5px"></div>
+      <div style="height:6px"></div>
+      <div class="uth-rule"></div>
+      <div style="height:10px"></div>
+      <div class="uth-label" id="dj-hand-label"><span class="nm">YOUR HAND</span></div>
+      <div class="cards dj-hand" id="dj-hole" style="margin-top:5px"></div>
+      <div class="uth-message" id="dj-message">Place your ante</div>
+      <div class="dj-pills" id="dj-results"></div>
+    </div>
+    <!-- The spots and buttons stand on the bottom edge: a five-pill result on a
+         short screen must never be able to push the buttons off. -->
+    <div class="dj-bottom">
+      <div class="uth-spots" id="dj-spots"></div>
+      <div id="dj-rack"></div>
+      <div class="uth-actions" id="dj-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="dj-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="dj-buyin">BUY BACK IN</button>
   </div>
 </div>
 
@@ -1335,11 +1445,11 @@
    * hard — the house will not take the chip.
    */
   var ROOMS = [
-    { key: "BASEMENT",   name: "The Basement", buyIn: 0,       min: 25,    max: 500,    sideMax: 100 },
-    { key: "MAIN_FLOOR", name: "Main Floor",   buyIn: 10000,   min: 100,   max: 2500,   sideMax: 500 },
-    { key: "HIGH_LIMIT", name: "High Limit",   buyIn: 50000,   min: 500,   max: 10000,  sideMax: 2000 },
-    { key: "SALON",      name: "The Salon",    buyIn: 250000,  min: 2500,  max: 50000,  sideMax: 10000 },
-    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: 250000, sideMax: 50000 }
+    { key: "BASEMENT",   name: "The Basement", buyIn: 0,       min: 25,    max: 500,    sideMax: 100,   badBeatMax: 25 },
+    { key: "MAIN_FLOOR", name: "Main Floor",   buyIn: 10000,   min: 100,   max: 2500,   sideMax: 500,   badBeatMax: 50 },
+    { key: "HIGH_LIMIT", name: "High Limit",   buyIn: 50000,   min: 500,   max: 10000,  sideMax: 2000,  badBeatMax: 75 },
+    { key: "SALON",      name: "The Salon",    buyIn: 250000,  min: 2500,  max: 50000,  sideMax: 10000, badBeatMax: 100 },
+    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: 250000, sideMax: 50000, badBeatMax: 125 }
   ];
   function roomShort(v) { return v >= 1000 ? (v / 1000) + "K" : String(v); }
   function roomSign(r) { return "$" + roomShort(r.min) + " – $" + roomShort(r.max); }
@@ -1349,7 +1459,9 @@
   var MARKER_AMOUNT = 5000, MARKER_INTEREST = 0.5;
 
   /** No house, no limits — play testing is uncapped. */
-  var FREE_LIMITS = { min: 0, max: Infinity, sideMax: Infinity, enforced: false };
+  var FREE_LIMITS = {
+    min: 0, max: Infinity, sideMax: Infinity, badBeatMax: Infinity, enforced: false
+  };
 
   /**
    * How much of [wanted] a spot will take, given what is on it already.
@@ -1363,6 +1475,16 @@
   function refusal(limits, side) {
     return side ? "Side bet max $" + fmt(limits.sideMax) : "Table max $" + fmt(limits.max);
   }
+  /**
+   * The Bad Beat rides its own, far lower ladder. At 10,000-to-1 the ordinary
+   * side cap would let one hand pay off the whole campaign, so the room holds
+   * it to a chip or two.
+   */
+  function allowBadBeat(limits, wanted, alreadyOn) {
+    if (!limits.enforced) return wanted;
+    return Math.min(wanted, Math.max(0, limits.badBeatMax - alreadyOn));
+  }
+  function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }
 
   // ---------- wallet & shell ----------
   var CAMPAIGN_START = 5000, CAMPAIGN_GOAL = 1000000;
@@ -1410,7 +1532,10 @@
     limits: function () {
       if (this.mode !== "campaign") return FREE_LIMITS;
       var r = this.getRoom();
-      return { min: r.min, max: r.max, sideMax: r.sideMax, enforced: true };
+      return {
+        min: r.min, max: r.max, sideMax: r.sideMax,
+        badBeatMax: r.badBeatMax, enforced: true
+      };
     },
 
     canEnter: function (room) {
@@ -1571,8 +1696,13 @@
   });
   $("lb-baccarat").addEventListener("click", function () { Baccarat.enter(); Shell.show("baccarat"); });
   $("lb-blackjack").addEventListener("click", function () { Shell.show("bjmenu"); });
-  $("lb-holdem").addEventListener("click", function () { Holdem.enter(); Shell.show("holdem"); });
-  $("uth-back").addEventListener("click", function () { Shell.showLobby(); });
+  // Poker is a page of its own now, the way blackjack already was.
+  $("lb-poker").addEventListener("click", function () { Shell.show("poker"); });
+  $("pk-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("pk-uth").addEventListener("click", function () { Holdem.enter(); Shell.show("holdem"); });
+  $("pk-djwild").addEventListener("click", function () { DjWild.enter(); Shell.show("djwild"); });
+  $("uth-back").addEventListener("click", function () { Shell.show("poker"); });
+  $("dj-back").addEventListener("click", function () { Shell.show("poker"); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-freebet").addEventListener("click", function () {
     Blackjack.enter("freebet"); Shell.show("blackjack");
@@ -1591,15 +1721,19 @@
   function cardEl(c, faceUp) {
     var el = document.createElement("div");
     el.className = "card" + (faceUp ? " up" : "");
-    el.innerHTML =
-      '<div class="inner">' +
-      '<div class="face front ' + (c.red ? "red" : "black") + '">' +
-      '<div class="tl">' + c.rank + "</div>" +
-      '<div class="mid">' + c.suit + "</div>" +
-      '<div class="br">' + c.rank + "</div>" +
-      "</div>" +
-      '<div class="face back"></div>' +
-      "</div>";
+    // The joker carries a suit only because every card has to; it means
+    // nothing, so its face ignores it and takes the name instead of a rank.
+    var front = c.joker
+      ? '<div class="face front black"><div class="joker">' +
+          '<div class="nm">JOKER</div><div class="star">★</div>' +
+          '<div class="nm up">JOKER</div>' +
+        "</div></div>"
+      : '<div class="face front ' + (c.red ? "red" : "black") + '">' +
+          '<div class="tl">' + c.rank + "</div>" +
+          '<div class="mid">' + c.suit + "</div>" +
+          '<div class="br">' + c.rank + "</div>" +
+        "</div>";
+    el.innerHTML = '<div class="inner">' + front + '<div class="face back"></div></div>';
     return el;
   }
   var SUITS = [["♠", 0], ["♥", 1], ["♦", 1], ["♣", 0]];
@@ -1722,6 +1856,277 @@
       for (var s = 0; s < 4; s++)
         for (var r = 0; r < 13; r++)
           shoe.push({ rank: RANKS[r], suit: SUITS[s][0], red: SUITS[s][1] === 1 });
+    for (var i = shoe.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = shoe[i]; shoe[i] = shoe[j]; shoe[j] = t;
+    }
+    return shoe;
+  }
+  /* ============================================================
+     DJ Wild engine — mirrors DjWildHand.kt and DjWildRules.kt so both
+     builds settle a hand the same way.
+     ============================================================ */
+  var DJ = (function () {
+    /* Ascending strength, so the index ranks them. */
+    var HIGH_CARD = 0, PAIR = 1, TWO_PAIR = 2, THREE_KIND = 3, STRAIGHT = 4,
+        FLUSH = 5, FULL_HOUSE = 6, FOUR_KIND = 7, STRAIGHT_FLUSH = 8,
+        FIVE_KIND = 9, ROYAL_FLUSH = 10, FIVE_WILDS = 11;
+    var CAT = ["High Card", "Pair", "Two Pair", "Three of a Kind", "Straight",
+               "Flush", "Full House", "Four of a Kind", "Straight Flush",
+               "Five of a Kind", "Royal Flush", "Five Wilds"];
+
+    /** Every deuce and the joker play wild — five wild cards in all. */
+    function isWild(c) { return !!c.joker || c.rank === "2"; }
+
+    /* The 52 a wild can turn into. The joker has no face, so it is not here. */
+    var DECK = (function () {
+      var d = [];
+      for (var s = 0; s < 4; s++)
+        for (var r = 0; r < 13; r++)
+          d.push({ rank: RANKS[r], suit: SUITS[s][0], red: SUITS[s][1] === 1 });
+      return d;
+    })();
+
+    function straightHigh(desc) {
+      var d = desc.filter(function (v, i) { return desc.indexOf(v) === i; });
+      if (d.length !== 5) return 0;
+      if (d[0] - d[4] === 4) return d[0];
+      if (d[0] === 14 && d[1] === 5 && d[4] === 2) return 5;   // the wheel
+      return 0;
+    }
+    /** Scores five cards that are all playing as themselves. */
+    function scoreNatural(hand) {
+      var v = hand.map(function (c) { return UTH.val(c.rank); })
+                  .sort(function (a, b) { return b - a; });
+      var flush = hand.every(function (c) { return c.suit === hand[0].suit; });
+      var sh = straightHigh(v);
+      var counts = {};
+      v.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+      var grouped = Object.keys(counts).map(function (k) {
+        return [parseInt(k, 10), counts[k]];
+      });
+      grouped.sort(function (a, b) { return b[1] - a[1] || b[0] - a[0]; });
+      var shape = grouped.map(function (g) { return g[1]; });
+      var ranks = grouped.map(function (g) { return g[0]; });
+      if (shape[0] === 5) return { cat: FIVE_KIND, tie: ranks };
+      if (flush && sh === 14) return { cat: ROYAL_FLUSH, tie: [14] };
+      if (flush && sh > 0) return { cat: STRAIGHT_FLUSH, tie: [sh] };
+      if (shape[0] === 4) return { cat: FOUR_KIND, tie: ranks };
+      if (shape[0] === 3 && shape[1] === 2) return { cat: FULL_HOUSE, tie: ranks };
+      if (flush) return { cat: FLUSH, tie: v };
+      if (sh > 0) return { cat: STRAIGHT, tie: [sh] };
+      if (shape[0] === 3) return { cat: THREE_KIND, tie: ranks };
+      if (shape[0] === 2 && shape[1] === 2) return { cat: TWO_PAIR, tie: ranks };
+      if (shape[0] === 2) return { cat: PAIR, tie: ranks };
+      return { cat: HIGH_CARD, tie: v };
+    }
+    function cmp(a, b) {
+      if (a.cat !== b.cat) return a.cat - b.cat;
+      for (var i = 0; i < a.tie.length; i++) {
+        var x = a.tie[i], y = b.tie[i] === undefined ? 0 : b.tie[i];
+        if (x !== y) return x - y;
+      }
+      return 0;
+    }
+    /**
+     * A wild becomes whatever card makes the hand best, so the score is the
+     * best of every substitution — worked out exhaustively rather than by
+     * rule. Substitutions are taken in non-decreasing deck order so the same
+     * multiset is never tried twice.
+     */
+    function score(hand) {
+      var wilds = hand.filter(isWild).length;
+      if (wilds === 5) return { cat: FIVE_WILDS, tie: [] };
+      var naturals = hand.filter(function (c) { return !isWild(c); });
+      if (wilds === 0) return scoreNatural(naturals);
+      var best = null;
+      (function fill(cards, left, from) {
+        if (left === 0) {
+          var v = scoreNatural(cards);
+          if (!best || cmp(v, best) > 0) best = v;
+          return;
+        }
+        for (var i = from; i < DECK.length; i++) fill(cards.concat([DECK[i]]), left - 1, i);
+      })(naturals, wilds, 0);
+      return best;
+    }
+    /**
+     * The hand read with every card playing as itself — a deuce counting two,
+     * not wild. Null when the hand holds the joker, which has no face of its
+     * own and so can never be part of a natural hand.
+     */
+    function naturalScore(hand) {
+      if (hand.some(function (c) { return c.joker; })) return null;
+      return scoreNatural(hand);
+    }
+
+    /* ---- the three ladders, read straight off the felt ---- */
+    var BAD_BEAT = [
+      ["Royal Flush", 10000], ["Quints", 10000], ["Straight Flush", 5000],
+      ["Quads", 500], ["Full House", 400], ["Flush", 300],
+      ["Straight", 100], ["Trips", 9]
+    ];
+    var BLIND = [
+      ["Five Wilds", 1000], ["Royal Flush", 50], ["Quints", 10],
+      ["Straight Flush", 9], ["Quads", 4], ["Full House", 3],
+      ["Flush", 3], ["Straight", 1]
+    ];
+    /** Wild column, then the far richer natural one; null where only a wild reaches. */
+    var TRIPS = [
+      ["Five Wilds", 2000, null], ["Royal Flush", 90, 1000], ["Quints", 70, null],
+      ["Straight Flush", 25, 200], ["Quads", 6, 60], ["Full House", 5, 30],
+      ["Flush", 4, 25], ["Straight", 3, 20], ["Three of a Kind", 1, 6]
+    ];
+
+    /** Which rung the Blind reaches, or -1 when trips or less pushes it. */
+    function blindRung(hand) {
+      switch (score(hand).cat) {
+        case FIVE_WILDS: return 0;
+        case ROYAL_FLUSH: return 1;
+        case FIVE_KIND: return 2;
+        case STRAIGHT_FLUSH: return 3;
+        case FOUR_KIND: return 4;
+        case FULL_HOUSE: return 5;
+        case FLUSH: return 6;
+        case STRAIGHT: return 7;
+        default: return -1;
+      }
+    }
+    function tripsRung(cat) {
+      switch (cat) {
+        case FIVE_WILDS: return 0;
+        case ROYAL_FLUSH: return 1;
+        case FIVE_KIND: return 2;
+        case STRAIGHT_FLUSH: return 3;
+        case FOUR_KIND: return 4;
+        case FULL_HOUSE: return 5;
+        case FLUSH: return 6;
+        case STRAIGHT: return 7;
+        case THREE_KIND: return 8;
+        default: return -1;
+      }
+    }
+    /**
+     * The better of the two ladders. A hand can qualify twice over — 2-3-4-5-6
+     * of spades is a natural straight flush at 200, and the deuce could
+     * instead play wild for a seven-high straight flush at 25 — so it is paid
+     * the way that pays it best.
+     */
+    function trips(hand) {
+      var best = null;
+      var w = tripsRung(score(hand).cat);
+      if (w >= 0) best = { rung: w, natural: false, payout: TRIPS[w][1] };
+      var nat = naturalScore(hand);
+      if (nat) {
+        var n = tripsRung(nat.cat);
+        if (n >= 0 && TRIPS[n][2] !== null && (!best || TRIPS[n][2] > best.payout)) {
+          best = { rung: n, natural: true, payout: TRIPS[n][2] };
+        }
+      }
+      return best;
+    }
+    function tripsLabel(hit) {
+      return TRIPS[hit.rung][0] + (hit.natural ? " (natural)" : "");
+    }
+    /** Which Bad Beat rung a five-card hand reaches, or -1 when it pays nothing. */
+    function badBeatRung(hand) {
+      switch (score(hand).cat) {
+        // Five wilds is five of a kind made of deuces; the felt has no
+        // separate rung for it, so it pays as quints.
+        case FIVE_WILDS: return 1;
+        case ROYAL_FLUSH: return 0;
+        case FIVE_KIND: return 1;
+        case STRAIGHT_FLUSH: return 2;
+        case FOUR_KIND: return 3;
+        case FULL_HOUSE: return 4;
+        case FLUSH: return 5;
+        case STRAIGHT: return 6;
+        case THREE_KIND: return 7;
+        default: return -1;
+      }
+    }
+    /**
+     * The Bad Beat pays off whichever hand *lost* the showdown, when that hand
+     * was trips or better — the point being that a big hand went down. A push
+     * pays nothing. A folded hand counts as the player's loss.
+     */
+    function badBeat(player, dealer, folded) {
+      var loserIsDealer;
+      if (folded) {
+        loserIsDealer = false;
+      } else {
+        var c = cmp(score(player), score(dealer));
+        if (c === 0) return null;
+        loserIsDealer = c > 0;
+      }
+      var losing = loserIsDealer ? dealer : player;
+      var rung = badBeatRung(losing);
+      if (rung < 0) return null;
+      return { rung: rung, onDealer: loserIsDealer };
+    }
+    function badBeatLabel(hit) {
+      return (hit.onDealer ? "Dealer " : "") + BAD_BEAT[hit.rung][0];
+    }
+
+    /** The Play bet is twice the ante — the one decision this table offers. */
+    var PLAY_MULTIPLE = 2;
+
+    /**
+     * Settles one hand. [play] is 0 when the player folded. Returns are gross —
+     * stake plus winnings — so a losing bet returns nothing and a push returns
+     * exactly what was put up. The dealer always qualifies here.
+     */
+    function settle(player, dealer, ante, blind, play, tripsBet, badBeatBet, folded) {
+      var ph = score(player), dh = score(dealer);
+
+      // Trips rides on the player's own five, so a fold never touches it.
+      var tripsWin = tripsBet > 0 ? trips(player) : null;
+      var tripsReturn = tripsWin ? tripsBet * (tripsWin.payout + 1) : 0;
+
+      // The Bad Beat reads the hand that lost, whichever side that was.
+      var bbWin = badBeatBet > 0 ? badBeat(player, dealer, folded) : null;
+      var bbReturn = bbWin ? badBeatBet * (BAD_BEAT[bbWin.rung][1] + 1) : 0;
+
+      var base = {
+        player: ph, dealer: dh,
+        trips: tripsReturn, badBeat: bbReturn,
+        tripsWin: tripsWin, badBeatWin: bbWin, blindWin: -1
+      };
+      if (folded) {
+        base.outcome = "fold"; base.ante = 0; base.blind = 0; base.play = 0;
+        return base;
+      }
+      var c = cmp(ph, dh);
+      base.outcome = c > 0 ? "win" : c < 0 ? "lose" : "push";
+      if (base.outcome === "win") {
+        var rung = blindRung(player);
+        base.blindWin = rung;
+        base.ante = ante * 2;
+        // Trips or less is a push: the blind comes back untouched.
+        base.blind = rung >= 0 ? blind * (BLIND[rung][1] + 1) : blind;
+        base.play = play * 2;
+      } else if (base.outcome === "push") {
+        base.ante = ante; base.blind = blind; base.play = play;
+      } else {
+        base.ante = 0; base.blind = 0; base.play = 0;
+      }
+      return base;
+    }
+
+    return {
+      isWild: isWild, score: score, naturalScore: naturalScore, cmp: cmp,
+      blindRung: blindRung, trips: trips, tripsLabel: tripsLabel,
+      badBeatRung: badBeatRung, badBeat: badBeat, badBeatLabel: badBeatLabel,
+      settle: settle, CAT: CAT, BAD_BEAT: BAD_BEAT, BLIND: BLIND, TRIPS: TRIPS,
+      PLAY_MULTIPLE: PLAY_MULTIPLE
+    };
+  })();
+  window.DJ = DJ;   // exposed so the rules can be exercised directly
+
+  /** DJ Wild's deck: the ordinary 52 plus one joker, shuffled in. */
+  function buildDjShoe() {
+    var shoe = buildShoe(1);
+    shoe.push({ rank: "★", suit: "★", red: false, joker: true });
     for (var i = shoe.length - 1; i > 0; i--) {
       var j = Math.floor(Math.random() * (i + 1));
       var t = shoe[i]; shoe[i] = shoe[j]; shoe[j] = t;
@@ -3494,6 +3899,409 @@
     }
     $("uth-buyin").addEventListener("click", function () {
       if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
+      bankroll = TESTING_BANKROLL;
+      setMessage("Place your ante");
+      renderAll();
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     DJ WILD
+     ============================================================ */
+  var DjWild = (function () {
+    var RESHUFFLE_AT = 12;
+    /* Sampled off dj4theboys.png: the ring, its bright core, the loss red. */
+    var NEON = "#2097F9", ICE = "#9BE3FB", DIM = "rgba(32,151,249,.6)",
+        FAINT = "rgba(32,151,249,.4)", RED = "#FF4D4D";
+    var shoe = buildDjShoe();
+    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    /** Pending bets while betting; the Blind always matches the Ante. */
+    var ante = 0, trips = 0, badBeat = 0, chipHist = [];
+    var lastAnte = 0, lastTrips = 0, lastBadBeat = 0;
+    /** Locked-in stakes once the hand is dealt. */
+    var anteStake = 0, blindStake = 0, tripsStake = 0, badBeatStake = 0, playStake = 0;
+    // betting | dealing | decision | showdown | result
+    var phase = "betting";
+    var player = [], dealer = [], dealerUp = false, folded = false;
+    var results = [], settlement = null, timers = [];
+
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function draw() { return shoe.pop(); }
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
+    function atRisk() {
+      return phase === "betting" ? ante * 2 + trips + badBeat
+        : anteStake + blindStake + tripsStake + badBeatStake + playStake;
+    }
+    function playCost() { return anteStake * DJ.PLAY_MULTIPLE; }
+
+    // ---------- render ----------
+    function setMessage(text, tone) {
+      var m = $("dj-message");
+      m.textContent = text;
+      m.className = "uth-message" + (tone ? " " + tone : "");
+    }
+    function renderTop() {
+      $("dj-bankroll").textContent = fmt(bankroll);
+      $("dj-risk").textContent = fmt(atRisk());
+    }
+    function renderCards(host, cards, faceUp) {
+      host.innerHTML = "";
+      if (!cards.length) {
+        for (var i = 0; i < 5; i++) {
+          var s = document.createElement("div");
+          s.className = "slot";
+          host.appendChild(s);
+        }
+        return;
+      }
+      cards.forEach(function (c) {
+        var el = cardEl(c, faceUp);
+        // Spotting the wilds is the game, so they are ringed in the hand.
+        if (faceUp && DJ.isWild(c)) el.classList.add("wild");
+        host.appendChild(el);
+      });
+    }
+    function renderLabel(id, text, badge) {
+      $(id).innerHTML = '<span class="nm">' + text + "</span>" +
+        (badge ? '<span class="badge">' + badge + "</span>" : "");
+    }
+    function renderHands() {
+      renderCards($("dj-dealer"), dealer, dealerUp);
+      renderCards($("dj-hole"), player, true);
+      renderLabel("dj-dealer-label", "DEALER",
+        dealerUp && settlement ? DJ.CAT[settlement.dealer.cat] : null);
+      renderLabel("dj-hand-label", "YOUR HAND",
+        settlement ? DJ.CAT[settlement.player.cat] : null);
+    }
+    function renderResults() {
+      var host = $("dj-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net)
+          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        host.insertAdjacentHTML("beforeend",
+          '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
+          '</span><span class="amt">' + txt + "</span></div>");
+      });
+    }
+    function paysHtml(title, rows) {
+      var html = '<div class="uth-pays"><div class="hd"><span class="bar"></span>' +
+        '<span class="ttl">' + title + '</span><span class="bar"></span></div>';
+      rows.forEach(function (r) {
+        html += '<div class="row"><span class="nm">' + r[0] + "</span>" +
+          '<span class="dots"></span><span class="val">' + r[1] + "</span></div>";
+      });
+      return html + "</div>";
+    }
+    function odds(list) {
+      return list.map(function (row) { return [row[0], fmt(row[1]) + "-to-1"]; });
+    }
+    /** Trips prints two columns, the way the felt does. */
+    function tripsOdds() {
+      return DJ.TRIPS.map(function (row) {
+        return [row[0], row[2] === null ? String(row[1]) : row[1] + " / " + fmt(row[2])];
+      });
+    }
+    function spotHtml(id, shape, label, amount, live, color) {
+      return '<button class="uth-spot" id="' + id + '"' + (live ? "" : " disabled") + '>' +
+        '<span class="' + shape + '" style="border-color:' +
+          (amount > 0 ? color : FAINT) + '"></span>' +
+        (amount > 0
+          ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
+          : '<span class="cap">' + label + "</span>") +
+        "</button>";
+    }
+    /**
+     * Each side bet stands under its own ladder — Bad Beat left, Trips right —
+     * with the Ante, Blind and Play down the centre line.
+     */
+    function renderSpots() {
+      var betting = phase === "betting";
+      $("dj-spots").innerHTML =
+        '<div class="uth-row dj-side">' +
+          '<div style="padding:0 6px 4px 0">' + paysHtml("BAD BEAT", odds(DJ.BAD_BEAT)) + "</div>" +
+          '<div class="mid">' +
+            spotHtml("dj-badbeat", "dia", "BAD<br>BEAT",
+              betting ? badBeat : badBeatStake, betting, ICE) +
+            spotHtml("dj-trips", "dia", "TRIPS",
+              betting ? trips : tripsStake, betting, ICE) +
+          "</div>" +
+          '<div style="padding:0 0 4px 6px">' + paysHtml("TRIPS", tripsOdds()) + "</div>" +
+        "</div>" +
+        '<div class="uth-row"><div></div><div class="mid">' +
+          spotHtml("dj-ante", "ring", "ANTE", betting ? ante : anteStake, betting, NEON) +
+          '<span class="uth-eq">=</span>' +
+          // The blind always matches the ante, so it takes no chips itself.
+          spotHtml("dj-blind", "ring", "BLIND", betting ? ante : blindStake, false, NEON) +
+        '</div><div></div></div>' +
+        '<div class="uth-row top">' +
+          "<div></div>" +
+          '<div class="mid" style="flex-direction:column">' +
+            spotHtml("dj-play", "ring", "PLAY", playStake, false, NEON) +
+            '<div class="dj-play">PLAY = 2X ANTE</div>' +
+          "</div>" +
+          '<div style="padding-left:6px">' + paysHtml("BLIND", odds(DJ.BLIND)) + "</div>" +
+        "</div>";
+      if (betting) {
+        $("dj-badbeat").addEventListener("click", function () { place("badbeat"); });
+        $("dj-trips").addEventListener("click", function () { place("trips"); });
+        $("dj-ante").addEventListener("click", function () { place("ante"); });
+      }
+    }
+    function renderRack() {
+      var host = $("dj-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("dj-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(actionBtn("UNDO", DIM, undoChip));
+        a.appendChild(actionBtn("DEAL", ICE, deal));
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+      } else if (phase === "decision") {
+        a.appendChild(actionBtn("FOLD", RED, fold));
+        a.appendChild(actionBtn("PLAY  " + fmt(playCost()), ICE, play));
+      } else if (phase === "result") {
+        a.appendChild(actionBtn("REBET", DIM, function () { nextHand(true); }));
+        a.appendChild(actionBtn("NEW BET", ICE, function () { nextHand(false); }));
+      }
+    }
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && atRisk() === 0;
+      $("dj-rebuy").classList.toggle("on", broke);
+    }
+    function renderAll() {
+      renderTop(); renderHands(); renderResults();
+      renderSpots(); renderRack(); renderActions(); renderRebuy();
+    }
+
+    // ---------- betting ----------
+    /** The ante costs double, because the blind rides alongside it. */
+    function place(spot) {
+      if (phase !== "betting") return;
+      var room = Math.floor(bankroll - (ante * 2 + trips + badBeat));
+      var affordable = spot === "ante"
+        ? Math.min(selectedChip, Math.floor(room / 2))
+        : Math.min(selectedChip, room);
+      if (affordable <= 0) { setMessage("Not enough for the ante and blind"); return; }
+      var lim = Shell.limits(), amount, refused;
+      if (spot === "ante") {
+        amount = allow(lim, affordable, ante, false);
+        refused = refusal(lim, false);
+      } else if (spot === "trips") {
+        amount = allow(lim, affordable, trips, true);
+        refused = refusal(lim, true);
+      } else {
+        amount = allowBadBeat(lim, affordable, badBeat);
+        refused = badBeatRefusal(lim);
+      }
+      if (amount <= 0) { setMessage(refused); return; }
+      if (spot === "ante") ante += amount;
+      else if (spot === "trips") trips += amount;
+      else badBeat += amount;
+      chipHist.push({ spot: spot, v: amount });
+      // A short chip means one of two different things, and the Bad Beat's low
+      // ladder makes the difference worth saying out loud.
+      setMessage(
+        amount < affordable ? refused
+          : amount < selectedChip ? "All in!"
+          : spot === "ante" ? "Ante and blind posted"
+          : spot === "trips" ? "Trips riding" : "Bad Beat riding"
+      );
+      renderTop(); renderSpots();
+    }
+    function undoChip() {
+      if (phase !== "betting" || !chipHist.length) return;
+      var last = chipHist.pop();
+      if (last.spot === "ante") ante = Math.max(0, ante - last.v);
+      else if (last.spot === "trips") trips = Math.max(0, trips - last.v);
+      else badBeat = Math.max(0, badBeat - last.v);
+      renderTop(); renderSpots();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      ante = 0; trips = 0; badBeat = 0; chipHist = [];
+      setMessage("Place your ante");
+      renderTop(); renderSpots();
+    }
+
+    // ---------- deal ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (ante <= 0) {
+        setMessage(trips + badBeat > 0 ? "The side bets ride with an ante"
+                                       : "Place an ante first");
+        return;
+      }
+      if (shoe.length < RESHUFFLE_AT) shoe = buildDjShoe();
+      bankroll -= ante * 2 + trips + badBeat;
+      syncWallet();
+      lastAnte = ante; lastTrips = trips; lastBadBeat = badBeat;
+      anteStake = ante; blindStake = ante;
+      tripsStake = trips; badBeatStake = badBeat; playStake = 0;
+      chipHist = [];
+      player = []; dealer = [];
+      dealerUp = false; folded = false;
+      results = []; settlement = null;
+      ante = 0; trips = 0; badBeat = 0;
+      phase = "dealing";
+      setMessage("Dealing…");
+      renderAll();
+      // Five each, alternating, the way they come off the deck.
+      for (var i = 0; i < 5; i++) {
+        (function (n) {
+          t(180 + n * 260, function () { player.push(draw()); renderHands(); });
+          t(300 + n * 260, function () { dealer.push(draw()); renderHands(); });
+        })(i);
+      }
+      t(1700, function () {
+        phase = "decision";
+        var w = player.filter(DJ.isWild).length;
+        setMessage(w === 0 ? "No wilds — play 2x, or fold"
+          : w === 1 ? "One wild — play 2x, or fold"
+          : w + " wilds — play 2x, or fold");
+        renderActions();
+      });
+    }
+
+    // ---------- decisions ----------
+    function play() {
+      if (phase !== "decision") return;
+      var cost = playCost();
+      if (bankroll < cost) { setMessage("Not enough to play"); return; }
+      bankroll -= cost;
+      syncWallet();
+      playStake = cost;
+      showdown();
+    }
+    function fold() {
+      if (phase !== "decision") return;
+      folded = true;
+      showdown();
+    }
+    function showdown() {
+      phase = "showdown";
+      setMessage(folded ? "Folded" : "Dealer turns over…");
+      renderTop(); renderSpots(); renderActions();
+      t(420, function () { dealerUp = true; renderHands(); });
+      t(1070, settle);
+    }
+    function settle() {
+      var s = DJ.settle(player, dealer, anteStake, blindStake, playStake,
+                        tripsStake, badBeatStake, folded);
+      settlement = s;
+
+      results = [];
+      if (!folded) {
+        results.push({ label: "Ante", net: s.ante - anteStake });
+        results.push({
+          label: s.blindWin >= 0 ? "Blind · " + DJ.BLIND[s.blindWin][0] : "Blind",
+          net: s.blind - blindStake
+        });
+        if (playStake > 0) results.push({ label: "Play", net: s.play - playStake });
+      } else {
+        results.push({ label: "Folded", net: -(anteStake + blindStake) });
+      }
+      if (tripsStake > 0) {
+        results.push({
+          label: s.tripsWin ? DJ.tripsLabel(s.tripsWin) : "Trips",
+          net: s.trips - tripsStake
+        });
+      }
+      if (badBeatStake > 0) {
+        results.push({
+          label: s.badBeatWin ? DJ.badBeatLabel(s.badBeatWin) : "Bad Beat",
+          net: s.badBeat - badBeatStake
+        });
+      }
+
+      var totalReturn = s.ante + s.blind + s.play + s.trips + s.badBeat;
+      bankroll += totalReturn;
+      syncWallet();
+      var staked = anteStake + blindStake + playStake + tripsStake + badBeatStake;
+      var net = totalReturn - staked;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        s.badBeatWin ? DJ.badBeatLabel(s.badBeatWin) + " — bad beat pays" :
+        s.tripsWin && s.tripsWin.rung === 0 ? "FIVE WILDS!" :
+        folded ? "Folded — ante and blind down" :
+        s.outcome === "win" ? "You win with " + DJ.CAT[s.player.cat] :
+        s.outcome === "push" ? "Push" :
+        net > 0 ? "Up " + fmt(net) + " on the side" :
+        "Dealer wins with " + DJ.CAT[s.dealer.cat];
+      setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
+      renderAll();
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
+    }
+
+    // ---------- table ----------
+    function reset() {
+      clearTimers();
+      phase = "betting";
+      player = []; dealer = [];
+      chipHist = [];
+      ante = 0; trips = 0; badBeat = 0;
+      anteStake = 0; blindStake = 0; tripsStake = 0; badBeatStake = 0; playStake = 0;
+      dealerUp = false; folded = false;
+      results = []; settlement = null;
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      reset();
+      if (repeat && lastAnte * 2 + lastTrips + lastBadBeat <= bankroll) {
+        ante = lastAnte; trips = lastTrips; badBeat = lastBadBeat;
+      } else if (repeat && lastAnte * 2 <= bankroll) {
+        ante = lastAnte;
+      }
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      reset();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    $("dj-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       bankroll = TESTING_BANKROLL;
       setMessage("Place your ante");
       renderAll();
