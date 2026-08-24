@@ -11,6 +11,7 @@ import com.example.casinogames.games.djwild.DjWildDeck
 import com.example.casinogames.games.djwild.DjWildEval
 import com.example.casinogames.games.djwild.DjWildRules
 import com.example.casinogames.games.djwild.DjWildRules.BadBeatPay
+import com.example.casinogames.games.djwild.DjWildRules.BlindPay
 import com.example.casinogames.games.djwild.DjWildRules.TripsPay
 import com.example.casinogames.games.djwild.WildCategory
 import org.junit.Assert.assertEquals
@@ -438,5 +439,131 @@ class DjWildTripsTest {
         assertEquals(1_525.0, DjWildRules.settleTrips(hand("As", "Ah", "Ad", "Ac", "9s"), 25), 0.001)
         assertEquals(0.0, DjWildRules.settleTrips(hand("As", "Kh", "9d", "7c", "5s"), 25), 0.001)
         assertEquals(0.0, DjWildRules.settleTrips(hand("As", "Ah", "Ad", "Ac", "9s"), 0), 0.001)
+    }
+}
+
+/** The Blind ladder and the way a whole hand settles. */
+class DjWildSettleTest {
+
+    private fun c(spec: String): Card {
+        val rank = when (spec[0]) {
+            'A' -> Rank.ACE; 'K' -> Rank.KING; 'Q' -> Rank.QUEEN; 'J' -> Rank.JACK
+            'T' -> Rank.TEN; '9' -> Rank.NINE; '8' -> Rank.EIGHT; '7' -> Rank.SEVEN
+            '6' -> Rank.SIX; '5' -> Rank.FIVE; '4' -> Rank.FOUR; '3' -> Rank.THREE
+            '2' -> Rank.TWO; 'W' -> Rank.JOKER
+            else -> error("bad rank in $spec")
+        }
+        val suit = when (spec[1]) {
+            's' -> Suit.SPADES; 'h' -> Suit.HEARTS; 'd' -> Suit.DIAMONDS; 'c' -> Suit.CLUBS
+            else -> error("bad suit in $spec")
+        }
+        return Card(rank, suit)
+    }
+
+    private fun hand(vararg specs: String) = specs.map(::c)
+
+    /** A plain hand with nothing in it, for the other side of a showdown. */
+    private val rags = hand("9h", "7d", "5c", "4s", "3h")
+    private val betterRags = hand("Kh", "7d", "5c", "4s", "3h")
+
+    @Test
+    fun `the blind ladder reads the way the felt does`() {
+        assertEquals(1_000, BlindPay.FIVE_WILDS.payout)
+        assertEquals(50, BlindPay.ROYAL_FLUSH.payout)
+        assertEquals(10, BlindPay.QUINTS.payout)
+        assertEquals(9, BlindPay.STRAIGHT_FLUSH.payout)
+        assertEquals(4, BlindPay.QUADS.payout)
+        assertEquals(3, BlindPay.FULL_HOUSE.payout)
+        // The felt pays a flush the same three as a full house. It stays that way.
+        assertEquals(3, BlindPay.FLUSH.payout)
+        assertEquals(1, BlindPay.STRAIGHT.payout)
+    }
+
+    @Test
+    fun `trips or less pushes the blind`() {
+        assertNull(DjWildRules.blindRung(hand("As", "Ah", "Ad", "9c", "5s")))
+        assertNull(DjWildRules.blindRung(hand("As", "Ah", "9d", "9c", "5s")))
+        assertNull(DjWildRules.blindRung(hand("As", "Kh", "9d", "7c", "5s")))
+    }
+
+    @Test
+    fun `a winning straight pays the blind one to one`() {
+        val player = hand("9s", "8h", "7d", "6c", "5s")
+        val s = DjWildRules.settle(player, rags, 25.0, 25.0, 50.0, 0.0, 0.0, folded = false)
+        assertEquals(DjWildRules.DjOutcome.WIN, s.outcome)
+        assertEquals(BlindPay.STRAIGHT, s.blindWin)
+        assertEquals(50.0, s.anteReturn, 0.001)   // ante 25 paid 1:1
+        assertEquals(50.0, s.blindReturn, 0.001)  // blind 25 paid 1:1
+        assertEquals(100.0, s.playReturn, 0.001)  // play 50 paid 1:1
+        assertEquals(200.0, s.totalReturn, 0.001)
+    }
+
+    @Test
+    fun `a winning hand under a straight pushes the blind but still wins the rest`() {
+        val player = hand("As", "Ah", "Ad", "9c", "5s")
+        val s = DjWildRules.settle(player, rags, 25.0, 25.0, 50.0, 0.0, 0.0, folded = false)
+        assertEquals(DjWildRules.DjOutcome.WIN, s.outcome)
+        assertNull("trips or less is a push", s.blindWin)
+        assertEquals(50.0, s.anteReturn, 0.001)
+        assertEquals(25.0, s.blindReturn, 0.001)  // pushed: exactly what went up
+        assertEquals(100.0, s.playReturn, 0.001)
+    }
+
+    @Test
+    fun `a losing hand takes the blind down with it`() {
+        val player = rags
+        val dealer = hand("As", "Ah", "Ad", "Ac", "9s")
+        val s = DjWildRules.settle(player, dealer, 25.0, 25.0, 50.0, 0.0, 0.0, folded = false)
+        assertEquals(DjWildRules.DjOutcome.LOSE, s.outcome)
+        assertEquals(0.0, s.totalReturn, 0.001)
+    }
+
+    @Test
+    fun `a tie pushes everything`() {
+        val player = hand("As", "Ah", "Ad", "9c", "5s")
+        val dealer = hand("Ac", "Ad", "Ah", "9s", "5h")
+        val s = DjWildRules.settle(player, dealer, 25.0, 25.0, 50.0, 0.0, 0.0, folded = false)
+        assertEquals(DjWildRules.DjOutcome.PUSH, s.outcome)
+        assertEquals(100.0, s.totalReturn, 0.001)  // 25 + 25 + 50 back
+    }
+
+    @Test
+    fun `folding forfeits the ante and blind`() {
+        val player = hand("9s", "8h", "7d", "6c", "5s")
+        val s = DjWildRules.settle(player, betterRags, 25.0, 25.0, 0.0, 0.0, 0.0, folded = true)
+        assertEquals(DjWildRules.DjOutcome.FOLD, s.outcome)
+        assertEquals(0.0, s.totalReturn, 0.001)
+    }
+
+    @Test
+    fun `the side bets ride whatever the hand does`() {
+        // A folded natural straight flush still collects Trips at 200 to 1,
+        // and the Bad Beat too, the folded hand having lost.
+        val player = hand("2s", "3s", "4s", "5s", "6s")
+        val s = DjWildRules.settle(player, rags, 25.0, 25.0, 0.0, 10.0, 5.0, folded = true)
+        assertEquals(DjWildRules.DjOutcome.FOLD, s.outcome)
+        assertEquals(TripsPay.STRAIGHT_FLUSH, s.tripsWin?.rung)
+        assertTrue("a deuce playing two keeps it natural", s.tripsWin!!.natural)
+        assertEquals(2_010.0, s.tripsReturn, 0.001)          // 10 at 200:1, stake back
+        assertEquals(BadBeatPay.STRAIGHT_FLUSH, s.badBeatWin?.rung)
+        assertEquals(25_005.0, s.badBeatReturn, 0.001)       // 5 at 5,000:1, stake back
+    }
+
+    @Test
+    fun `five wilds pays every ladder it touches`() {
+        val player = hand("2s", "2h", "2d", "2c", "Ws")
+        val s = DjWildRules.settle(player, rags, 25.0, 25.0, 50.0, 10.0, 5.0, folded = false)
+        assertEquals(DjWildRules.DjOutcome.WIN, s.outcome)
+        assertEquals(BlindPay.FIVE_WILDS, s.blindWin)
+        assertEquals(25_025.0, s.blindReturn, 0.001)   // 25 at 1,000:1
+        assertEquals(TripsPay.FIVE_WILDS, s.tripsWin?.rung)
+        assertEquals(20_010.0, s.tripsReturn, 0.001)   // 10 at 2,000:1
+        // The dealer's rags never lost big, so the Bad Beat finds nothing.
+        assertNull(s.badBeatWin)
+    }
+
+    @Test
+    fun `the play bet is twice the ante`() {
+        assertEquals(2, DjWildRules.PLAY_MULTIPLE)
     }
 }

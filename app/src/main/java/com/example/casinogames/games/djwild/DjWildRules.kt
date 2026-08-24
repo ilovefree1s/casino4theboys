@@ -28,6 +28,44 @@ object DjWildRules {
     }
 
     /**
+     * The Blind, read straight off the felt:
+     *
+     *   Five Wilds .... 1,000 to 1      Quads ......... 4 to 1
+     *   Royal Flush ....... 50 to 1     Full House .... 3 to 1
+     *   Quints ............ 10 to 1     Flush ......... 3 to 1
+     *   Straight Flush ..... 9 to 1     Straight ...... 1 to 1
+     *
+     * Trips or less is a push. Full house and flush both pay 3 — that is what
+     * the felt says, and it stays that way.
+     *
+     * Like every blind, it only pays on a hand that wins; a losing hand takes
+     * it down whatever it held.
+     */
+    enum class BlindPay(val label: String, val payout: Int) {
+        FIVE_WILDS("Five Wilds", 1_000),
+        ROYAL_FLUSH("Royal Flush", 50),
+        QUINTS("Quints", 10),
+        STRAIGHT_FLUSH("Straight Flush", 9),
+        QUADS("Quads", 4),
+        FULL_HOUSE("Full House", 3),
+        FLUSH("Flush", 3),
+        STRAIGHT("Straight", 1),
+    }
+
+    /** Which rung the Blind reaches, or null when trips or less pushes it. */
+    fun blindRung(hand: List<Card>): BlindPay? = when (DjWildEval.score(hand).category) {
+        WildCategory.FIVE_WILDS -> BlindPay.FIVE_WILDS
+        WildCategory.ROYAL_FLUSH -> BlindPay.ROYAL_FLUSH
+        WildCategory.FIVE_KIND -> BlindPay.QUINTS
+        WildCategory.STRAIGHT_FLUSH -> BlindPay.STRAIGHT_FLUSH
+        WildCategory.FOUR_KIND -> BlindPay.QUADS
+        WildCategory.FULL_HOUSE -> BlindPay.FULL_HOUSE
+        WildCategory.FLUSH -> BlindPay.FLUSH
+        WildCategory.STRAIGHT -> BlindPay.STRAIGHT
+        else -> null
+    }
+
+    /**
      * The Trips side bet, read straight off the felt. It pays two ways — a
      * hand made with a wild pays one ladder, a hand that stands up on its own
      * pays a far richer one:
@@ -133,6 +171,100 @@ object DjWildRules {
         if (stake <= 0) return 0.0
         val hit = badBeat(player, dealer, folded) ?: return 0.0
         return stake * (hit.rung.payout + 1.0)
+    }
+
+    enum class DjOutcome { WIN, LOSE, PUSH, FOLD }
+
+    /** Everything a settled hand decided, itemised the way the table reports it. */
+    data class Settlement(
+        val playerHand: WildHandValue,
+        val dealerHand: WildHandValue,
+        val outcome: DjOutcome,
+        val anteReturn: Double,
+        val blindReturn: Double,
+        val playReturn: Double,
+        val tripsReturn: Double,
+        val badBeatReturn: Double,
+        val blindWin: BlindPay?,
+        val tripsWin: TripsHit?,
+        val badBeatWin: BadBeat?,
+    ) {
+        val totalReturn: Double
+            get() = anteReturn + blindReturn + playReturn + tripsReturn + badBeatReturn
+    }
+
+    /** The Play bet is twice the ante — the one decision this table offers. */
+    const val PLAY_MULTIPLE = 2
+
+    /**
+     * Settles one hand. [play] is 0 when the player folded. Returns are gross —
+     * stake plus winnings — so a losing bet returns nothing and a push returns
+     * exactly what was put up.
+     *
+     * The dealer always qualifies here; there is no hand they must make before
+     * the ante plays, which is the whole draw of the table.
+     */
+    fun settle(
+        player: List<Card>,
+        dealer: List<Card>,
+        ante: Double,
+        blind: Double,
+        play: Double,
+        trips: Double,
+        badBeat: Double,
+        folded: Boolean,
+    ): Settlement {
+        val playerHand = DjWildEval.score(player)
+        val dealerHand = DjWildEval.score(dealer)
+
+        // Trips rides on the player's own five, so a fold never touches it.
+        val tripsWin = if (trips > 0) trips(player) else null
+        val tripsReturn = if (tripsWin != null) trips * (tripsWin.payout + 1) else 0.0
+
+        // The Bad Beat reads the hand that lost, whichever side that was.
+        val badBeatWin = if (badBeat > 0) badBeat(player, dealer, folded) else null
+        val badBeatReturn = if (badBeatWin != null) badBeat * (badBeatWin.rung.payout + 1) else 0.0
+
+        if (folded) {
+            return Settlement(
+                playerHand, dealerHand, DjOutcome.FOLD,
+                anteReturn = 0.0, blindReturn = 0.0, playReturn = 0.0,
+                tripsReturn = tripsReturn, badBeatReturn = badBeatReturn,
+                blindWin = null, tripsWin = tripsWin, badBeatWin = badBeatWin,
+            )
+        }
+
+        val cmp = playerHand.compareTo(dealerHand)
+        val outcome = when {
+            cmp > 0 -> DjOutcome.WIN
+            cmp < 0 -> DjOutcome.LOSE
+            else -> DjOutcome.PUSH
+        }
+        val blindWin = if (outcome == DjOutcome.WIN) blindRung(player) else null
+
+        return when (outcome) {
+            DjOutcome.WIN -> Settlement(
+                playerHand, dealerHand, outcome,
+                anteReturn = ante * 2,
+                // Trips or less is a push: the blind comes back untouched.
+                blindReturn = if (blindWin != null) blind * (blindWin.payout + 1) else blind,
+                playReturn = play * 2,
+                tripsReturn = tripsReturn, badBeatReturn = badBeatReturn,
+                blindWin = blindWin, tripsWin = tripsWin, badBeatWin = badBeatWin,
+            )
+            DjOutcome.PUSH -> Settlement(
+                playerHand, dealerHand, outcome,
+                anteReturn = ante, blindReturn = blind, playReturn = play,
+                tripsReturn = tripsReturn, badBeatReturn = badBeatReturn,
+                blindWin = null, tripsWin = tripsWin, badBeatWin = badBeatWin,
+            )
+            else -> Settlement(
+                playerHand, dealerHand, outcome,
+                anteReturn = 0.0, blindReturn = 0.0, playReturn = 0.0,
+                tripsReturn = tripsReturn, badBeatReturn = badBeatReturn,
+                blindWin = null, tripsWin = tripsWin, badBeatWin = badBeatWin,
+            )
+        }
     }
 
     /** Which rung a five-card hand reaches, or null when it pays nothing. */
