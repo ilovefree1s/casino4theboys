@@ -311,17 +311,19 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
-                DiamondSpot(
-                    "TRIPS", IceBlue,
-                    amount = if (betting) vm.trips else vm.tripsStake,
-                    size = spot,
-                    onClick = { vm.addTrips() }.takeIf { betting },
-                )
+                // Each spot stands under its own ladder — Bad Beat left,
+                // Trips right — so the chips sit beside what they pay.
                 DiamondSpot(
                     "BAD BEAT", NeonBlue,
                     amount = if (betting) vm.badBeat else vm.badBeatStake,
                     size = spot,
                     onClick = { vm.addBadBeat() }.takeIf { betting },
+                )
+                DiamondSpot(
+                    "TRIPS", IceBlue,
+                    amount = if (betting) vm.trips else vm.tripsStake,
+                    size = spot,
+                    onClick = { vm.addTrips() }.takeIf { betting },
                 )
             }
             FeltPayTable(
