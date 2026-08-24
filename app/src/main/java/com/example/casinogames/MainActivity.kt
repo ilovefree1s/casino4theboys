@@ -20,6 +20,8 @@ import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
+import com.example.casinogames.games.poker.PokerMenuScreen
+import com.example.casinogames.games.poker.PokerVariant
 import com.example.casinogames.games.roulette.RouletteScreen
 import com.example.casinogames.lobby.GameId
 import com.example.casinogames.lobby.LobbyScreen
@@ -70,10 +72,19 @@ class MainActivity : ComponentActivity() {
                             onGameOverExit = { screen = "menu" },
                         )
                     }
-                    place == GameId.ULTIMATE_TEXAS_HOLDEM.name -> {
+                    place == GameId.POKER.name -> {
                         BackHandler { screen = lobby }
-                        UltimateHoldemScreen(
+                        PokerMenuScreen(
                             onBack = { screen = lobby },
+                            onPick = { screen = "$mode:${it.name}" },
+                            campaign = campaign,
+                        )
+                    }
+                    place == PokerVariant.ULTIMATE_TEXAS_HOLDEM.name -> {
+                        val back = "$mode:${GameId.POKER.name}"
+                        BackHandler { screen = back }
+                        UltimateHoldemScreen(
+                            onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
                         )
