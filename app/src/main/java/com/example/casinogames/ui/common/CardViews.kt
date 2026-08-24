@@ -84,6 +84,10 @@ fun PlayingCardView(card: Card, faceUp: Boolean, scale: Float = 1f) {
 
 @Composable
 private fun CardFront(card: Card, scale: Float = 1f) {
+    if (card.isJoker) {
+        JokerFront(scale)
+        return
+    }
     val ink = if (card.suit.isRed) Color(0xFFB3222E) else Color(0xFF141014)
     Box(
         Modifier
@@ -108,6 +112,43 @@ private fun CardFront(card: Card, scale: Float = 1f) {
             color = ink, fontSize = 10.sp * scale, fontWeight = FontWeight.Black,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
+                .graphicsLayer { rotationZ = 180f },
+        )
+    }
+}
+
+/**
+ * The joker carries a suit only because every card has to; it means nothing,
+ * so the face ignores it — the word across the top and the star in the middle,
+ * mirrored at the foot the way the ranks are.
+ */
+@Composable
+private fun JokerFront(scale: Float = 1f) {
+    val ink = Color(0xFF141014)
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Color(0xFFFAF6EC), RoundedCornerShape(6.dp * scale))
+            .border(1.dp * scale, Color(0x66000000), RoundedCornerShape(6.dp * scale))
+            .padding(horizontal = 3.dp * scale, vertical = 4.dp * scale)
+    ) {
+        Text(
+            "JOKER",
+            color = ink, fontSize = 8.sp * scale,
+            fontWeight = FontWeight.Black, lineHeight = 8.sp * scale,
+            modifier = Modifier.align(Alignment.TopCenter),
+        )
+        Text(
+            "★",
+            color = ink, fontSize = 22.sp * scale,
+            modifier = Modifier.align(Alignment.Center),
+        )
+        Text(
+            "JOKER",
+            color = ink, fontSize = 8.sp * scale,
+            fontWeight = FontWeight.Black, lineHeight = 8.sp * scale,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
                 .graphicsLayer { rotationZ = 180f },
         )
     }
