@@ -4092,8 +4092,8 @@
         a.appendChild(actionBtn("FOLD", RED, fold));
         a.appendChild(actionBtn("PLAY  " + fmt(playCost()), ICE, play));
       } else if (phase === "result") {
-        a.appendChild(actionBtn("REBET", DIM, function () { nextHand(true); }));
         a.appendChild(actionBtn("NEW BET", ICE, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", DIM, function () { nextHand(true); }));
       }
     }
     function renderRebuy() {
