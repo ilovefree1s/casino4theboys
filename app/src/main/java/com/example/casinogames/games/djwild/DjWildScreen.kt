@@ -87,7 +87,7 @@ fun DjWildScreen(
         Image(
             painter = painterResource(R.drawable.dj4theboys),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.23f),
+            modifier = Modifier.fillMaxSize().alpha(0.19f),
             contentScale = ContentScale.Crop,
         )
         Column(
