@@ -320,7 +320,7 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
                 // Trips right — so the chips sit beside what they pay.
                 DiamondSpot(
                     // Two lines: the diamond is taller than it is wide inside.
-                    "BAD\nBEAT", NeonBlue,
+                    "BAD\nBEAT", IceBlue,
                     amount = if (betting) vm.badBeat else vm.badBeatStake,
                     size = spot,
                     onClick = { vm.addBadBeat() }.takeIf { betting },
@@ -334,7 +334,7 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
             }
             FeltPayTable(
                 title = "BAD BEAT",
-                color = NeonBlue,
+                color = IceBlue,
                 rows = DjWildRules.BadBeatPay.entries.map {
                     it.label to "${formatWhole(it.payout)}-to-1"
                 },
@@ -381,10 +381,10 @@ private fun BetSpots(vm: DjWildViewModel, onShowPays: () -> Unit) {
                 Modifier.align(Alignment.TopCenter),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                CircleSpot("PLAY", IceBlue, vm.playStake, spot, null)
+                CircleSpot("PLAY", NeonBlue, vm.playStake, spot, null)
                 Text(
                     "PLAY = 2X ANTE",
-                    color = IceBlue.copy(alpha = 0.8f),
+                    color = NeonBlue.copy(alpha = 0.8f),
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
                     letterSpacing = 1.sp,
@@ -675,7 +675,7 @@ private fun PayTables(onDismiss: () -> Unit) {
             )
             Spacer(Modifier.height(12.dp))
             PayList(
-                "BAD BEAT", NeonBlue,
+                "BAD BEAT", IceBlue,
                 DjWildRules.BadBeatPay.entries.map { it.label to "${formatWhole(it.payout)}-to-1" },
             )
             Spacer(Modifier.height(4.dp))
