@@ -20,6 +20,7 @@ import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
+import com.example.casinogames.games.djwild.DjWildScreen
 import com.example.casinogames.games.poker.PokerMenuScreen
 import com.example.casinogames.games.poker.PokerVariant
 import com.example.casinogames.games.roulette.RouletteScreen
@@ -84,6 +85,15 @@ class MainActivity : ComponentActivity() {
                         val back = "$mode:${GameId.POKER.name}"
                         BackHandler { screen = back }
                         UltimateHoldemScreen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == PokerVariant.DJ_WILD.name -> {
+                        val back = "$mode:${GameId.POKER.name}"
+                        BackHandler { screen = back }
+                        DjWildScreen(
                             onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },

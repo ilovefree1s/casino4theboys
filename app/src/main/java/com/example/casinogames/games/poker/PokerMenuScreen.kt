@@ -27,12 +27,11 @@ import com.example.casinogames.R
 import com.example.casinogames.lobby.CampaignPlate
 
 /**
- * The two tables behind the lobby's POKER card. DJ Wild's rules are written
- * and tested; its felt is not built yet, so the card does not open.
+ * The two tables behind the lobby's POKER card. Both are built.
  */
 enum class PokerVariant(val available: Boolean) {
     ULTIMATE_TEXAS_HOLDEM(true),
-    DJ_WILD(false),
+    DJ_WILD(true),
 }
 
 // Dead flat black: the page art runs to black at its own edges, so any tint
