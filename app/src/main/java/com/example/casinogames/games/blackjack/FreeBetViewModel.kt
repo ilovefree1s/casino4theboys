@@ -30,7 +30,11 @@ data class BjHand(
     val aceSplit: Boolean = false,     // took its one card from a split of aces
 )
 
-data class BjResult(val label: String, val net: Double)
+/**
+ * [freeLoss] marks a hand the house paid for that went down: it nets nothing,
+ * which is not the same thing as a push, and the felt should not call it one.
+ */
+data class BjResult(val label: String, val net: Double, val freeLoss: Boolean = false)
 
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
@@ -442,21 +446,24 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
             val playerBj =
                 playerHands.size == 1 && !h.doubled && BlackjackCore.isBlackjack(h.cards)
             val winUnits = if (h.doubled) 2 else 1
+            var lost = false
             val returned: Double = when {
                 playerBj && dealerBj -> h.stake.toDouble()
                 playerBj -> h.stake + 1.5 * h.betUnit
-                dealerBj -> 0.0
-                BlackjackCore.isBust(h.cards) -> 0.0
+                dealerBj -> { lost = true; 0.0 }
+                BlackjackCore.isBust(h.cards) -> { lost = true; 0.0 }
                 push22 -> h.stake.toDouble()
                 dTotal > 21 -> h.stake + winUnits.toDouble() * h.betUnit
                 pTotal > dTotal -> h.stake + winUnits.toDouble() * h.betUnit
                 pTotal == dTotal -> h.stake.toDouble()
-                else -> 0.0
+                else -> { lost = true; 0.0 }
             }
             totalReturn += returned
             val label = if (playerHands.size > 1) "Hand ${i + 1}" else
                 if (playerBj) "Blackjack" else "Hand"
-            out.add(BjResult(label, returned - h.stake))
+            // A free split carries no stake of the player's, so losing it costs
+            // nothing — report that, rather than a tie that never happened.
+            out.add(BjResult(label, returned - h.stake, freeLoss = lost && h.stake == 0))
         }
 
         if (potStake > 0) {

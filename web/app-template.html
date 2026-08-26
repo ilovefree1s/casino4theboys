@@ -319,7 +319,9 @@
     position: absolute; left: 2px; top: 50%; transform: translateY(-50%);
     width: 117px; padding: 0;
   }
-  .bj-paytable img { width: 100%; display: block; border-radius: 8px; }
+  /* The chart itself fills the button; the coins pinned over it must not, or
+     they stretch to the chart's full width and smear off the screen edge. */
+  .bj-paytable img:not(.pt-coin) { width: 100%; display: block; border-radius: 8px; }
   /* A gold coin straddles each edge of the chart, level with the line those
      coins are currently worth; another coin walks the pair up a rung. */
   .pt-coin {
@@ -397,15 +399,6 @@
   /* The watermark burns red with this felt instead of purple. */
   .bj-bg.b7 { opacity: .4; filter: hue-rotate(85deg) saturate(1.25); }
 
-  .bj-coins {
-    display: none; margin: 6px auto 0; width: fit-content;
-    display_: none; align-items: center; gap: 8px;
-  }
-  .bj-coins img { width: 32px; height: 32px; border-radius: 50%; }
-  .bj-coins .cpill {
-    background: var(--trim); color: var(--ink); font-weight: 900; font-size: 10px;
-    letter-spacing: .05em; border-radius: 999px; padding: 3px 9px;
-  }
   .bj-actions {
     width: 100%; display: flex; gap: 5px; margin-top: 12px;
     align-items: center; justify-content: center; min-height: 50px;
@@ -2326,7 +2319,9 @@
         if (phase === "result" && results[i]) {
           var r = results[i];
           var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-          var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
+          var txt = r.net > 0 ? "+" + fmt(r.net)
+            : r.net < 0 ? "−" + fmt(-r.net)
+            : r.freeLoss ? "free" : "push";
           var pill = document.createElement("div");
           pill.className = "bj-result-pill" + (r.net > 0 ? " win" : "");
           pill.innerHTML = "<span>" + r.label + '</span><span class="amt ' + cls + '">' + txt + "</span>";
@@ -2376,26 +2371,24 @@
       var b = $("bj-bottom");
       b.innerHTML = "";
       var betting = phase === "betting";
-      var compact = !betting && hands.length >= 3;
-      if (!compact) {
-        b.appendChild(variant === "blazing" ? blazingSpots() : freeBetSpots());
-        if (betting) {
-          var rack = document.createElement("div");
-          rack.className = "rack";
-          selectedChip = clampChip(selectedChip, bankroll);
-          chipsFor(bankroll, Shell.limits()).forEach(function (v) {
-            var cb = document.createElement("button");
-            cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
-            cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
-            cb.addEventListener("click", function () { selectedChip = v; renderBottom(); });
-            rack.appendChild(cb);
-          });
-          b.appendChild(rack);
-        }
-        // No coin tally beside the spot — the chart's own coins carry it.
-      } else if (variant === "freebet" && (potStake > 0 || freeCoins > 0)) {
-        b.appendChild(coinsRow());
+      // The spots stay on the felt through every phase: the chart is the coin
+      // count, so it must not vanish just as the coins land. A tall split
+      // stack may brush against it, and that is fine.
+      b.appendChild(variant === "blazing" ? blazingSpots() : freeBetSpots());
+      if (betting) {
+        var rack = document.createElement("div");
+        rack.className = "rack";
+        selectedChip = clampChip(selectedChip, bankroll);
+        chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+          var cb = document.createElement("button");
+          cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+          cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+          cb.addEventListener("click", function () { selectedChip = v; renderBottom(); });
+          rack.appendChild(cb);
+        });
+        b.appendChild(rack);
       }
+      // No coin tally beside the spot — the chart's own coins carry it.
     }
     /**
      * Row bands measured off fb_paytable.png (200 x 221): the top of each payout
@@ -2471,15 +2464,6 @@
     function showSidePays() {
       var m = $("bj-sidepays");
       m.classList.add("on");
-    }
-    function coinsRow() {
-      var row = document.createElement("div");
-      row.className = "bj-coins";
-      row.style.display = "flex";
-      var html = '<img src="' + BOYS_IMG + '" alt="4 The Boys">';
-      if (freeCoins > 0) html += '<span class="cpill">COINS × ' + freeCoins + "</span>";
-      row.innerHTML = html;
-      return row;
     }
     function imgBtn(src, alt, fn) {
       var btn = document.createElement("button");
@@ -2780,19 +2764,21 @@
         var pTotal = total(h.cards);
         var playerBj = hands.length === 1 && !h.doubled && isBJ(h.cards);
         var winUnits = h.doubled ? 2 : 1;
-        var returned;
+        var returned, lost = false;
         if (playerBj && dealerBj) returned = h.stake;
         else if (playerBj) returned = h.stake + 1.5 * h.betUnit;
-        else if (dealerBj) returned = 0;
-        else if (isBust(h.cards)) returned = 0;
+        else if (dealerBj) { returned = 0; lost = true; }
+        else if (isBust(h.cards)) { returned = 0; lost = true; }
         else if (push22) returned = h.stake;
         else if (dTotal > 21) returned = h.stake + winUnits * h.betUnit;
         else if (pTotal > dTotal) returned = h.stake + winUnits * h.betUnit;
         else if (pTotal === dTotal) returned = h.stake;
-        else returned = 0;
+        else { returned = 0; lost = true; }
         totalReturn += returned;
         var label = hands.length > 1 ? "Hand " + (i + 1) : playerBj ? "Blackjack" : "Hand";
-        results.push({ label: label, net: returned - h.stake });
+        // A free split the house paid for nets nothing when it goes down, which
+        // is not the same thing as a push — say so rather than claim a tie.
+        results.push({ label: label, net: returned - h.stake, freeLoss: lost && h.stake === 0 });
       });
       if (potStake > 0) {
         var mult = potMult(freeCoins);

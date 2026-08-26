@@ -123,12 +123,12 @@ fun FreeBetScreen(
                 Spacer(Modifier.height(12.dp))
                 ChipRack(vm)
                 Spacer(Modifier.height(10.dp))
-            } else if (vm.playerHands.size < 3) {
-                // Spots stay on the felt unless splits need the room.
+            } else {
+                // The spots stay on the felt through every phase: the chart is
+                // the coin count, so it must not vanish just as the coins land.
+                // A tall split stack may brush against it, and that is fine.
                 BetSpots(vm, onShowPayTable = { showPayTable = true })
                 Spacer(Modifier.height(10.dp))
-            } else {
-                PotStatusRow(vm)
             }
             ActionButtons(vm)
         }
@@ -323,6 +323,7 @@ private fun ResultPill(r: BjResult) {
             when {
                 r.net > 0 -> "+${formatMoney(r.net)}"
                 r.net < 0 -> "−${formatMoney(-r.net)}"
+                r.freeLoss -> "free"
                 else -> "push"
             },
             fontSize = 11.sp,
@@ -568,34 +569,6 @@ private fun BetSpots(vm: FreeBetViewModel, onShowPayTable: () -> Unit) {
                 )
                 PlacedBetChip(if (vm.phase == BjPhase.BETTING) vm.potBet else vm.potStake)
             }
-        }
-    }
-}
-
-@Composable
-private fun PotStatusRow(vm: FreeBetViewModel) {
-    if (vm.potStake <= 0 && vm.freeCoins <= 0) return
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(bottom = 10.dp),
-    ) {
-        Image(
-            painter = painterResource(R.drawable.fourtheboys_spot),
-            contentDescription = "4 The Boys",
-            modifier = Modifier.size(34.dp),
-            contentScale = ContentScale.Fit,
-        )
-        if (vm.potStake > 0) PlacedBetChip(vm.potStake, size = 36.dp)
-        if (vm.freeCoins > 0) {
-            Text(
-                "COINS × ${vm.freeCoins}",
-                fontSize = 9.sp, fontWeight = FontWeight.Black,
-                color = P.Ink, letterSpacing = 0.05.em,
-                modifier = Modifier
-                    .background(P.GoldTrim, RoundedCornerShape(999.dp))
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-            )
         }
     }
 }
