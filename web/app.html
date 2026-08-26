@@ -3661,6 +3661,16 @@
         playChoices().forEach(function (m) {
           a.appendChild(actionBtn("PLAY " + m + "x", GREEN, function () { play(m); }));
         });
+        // Short of every raise: the pit lends at the felt rather than fold a
+        // good hand for want of chips. Free play has no house to borrow from.
+        if (Shell.mode === "campaign" && !playChoices().length) {
+          a.appendChild(actionBtn("MARKER +5,000", "#D9B23A", function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — play on");
+            renderAll();
+          }));
+        }
         if (phase === "preflop" || phase === "flop") a.appendChild(actionBtn("CHECK", DIM, check));
         if (phase === "river") a.appendChild(actionBtn("FOLD", GREEN, fold));
       } else if (phase === "result") {
@@ -4076,7 +4086,18 @@
         a.appendChild(actionBtn("CLEAR", DIM, clearBet));
       } else if (phase === "decision") {
         a.appendChild(actionBtn("FOLD", RED, fold));
-        a.appendChild(actionBtn("PLAY  " + fmt(playCost()), ICE, play));
+        // Short of the play bet: the pit lends at the felt rather than fold a
+        // good hand for want of chips. Free play has no house to borrow from.
+        if (Shell.mode === "campaign" && bankroll < playCost()) {
+          a.appendChild(actionBtn("MARKER +5,000", "#D9B23A", function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — play on");
+            renderAll();
+          }));
+        } else {
+          a.appendChild(actionBtn("PLAY  " + fmt(playCost()), ICE, play));
+        }
       } else if (phase === "result") {
         a.appendChild(actionBtn("NEW BET", ICE, function () { nextHand(false); }));
         a.appendChild(actionBtn("REBET", DIM, function () { nextHand(true); }));

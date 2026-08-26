@@ -122,6 +122,20 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
 
     val canFold: Boolean get() = phase == UthPhase.RIVER
 
+    /**
+     * The pit lends at the felt only when the purse cannot cover any raise at
+     * all — the point being to finish a good hand, not to raise bigger. Free
+     * play has no house to borrow from.
+     */
+    val canTakeMarker: Boolean
+        get() = campaign && street != null && playChoices.isEmpty()
+
+    fun takeMarker() {
+        if (!canTakeMarker) return
+        Campaign.takeMarker()
+        message = "Marker taken — play on"
+    }
+
     // ---- campaign ----
 
     var campaign by mutableStateOf(false)

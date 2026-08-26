@@ -579,10 +579,19 @@ private fun Actions(vm: DjWildViewModel) {
             }
             DjPhase.DECISION -> {
                 ActionButton("FOLD", LossRed, false, Modifier.weight(1f), vm::fold)
-                ActionButton(
-                    "PLAY  ${formatWhole(vm.playCost)}", IceBlue, true, Modifier.weight(1.6f),
-                    vm::play.takeIf { vm.canPlay },
-                )
+                if (vm.canTakeMarker) {
+                    // Short of the play bet: the pit lends at the felt rather
+                    // than fold a good hand for want of chips.
+                    ActionButton(
+                        "MARKER +5,000", P.GoldTrim, true, Modifier.weight(1.6f),
+                        vm::takeMarker,
+                    )
+                } else {
+                    ActionButton(
+                        "PLAY  ${formatWhole(vm.playCost)}", IceBlue, true, Modifier.weight(1.6f),
+                        vm::play.takeIf { vm.canPlay },
+                    )
+                }
             }
             DjPhase.RESULT -> {
                 ActionButton("NEW BET", IceBlue, true, Modifier.weight(1.4f)) { vm.nextHand(false) }

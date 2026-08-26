@@ -641,6 +641,13 @@ private fun Actions(vm: UltimateHoldemViewModel) {
                 vm.playChoices.forEach { mult ->
                     ActionButton("PLAY ${mult}x", FeltGreen, Modifier.weight(1f)) { vm.play(mult) }
                 }
+                if (vm.canTakeMarker) {
+                    // Short of every raise: the pit lends at the felt rather
+                    // than fold a good hand for want of chips.
+                    ActionButton("MARKER +5,000", P.GoldTrim, Modifier.weight(1.2f)) {
+                        vm.takeMarker()
+                    }
+                }
                 if (vm.canCheck) {
                     ActionButton("CHECK", NeonPurpleDim, Modifier.weight(1f)) { vm.check() }
                 }

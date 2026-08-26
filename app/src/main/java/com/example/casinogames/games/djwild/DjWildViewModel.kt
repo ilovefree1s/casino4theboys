@@ -262,6 +262,20 @@ class DjWildViewModel(app: Application) : AndroidViewModel(app) {
     val playCost: Int get() = anteStake * DjWildRules.PLAY_MULTIPLE
     val canPlay: Boolean get() = phase == DjPhase.DECISION && bankroll >= playCost
 
+    /**
+     * The pit lends at the felt when the purse cannot cover the play bet, so
+     * a good hand is not folded for want of chips. Free play has no house to
+     * borrow from.
+     */
+    val canTakeMarker: Boolean
+        get() = campaign && phase == DjPhase.DECISION && bankroll < playCost
+
+    fun takeMarker() {
+        if (!canTakeMarker) return
+        Campaign.takeMarker()
+        message = "Marker taken — play on"
+    }
+
     fun play() {
         if (!canPlay) return
         spend(playCost.toDouble())
