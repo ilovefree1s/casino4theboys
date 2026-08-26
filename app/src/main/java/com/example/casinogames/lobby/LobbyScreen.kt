@@ -40,28 +40,30 @@ enum class GameId(val available: Boolean) {
 // tint behind it showed as a band where the image stops.
 private val LobbyBlack = Color(0xFF000000)
 
-/** The page art, and where each card's band sits inside it (941 x 1610). */
+/** The page art, and where each card's band sits inside it (941 x 1680). */
 private const val PageWidth = 941f
-private const val PageHeight = 1610f
+private const val PageHeight = 1680f
 /**
  * Measured off the art itself. The page came in as a phone screenshot with a
  * status bar on it, so it was cropped, the printed campaign line healed out
- * to read live, and the cards dropped forty pixels into the space at the foot
- * to leave room for the line and the room plate above them.
+ * to read live, and the cards dropped down the page — the canvas grown 70px
+ * at the foot to make the room — so the live room plate stands clear of the
+ * baccarat card.
  */
 private val CardBands = listOf(
-    GameId.BACCARAT to (666f to 859f),
-    GameId.BLACKJACK to (872f to 1060f),
-    GameId.POKER to (1069f to 1256f),
-    GameId.ROULETTE to (1269f to 1439f),
-    GameId.CRAPS to (1449f to 1600f),
+    GameId.BACCARAT to (736f to 929f),
+    GameId.BLACKJACK to (942f to 1130f),
+    GameId.POKER to (1139f to 1326f),
+    GameId.ROULETTE to (1339f to 1509f),
+    GameId.CRAPS to (1519f to 1670f),
 )
 /**
- * The art paints the menu button itself, so only its press is caught. The
- * campaign line was healed out of the page and is drawn live on its mark.
+ * The art paints the menu button itself, so only its press is caught. It was
+ * moved down the page to sit level with the HOTEL & CASINO line. The campaign
+ * line was healed out of the page and is drawn live on its mark.
  */
-private const val MenuCentreX = 81f
-private const val MenuCentreY = 67f
+private const val MenuCentreX = 78f
+private const val MenuCentreY = 523f
 private const val MenuDiameter = 86f
 private const val CampaignCentreY = 578f
 
