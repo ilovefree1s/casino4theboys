@@ -152,7 +152,7 @@ fun UltimateHoldemScreen(
             )
         } else if (vm.bankroll < 25 && vm.phase == UthPhase.BETTING && vm.ante == 0) {
             if (vm.campaign) {
-                CampaignGameOver(onStartOver = { vm.restartCampaign(); onGameOverExit() })
+                CampaignGameOver(onDone = onGameOverExit)
             } else {
                 RebuyPrompt { vm.buyBackIn() }
             }

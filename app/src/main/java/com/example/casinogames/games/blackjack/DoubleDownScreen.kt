@@ -146,10 +146,7 @@ fun DoubleDownScreen(
         }
         if (showOdds) OddsOverlay { showOdds = false }
         if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll < 25 && vm.nothingAtStake) {
-            CampaignGameOver(onStartOver = {
-                vm.buyBackIn()
-                onGameOverExit()
-            })
+            CampaignGameOver(onDone = onGameOverExit)
         }
         if (vm.campaign && vm.phase == BjPhase.BETTING && vm.bankroll >= vm.goal && vm.nothingAtStake) {
             CampaignComplete(

@@ -127,7 +127,7 @@ fun RouletteScreen(
             (vm.phase == RoulettePhase.BETTING && vm.totalStaked == 0)
         if (settled && vm.bankroll < 25) {
             if (vm.campaign) {
-                CampaignGameOver(onStartOver = { vm.buyBackIn(); onGameOverExit() })
+                CampaignGameOver(onDone = onGameOverExit)
             } else {
                 RebuyPrompt(onBuyIn = vm::buyBackIn)
             }

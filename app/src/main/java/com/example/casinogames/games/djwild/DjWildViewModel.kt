@@ -268,7 +268,8 @@ class DjWildViewModel(app: Application) : AndroidViewModel(app) {
      * borrow from.
      */
     val canTakeMarker: Boolean
-        get() = campaign && phase == DjPhase.DECISION && bankroll < playCost
+        get() = campaign && phase == DjPhase.DECISION && bankroll < playCost &&
+            Campaign.canTakeMarker
 
     fun takeMarker() {
         if (!canTakeMarker) return

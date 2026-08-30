@@ -1450,6 +1450,8 @@
 
   /** What the house hands over on a marker, and what it costs to clear it. */
   var MARKER_AMOUNT = 5000, MARKER_INTEREST = 0.5;
+  /** The most the house will let anyone owe - three markers, then no more. */
+  var DEBT_CEILING = 25000;
 
   /** No house, no limits — play testing is uncapped. */
   var FREE_LIMITS = {
@@ -1556,9 +1558,21 @@
     },
 
     // ---- markers ----
+    /** Whether the house will still sign one — the ceiling is on what is owed. */
+    canTakeMarker: function () {
+      return this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING;
+    },
     takeMarker: function () {
+      if (!this.canTakeMarker()) return;
       this.setBankroll(this.getBankroll() + MARKER_AMOUNT);
       this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));
+    },
+    /** The whole campaign back to its first hand — the debt dies with the run. */
+    restartCampaign: function () {
+      this.setBankroll(CAMPAIGN_START);
+      this.setGoal(CAMPAIGN_GOAL);
+      this.setDebt(0);
+      store.setStr("ftb.room", ROOMS[0].key);
     },
     canPayMarker: function () {
       return this.getDebt() > 0 && this.getBankroll() >= this.getDebt();
@@ -1634,17 +1648,24 @@
       if (this.mode !== "campaign") return false;
       var b = this.getBankroll(), g = this.getGoal();
       if (b < 25) {
-        // Broke in the campaign is a marker, not a free reset.
-        var owed = self.getDebt();
-        $("ov-gameover-sub").textContent = owed > 0
-          ? "The purse is gone. Already owing $" + fmt(owed) + "."
-          : "The purse is gone. The house will cover you.";
-        $("ov-loan").textContent = "SIGN A $" + fmt(MARKER_AMOUNT) + " MARKER";
-        $("ov-loan-terms").textContent =
-          "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · no moving up until you do";
+        // Broke in the campaign is a marker, not a free reset — until the
+        // credit line is done, and then the campaign is too.
+        var owed = self.getDebt(), credit = self.canTakeMarker();
+        $("ov-gameover-sub").textContent = credit
+          ? (owed > 0
+              ? "The purse is gone. Already owing $" + fmt(owed) + "."
+              : "The purse is gone. The house will cover you.")
+          : "The purse is gone, owing $" + fmt(owed) + " of a $" + fmt(DEBT_CEILING) +
+            " line. The house is done covering you. Seek Gamblers Anonymous.";
+        $("ov-loan").textContent = credit
+          ? "SIGN A $" + fmt(MARKER_AMOUNT) + " MARKER"
+          : "START A NEW CAMPAIGN";
+        $("ov-loan-terms").textContent = credit
+          ? "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · no moving up until you do"
+          : "the debt dies with the run · fresh $" + fmt(CAMPAIGN_START) + " in the Basement";
         $("ov-gameover").classList.add("on");
         $("ov-loan").onclick = function () {
-          self.takeMarker();
+          if (credit) self.takeMarker(); else self.restartCampaign();
           $("ov-gameover").classList.remove("on");
           self.showMenu();
           if (onDone) onDone();
@@ -3663,7 +3684,7 @@
         });
         // Short of every raise: the pit lends at the felt rather than fold a
         // good hand for want of chips. Free play has no house to borrow from.
-        if (Shell.mode === "campaign" && !playChoices().length) {
+        if (Shell.mode === "campaign" && !playChoices().length && Shell.canTakeMarker()) {
           a.appendChild(actionBtn("MARKER +5,000", "#D9B23A", function () {
             Shell.takeMarker();
             bankroll = Shell.getBankroll();
@@ -4088,7 +4109,7 @@
         a.appendChild(actionBtn("FOLD", RED, fold));
         // Short of the play bet: the pit lends at the felt rather than fold a
         // good hand for want of chips. Free play has no house to borrow from.
-        if (Shell.mode === "campaign" && bankroll < playCost()) {
+        if (Shell.mode === "campaign" && bankroll < playCost() && Shell.canTakeMarker()) {
           a.appendChild(actionBtn("MARKER +5,000", "#D9B23A", function () {
             Shell.takeMarker();
             bankroll = Shell.getBankroll();

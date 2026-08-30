@@ -37,11 +37,14 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.example.casinogames.campaign.CAMPAIGN_START
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.DEBT_CEILING
 import com.example.casinogames.campaign.FreePlayLimits
 import com.example.casinogames.campaign.MARKER_AMOUNT
 import com.example.casinogames.campaign.MARKER_INTEREST
 import com.example.casinogames.campaign.TableLimits
+import androidx.compose.ui.text.font.FontStyle
 import com.example.casinogames.R
 import com.example.casinogames.ui.theme.CasinoPalette
 import java.util.Locale
@@ -185,12 +188,14 @@ fun PlacedBetChip(
 }
 
 /**
- * Full-screen campaign bust overlay. The run is not dead — the house will
- * always cover a player — but the marker it writes has to be cleared before
- * they are allowed upstairs again.
+ * Full-screen campaign bust overlay. While the credit line holds, the house
+ * covers the player with another marker. Once what is owed hits the ceiling
+ * there is nothing left to sign, and the campaign is over — the overlay does
+ * the signing or the burying itself, so every table shows the same house.
  */
 @Composable
-fun CampaignGameOver(onStartOver: () -> Unit) {
+fun CampaignGameOver(onDone: () -> Unit) {
+    val credit = Campaign.canTakeMarker
     Box(
         Modifier
             .fillMaxSize()
@@ -211,22 +216,34 @@ fun CampaignGameOver(onStartOver: () -> Unit) {
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "The purse is gone. The house will cover you.",
+                if (credit) "The purse is gone. The house will cover you."
+                else "The purse is gone, and the house is done covering you.",
                 fontSize = 13.sp,
                 color = Color(0xB3FFFFFF),
             )
             if (Campaign.debt > 0) {
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    "Already owing ${formatMoney(Campaign.debt)}",
+                    "Already owing ${formatMoney(Campaign.debt)}" +
+                        if (credit) "" else " of a ${formatMoney(DEBT_CEILING)} line",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFF3B5C),
                 )
             }
+            if (!credit) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Seek Gamblers Anonymous.",
+                    fontSize = 13.sp,
+                    fontStyle = FontStyle.Italic,
+                    color = Color(0xB3FFFFFF),
+                )
+            }
             Spacer(Modifier.height(26.dp))
             Text(
-                "SIGN A ${formatMoney(MARKER_AMOUNT)} MARKER",
+                if (credit) "SIGN A ${formatMoney(MARKER_AMOUNT)} MARKER"
+                else "START A NEW CAMPAIGN",
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Black,
                 letterSpacing = 0.08.em,
@@ -234,14 +251,22 @@ fun CampaignGameOver(onStartOver: () -> Unit) {
                 modifier = Modifier
                     .clip(RoundedCornerShape(999.dp))
                     .background(Color(0xFFFFD24D))
-                    .clickable(onClick = onStartOver)
+                    .clickable {
+                        if (credit) Campaign.takeMarker() else Campaign.restart()
+                        onDone()
+                    }
                     .padding(horizontal = 28.dp, vertical = 14.dp),
             )
             Spacer(Modifier.height(10.dp))
             // The whole point of the marker: it is not a free reset.
             Text(
-                "${formatMoney(MARKER_AMOUNT * (1 + MARKER_INTEREST))} to clear · " +
-                    "no moving up until you do",
+                if (credit) {
+                    "${formatMoney(MARKER_AMOUNT * (1 + MARKER_INTEREST))} to clear · " +
+                        "no moving up until you do"
+                } else {
+                    "the debt dies with the run · fresh ${formatMoney(CAMPAIGN_START)} " +
+                        "in the Basement"
+                },
                 fontSize = 10.sp,
                 letterSpacing = 0.04.em,
                 color = Color(0x8CFFFFFF),

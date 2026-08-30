@@ -168,10 +168,7 @@ fun BaccaratScreen(
         if (vm.campaign && vm.phase == Phase.BETTING &&
             vm.bankroll < 25 && vm.totalStaked == 0
         ) {
-            com.example.casinogames.ui.common.CampaignGameOver(onStartOver = {
-                vm.buyBackIn()
-                onGameOverExit()
-            })
+            com.example.casinogames.ui.common.CampaignGameOver(onDone = onGameOverExit)
         }
         if (vm.campaign && vm.phase == Phase.BETTING &&
             vm.bankroll >= vm.goal && vm.totalStaked == 0

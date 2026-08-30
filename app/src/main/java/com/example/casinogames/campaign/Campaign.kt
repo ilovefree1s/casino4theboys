@@ -16,6 +16,14 @@ const val MARKER_AMOUNT = 5_000.0
 const val MARKER_INTEREST = 0.5
 
 /**
+ * The most the house will let anyone owe. Credit without a floor made the
+ * campaign unlosable — debt just piled up past any hope of clearing while the
+ * markers kept coming. Three signings hit this; the fourth is refused, and
+ * busting with the credit line shut is the end of the campaign.
+ */
+const val DEBT_CEILING = 25_000.0
+
+/**
  * A room on the floor. The buy-in is what it takes to get in; the limits are
  * what it lets you put down once you are.
  *
@@ -165,7 +173,12 @@ object Campaign {
     /** Broke is being unable to cover the cheapest bet in the house. */
     val isBroke: Boolean get() = bankroll < Room.BASEMENT.minBet
 
+    /** Whether the house will still sign one — the ceiling is on what is owed. */
+    val canTakeMarker: Boolean
+        get() = debt + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING
+
     fun takeMarker() {
+        if (!canTakeMarker) return
         bankroll += MARKER_AMOUNT
         debt += MARKER_AMOUNT * (1 + MARKER_INTEREST)
         markersTaken++

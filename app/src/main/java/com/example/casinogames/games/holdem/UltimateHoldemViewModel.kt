@@ -128,7 +128,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
      * play has no house to borrow from.
      */
     val canTakeMarker: Boolean
-        get() = campaign && street != null && playChoices.isEmpty()
+        get() = campaign && street != null && playChoices.isEmpty() && Campaign.canTakeMarker
 
     fun takeMarker() {
         if (!canTakeMarker) return

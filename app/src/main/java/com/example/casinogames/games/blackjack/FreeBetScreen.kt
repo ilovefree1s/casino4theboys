@@ -153,10 +153,7 @@ fun FreeBetScreen(
         if (vm.campaign && vm.phase == BjPhase.BETTING &&
             vm.bankroll < 25 && vm.bet == 0 && vm.potBet == 0
         ) {
-            CampaignGameOver(onStartOver = {
-                vm.buyBackIn()
-                onGameOverExit()
-            })
+            CampaignGameOver(onDone = onGameOverExit)
         }
         if (vm.campaign && vm.phase == BjPhase.BETTING &&
             vm.bankroll >= vm.goal && vm.bet == 0 && vm.potBet == 0

@@ -141,10 +141,7 @@ fun Blazing777Screen(
         if (vm.campaign && vm.phase == BjPhase.BETTING &&
             vm.bankroll < 25 && vm.totalAtRisk == 0
         ) {
-            CampaignGameOver(onStartOver = {
-                vm.buyBackIn()
-                onGameOverExit()
-            })
+            CampaignGameOver(onDone = onGameOverExit)
         }
         if (vm.campaign && vm.phase == BjPhase.BETTING &&
             vm.bankroll >= vm.goal && vm.totalAtRisk == 0

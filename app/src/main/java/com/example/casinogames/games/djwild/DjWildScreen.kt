@@ -143,7 +143,7 @@ fun DjWildScreen(
             )
         } else if (vm.bankroll < 25 && vm.phase == DjPhase.BETTING && vm.totalAtRisk == 0) {
             if (vm.campaign) {
-                CampaignGameOver(onStartOver = { vm.buyBackIn(); onGameOverExit() })
+                CampaignGameOver(onDone = onGameOverExit)
             } else {
                 RebuyPrompt { vm.buyBackIn() }
             }

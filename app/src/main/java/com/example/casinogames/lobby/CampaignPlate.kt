@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.casinogames.campaign.Campaign
 import com.example.casinogames.campaign.Room
 import com.example.casinogames.ui.common.formatMoney
@@ -169,6 +171,13 @@ private fun MarkerPlate(scale: Float) {
  */
 @Composable
 private fun RoomPicker(onDismiss: () -> Unit) {
+    // Its own window, not a Box in the page: the lobby composes its card tap
+    // bands after the plate, so an in-page scrim sat underneath them and taps
+    // on a room fell through to whatever game lay behind it.
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
     Box(
         Modifier
             .fillMaxSize()
@@ -204,6 +213,7 @@ private fun RoomPicker(onDismiss: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
             }
         }
+    }
     }
 }
 
