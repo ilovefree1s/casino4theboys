@@ -19,6 +19,7 @@ import com.example.casinogames.games.blackjack.BlackjackMenuScreen
 import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
+import com.example.casinogames.games.destroyer.DestroyerScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
 import com.example.casinogames.games.djwild.DjWildScreen
 import com.example.casinogames.games.poker.PokerMenuScreen
@@ -95,6 +96,14 @@ class MainActivity : ComponentActivity() {
                         BackHandler { screen = back }
                         DjWildScreen(
                             onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == GameId.CRAPS.name -> {
+                        BackHandler { screen = lobby }
+                        DestroyerScreen(
+                            onBack = { screen = lobby },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
                         )

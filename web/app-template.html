@@ -750,6 +750,65 @@
     #screen-djwild .card .mid { font-size: 18px; }
   }
 
+  /* ========== DESTROYER ==========
+     The felt's colours are taken off pink4theboys.png itself: the hot magenta
+     ring and its pale glow. Hits stay battleship red, the money stays brass. */
+  #screen-destroyer { position: relative; background: #0C0308; --uth-green: #FF40A0; }
+  .dz-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .19; pointer-events: none;
+  }
+  .dz-table { justify-content: space-between; }
+  .dz-top, .dz-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  .dz-board {
+    display: grid; grid-template-columns: repeat(6, 44px); gap: 4px;
+    padding: 8px; border-radius: 10px; background: #140610;
+    border: 1.5px solid #6E1C4A;
+  }
+  .dz-cell {
+    width: 44px; height: 44px; border-radius: 6px; position: relative;
+    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  }
+  .dz-cell.ship { background: rgba(255,64,160,.16); border-color: rgba(255,64,160,.6); }
+  .dz-cell.sunk { background: rgba(255,59,77,.30); border-color: #FF3B4D; }
+  .dz-cell.target { border: 2px solid #E8C169; }
+  .dz-cell .peg {
+    position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
+    border-radius: 50%; transform: translate(-50%,-50%);
+  }
+  .dz-cell .peg.hit { background: #FF3B4D; }
+  .dz-cell .peg.miss { background: rgba(245,241,232,.4); }
+  .dz-status {
+    display: flex; align-items: center; gap: 10px; margin-top: 8px;
+  }
+  .dz-status .lbl { font-size: 10px; letter-spacing: .08em; color: rgba(245,241,232,.6); }
+  .dz-status .pip {
+    display: inline-block; width: 10px; height: 10px; border-radius: 50%;
+    margin: 0 2px; background: #E8C169; vertical-align: middle;
+  }
+  .dz-status .pip.spent { background: rgba(255,255,255,.2); }
+  .dz-roll { font-family: var(--display); font-size: 13px; color: #FF40A0; }
+  .dz-pays {
+    font-family: var(--display); font-size: 10px; letter-spacing: .08em;
+    color: rgba(255,64,160,.7); background: none; border: none; padding: 4px;
+  }
+  .dz-betrow { display: flex; align-items: center; gap: 18px; }
+  .dz-shuffle {
+    font-family: var(--display); font-size: 10px; letter-spacing: .06em;
+    line-height: 1.2; color: rgba(255,64,160,.7); background: none; border: none;
+    padding: 8px; width: 70px;
+  }
+  .dz-shuffle-ghost { width: 70px; }
+  #screen-destroyer .uth-spot .ring { border-color: rgba(232,193,105,.4); }
+  #screen-destroyer .uth-spot .cap { color: rgba(232,193,105,.75); }
+  #dz-paytable .dz-paybox { max-width: 320px; }
+  .dz-payrows { margin: 12px 0; }
+  .dz-payrows > div { display: flex; justify-content: space-between; font-size: 12px;
+    color: rgba(245,241,232,.88); padding: 2px 0; }
+  .dz-payrows > div b { color: #E8C169; }
+  .dz-payrows .sp { height: 8px; }
+  #dz-paytable .sub { font-size: 10px; line-height: 14px; color: rgba(245,241,232,.6); }
+
   .uth-rebuy {
     position: absolute; inset: 0; z-index: 30; display: none;
     flex-direction: column; align-items: center; justify-content: center;
@@ -982,7 +1041,7 @@
       <button class="lb-imgcard" id="lb-blackjack"><img src="__LB_BLACKJACK__" alt="Free Bet Blackjack — play"></button>
       <button class="lb-imgcard" id="lb-poker"><img src="__LB_POKER__" alt="Poker — Ultimate Texas Hold'em or DJ Wild"></button>
       <div class="lb-imgcard soon"><img src="__LB_ROULETTE__" alt="Roulette — coming soon"></div>
-      <div class="lb-imgcard soon"><img src="__LB_CRAPS__" alt="Craps — coming soon"></div>
+      <button class="lb-imgcard" id="lb-craps"><img src="__LB_CRAPS__" alt="Destroyer — battleship dice"></button>
     </div>
   </div>
 </div>
@@ -1191,6 +1250,62 @@
   <div class="uth-rebuy" id="dj-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="dj-buyin">BUY BACK IN</button>
+  </div>
+</div>
+
+<!-- ================= DESTROYER ================= -->
+<div class="screen" id="screen-destroyer">
+  <img class="dz-bg" src="__DZ_BG__" alt="">
+  <div class="uth-table dz-table">
+    <div class="dz-top">
+      <div class="uth-topbar">
+        <button class="backlink" id="dz-back">‹ LOBBY</button>
+        <div class="uth-money">
+          <span class="lbl">BANKROLL</span><span class="val" id="dz-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="dz-risk">0</span>
+        </div>
+      </div>
+      <div style="height:8px"></div>
+      <div class="dz-board" id="dz-board"></div>
+      <div class="dz-status">
+        <span class="lbl">SHOTS</span><span id="dz-shots"></span>
+        <span class="dz-roll" id="dz-roll">— · —</span>
+        <button class="dz-pays" id="dz-pays">PAY TABLE</button>
+      </div>
+      <div class="uth-message" id="dz-message">Place your bet</div>
+      <div class="dj-pills" id="dz-results"></div>
+    </div>
+    <div class="dz-bottom">
+      <div class="dz-betrow">
+        <button class="dz-shuffle" id="dz-shuffle">SHUFFLE<br>FLEET</button>
+        <button class="uth-spot" id="dz-bet"><span class="ring"></span><span class="cap">BET</span></button>
+        <span class="dz-shuffle-ghost"></span>
+      </div>
+      <div id="dz-rack"></div>
+      <div class="uth-actions" id="dz-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="dz-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="dz-buyin">BUY BACK IN</button>
+  </div>
+  <div class="ov" id="dz-paytable">
+    <div class="box dz-paybox">
+      <div class="big" style="color:#E8C169;font-size:18px;letter-spacing:.14em">DESTROYER PAYS</div>
+      <div class="dz-payrows">
+        <div><span>2-ship sunk</span><b>3</b></div>
+        <div><span>3-ship · 2 hits / sunk</span><b>3 / 10</b></div>
+        <div><span>4-ship · 2 / 3 hits / sunk</span><b>3 / 4 / 40</b></div>
+        <div class="sp"></div>
+        <div><span>2 ships down</span><b>+51</b></div>
+        <div><span>3 ships down</span><b>+251</b></div>
+        <div><span>FLEET DESTROYED</span><b>+501</b></div>
+      </div>
+      <div class="sub">All pays are for-1 — the stake buys the shots.<br>
+        Four shots; a fresh hit is free, twice-hit water is a miss.</div>
+    </div>
   </div>
 </div>
 
@@ -1718,6 +1833,8 @@
   $("uth-back").addEventListener("click", function () { Shell.show("poker"); });
   $("dj-back").addEventListener("click", function () { Shell.show("poker"); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("lb-craps").addEventListener("click", function () { Destroyer.enter(); Shell.show("destroyer"); });
+  $("dz-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-freebet").addEventListener("click", function () {
     Blackjack.enter("freebet"); Shell.show("blackjack");
   });
@@ -2136,6 +2253,88 @@
     };
   })();
   window.DJ = DJ;   // exposed so the rules can be exercised directly
+
+  /* ============================================================
+     Destroyer engine — mirrors DestroyerRules.kt so both builds pay a
+     board the same way. 6x6 grid, ships of 4/3/3/2, four lives; a fresh
+     hit is a free roll, twice-hit water is a miss. Each ship pays the
+     highest rung it reached; the stake buys the shots.
+     ============================================================ */
+  var DZ = (function () {
+    var GRID = 6, CELLS = 36, LIVES = 4;
+    var SIZES = [4, 3, 3, 2];
+    var MILESTONES = { 2: { 2: 3 }, 3: { 2: 3, 3: 10 }, 4: { 2: 3, 3: 4, 4: 40 } };
+    var FLEET_BONUS = [0, 0, 51, 251, 501];
+
+    function placeFleet(rng) {
+      while (true) {
+        var taken = {}, ships = [], ok = true;
+        for (var s = 0; s < SIZES.length; s++) {
+          var size = SIZES[s], placed = false;
+          for (var t = 0; t < 100 && !placed; t++) {
+            var horiz = rng() < 0.5;
+            var row = Math.floor(rng() * GRID);
+            var col = Math.floor(rng() * (GRID - size + 1));
+            var cells = [];
+            for (var i = 0; i < size; i++) {
+              cells.push(horiz ? row * GRID + col + i : (col + i) * GRID + row);
+            }
+            if (cells.every(function (c) { return !taken[c]; })) {
+              cells.forEach(function (c) { taken[c] = true; });
+              ships.push(cells);
+              placed = true;
+            }
+          }
+          if (!placed) { ok = false; break; }
+        }
+        if (ok) return ships;
+      }
+    }
+
+    /** What one ship pays for the hits it took — the highest rung reached. */
+    function shipPay(size, hits) {
+      var rungs = MILESTONES[size], best = 0;
+      for (var k in rungs) if (+k <= hits && rungs[k] > best) best = rungs[k];
+      return best;
+    }
+
+    function sunkCount(fleet, hitSet) {
+      return fleet.filter(function (ship) {
+        return ship.every(function (c) { return hitSet[c]; });
+      }).length;
+    }
+
+    /** Units won per unit staked; the stake itself is spent. */
+    function settle(fleet, hitSet) {
+      var units = 0, sunk = 0;
+      fleet.forEach(function (ship) {
+        var hits = ship.filter(function (c) { return hitSet[c]; }).length;
+        units += shipPay(ship.length, hits);
+        if (hits === ship.length) sunk++;
+      });
+      return units + FLEET_BONUS[sunk];
+    }
+
+    /**
+     * Plays a fixed roll sequence by the table rules, for the parity
+     * fixture: returns what the hand pays and the lives left standing.
+     */
+    function replay(fleet, rolls) {
+      var hitSet = {}, lives = LIVES;
+      for (var i = 0; i < rolls.length && lives > 0; i++) {
+        if (sunkCount(fleet, hitSet) === fleet.length) break;
+        var cell = rolls[i];
+        var onShip = fleet.some(function (ship) { return ship.indexOf(cell) >= 0; });
+        if (onShip && !hitSet[cell]) hitSet[cell] = true; else lives--;
+      }
+      return { units: settle(fleet, hitSet), lives: lives, hitSet: hitSet };
+    }
+
+    return { GRID: GRID, CELLS: CELLS, LIVES: LIVES, MILESTONES: MILESTONES,
+             FLEET_BONUS: FLEET_BONUS, placeFleet: placeFleet, shipPay: shipPay,
+             settle: settle, sunkCount: sunkCount, replay: replay };
+  })();
+  window.DZ = DZ;   // exposed so the rules can be exercised directly
 
   /** DJ Wild's deck: the ordinary 52 plus one joker, shuffled in. */
   function buildDjShoe() {
@@ -4332,6 +4531,287 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       bankroll = TESTING_BANKROLL;
       setMessage("Place your ante");
+      renderAll();
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     DESTROYER
+     ============================================================ */
+  var Destroyer = (function () {
+    var PINK = "#FF40A0", DIM = "rgba(255,64,160,.6)", BRASS = "#E8C169", RED = "#FF3B4D";
+    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    var bet = 0, stake = 0, lastBet = 0;
+    // betting | targeting | result
+    var phase = "betting";
+    var fleet = DZ.placeFleet(Math.random);
+    var hitSet = {}, missSet = {}, lives = DZ.LIVES;
+    var lastRoll = null, rolling = false, lastWin = 0;
+    var results = [], timers = [];
+
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
+    function atRisk() { return phase === "betting" ? bet : stake; }
+
+    // ---------- render ----------
+    function setMessage(text, tone) {
+      var m = $("dz-message");
+      m.textContent = text;
+      m.className = "uth-message" + (tone ? " " + tone : "");
+    }
+    function renderTop() {
+      $("dz-bankroll").textContent = fmt(bankroll);
+      $("dz-risk").textContent = fmt(atRisk());
+    }
+    function renderBoard() {
+      var host = $("dz-board");
+      host.innerHTML = "";
+      var shipCells = {};
+      fleet.forEach(function (ship) { ship.forEach(function (c) { shipCells[c] = ship; }); });
+      var sunkCells = {};
+      fleet.forEach(function (ship) {
+        if (ship.every(function (c) { return hitSet[c]; })) {
+          ship.forEach(function (c) { sunkCells[c] = true; });
+        }
+      });
+      var target = lastRoll ? lastRoll[0] * DZ.GRID + lastRoll[1] : -1;
+      for (var cell = 0; cell < DZ.CELLS; cell++) {
+        var d = document.createElement("div");
+        var cls = "dz-cell";
+        if (sunkCells[cell]) cls += " sunk";
+        else if (shipCells[cell]) cls += " ship";
+        if (cell === target) cls += " target";
+        d.className = cls;
+        if (hitSet[cell]) d.innerHTML = '<span class="peg hit"></span>';
+        else if (missSet[cell]) d.innerHTML = '<span class="peg miss"></span>';
+        host.appendChild(d);
+      }
+    }
+    function renderStatus() {
+      var shots = "";
+      for (var i = 0; i < DZ.LIVES; i++) {
+        shots += '<span class="pip' + (i < lives ? "" : " spent") + '"></span>';
+      }
+      $("dz-shots").innerHTML = shots;
+      $("dz-roll").textContent = lastRoll
+        ? (lastRoll[0] + 1) + " · " + (lastRoll[1] + 1) : "— · —";
+    }
+    function renderResults() {
+      var host = $("dz-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        host.insertAdjacentHTML("beforeend",
+          '<div class="dj-pill w"><span class="nm">' + r.label +
+          '</span><span class="amt">' + r.units + "-for-1</span></div>");
+      });
+    }
+    function renderBet() {
+      var spot = $("dz-bet");
+      var amount = phase === "betting" ? bet : stake;
+      spot.innerHTML = '<span class="ring" style="border-color:' +
+        (amount > 0 ? BRASS : "rgba(232,193,105,.4)") + '"></span>' +
+        (amount > 0
+          ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
+          : '<span class="cap">BET</span>');
+      $("dz-shuffle").style.visibility = phase === "betting" ? "visible" : "hidden";
+      $("dz-shuffle-ghost") && ($("dz-shuffle-ghost").style.visibility = "hidden");
+    }
+    function renderRack() {
+      var host = $("dz-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("dz-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        a.appendChild(actionBtn("DEAL", BRASS, deal));
+      } else if (phase === "targeting") {
+        a.appendChild(actionBtn(rolling ? "…" : "FIRE", RED, fire));
+      } else if (phase === "result") {
+        a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", BRASS, function () { nextHand(true); }));
+      }
+    }
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && bet === 0;
+      $("dz-rebuy").classList.toggle("on", broke);
+    }
+    function renderAll() {
+      renderTop(); renderBoard(); renderStatus(); renderResults();
+      renderBet(); renderRack(); renderActions(); renderRebuy();
+    }
+
+    // ---------- betting ----------
+    function addChip() {
+      if (phase !== "betting") return;
+      var room = Math.floor(bankroll - bet);
+      var affordable = Math.min(selectedChip, room);
+      if (affordable <= 0) { setMessage("Not enough in the purse"); return; }
+      var lim = Shell.limits();
+      var amount = allow(lim, affordable, bet, false);
+      if (amount <= 0) { setMessage(refusal(lim, false)); return; }
+      bet += amount;
+      setMessage(amount < selectedChip ? refusal(lim, false) : "Fleet bet down");
+      renderTop(); renderBet();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      bet = 0;
+      setMessage("Place your bet");
+      renderTop(); renderBet();
+    }
+    function shuffleFleet() {
+      if (phase !== "betting") return;
+      fleet = DZ.placeFleet(Math.random);
+      renderBoard();
+    }
+
+    // ---------- the hand ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (bet <= 0) { setMessage("Place your bet first"); return; }
+      bankroll -= bet;
+      syncWallet();
+      lastBet = bet; stake = bet; bet = 0;
+      hitSet = {}; missSet = {}; lives = DZ.LIVES;
+      lastRoll = null; results = []; lastWin = 0;
+      phase = "targeting";
+      setMessage("Fire — " + DZ.LIVES + " shots in the rack");
+      renderAll();
+    }
+    /** One press, one roll — a fresh hit is a free shot. */
+    function fire() {
+      if (phase !== "targeting" || rolling) return;
+      rolling = true;
+      renderActions();
+      t(260, function () {
+        var row = Math.floor(Math.random() * DZ.GRID);
+        var col = Math.floor(Math.random() * DZ.GRID);
+        lastRoll = [row, col];
+        var cell = row * DZ.GRID + col;
+        var onShip = fleet.some(function (ship) { return ship.indexOf(cell) >= 0; });
+        if (onShip && !hitSet[cell]) {
+          hitSet[cell] = true;
+          var struck = fleet.filter(function (s) { return s.indexOf(cell) >= 0; })[0];
+          var sunk = struck.every(function (c) { return hitSet[c]; });
+          setMessage(sunk ? struck.length + "-ship sunk!" : "Hit — free shot");
+        } else {
+          if (!onShip && !hitSet[cell]) missSet[cell] = true;
+          lives--;
+          setMessage(onShip ? "Same water twice — that costs a shot" : "Miss");
+        }
+        var allSunk = DZ.sunkCount(fleet, hitSet) === fleet.length;
+        // The trigger stays locked through the pause when the hand is over,
+        // or a quick tap here would fire a phantom shot and settle twice.
+        if (lives <= 0 || allSunk) { t(480, settleHand); }
+        else { rolling = false; }
+        renderBoard(); renderStatus(); renderActions();
+      });
+    }
+    function settleHand() {
+      if (phase !== "targeting") return;
+      rolling = false;
+      var units = DZ.settle(fleet, hitSet);
+      lastWin = units * stake;
+      bankroll += lastWin;
+      syncWallet();
+
+      results = [];
+      fleet.slice().sort(function (a, b) { return b.length - a.length; }).forEach(function (ship) {
+        var h = ship.filter(function (c) { return hitSet[c]; }).length;
+        var pay = DZ.shipPay(ship.length, h);
+        if (pay > 0) {
+          results.push({
+            label: ship.length + "-ship " + (h === ship.length ? "sunk" : h + " hits"),
+            units: pay
+          });
+        }
+      });
+      var sunk = DZ.sunkCount(fleet, hitSet);
+      if (DZ.FLEET_BONUS[sunk] > 0) {
+        results.push({ label: sunk + " ships down", units: DZ.FLEET_BONUS[sunk] });
+      }
+
+      var net = lastWin - stake;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        sunk === fleet.length ? "FLEET DESTROYED — " + units + "-for-1" :
+        net > 0 ? "Paid " + units + "-for-1" :
+        units > 0 ? "Back " + units + "-for-1 of the stake" :
+        "The fleet sails on";
+      setMessage(msg, net > 0 ? "win" : "lose");
+      renderAll();
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
+    }
+
+    // ---------- table ----------
+    function reset() {
+      clearTimers();
+      phase = "betting";
+      bet = 0; stake = 0;
+      hitSet = {}; missSet = {}; lives = DZ.LIVES;
+      lastRoll = null; rolling = false;
+      results = []; lastWin = 0;
+      fleet = DZ.placeFleet(Math.random);
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      reset();
+      if (repeat && lastBet <= bankroll) bet = lastBet;
+      setMessage("Place your bet");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      reset();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      setMessage("Place your bet");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    $("dz-bet").addEventListener("click", addChip);
+    $("dz-shuffle").addEventListener("click", shuffleFleet);
+    $("dz-pays").addEventListener("click", function () { $("dz-paytable").classList.add("on"); });
+    $("dz-paytable").addEventListener("click", function () { $("dz-paytable").classList.remove("on"); });
+    $("dz-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || bet !== 0 || bankroll >= 25) return;
+      bankroll = TESTING_BANKROLL;
+      setMessage("Place your bet");
       renderAll();
     });
     return { enter: enter };

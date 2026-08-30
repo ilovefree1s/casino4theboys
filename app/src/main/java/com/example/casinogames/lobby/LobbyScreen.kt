@@ -33,7 +33,8 @@ enum class GameId(val available: Boolean) {
     /** Opens the poker variants page rather than a table directly. */
     POKER(true),
     ROULETTE(true),
-    CRAPS(false),
+    /** Opens Destroyer, the battleship bubble-dice game. */
+    CRAPS(true),
 }
 
 // Dead flat black: the page art runs to black at its own edges, and any

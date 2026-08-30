@@ -1,0 +1,97 @@
+<!doctype html>
+<title>Destroyer parity · web engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { background: #0C0308; color: #F5F1E8; font: 13px "Segoe UI", system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 16px; letter-spacing: .1em; color: #FF40A0; margin: 0 0 4px; }
+  .sub { color: rgba(245,241,232,.6); margin-bottom: 16px; }
+  #tally { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .ok { color: #FF40A0; }
+  .bad { color: #FF4D4D; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(245,241,232,.12); vertical-align: top; }
+  th { color: rgba(245,241,232,.55); font-weight: 600; font-size: 11px; letter-spacing: .08em; }
+  td.hand { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .why { color: #FF9C8A; font-size: 12px; }
+  iframe { display: none; }
+</style>
+<h1>DESTROYER PARITY · WEB ENGINE</h1>
+<div class="sub">
+  Runs <code>destroyer-parity.txt</code> — the same fixture DestroyerParityTest.kt runs against Compose —
+  through <code>window.DZ</code> inside the shipped app.html.
+</div>
+<div id="tally">Loading…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody></tbody></table>
+<iframe id="app" src="app.html"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  function parse(text) {
+    return text.split("\n")
+      .map(function (l) { return l.split("#")[0].trim(); })
+      .filter(function (l) { return l.length; })
+      .map(function (line) {
+        var c = line.split("|").map(function (x) { return x.trim(); });
+        var want = c[2].split(/\s+/);
+        return {
+          line: line,
+          fleet: c[0].split(";").map(function (s) {
+            return s.trim().split(/\s+/).map(Number);
+          }),
+          rolls: c[1].split(/\s+/).map(Number),
+          units: +want[0], lives: +want[1]
+        };
+      });
+  }
+
+  function run(DZ, cases) {
+    var body = document.querySelector("#rows tbody");
+    var failed = 0;
+    cases.forEach(function (c) {
+      var r = DZ.replay(c.fleet, c.rolls);
+      var bad = [];
+      if (r.units !== c.units) bad.push("units: got " + r.units + ", fixture says " + c.units);
+      if (r.lives !== c.lives) bad.push("lives: got " + r.lives + ", fixture says " + c.lives);
+      if (bad.length) failed++;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="hand">' + c.line + "</td>" +
+        '<td class="' + (bad.length ? "bad" : "ok") + '">' +
+        (bad.length ? '<span class="why">' + bad.join("<br>") + "</span>" : "match") +
+        "</td>";
+      body.appendChild(tr);
+    });
+    var tally = document.getElementById("tally");
+    tally.className = failed ? "bad" : "ok";
+    tally.textContent = failed
+      ? failed + " of " + cases.length + " cases disagree with the Compose engine"
+      : "All " + cases.length + " cases match the Compose engine";
+    window.PARITY = { total: cases.length, failed: failed };
+  }
+
+  function fail(msg) {
+    var tally = document.getElementById("tally");
+    tally.className = "bad";
+    tally.textContent = msg;
+    window.PARITY = { total: 0, failed: -1, error: msg };
+  }
+
+  var frame = document.getElementById("app");
+  var text = null, ready = false;
+  function start() {
+    if (!ready || text === null) return;
+    var DZ = frame.contentWindow && frame.contentWindow.DZ;
+    if (!DZ) { fail("app.html did not expose window.DZ — is the build current?"); return; }
+    run(DZ, parse(text));
+  }
+  frame.addEventListener("load", function () { ready = true; start(); });
+  fetch("destroyer-parity.txt")
+    .then(function (r) {
+      if (!r.ok) throw new Error("destroyer-parity.txt: HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (t) { text = t; start(); })
+    .catch(function (e) { fail(String(e)); });
+})();
+</script>

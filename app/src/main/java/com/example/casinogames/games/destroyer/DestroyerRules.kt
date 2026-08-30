@@ -1,0 +1,97 @@
+package com.example.casinogames.games.destroyer
+
+import kotlin.random.Random
+
+/**
+ * Destroyer — the battleship bubble-craps game, played the way the floor
+ * machine plays it. A 6x6 grid holds four ships (2, 3, 3 and 4 cells). Two
+ * dice pick a cell: one die the row, one the column. Four lives: a miss —
+ * open water or a cell already hit — burns one, a fresh hit is a free roll.
+ *
+ * When the hand ends, each ship pays the highest rung it reached, sinking
+ * two or more ships pays a bonus on top, and the stake itself is spent, not
+ * returned — this is a machine game, not a table bet. That reading of the
+ * felt is the one that reproduces the floor game's published 5.6% edge; paying
+ * every rung as it lands comes out over 100%.
+ */
+object DestroyerRules {
+
+    const val GRID = 6
+    const val CELLS = GRID * GRID
+    const val LIVES = 4
+
+    /** Ship sizes, largest first so placement fails less often. */
+    val SHIP_SIZES = listOf(4, 3, 3, 2)
+
+    /** What a ship pays for reaching [hits], keyed by ship size. */
+    val MILESTONES: Map<Int, Map<Int, Int>> = mapOf(
+        2 to mapOf(2 to 3),
+        3 to mapOf(2 to 3, 3 to 10),
+        4 to mapOf(2 to 3, 3 to 4, 4 to 40),
+    )
+
+    /** The fleet bonus, by ships sunk. */
+    val FLEET_BONUS = listOf(0, 0, 51, 251, 501)
+
+    /** One ship: its cells on the grid, cell = row * GRID + col. */
+    data class Ship(val cells: List<Int>) {
+        val size: Int get() = cells.size
+    }
+
+    /**
+     * Deals a fleet: every ship straight, in bounds, no overlap. Ships may
+     * touch — the floor game allows it and the odds don't care.
+     */
+    fun placeFleet(random: Random): List<Ship> {
+        while (true) {
+            val taken = mutableSetOf<Int>()
+            val ships = mutableListOf<Ship>()
+            var ok = true
+            for (size in SHIP_SIZES) {
+                var placed = false
+                repeat(100) {
+                    if (placed) return@repeat
+                    val horizontal = random.nextBoolean()
+                    val row = random.nextInt(GRID)
+                    val col = random.nextInt(GRID - size + 1)
+                    val cells = (0 until size).map { i ->
+                        if (horizontal) row * GRID + col + i else (col + i) * GRID + row
+                    }
+                    if (cells.none { it in taken }) {
+                        taken.addAll(cells)
+                        ships.add(Ship(cells))
+                        placed = true
+                    }
+                }
+                if (!placed) { ok = false; break }
+            }
+            if (ok) return ships
+        }
+    }
+
+    /** What one ship pays for the hits it took — the highest rung reached. */
+    fun shipPay(size: Int, hits: Int): Int {
+        val rungs = MILESTONES.getValue(size)
+        return rungs.filterKeys { it <= hits }.values.maxOrNull() ?: 0
+    }
+
+    /**
+     * Settles a finished hand: units won per unit staked. The stake is spent,
+     * so the table credits exactly stake × this — nothing comes back on a
+     * hand that never reached a rung.
+     */
+    fun settle(fleet: List<Ship>, hitCells: Set<Int>): Int {
+        var units = 0
+        var sunk = 0
+        for (ship in fleet) {
+            val hits = ship.cells.count { it in hitCells }
+            units += shipPay(ship.size, hits)
+            if (hits == ship.size) sunk++
+        }
+        return units + FLEET_BONUS[sunk]
+    }
+
+    /** How many ships in [fleet] are fully under [hitCells]. */
+    fun sunkCount(fleet: List<Ship>, hitCells: Set<Int>): Int =
+        fleet.count { ship -> ship.cells.all { it in hitCells } }
+}
