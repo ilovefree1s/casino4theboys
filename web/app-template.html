@@ -4102,9 +4102,9 @@
       var a = $("dj-actions");
       a.innerHTML = "";
       if (phase === "betting") {
-        a.appendChild(actionBtn("UNDO", DIM, undoChip));
-        a.appendChild(actionBtn("DEAL", ICE, deal));
+        // No undo: CLEAR takes the whole bet back.
         a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        a.appendChild(actionBtn("DEAL", ICE, deal));
       } else if (phase === "decision") {
         a.appendChild(actionBtn("FOLD", RED, fold));
         // Short of the play bet: the pit lends at the felt rather than fold a
@@ -4120,8 +4120,8 @@
           a.appendChild(actionBtn("PLAY  " + fmt(playCost()), ICE, play));
         }
       } else if (phase === "result") {
-        a.appendChild(actionBtn("NEW BET", ICE, function () { nextHand(false); }));
-        a.appendChild(actionBtn("REBET", DIM, function () { nextHand(true); }));
+        a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", ICE, function () { nextHand(true); }));
       }
     }
     function renderRebuy() {

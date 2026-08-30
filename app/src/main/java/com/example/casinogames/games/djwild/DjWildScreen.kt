@@ -573,9 +573,10 @@ private fun Actions(vm: DjWildViewModel) {
     ) {
         when (vm.phase) {
             DjPhase.BETTING -> {
-                ActionButton("UNDO", NeonBlue, false, Modifier.weight(1f), vm::undoChip)
-                ActionButton("DEAL", IceBlue, true, Modifier.weight(1.4f), vm::deal)
+                // No undo: CLEAR takes the whole bet back, and the row matches
+                // the result row's shape — quiet on the left, the go on the right.
                 ActionButton("CLEAR", NeonBlue, false, Modifier.weight(1f), vm::clearBets)
+                ActionButton("DEAL", IceBlue, true, Modifier.weight(1.4f), vm::deal)
             }
             DjPhase.DECISION -> {
                 ActionButton("FOLD", LossRed, false, Modifier.weight(1f), vm::fold)
@@ -594,8 +595,8 @@ private fun Actions(vm: DjWildViewModel) {
                 }
             }
             DjPhase.RESULT -> {
-                ActionButton("NEW BET", IceBlue, true, Modifier.weight(1.4f)) { vm.nextHand(false) }
-                ActionButton("REBET", NeonBlue, false, Modifier.weight(1f)) { vm.nextHand(true) }
+                ActionButton("NEW BET", NeonBlue, false, Modifier.weight(1f)) { vm.nextHand(false) }
+                ActionButton("REBET", IceBlue, true, Modifier.weight(1.4f)) { vm.nextHand(true) }
             }
             else -> {
                 Spacer(Modifier.weight(1f))
