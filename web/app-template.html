@@ -117,21 +117,22 @@
     font-size: 10px; letter-spacing: .08em; background: #E8C169; color: #050408;
   }
   .lb-plate.marker .pay:disabled { background: rgba(255,255,255,.1); color: rgba(255,255,255,.4); }
-  /* ---- the floor ---- */
-  .floor-list { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
-  .floor-row {
-    width: 100%; text-align: left; border-radius: 10px; padding: 9px 13px;
-    background: rgba(11,7,19,.8); border: 1px solid rgba(185,140,255,.35);
+  /* ---- the floor: the painted sheet, five measured card bands ---- */
+  .floor-art { position: relative; width: min(420px, 100vw, calc(100dvh * 941 / 1672)); pointer-events: none; }
+  .floor-art img { width: 100%; display: block; }
+  .floor-art #floor-bands { position: absolute; inset: 0; }
+  .floor-art .band {
+    position: absolute; left: 4.68%; width: 90.66%; border-radius: 14px;
+    background: none; border: 0; padding: 0; pointer-events: auto; cursor: pointer;
   }
-  .floor-row.here { background: rgba(232,193,105,.12); border: 1.5px solid #E8C169; }
-  .floor-row.shut { border-color: rgba(255,255,255,.1); }
-  .floor-row .hd { display: flex; align-items: center; justify-content: space-between; }
-  .floor-row .nm { font-family: var(--display); font-size: 13px; letter-spacing: .1em; color: #E8C169; }
-  .floor-row.shut .nm { color: rgba(255,255,255,.35); }
-  .floor-row .tag { font-family: var(--display); font-size: 9px; letter-spacing: .08em; color: rgba(255,255,255,.6); }
-  .floor-row.shut .tag { color: rgba(255,59,92,.45); }
-  .floor-row .lim { font-size: 11px; font-weight: 700; color: rgba(255,255,255,.7); margin-top: 3px; }
-  .floor-row.shut .lim { color: rgba(255,255,255,.25); }
+  .floor-art .band.here { border: 2px solid #E8C169; cursor: default; }
+  .floor-art .band.shut { background: rgba(5,3,8,.65); cursor: default; }
+  .floor-art .band .plate {
+    position: absolute; right: 4%; top: 50%; transform: translateY(-50%);
+    font-family: var(--display); font-size: 11px; letter-spacing: .06em;
+    color: #FF3B5C; background: rgba(11,7,19,.92);
+    border: 1px solid rgba(255,59,92,.8); border-radius: 999px; padding: 7px 14px;
+  }
   .lb-cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
   .lb-imgcard { width: 100%; padding: 0; border-radius: 18px; overflow: hidden; }
   .lb-imgcard img { width: 100%; display: block; }
@@ -1558,10 +1559,9 @@
   </div>
 </div>
 <div class="ov" id="ov-floor">
-  <div class="box">
-    <div class="big" style="color:#E8C169;font-size:22px;letter-spacing:.16em">THE FLOOR</div>
-    <div class="sub" id="ov-floor-sub">Higher rooms pay faster and bust quicker</div>
-    <div class="floor-list" id="ov-floor-list"></div>
+  <div class="floor-art">
+    <img src="__FLOOR_ROOMS__" alt="The floor">
+    <div id="floor-bands"></div>
   </div>
 </div>
 <div class="ov" id="ov-complete">
@@ -2667,31 +2667,32 @@
      * slate with the house.
      */
     showFloor: function () {
+      // The painted sheet, with the live layer deciding which WALK INs mean
+      // it: the room you hold wears a gold ring, a shut room dims under a
+      // red plate quoting the reason. Bands measured off the 941x1672 art.
       var self = this;
-      $("ov-floor-sub").textContent = this.getDebt() > 0
-        ? "Square the marker before moving up"
-        : "Higher rooms pay faster and bust quicker";
-      var list = $("ov-floor-list");
-      list.innerHTML = "";
-      ROOMS.forEach(function (room) {
+      var BANDS = [[384, 561], [585, 760], [784, 965], [989, 1168], [1192, 1373]];
+      var host = $("floor-bands");
+      host.innerHTML = "";
+      ROOMS.forEach(function (room, i) {
         var here = self.getRoom() === room;
         var open = self.canEnter(room);
         var shut = self.blockedReason(room);
-        var row = document.createElement("button");
-        row.className = "floor-row" + (here ? " here" : "") + (open ? "" : " shut");
-        row.innerHTML =
-          '<div class="hd"><span class="nm">' + room.name.toUpperCase() + "</span>" +
-          '<span class="tag">' +
-          (here ? "YOU ARE HERE" : shut ? shut : "WALK IN") + "</span></div>" +
-          '<div class="lim">' + roomSign(room) + " · " + roomSideSign(room) + "</div>";
+        var band = document.createElement("button");
+        band.className = "band" + (here ? " here" : "") + (open ? "" : " shut");
+        band.style.top = (BANDS[i][0] / 1672 * 100).toFixed(2) + "%";
+        band.style.height = ((BANDS[i][1] - BANDS[i][0]) / 1672 * 100).toFixed(2) + "%";
+        if (!open) {
+          band.innerHTML = '<span class="plate">' + (shut || "LOCKED").toUpperCase() + "</span>";
+        }
         if (open && !here) {
-          row.addEventListener("click", function () {
+          band.addEventListener("click", function () {
             self.enter(room);
             $("ov-floor").classList.remove("on");
             self.showLobby();
           });
         }
-        list.appendChild(row);
+        host.appendChild(band);
       });
       $("ov-floor").classList.add("on");
     },
