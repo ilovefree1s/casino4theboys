@@ -28,6 +28,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
@@ -101,9 +102,42 @@ class TrayDie {
     var value by mutableIntStateOf(1)
     var rot by mutableStateOf(0f)        // flat spin, degrees
     var held by mutableStateOf(false)
+    // The other two axes of the tumble; drawn every frame, so state too.
+    var tumble by mutableStateOf(0f)
+    var roll by mutableStateOf(0f)
     var vx = 0f; var vy = 0f
-    var spin = 0f; var tumble = 0f; var roll = 0f
+    var spin = 0f
+    // Where the die stopped and where it is being stood up to, so the last
+    // turn onto its face can be played rather than jumped.
+    var fromRot = 0f; var fromTumble = 0f; var fromRoll = 0f
+    var toRot = 0f; var toTumble = 0f; var toRoll = 0f
+
+    /**
+     * Stands [v] face-on and upright — the pose every die at rest is in.
+     *
+     * The drawn face comes from the angles alone, so setting [value] without
+     * these is a die that says one thing and shows another. That is how the
+     * tray opened: every die drawn as a 1 whatever it claimed to be.
+     */
+    fun faceUp(v: Int) {
+        value = v
+        val (fx, fy) = FACING.getValue(v)
+        rot = 0f; tumble = fx; roll = fy
+    }
 }
+
+/**
+ * The rotateX / rotateY pair that stands each value face-on and the right way
+ * up, like the web FACING map.
+ *
+ * 6 is the one to be careful with: turning the cube 180 about X also brings the
+ * 6 to the front, and reads as a 6 either way, so the wrong pair passes every
+ * test a pip die can fail. It stands the character on its head.
+ */
+private val FACING = mapOf(
+    1 to (0f to 0f), 2 to (90f to 0f), 3 to (0f to -90f),
+    4 to (0f to 90f), 5 to (-90f to 0f), 6 to (0f to 180f),
+)
 
 /**
  * The tray's whole state, owned outside the composable so a hand survives
@@ -119,8 +153,11 @@ class DiceTrayState(
     val letterDie: Int = -1,
     private val random: Random = Random(System.nanoTime()),
 ) {
-    val dice = List(count) { TrayDie().apply { value = 1 + random.nextInt(6) } }
+    val dice = List(count) { TrayDie().apply { faceUp(1 + random.nextInt(6)) } }
     var rolling by mutableStateOf(false)
+    /** The last turn onto the face, after the physics has stopped. */
+    var standing = false
+    var standStart = 0L
     var fieldW = 0f; var fieldH = 0f
     var density = 1f
     var epoch by mutableLongStateOf(0L)
@@ -141,7 +178,11 @@ class DiceTrayState(
         for (d in dice) {
             var v: Int
             do { v = 1 + random.nextInt(6) } while (v == d.value)
-            d.value = v
+            // The cube is really turned to the new number, then knocked a few
+            // degrees off square so it looks rattled rather than presented.
+            d.faceUp(v)
+            d.tumble += (random.nextFloat() - 0.5f) * 26f
+            d.roll += (random.nextFloat() - 0.5f) * 26f
             d.rot = (random.nextFloat() - 0.5f) * 26f
         }
     }
@@ -317,8 +358,12 @@ fun DiceTray(
         var still = 0
         var began = 0L
         val reachW = sizePx * 0.708f
+        try {
         while (state.rolling) {
             withFrameNanos { now ->
+                // The dice have stopped travelling and are turning onto their
+                // faces; the simulation is over and this is the last of it.
+                if (state.standing) { standStep(state, now); return@withFrameNanos }
                 val dt = if (last == 0L) 0.016f else min(0.032f, (now - last) / 1e9f)
                 last = now
                 if (began == 0L) began = now
@@ -381,23 +426,101 @@ fun DiceTray(
                 }
             }
         }
+        } finally {
+            // Left mid-throw — the screen went away while the dice were still
+            // in the air, so the frame loop stops and nothing will ever call
+            // the settle. A tray left rolling is a tray nobody can pick up
+            // again: launch() refuses while rolling, so the dice would be
+            // dead for the rest of the session.
+            if (state.rolling) {
+                state.standing = false
+                state.rolling = false
+            }
+        }
     }
 }
 
-/** The die rocks onto its nearest flat side, and that side is read off it. */
+/** The same angle, moved to whichever revolution sits nearest [to]. */
+private fun nearest(from: Float, to: Float): Float {
+    var f = from
+    while (f - to > 180f) f -= 360f
+    while (to - f > 180f) f += 360f
+    return f
+}
+
+/**
+ * The die rocks onto its nearest flat side, that side is read off it, and then
+ * it is stood up the right way round.
+ *
+ * The number is decided on the first two lines, off the angles the throw
+ * actually left behind, and nothing after that can change it. Standing the die
+ * up only turns the cube about the face already pointing at you — the same face
+ * either way, so the throw stays honest.
+ *
+ * Which is a rule pips never needed. A 6 lying on its side is still a 6, so the
+ * web tray could stop wherever it liked and nobody could tell. A letter cannot:
+ * snapping each axis to its own nearest 90 left only a quarter of throws
+ * standing upright, and on a die whose whole job is to call out a square, three
+ * reads in four came up sideways or on their head.
+ */
 private fun settle(state: DiceTrayState) {
-    val values = state.dice.map { b ->
+    for (b in state.dice) {
         val sz = (b.rot / 90f).roundToInt() * 90f
         val sx = (b.tumble / 90f).roundToInt() * 90f
         val sy = (b.roll / 90f).roundToInt() * 90f
-        b.rot = sz
         b.value = faceToward(sz, sx, sy)
         b.vx = 0f; b.vy = 0f; b.spin = 0f
-        b.value
+        val (fx, fy) = FACING.getValue(b.value)
+        b.toRot = 0f; b.toTumble = fx; b.toRoll = fy
+        // From the revolution nearest the target, or a die that has gone over
+        // six times unwinds all six on its way to standing up.
+        b.fromRot = nearest(b.rot, b.toRot)
+        b.fromTumble = nearest(b.tumble, b.toTumble)
+        b.fromRoll = nearest(b.roll, b.toRoll)
+        b.rot = b.fromRot; b.tumble = b.fromTumble; b.roll = b.fromRoll
     }
-    state.rolling = false
-    state.onSettle?.invoke(values)
+    state.standing = true
+    state.standStart = 0L
 }
+
+/**
+ * The last quarter-turn onto the face, played out over about a fifth of a
+ * second: the die rocks flat instead of snapping there, which is what it looks
+ * like when a real one stops rolling. Only when it has finished is the throw
+ * called, so the number arrives with the picture rather than ahead of it.
+ */
+private fun standStep(state: DiceTrayState, now: Long) {
+    if (state.standStart == 0L) state.standStart = now
+    val t = ((now - state.standStart) / 2.2e8f).coerceIn(0f, 1f)
+    val e = 1f - (1f - t) * (1f - t) * (1f - t)
+    for (b in state.dice) {
+        b.rot = b.fromRot + (b.toRot - b.fromRot) * e
+        b.tumble = b.fromTumble + (b.toTumble - b.fromTumble) * e
+        b.roll = b.fromRoll + (b.toRoll - b.fromRoll) * e
+    }
+    if (t < 1f) return
+    state.standing = false
+    state.rolling = false
+    state.onSettle?.invoke(state.dice.map { it.value })
+}
+
+/*
+ * The cube itself, projected by hand: Compose has no preserve-3d, so the
+ * six faces are turned through the same three angles the physics tracks,
+ * backfaces culled, the rest shaded by how squarely they face the light
+ * and filled as perspective quads — a die that really goes over and over,
+ * not a card with the number repainted. Each row is a face: its value,
+ * outward normal, the axis that runs right across it and the one that
+ * runs down it.
+ */
+private val FACE_DEFS = arrayOf(
+    intArrayOf(1, 0, 0, 1, 1, 0, 0, 0, 1, 0),
+    intArrayOf(6, 0, 0, -1, -1, 0, 0, 0, 1, 0),
+    intArrayOf(3, 1, 0, 0, 0, 0, -1, 0, 1, 0),
+    intArrayOf(4, -1, 0, 0, 0, 0, 1, 0, 1, 0),
+    intArrayOf(5, 0, -1, 0, 1, 0, 0, 0, 0, 1),
+    intArrayOf(2, 0, 1, 0, 1, 0, 0, 0, 0, -1),
+)
 
 @Composable
 private fun DieView(
@@ -410,32 +533,110 @@ private fun DieView(
     pipColor: Color,
 ) {
     // The letter die wears battleship red with white call letters; the
-    // number die keeps the bone face and dark pips.
+    // number die keeps the bone face and dark ink.
     val letter = index == state.letterDie
+    val face = if (letter) Color(0xFFC81428) else faceColor
+    val ink = if (letter) Color.White else pipColor
+    val glyphPaint = remember {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            typeface = android.graphics.Typeface.create(
+                android.graphics.Typeface.DEFAULT_BOLD, android.graphics.Typeface.BOLD
+            )
+            textAlign = android.graphics.Paint.Align.CENTER
+        }
+    }
     Box(
         Modifier
             .offset { IntOffset((die.x - sizePx / 2).roundToInt(), (die.y - sizePx / 2).roundToInt()) }
             .size(dieSize)
             .graphicsLayer {
-                rotationZ = die.rot
-                val s = if (die.held) 1.1f else 1f
+                val s = if (die.held) 1.12f else 1f
                 scaleX = s; scaleY = s
             }
-            .background(if (letter) Color(0xFFC81428) else faceColor, RoundedCornerShape(10.dp))
-            .then(
-                if (die.held) Modifier.border(2.dp, Color(0x80FF40A0), RoundedCornerShape(10.dp))
-                else Modifier
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        // Both dice call their face outright — the letter for the row, the
-        // numeral for the column — battleship coordinates, not pips.
-        Text(
-            if (letter) ('A' + die.value - 1).toString() else die.value.toString(),
-            color = if (letter) Color.White else pipColor,
-            fontSize = with(LocalDensity.current) { (sizePx * 0.44f).toSp() },
-            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+            .drawBehind {
+                if (die.held) {
+                    drawCircle(Color(0x59FF40A0), radius = size.width * 0.72f, center = center)
+                }
+                drawDieCube(die.rot, die.tumble, die.roll, face, ink, letter, glyphPaint)
+            },
+    )
+}
+
+private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDieCube(
+    zDeg: Float,
+    xDeg: Float,
+    yDeg: Float,
+    face: Color,
+    ink: Color,
+    letterDie: Boolean,
+    glyphPaint: android.graphics.Paint,
+) {
+    val half = size.width * 0.46f
+    val persp = size.width * 3.6f
+    val rz = Math.toRadians(zDeg.toDouble()); val rx = Math.toRadians(xDeg.toDouble())
+    val ry = Math.toRadians(yDeg.toDouble())
+    val cz = cos(rz); val sz = sin(rz)
+    val cxr = cos(rx); val sxr = sin(rx)
+    val cyr = cos(ry); val syr = sin(ry)
+    // rotateY, then rotateX, then rotateZ — the same order faceToward reads.
+    fun turn(vx: Double, vy: Double, vz: Double): DoubleArray {
+        val x1 = cyr * vx + syr * vz; val z1 = -syr * vx + cyr * vz
+        val y2 = cxr * vy - sxr * z1; val z2 = sxr * vy + cxr * z1
+        return doubleArrayOf(cz * x1 - sz * y2, sz * x1 + cz * y2, z2)
+    }
+
+    fun proj(v: DoubleArray): Offset {
+        val s = persp / (persp - v[2] * half)
+        return Offset(
+            (center.x + v[0] * half * s).toFloat(),
+            (center.y + v[1] * half * s).toFloat(),
         )
+    }
+
+    // A soft shadow pinned under the cube, so it reads as a thing, not a tile.
+    drawCircle(Color(0x33000000), radius = half * 1.02f, center = center + Offset(0f, half * 0.16f))
+
+    val srcPts = floatArrayOf(0f, 0f, 100f, 0f, 100f, 100f, 0f, 100f)
+    val dstPts = FloatArray(8)
+    val warp = android.graphics.Matrix()
+    for (def in FACE_DEFS) {
+        val n = turn(def[1].toDouble(), def[2].toDouble(), def[3].toDouble())
+        if (n[2] <= 0.02) continue   // facing away
+        val value = def[0]
+        val t1x = def[4].toDouble(); val t1y = def[5].toDouble(); val t1z = def[6].toDouble()
+        val t2x = def[7].toDouble(); val t2y = def[8].toDouble(); val t2z = def[9].toDouble()
+        val tl = proj(turn(def[1] - t1x - t2x, def[2] - t1y - t2y, def[3] - t1z - t2z))
+        val tr = proj(turn(def[1] + t1x - t2x, def[2] + t1y - t2y, def[3] + t1z - t2z))
+        val br = proj(turn(def[1] + t1x + t2x, def[2] + t1y + t2y, def[3] + t1z + t2z))
+        val bl = proj(turn(def[1] - t1x + t2x, def[2] - t1y + t2y, def[3] - t1z + t2z))
+        val light = (0.5 + 0.5 * n[2]).toFloat()
+        val lit = Color(face.red * light, face.green * light, face.blue * light, 1f)
+        val quad = androidx.compose.ui.graphics.Path().apply {
+            moveTo(tl.x, tl.y); lineTo(tr.x, tr.y); lineTo(br.x, br.y); lineTo(bl.x, bl.y); close()
+        }
+        drawPath(quad, lit)
+        drawPath(
+            quad, Color(0f, 0f, 0f, 0.35f),
+            style = Stroke(width = size.width * 0.03f),
+        )
+        // The face's own character, warped onto it with the quad.
+        dstPts[0] = tl.x; dstPts[1] = tl.y; dstPts[2] = tr.x; dstPts[3] = tr.y
+        dstPts[4] = br.x; dstPts[5] = br.y; dstPts[6] = bl.x; dstPts[7] = bl.y
+        if (warp.setPolyToPoly(srcPts, 0, dstPts, 0, 4)) {
+            drawContext.canvas.nativeCanvas.let { nc ->
+                nc.save()
+                nc.concat(warp)
+                glyphPaint.color = android.graphics.Color.argb(
+                    (255 * (0.45f + 0.55f * light)).roundToInt(),
+                    (ink.red * 255).roundToInt(), (ink.green * 255).roundToInt(),
+                    (ink.blue * 255).roundToInt(),
+                )
+                glyphPaint.textSize = 58f
+                val ch = if (letterDie) ('A' + value - 1).toString() else value.toString()
+                nc.drawText(ch, 50f, 50f - (glyphPaint.ascent() + glyphPaint.descent()) / 2f, glyphPaint)
+                nc.restore()
+            }
+        }
     }
 }
 
