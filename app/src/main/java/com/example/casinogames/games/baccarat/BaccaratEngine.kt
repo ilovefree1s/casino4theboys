@@ -36,7 +36,7 @@ data class BaccaratHand(
  * Pure punto banco rules and payouts. Payouts mirror the felt:
  * Player 1:1 · Banker 1:1 less 5% commission · Tie 8:1 (P/B push) · Pairs 11:1
  * Fortune 7 40:1 · Golden 8 25:1 · Heavenly 9 75:1 both / 10:1 either ·
- * Blazing 7s 200:1 both / 75:1 either.
+ * Blazing 7s 200:1 both on three cards / 60:1 both on two cards.
  */
 object BaccaratEngine {
 
@@ -118,13 +118,16 @@ object BaccaratEngine {
         if (p9 && b9) pay(BetType.HEAVENLY_9, 76.0)
         else if (p9 || b9) pay(BetType.HEAVENLY_9, 11.0)
 
-        val p7 = p3 && pT == 7
-        val b7 = b3 && bT == 7
-        if (p7 && b7) pay(BetType.BLAZING_7S, 201.0)
-        else if (p7 || b7) pay(BetType.BLAZING_7S, 76.0)
+        // Blazing 7s reads the felt exactly: both hands on three-card sevens
+        // is the fire, both standing on two-card sevens is the second rung,
+        // and a lone seven pays nothing.
+        val blazing3 = p3 && pT == 7 && b3 && bT == 7
+        val blazing2 = !p3 && pT == 7 && !b3 && bT == 7
+        if (blazing3) pay(BetType.BLAZING_7S, 201.0)
+        else if (blazing2) pay(BetType.BLAZING_7S, 61.0)
 
         // Cover All: 6 to 1 when any of the four fortune events occurs.
-        if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay(BetType.COVER_ALL, 7.0)
+        if (fortune7 || golden8 || p9 || b9 || blazing3 || blazing2) pay(BetType.COVER_ALL, 7.0)
 
         return returns
     }
@@ -150,7 +153,9 @@ object BaccaratEngine {
             if (hand.outcome == Outcome.BANKER && b3 && bT == 7) add(BetType.FORTUNE_7)
             if (hand.outcome == Outcome.PLAYER && p3 && pT == 8) add(BetType.GOLDEN_8)
             if ((p3 && pT == 9) || (b3 && bT == 9)) add(BetType.HEAVENLY_9)
-            if ((p3 && pT == 7) || (b3 && bT == 7)) add(BetType.BLAZING_7S)
+            if ((p3 && pT == 7 && b3 && bT == 7) ||
+                (!p3 && pT == 7 && !b3 && bT == 7)
+            ) add(BetType.BLAZING_7S)
             if (BetType.FORTUNE_7 in this || BetType.GOLDEN_8 in this ||
                 BetType.HEAVENLY_9 in this || BetType.BLAZING_7S in this
             ) add(BetType.COVER_ALL)

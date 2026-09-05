@@ -127,8 +127,9 @@ class BaccaratEngineTest {
 
     @Test
     fun `breakdown reports each winning spot separately and omits losers`() {
-        // Banker three-card 7 vs player pair: Fortune 7, Blazing 7s, Banker and
-        // Player Pair all pay; the Player and Tie bets lose and must be absent.
+        // Banker three-card 7 vs player pair: Fortune 7, Banker and Player
+        // Pair all pay; a lone seven no longer lights Blazing 7s, and the
+        // Player and Tie bets lose — all three must be absent.
         val h = hand(
             listOf(Rank.SIX, Rank.SIX),
             listOf(Rank.TWO, Rank.TWO, Rank.THREE),
@@ -144,7 +145,6 @@ class BaccaratEngineTest {
                 BetType.BANKER to 39.0,
                 BetType.PLAYER_PAIR to 120.0,
                 BetType.FORTUNE_7 to 410.0,
-                BetType.BLAZING_7S to 760.0,
             ),
             breakdown,
         )
@@ -182,14 +182,14 @@ class BaccaratEngineTest {
     }
 
     @Test
-    fun `blazing sevens pays single rate when one hand has a three card seven`() {
+    fun `blazing sevens pays nothing on a lone seven`() {
         val h = hand(
             listOf(Rank.TWO, Rank.TWO, Rank.THREE),
             listOf(Rank.KING, Rank.EIGHT),
             Outcome.BANKER,
             natural = true,
         )
-        assertEquals(760.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
+        assertEquals(0.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
     }
 
     @Test
@@ -200,5 +200,23 @@ class BaccaratEngineTest {
             Outcome.TIE,
         )
         assertEquals(2010.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
+    }
+
+    @Test
+    fun `blazing sevens pays 60 to 1 when both hands stand on two card sevens`() {
+        val h = hand(
+            listOf(Rank.THREE, Rank.FOUR),
+            listOf(Rank.KING, Rank.SEVEN),
+            Outcome.TIE,
+        )
+        assertEquals(610.0, BaccaratEngine.settle(h, mapOf(BetType.BLAZING_7S to 10)), 0.0)
+        assertTrue(BetType.BLAZING_7S in BaccaratEngine.winningSpots(h))
+        // One two-card seven against a three-card hand is not the rung.
+        val mixed = hand(
+            listOf(Rank.THREE, Rank.FOUR),
+            listOf(Rank.TWO, Rank.TWO, Rank.THREE),
+            Outcome.TIE,
+        )
+        assertEquals(0.0, BaccaratEngine.settle(mixed, mapOf(BetType.BLAZING_7S to 10)), 0.0)
     }
 }

@@ -394,7 +394,8 @@
   .b7-luxring img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; }
   .b7-luxring .placed { width: 38px; height: 38px; }
   .b7-luxspot .cap {
-    color: #FF2A2A; font-weight: 900; font-size: 11px; letter-spacing: .14em; margin-top: 3px;
+    color: #FF2A2A; font-weight: 900; font-size: 10px; letter-spacing: .08em;
+    margin-top: 3px; text-align: center; line-height: 1.35;
   }
   /* The watermark burns red with this felt instead of purple. */
   .bj-bg.b7 { opacity: .4; filter: hue-rotate(85deg) saturate(1.25); }
@@ -1433,7 +1434,7 @@
         <div class="cjk outline-1">燒倍烈火 7s</div>
         <div class="cols">
           <div class="col">P &amp; B Have<br>3-Card 7s<br>PAYS 200 to 1</div>
-          <div class="col">P or B Has<br>3-Card 7s<br>PAYS 75 to 1</div>
+          <div class="col">P &amp; B Have<br>2-Card 7s<br>PAYS 60 to 1</div>
         </div>
         <div class="placed"></div>
       </button>
@@ -5863,9 +5864,13 @@
       if (golden8) pay("golden8", 26);
       var p9 = p3 && pT === 9, b9 = b3 && bT === 9;
       if (p9 && b9) pay("heavenly9", 76); else if (p9 || b9) pay("heavenly9", 11);
-      var p7 = p3 && pT === 7, b7 = b3 && bT === 7;
-      if (p7 && b7) pay("blazing7s", 201); else if (p7 || b7) pay("blazing7s", 76);
-      if (fortune7 || golden8 || p9 || b9 || p7 || b7) pay("coverAll", 7);
+      // Blazing 7s reads the felt exactly: both hands on three-card sevens is
+      // the fire, both standing on two-card sevens is the second rung, and a
+      // lone seven pays nothing.
+      var blazing3 = p3 && pT === 7 && b3 && bT === 7;
+      var blazing2 = !p3 && pT === 7 && !b3 && bT === 7;
+      if (blazing3) pay("blazing7s", 201); else if (blazing2) pay("blazing7s", 61);
+      if (fortune7 || golden8 || p9 || b9 || blazing3 || blazing2) pay("coverAll", 7);
       return out;
     }
     function winningSpots(h) {
@@ -5878,7 +5883,8 @@
       if (h.outcome === "B" && b3 && bT === 7) s.fortune7 = true;
       if (h.outcome === "P" && p3 && pT === 8) s.golden8 = true;
       if ((p3 && pT === 9) || (b3 && bT === 9)) s.heavenly9 = true;
-      if ((p3 && pT === 7) || (b3 && bT === 7)) s.blazing7s = true;
+      if ((p3 && pT === 7 && b3 && bT === 7) ||
+          (!p3 && pT === 7 && !b3 && bT === 7)) s.blazing7s = true;
       if (s.fortune7 || s.golden8 || s.heavenly9 || s.blazing7s) s.coverAll = true;
       return s;
     }
