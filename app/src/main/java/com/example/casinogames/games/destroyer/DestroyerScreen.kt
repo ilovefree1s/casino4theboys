@@ -328,7 +328,8 @@ private fun Board(vm: DestroyerViewModel) {
             }
         }
 
-        // Pegs and the last shot's ring, cell by cell.
+        // Pegs and the last shot's ring, cell by cell — floated above the
+        // hulls, or a red peg on a ship would vanish under its own target.
         for (cell in 0 until DestroyerRules.CELLS) {
             val row = cell / GRID
             val col = cell % GRID
@@ -337,6 +338,7 @@ private fun Board(vm: DestroyerViewModel) {
                     Modifier
                         .offset(x = left(col), y = top(row))
                         .size(cellW, cellH)
+                        .zIndex(3f)
                         .padding(3.dp)
                         .border(2.dp, Brass, RoundedCornerShape(8.dp))
                 )
@@ -351,6 +353,7 @@ private fun Board(vm: DestroyerViewModel) {
                     Modifier
                         .offset(x = left(col) + cellW / 2 - 7.dp, y = top(row) + cellH / 2 - 7.dp)
                         .size(14.dp)
+                        .zIndex(3f)
                         .clip(CircleShape)
                         .background(peg)
                         .border(1.dp, Color(0x66000000), CircleShape)
@@ -382,11 +385,16 @@ private fun StatusRow(vm: DestroyerViewModel, onShowPays: () -> Unit) {
             color = Steel, fontSize = 13.sp, fontWeight = FontWeight.Black,
         )
         Spacer(Modifier.width(14.dp))
+        // A button that looks like one: the dim text version went unnoticed.
         Text(
-            "PAY TABLE",
-            color = SteelDim, fontSize = 10.sp, fontWeight = FontWeight.Black,
+            "ⓘ PAYS",
+            color = Brass, fontSize = 11.sp, fontWeight = FontWeight.Black,
             letterSpacing = 0.08.em,
-            modifier = Modifier.clickable(onClick = onShowPays).padding(4.dp),
+            modifier = Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .border(1.dp, Brass.copy(alpha = 0.8f), RoundedCornerShape(999.dp))
+                .clickable(onClick = onShowPays)
+                .padding(horizontal = 10.dp, vertical = 5.dp),
         )
     }
 }

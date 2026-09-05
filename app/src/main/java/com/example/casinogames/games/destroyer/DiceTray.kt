@@ -258,6 +258,10 @@ fun DiceTray(
                 state.fieldH = it.height.toFloat()
                 if (fresh) state.home()
             }
+            // The hand listens on the field, not the die: the web tray reads
+            // clientX/Y, and a die that moves under the finger would otherwise
+            // swallow most of the measured speed.
+            .pointerInput(state) { trayGesture(state, sizePx) }
             // The throwing area's near edge: quiet enough to ignore, there
             // enough to find. Everything above it is the table.
             .drawBehind {
@@ -437,8 +441,7 @@ private fun DieView(
                         center = Offset(start + (p % 3) * cell, start + (p / 3) * cell),
                     )
                 }
-            }
-            .pointerInput(index) { trayDrag(state, die) },
+            },
         contentAlignment = Alignment.Center,
     ) {
         if (index == state.letterDie) {
@@ -456,15 +459,27 @@ private fun DieView(
  * The web tray's whole hand, in one gesture: carry a die (and whatever is
  * piled on it), rattle it with quick reversals, and throw it by carrying it
  * up over the line — or flicking it upward hard enough for where it is.
+ *
+ * It listens on the field itself, the way the web tray reads clientX/Y off
+ * the document: every position is in the tray's own frame, so a die moving
+ * under the finger cannot eat the speed the finger actually has.
  */
-private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trayDrag(
+private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trayGesture(
     state: DiceTrayState,
-    die: TrayDie,
+    sizePx: Float,
 ) {
     awaitPointerEventScope {
         while (true) {
             val down = awaitFirstDown()
             if (state.rolling) continue
+            // The die under the finger; a touch on open felt is not a hand.
+            val die = state.dice.minByOrNull { d ->
+                val dx = d.x - down.position.x; val dy = d.y - down.position.y
+                dx * dx + dy * dy
+            } ?: continue
+            val grabDx = die.x - down.position.x
+            val grabDy = die.y - down.position.y
+            if (sqrt(grabDx * grabDx + grabDy * grabDy) > sizePx * 0.9f) continue
             // The pile: everything close enough to come up with this die.
             val reach = state.density * 52f * 0.62f
             val pile = state.dice.filter { other ->
@@ -473,11 +488,12 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trayDrag
             }
             pile.forEach { it.held = true }
             var lastPos = down.position
-            var lastT = System.currentTimeMillis()
+            var lastT = down.uptimeMillis
+            var endT = lastT
             var speed = 0f                 // upward px/ms
             var moved = false
             var launched = false
-            val y0 = die.y
+            val y0 = down.position.y
             var wasBelow = die.y >= state.fieldH * 0.5f
             var shakeX = down.position.x
             var shakeDir = 0
@@ -492,9 +508,10 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trayDrag
             while (true) {
                 val event = awaitPointerEvent()
                 val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                endT = change.uptimeMillis
                 if (!change.pressed) break
                 val pos = change.position
-                val now = System.currentTimeMillis()
+                val now = change.uptimeMillis
                 val dt = now - lastT
                 if (dt > 0) speed = (lastPos.y - pos.y) / dt
                 val dx = pos.x - lastPos.x
@@ -555,13 +572,15 @@ private suspend fun androidx.compose.ui.input.pointer.PointerInputScope.trayDrag
             if (shaking || !moved) continue
             // A flick: upward and still moving when let go. Down in the
             // throwing band a gentle lift is enough; out on the felt it has
-            // to be a real one.
-            val staleness = System.currentTimeMillis() - lastT
+            // to be a real one — and mostly upward, so carrying a die across
+            // the table and setting it down does not throw the lot.
+            val staleness = endT - lastT
             val v = if (staleness > 90) 0f else speed / state.density
             val near = y0 >= state.fieldH * 0.42f || lastPos.y >= state.fieldH * 0.42f
             val needs = if (near) LOB else FLICK
             val throwDy = if (near) -16f else -THROW_PX
-            if (totalDy / state.density <= throwDy && v >= needs) {
+            val sideways = abs(lastPos.x - startX)
+            if (totalDy / state.density <= throwDy && v >= needs && sideways < abs(totalDy) * 1.6f) {
                 state.launch(((v - needs) / (FAST - needs)).coerceIn(0f, 1f))
             }
         }
