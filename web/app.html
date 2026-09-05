@@ -3593,8 +3593,8 @@
           }
         }
       } else if (phase === "result") {
-        a.appendChild(imgBtn(ART.btnRebet, "Rebet", function () { nextHand(true); }));
         a.appendChild(imgBtn(ART.btnNewbet, "New bet", function () { nextHand(false); }));
+        a.appendChild(imgBtn(ART.btnRebet, "Rebet", function () { nextHand(true); }));
       } else {
         var d = document.createElement("span");
         d.className = "dealing-label";
@@ -4266,8 +4266,8 @@
           a.appendChild(imgBtn(BJ_ART.btnDouble, "Double", doubleDown));
         }
       } else if (phase === "result") {
-        a.appendChild(imgBtn(BJ_ART.btnRebet, "Rebet", function () { nextHand(true); }));
         a.appendChild(imgBtn(BJ_ART.btnNewbet, "New bet", function () { nextHand(false); }));
+        a.appendChild(imgBtn(BJ_ART.btnRebet, "Rebet", function () { nextHand(true); }));
       } else {
         var d = document.createElement("span");
         d.className = "dealing-label";
@@ -4440,7 +4440,9 @@
         var cards = hand ? hand.cards : [];
         // A live Push 22 keeps the dealer drawing even when the main bet is
         // already decided: the side bet is owed its answer.
-        var playOut = push22Stake > 0 || (!isBust(cards) && !isBJ(cards));
+        var handDead = isBust(cards) || isBJ(cards);
+        var playOut = push22Stake > 0 || !handDead;
+        if (push22Stake > 0 && handDead) setMessage("Push 22 rides — dealer plays…");
         (function maybeHit() {
           if (playOut && dealerHits(dealer)) {
             t(650, function () {

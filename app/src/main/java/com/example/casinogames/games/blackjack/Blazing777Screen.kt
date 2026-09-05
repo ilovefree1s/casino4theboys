@@ -572,8 +572,8 @@ private fun ActionButtons(vm: Blazing777ViewModel) {
                 if (vm.canSplit) ImgButton(R.drawable.r_btn_split, "Split", vm::split)
             }
             BjPhase.RESULT -> {
-                ImgButton(R.drawable.r_btn_rebet, "Rebet", { vm.nextHand(true) })
                 ImgButton(R.drawable.r_btn_newbet, "New bet", { vm.nextHand(false) })
+                ImgButton(R.drawable.r_btn_rebet, "Rebet", { vm.nextHand(true) })
             }
             else -> {
                 Spacer(Modifier.weight(1f))

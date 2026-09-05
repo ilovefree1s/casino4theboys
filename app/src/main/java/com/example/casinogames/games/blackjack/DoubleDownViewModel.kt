@@ -384,7 +384,9 @@ class DoubleDownViewModel(app: Application) : AndroidViewModel(app) {
             // A live Push 22 keeps the dealer drawing even when the main bet is
             // already decided: the side bet is owed its answer.
             val sideBetLive = push22Stake > 0
-            if (sideBetLive || (!BlackjackCore.isBust(cards) && !BlackjackCore.isBlackjack(cards))) {
+            val handDead = BlackjackCore.isBust(cards) || BlackjackCore.isBlackjack(cards)
+            if (sideBetLive && handDead) message = "Push 22 rides — dealer plays…"
+            if (sideBetLive || !handDead) {
                 while (BlackjackCore.dealerShouldHit(dealerCards)) {
                     delay(650)
                     dealerCards.add(shoe.draw())

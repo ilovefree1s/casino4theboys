@@ -703,8 +703,8 @@ private fun ActionButtons(vm: DoubleDownViewModel) {
                 if (vm.canDouble) ImgButton(R.drawable.btn_double, "Double", vm::doubleDown)
             }
             BjPhase.RESULT -> {
-                ImgButton(R.drawable.btn_rebet, "Rebet", { vm.nextHand(true) })
                 ImgButton(R.drawable.btn_newbet, "New bet", { vm.nextHand(false) })
+                ImgButton(R.drawable.btn_rebet, "Rebet", { vm.nextHand(true) })
             }
             else -> {
                 Spacer(Modifier.weight(1f))
