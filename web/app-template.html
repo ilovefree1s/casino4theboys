@@ -898,51 +898,38 @@
   /* ---- baccarat: the painted table, live pieces on measured spots ---- */
   .bacc-wrap {
     display: flex; flex-direction: column; align-items: center; width: 100%;
-    background: radial-gradient(120% 60% at 50% 100%, rgba(90,30,140,.35), rgba(4,3,8,0) 70%), #040308;
+    background: #040308;
   }
-  .bacc-sheet { position: relative; width: min(432px, 100vw, calc((100dvh - 150px) * 941 / 1672)); }
+  .bacc-sheet { position: relative; width: min(440px, 100vw, calc(100dvh * 852 / 1846)); }
   .bacc-sheet .bacc-art { width: 100%; display: block; }
-  .bacc-back { position: absolute; left: 4.25%; top: 4.67%; width: 19.2%; height: 3.6%; background: none; border: 0; cursor: pointer; }
-  .bacc-plate { position: absolute; background: #040308; display: flex; align-items: center; }
-  .bacc-plate span { font-weight: 900; font-size: 14px; }
-  .bacc-bank { left: 51.0%; top: 4.9%; width: 16.6%; height: 2.76%; }
-  .bacc-bank span { color: #FFD75E; }
-  .bacc-staked { left: 76.3%; top: 4.9%; width: 19.9%; height: 2.76%; }
-  .bacc-staked span { color: #F5F1E8; }
-  .bacc-sub {
-    position: absolute; left: 10.6%; top: 8.37%; width: 78.8%; height: 2.52%;
-    background: #040308; display: flex; align-items: center; justify-content: center;
-    font-size: 10px; letter-spacing: .27em; color: rgba(245,241,232,.55); white-space: nowrap;
-  }
-  .bacc-hand { position: absolute; top: 16.45%; height: 10.35%; }
-  .bacc-hand.p { left: 7.86%; width: 40.4%; }
-  .bacc-hand.b { left: 51.75%; width: 40.4%; }
-  .bacc-hand .cards { display: flex; gap: 4px; justify-content: center; align-items: center; width: 100%; height: 100%; }
-  .bacc-hand.dimmed { opacity: .55; }
-  .bacc-total { position: absolute; }
-  .bacc-total.p { left: 40.4%; top: 12.1%; }
-  .bacc-total.b { left: 85.0%; top: 12.1%; }
+  /* The open top of the sheet: the live top bar, names and cards. */
+  .bacc-top { position: absolute; top: 0; left: 0; right: 0; padding: 8px 12px 0; }
   .bacc-sheet .message {
-    position: absolute; left: 21.8%; top: 26.08%; width: 56.5%; height: 3.6%;
+    position: absolute; left: 22.3%; top: 31.58%; width: 55.4%; height: 3.25%;
     background: #060012; border-radius: 8px; margin: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .bspot { position: absolute; background: none; border: 0; padding: 0; cursor: pointer; }
   .bspot.r12 { border-radius: 12px; }
-  .bspot.r20 { border-radius: 20px; }
+  .bspot.r20 { border-radius: 18px; }
   .bspot.round { border-radius: 50%; }
   .bspot.active { background: rgba(0,0,0,.16); }
   .bspot.won { background: rgba(168,224,99,.22); box-shadow: inset 0 0 0 2.5px #A8E063; }
-  #spot-playerPair { left: 6.70%; top: 29.72%; width: 28.4%; height: 9.57%; }
-  #spot-tie { left: 35.81%; top: 29.72%; width: 28.3%; height: 9.57%; }
-  #spot-bankerPair { left: 64.82%; top: 29.72%; width: 30.6%; height: 9.57%; }
-  #spot-fortune7 { left: 5.84%; top: 40.67%; width: 42.5%; height: 13.46%; }
-  #spot-golden8 { left: 51.86%; top: 40.67%; width: 43.6%; height: 13.46%; }
-  #spot-heavenly9 { left: 5.84%; top: 55.50%; width: 42.5%; height: 13.28%; }
-  #spot-blazing7s { left: 51.86%; top: 55.50%; width: 43.6%; height: 13.28%; }
-  #spot-coverAll { left: 38.79%; top: 48.44%; width: 22.3%; height: 12.56%; }
-  #spot-player { left: 15.94%; top: 73.39%; width: 25.1%; height: 14.11%; }
-  #spot-banker { left: 59.19%; top: 73.39%; width: 25.1%; height: 14.11%; }
+  #spot-playerPair { left: 8.80%; top: 34.94%; width: 27.7%; height: 7.04%; }
+  #spot-tie { left: 36.50%; top: 34.94%; width: 26.5%; height: 7.04%; }
+  #spot-bankerPair { left: 63.03%; top: 34.94%; width: 27.9%; height: 7.04%; }
+  #spot-fortune7 { left: 9.04%; top: 42.90%; width: 38.7%; height: 10.02%; }
+  #spot-golden8 { left: 52.00%; top: 42.90%; width: 38.9%; height: 10.02%; }
+  #spot-heavenly9 { left: 9.04%; top: 54.22%; width: 38.7%; height: 10.40%; }
+  #spot-blazing7s { left: 52.00%; top: 54.22%; width: 38.9%; height: 10.40%; }
+  #spot-coverAll { left: 38.85%; top: 48.70%; width: 22.1%; height: 10.18%; }
+  #spot-player { left: 17.61%; top: 68.15%; width: 24.2%; height: 11.27%; }
+  #spot-banker { left: 57.75%; top: 68.80%; width: 24.2%; height: 11.16%; }
+  /* The painted floor carries the working strip. */
+  .bacc-bottom {
+    position: absolute; left: 0; right: 0; bottom: 1.2%;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
   .bspot .placed {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
     display: none;
@@ -1095,11 +1082,9 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
-  /* The painted gold tab on the sheet is the visible handle; this one is
-     the invisible tap target laid over it. */
   .road-tab {
-    background: none; border: 0; opacity: 0;
-    width: 64px; height: 40px; padding: 0; color: var(--trim); font-size: 9px; line-height: 1;
+    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim);
+    border-radius: 0 0 10px 10px; padding: 3px 20px 4px; color: var(--trim); font-size: 9px; line-height: 1;
   }
   .road-tab .arrow { display: inline-block; transition: transform 240ms; }
   .road-drawer.open .road-tab .arrow { transform: rotate(180deg); }
@@ -1474,14 +1459,35 @@
 <div class="bacc-wrap">
   <div class="bacc-sheet">
     <img class="bacc-art" src="__BACC_TABLE__" alt="Baccarat table">
-    <button class="bacc-back" id="bacc-back" aria-label="Back to lobby"></button>
-    <div class="bacc-plate bacc-bank"><span id="bankroll">5,000</span></div>
-    <div class="bacc-plate bacc-staked"><span id="staked">0</span></div>
-    <div class="bacc-sub">PUNTO BANCO · 8 DECKS · <span id="shoeCount">416</span> CARDS IN SHOE</div>
-    <div class="bacc-hand p" id="handP"><div class="cards" id="cardsP"></div></div>
-    <div class="bacc-hand b" id="handB"><div class="cards" id="cardsB"></div></div>
-    <span class="total-badge bacc-total p" id="totalP">0</span>
-    <span class="total-badge bacc-total b" id="totalB">0</span>
+    <div class="bacc-top">
+      <div class="topbar">
+        <button class="backlink" id="bacc-back" style="padding-left:0">‹ LOBBY</button>
+        <div class="money">
+          <span><span class="lbl">BANKROLL </span><span class="val" id="bankroll">5,000</span></span>
+          <span><span class="lbl">STAKED </span><span class="val staked" id="staked">0</span></span>
+        </div>
+      </div>
+      <div class="shoe-line">PUNTO BANCO · 8 DECKS · <span id="shoeCount">416</span> CARDS IN SHOE</div>
+      <div class="hands">
+        <div class="hand player" id="handP">
+          <div class="hand-title">
+            <span class="hand-name player outline">PLAYER</span>
+            <span class="total-badge" id="totalP">0</span>
+          </div>
+          <div class="hand-rule"></div>
+          <div class="cards" id="cardsP"><div class="slot"></div></div>
+        </div>
+        <div class="divider"></div>
+        <div class="hand banker" id="handB">
+          <div class="hand-title">
+            <span class="hand-name banker outline">BANKER</span>
+            <span class="total-badge" id="totalB">0</span>
+          </div>
+          <div class="hand-rule"></div>
+          <div class="cards" id="cardsB"><div class="slot"></div></div>
+        </div>
+      </div>
+    </div>
     <div class="message outline-1" id="message">Place your bets</div>
     <button class="bspot r12" id="spot-playerPair" aria-label="Bet Player Pair"><div class="placed"></div></button>
     <button class="bspot r12" id="spot-tie" aria-label="Bet Tie"><div class="placed"></div></button>
@@ -1493,10 +1499,12 @@
     <button class="bspot round" id="spot-coverAll" aria-label="Bet Cover All"><div class="placed"></div></button>
     <div class="bspot round" id="spot-player"><button class="bet-circle" aria-label="Bet on Player"></button><div class="placed"></div></div>
     <div class="bspot round" id="spot-banker"><button class="bet-circle" aria-label="Bet on Banker"></button><div class="placed"></div></div>
+    <div class="bacc-bottom">
+      <div class="pills" id="pills"></div>
+      <div class="rack" id="rack"></div>
+      <div class="actions" id="actions"></div>
+    </div>
   </div>
-  <div class="pills" id="pills"></div>
-  <div class="rack" id="rack"></div>
-  <div class="actions" id="actions"></div>
 </div>
 
 <div class="road-drawer" id="roadDrawer">
