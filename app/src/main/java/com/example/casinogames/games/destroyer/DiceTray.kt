@@ -71,12 +71,6 @@ private const val LOB = 0.12f
 private const val FAST = 2.2f
 private const val THROW_PX = 42f
 
-/** Which cells of a face's 3x3 grid carry a pip. */
-private val PIPS = mapOf(
-    1 to listOf(4), 2 to listOf(0, 8), 3 to listOf(0, 4, 8),
-    4 to listOf(0, 2, 6, 8), 5 to listOf(0, 2, 4, 6, 8), 6 to listOf(0, 2, 3, 5, 6, 8),
-)
-
 /** Face values and the direction each points before anything is turned. */
 private val NORMALS = arrayOf(
     intArrayOf(1, 0, 0, 1), intArrayOf(6, 0, 0, -1), intArrayOf(3, 1, 0, 0),
@@ -431,30 +425,17 @@ private fun DieView(
             .then(
                 if (die.held) Modifier.border(2.dp, Color(0x80FF40A0), RoundedCornerShape(10.dp))
                 else Modifier
-            )
-            .drawBehind {
-                if (index == state.letterDie) return@drawBehind
-                val pips = PIPS[die.value] ?: return@drawBehind
-                val cell = size.width * 0.24f
-                val start = size.width * 0.26f
-                for (p in pips) {
-                    drawCircle(
-                        color = pipColor,
-                        radius = size.width * 0.085f,
-                        center = Offset(start + (p % 3) * cell, start + (p / 3) * cell),
-                    )
-                }
-            },
+            ),
         contentAlignment = Alignment.Center,
     ) {
-        if (letter) {
-            Text(
-                ('A' + die.value - 1).toString(),
-                color = Color.White,
-                fontSize = with(LocalDensity.current) { (sizePx * 0.44f).toSp() },
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
-            )
-        }
+        // Both dice call their face outright — the letter for the row, the
+        // numeral for the column — battleship coordinates, not pips.
+        Text(
+            if (letter) ('A' + die.value - 1).toString() else die.value.toString(),
+            color = if (letter) Color.White else pipColor,
+            fontSize = with(LocalDensity.current) { (sizePx * 0.44f).toSp() },
+            fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+        )
     }
 }
 
