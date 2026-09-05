@@ -820,6 +820,11 @@
   .dz-status {
     display: flex; align-items: center; gap: 10px; margin-top: 8px;
   }
+  /* What the hand pays if it ended right now, kept under the shot rack. */
+  .dz-owed {
+    min-height: 14px; margin-top: 2px; font-size: 11px; font-weight: 900;
+    letter-spacing: .08em; color: #E8C169;
+  }
   .dz-status .lbl { font-size: 10px; letter-spacing: .08em; color: rgba(245,241,232,.6); }
   .dz-status .pip {
     display: inline-block; width: 10px; height: 10px; border-radius: 50%;
@@ -1352,6 +1357,7 @@
         <span class="dz-roll" id="dz-roll">— · —</span>
         <button class="dz-pays" id="dz-pays">PAY TABLE</button>
       </div>
+      <div class="dz-owed" id="dz-owed"></div>
       <div class="uth-message" id="dz-message">Place your bet</div>
       <div class="dj-pills" id="dz-results"></div>
       <!-- The dice themselves: FIRE throws them, or pick one up and flick it. -->
@@ -5673,6 +5679,9 @@
       // Called the battleship way, lettered from the bottom row up.
       $("dz-roll").textContent = lastRoll
         ? String.fromCharCode(65 + (DZ.GRID - 1 - lastRoll[0])) + (lastRoll[1] + 1) : "——";
+      // What the hits so far pay if the hand ended right here.
+      $("dz-owed").textContent = phase === "targeting"
+        ? "PAYING $" + fmt(DZ.settle(fleet, hitSet) * stake) : "";
     }
     function renderResults() {
       var host = $("dz-results");

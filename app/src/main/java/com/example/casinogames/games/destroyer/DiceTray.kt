@@ -159,6 +159,8 @@ class DiceTrayState(
     /** The last turn onto the face, after the physics has stopped. */
     var standing = false
     var standStart = 0L
+    var standLast = 0L
+    var reachPx = 0f
     var fieldW = 0f; var fieldH = 0f
     var density = 1f
     var epoch by mutableLongStateOf(0L)
@@ -359,6 +361,7 @@ fun DiceTray(
         var still = 0
         var began = 0L
         val reachW = sizePx * 0.708f
+        state.reachPx = reachW
         try {
         while (state.rolling) {
             withFrameNanos { now ->
@@ -412,7 +415,10 @@ fun DiceTray(
                     b.x = b.x.coerceIn(reachW, w - reachW)
                     b.y = b.y.coerceIn(reachW, h - reachW)
                     val speed = abs(b.vx) + abs(b.vy)
-                    if (speed > 26f * state.density) moving++
+                    // "Still" starts while there is visibly a little life left:
+                    // the stand-up carries the last of the glide, so coming to
+                    // rest flat is part of the roll, not a correction after it.
+                    if (speed > 80f * state.density) moving++
                     // Over and over about two axes at once, at a rate set by
                     // how fast it travels — no throw looks like the last one.
                     // The flat spin feeds the tumble a little too, so a die
@@ -474,7 +480,9 @@ private fun settle(state: DiceTrayState) {
         val sx = (b.tumble / 90f).roundToInt() * 90f
         val sy = (b.roll / 90f).roundToInt() * 90f
         b.value = faceToward(sz, sx, sy)
-        b.vx = 0f; b.vy = 0f; b.spin = 0f
+        // The glide is kept: the stand-up damps it out while the die rocks
+        // flat, so it does not freeze mid-slide and then turn.
+        b.spin = 0f
         val (fx, fy) = FACING.getValue(b.value)
         b.toRot = 0f; b.toTumble = fx; b.toRoll = fy
         // From the revolution nearest the target, or a die that has gone over
@@ -496,17 +504,24 @@ private fun settle(state: DiceTrayState) {
  * the picture rather than ahead of it.
  */
 private fun standStep(state: DiceTrayState, now: Long) {
-    if (state.standStart == 0L) state.standStart = now
+    if (state.standStart == 0L) { state.standStart = now; state.standLast = now }
+    val dt = min(0.032f, (now - state.standLast) / 1e9f)
+    state.standLast = now
     val t = ((now - state.standStart) / 4.2e8f).coerceIn(0f, 1f)
     // Ease-out with a rock past the flat: back-out, softened.
     val u = t - 1f
     val e = 1f + 2.3f * u * u * u + 1.3f * u * u
     for (b in state.dice) {
+        // The last of the slide plays out under the turn and damps away.
+        b.x = (b.x + b.vx * dt).coerceIn(state.reachPx, state.fieldW - state.reachPx)
+        b.y = (b.y + b.vy * dt).coerceIn(state.reachPx, state.fieldH - state.reachPx)
+        b.vx *= 0.88f; b.vy *= 0.88f
         b.rot = b.fromRot + (b.toRot - b.fromRot) * e
         b.tumble = b.fromTumble + (b.toTumble - b.fromTumble) * e
         b.roll = b.fromRoll + (b.toRoll - b.fromRoll) * e
     }
     if (t < 1f) return
+    for (b in state.dice) { b.vx = 0f; b.vy = 0f }
     state.standing = false
     state.rolling = false
     state.onSettle?.invoke(state.dice.map { it.value })

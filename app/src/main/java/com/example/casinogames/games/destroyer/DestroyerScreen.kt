@@ -127,6 +127,15 @@ fun DestroyerScreen(
             Board(vm)
             Spacer(Modifier.height(6.dp))
             StatusRow(vm, onShowPays = { showPays = true })
+            // What the hits so far pay if the hand ended right here.
+            if (vm.phase == DzPhase.TARGETING) {
+                val owed = DestroyerRules.settle(vm.fleet, vm.hitCells.toSet()) * vm.stake
+                Text(
+                    "PAYING $" + formatMoney(owed.toDouble()),
+                    color = Brass, fontSize = 11.sp, fontWeight = FontWeight.Black,
+                    letterSpacing = 0.08.em,
+                )
+            }
             Spacer(Modifier.height(2.dp))
             MessageLine(vm)
             ResultRows(vm)
