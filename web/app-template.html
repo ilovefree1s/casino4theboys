@@ -788,6 +788,17 @@
   }
   .dz-board .peg.hit { background: #FF3B4D; }
   .dz-board .peg.miss { background: rgba(245,241,232,.55); }
+  /* A wounded ship's unstruck cells wear what the next hit is worth. */
+  .dz-board .nextpay {
+    position: absolute; transform: translate(-50%,-50%); text-align: center;
+    background: rgba(10,20,32,.8); border: 1px solid rgba(232,193,105,.7);
+    border-radius: 6px; padding: 1px 5px; color: #E8C169;
+    font-size: 11px; font-weight: 900; line-height: 12px; pointer-events: none;
+  }
+  .dz-board .nextpay i {
+    display: block; font-style: normal; font-size: 6px;
+    color: rgba(245,241,232,.6); letter-spacing: .05em;
+  }
   /* The called coordinate lights its letter and number badges — a quiet
      brass glow on the octagons that name it, hit or miss. */
   .dz-board .call {
@@ -5463,6 +5474,22 @@
           html += '<span class="wreck" style="left:' + midX.toFixed(2) + '%;top:' + midY.toFixed(2) + '%;' +
             'width:' + (horiz ? longW : cw).toFixed(2) + '%;height:' + (horiz ? ch : ch * ship.length).toFixed(2) + '%"></span>';
         }
+      });
+      // After first blood a ship tips its hand: every unstruck cell shows
+      // what the next hit there is worth, and the last cell standing wears
+      // the full sink pay.
+      fleet.forEach(function (ship) {
+        var struck = ship.filter(function (c) { return hitSet[c]; }).length;
+        if (!struck || struck === ship.length) return;
+        var nextPay = DZ.MILESTONES[ship.length][struck + 1];
+        if (!nextPay) return;
+        ship.forEach(function (c) {
+          if (hitSet[c]) return;
+          html += '<span class="nextpay" style="left:' +
+            cellPct((c % DZ.GRID) + 0.5, "x").toFixed(2) + '%;top:' +
+            cellPct(Math.floor(c / DZ.GRID) + 0.5, "y").toFixed(2) + '%">' +
+            nextPay + '<i>FOR 1</i></span>';
+        });
       });
       if (lastRoll) {
         // Badge centres measured off the art: letters at x 93, numbers at

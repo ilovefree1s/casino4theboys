@@ -330,6 +330,43 @@ private fun Board(vm: DestroyerViewModel) {
             }
         }
 
+        // After first blood a ship tips its hand: every unstruck cell shows
+        // what the next hit there is worth, and the last cell standing
+        // wears the full sink pay.
+        vm.fleet.forEach { ship ->
+            val struck = ship.cells.count { it in hits }
+            if (struck == 0 || struck == ship.size) return@forEach
+            val nextPay = DestroyerRules.MILESTONES.getValue(ship.size)[struck + 1]
+                ?: return@forEach
+            ship.cells.filter { it !in hits }.forEach { cell ->
+                Box(
+                    Modifier
+                        .offset(x = left(cell % GRID), y = top(cell / GRID))
+                        .size(cellW, cellH)
+                        .zIndex(3f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Column(
+                        Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(Color(0xCC0A1420))
+                            .border(1.dp, Brass.copy(alpha = 0.7f), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 5.dp, vertical = 1.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            "$nextPay", color = Brass, fontSize = 11.sp,
+                            fontWeight = FontWeight.Black, lineHeight = 12.sp,
+                        )
+                        Text(
+                            "FOR 1", color = P.OffWhite.copy(alpha = 0.6f),
+                            fontSize = 6.sp, letterSpacing = 0.05.em, lineHeight = 7.sp,
+                        )
+                    }
+                }
+            }
+        }
+
         // The called coordinate lights its letter and number badges — a
         // quiet brass glow on the octagons that name it, hit or miss.
         vm.lastRoll?.let { (r, c) ->
