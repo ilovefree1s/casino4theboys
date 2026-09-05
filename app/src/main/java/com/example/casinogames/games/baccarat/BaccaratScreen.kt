@@ -1,33 +1,28 @@
 package com.example.casinogames.games.baccarat
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -40,48 +35,69 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.TransformOrigin
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.casinogames.games.core.Card
+import com.example.casinogames.R
+import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.chipsFor
-import com.example.casinogames.ui.common.EmptyCardSlot
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
-import com.example.casinogames.campaign.FreePlay
-import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
+/*
+ * The table is one piece of art — baccarattable.png, 941x1672 — and every
+ * live thing sits on coordinates measured off it: tap bands over the painted
+ * spots, chips on their centres, dark plates over the painted example money
+ * so the real figures can stand where the paint put them. The rack and the
+ * buttons live on the black below the sheet.
+ */
+private const val ART_W = 941f
+private const val ART_H = 1672f
+
+/** Places a box on the art's own pixels. */
+private fun Modifier.artBox(k: Float, x0: Float, y0: Float, x1: Float, y1: Float): Modifier =
+    this
+        .offset(x = (x0 * k).dp, y = (y0 * k).dp)
+        .size(width = ((x1 - x0) * k).dp, height = ((y1 - y0) * k).dp)
+
+/** One painted bet spot: where it is, what shape its win glow takes. */
+private data class SpotDef(
+    val type: BetType,
+    val x0: Float, val y0: Float, val x1: Float, val y1: Float,
+    val corner: Float,
+    val round: Boolean = false,
+)
+
+private val SPOTS = listOf(
+    SpotDef(BetType.PLAYER_PAIR, 63f, 497f, 330f, 657f, 14f),
+    SpotDef(BetType.TIE, 337f, 497f, 603f, 657f, 14f),
+    SpotDef(BetType.BANKER_PAIR, 610f, 497f, 898f, 657f, 14f),
+    SpotDef(BetType.FORTUNE_7, 55f, 680f, 455f, 905f, 26f),
+    SpotDef(BetType.GOLDEN_8, 488f, 680f, 898f, 905f, 26f),
+    SpotDef(BetType.HEAVENLY_9, 55f, 928f, 455f, 1150f, 26f),
+    SpotDef(BetType.BLAZING_7S, 488f, 928f, 898f, 1150f, 26f),
+    SpotDef(BetType.COVER_ALL, 365f, 810f, 575f, 1020f, 0f, round = true),
+    SpotDef(BetType.PLAYER, 150f, 1227f, 386f, 1463f, 0f, round = true),
+    SpotDef(BetType.BANKER, 557f, 1227f, 793f, 1463f, 0f, round = true),
+)
 
 @Composable
 fun BaccaratScreen(
@@ -90,7 +106,7 @@ fun BaccaratScreen(
     onGameOverExit: () -> Unit = onBack,
     vm: BaccaratViewModel = viewModel(),
 ) {
-    androidx.compose.runtime.LaunchedEffect(campaign) { vm.enterMode(campaign) }
+    LaunchedEffect(campaign) { vm.enterMode(campaign) }
     val hand = vm.hand
     val winningSpots =
         if (hand != null && vm.phase == Phase.RESULT) BaccaratEngine.winningSpots(hand)
@@ -98,76 +114,76 @@ fun BaccaratScreen(
     var roadOpen by rememberSaveable { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize().background(Color(0xFF040308))) {
-        // The 4 The Boys art carries the branding, so the script watermarks retire.
-        Image(
-            painter = painterResource(com.example.casinogames.R.drawable.background),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize().alpha(0.45f),
-            contentScale = ContentScale.Crop,
-        )
-
-        BoxWithConstraints(
+        Column(
             Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .navigationBarsPadding()
-                .padding(bottom = 8.dp),
-            contentAlignment = Alignment.TopCenter,
+                .navigationBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // The table is designed against this height; shorter screens render
-            // the whole felt proportionally smaller instead of clipping DEAL.
-            val designHeight = 900.dp
-            val fit = (maxHeight.value / designHeight.value).coerceAtMost(1f)
-            val columnModifier = if (fit < 1f) {
-                Modifier
-                    .requiredHeight(designHeight)
-                    .graphicsLayer {
-                        scaleX = fit
-                        scaleY = fit
-                        // The over-tall layout is centered by the parent, so
-                        // scaling about the center lands it exactly in bounds.
-                        transformOrigin = TransformOrigin.Center
-                    }
-                    .padding(horizontal = 12.dp)
-            } else {
-                Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 12.dp)
-            }
-            Column(
-                columnModifier,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
+            BoxWithConstraints(
+                Modifier.fillMaxWidth().weight(1f),
+                contentAlignment = Alignment.TopCenter,
             ) {
-            TopBar(onBack, vm)
-            Text(
-                "PUNTO BANCO · 8 DECKS · ${vm.shoeCount} CARDS IN SHOE",
-                fontSize = 10.sp,
-                letterSpacing = 0.3.em,
-                color = P.OffWhite.copy(alpha = 0.55f),
-                modifier = Modifier.padding(bottom = 6.dp),
-            )
-            HandsRow(vm)
-            Spacer(Modifier.height(8.dp))
-            MessageLine(vm)
-            WinningsRow(vm)
-            Spacer(Modifier.height(12.dp))
-            PairTieRow(vm, winningSpots)
-            Spacer(Modifier.height(10.dp))
-            SidePlacards(vm, winningSpots)
-            Spacer(Modifier.height(12.dp))
-            MainCircles(vm, winningSpots)
-            Spacer(Modifier.height(10.dp))
-            ChipRack(vm)
-            Spacer(Modifier.height(10.dp))
+                // Fit the sheet whole; the black it leaves below is working
+                // room for the rack and the buttons.
+                val artW = minOf(maxWidth, maxHeight * (ART_W / ART_H))
+                val artH = artW * (ART_H / ART_W)
+                val k = artW.value / ART_W
+                Box(Modifier.width(artW).height(artH)) {
+                    Image(
+                        painter = painterResource(R.drawable.baccarattable),
+                        contentDescription = "Baccarat table",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.FillBounds,
+                    )
+                    ArtLayer(vm, winningSpots, k, onBack)
+                    // The painted gold tab in the corner pulls the road down.
+                    Box(
+                        Modifier
+                            .artBox(k, 788f, 6f, 912f, 66f)
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                            ) { roadOpen = !roadOpen }
+                    )
+                    Column(
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .offset(x = (-14 * k).dp, y = (72 * k).dp)
+                            .zIndex(3f)
+                    ) {
+                        AnimatedVisibility(
+                            visible = roadOpen,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut(),
+                        ) {
+                            Column(
+                                Modifier
+                                    .background(Color(0xF2240F10), RoundedCornerShape(14.dp))
+                                    .border(1.5.dp, P.GoldTrim, RoundedCornerShape(14.dp))
+                                    .padding(horizontal = 14.dp, vertical = 12.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                            ) {
+                                BeadRoad(vm)
+                            }
+                        }
+                    }
+                }
+            }
+            // The strip below the sheet: results, the rack and the buttons.
+            if (vm.phase == Phase.RESULT) WinningsRow(vm)
+            Spacer(Modifier.height(4.dp))
+            if (vm.phase == Phase.BETTING) ChipRack(vm)
+            Spacer(Modifier.height(6.dp))
             ActionButtons(vm)
-            if (!vm.campaign && vm.bankroll < 25 && vm.totalStaked == 0 && vm.phase == Phase.BETTING) {
-                FreePlayBuyIn(
-                    onDismiss = {},
-                    onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
-                )
-            }
-            }
+            Spacer(Modifier.height(8.dp))
+        }
+        if (!vm.campaign && vm.bankroll < 25 && vm.totalStaked == 0 && vm.phase == Phase.BETTING) {
+            FreePlayBuyIn(
+                onDismiss = {},
+                onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+            )
         }
         if (vm.campaign && vm.phase == Phase.BETTING &&
             vm.bankroll < 25 && vm.totalStaked == 0
@@ -187,230 +203,193 @@ fun BaccaratScreen(
                 },
             )
         }
-        RoadDrawer(
-            vm,
-            open = roadOpen,
-            onToggle = { roadOpen = !roadOpen },
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .statusBarsPadding()
-                .padding(end = 12.dp)
-                .zIndex(2f),
-        )
     }
 }
 
-/** Bead road that drops down from the top-right, with a pull tab under the status bar. */
+/** Everything live on the sheet, on the art's own coordinates. */
 @Composable
-private fun RoadDrawer(
+private fun ArtLayer(
     vm: BaccaratViewModel,
-    open: Boolean,
-    onToggle: () -> Unit,
-    modifier: Modifier = Modifier,
+    winningSpots: Set<BetType>,
+    k: Float,
+    onBack: () -> Unit,
 ) {
-    Column(modifier, horizontalAlignment = Alignment.End) {
-        AnimatedVisibility(
-            visible = open,
-            enter = expandVertically() + fadeIn(),
-            exit = shrinkVertically() + fadeOut(),
-        ) {
-            Column(
-                Modifier
-                    .padding(bottom = 6.dp)
-                    .background(Color(0xF2240F10), RoundedCornerShape(14.dp))
-                    .border(1.5.dp, P.GoldTrim, RoundedCornerShape(14.dp))
-                    .padding(horizontal = 14.dp, vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                BeadRoad(vm)
-            }
-        }
-        val arrowRotation by animateFloatAsState(
-            targetValue = if (open) 180f else 0f,
-            animationSpec = tween(240),
-            label = "roadArrow",
+    val hand = vm.hand
+
+    // The painted < LOBBY is the way out.
+    Box(
+        Modifier
+            .artBox(k, 40f, 78f, 220f, 138f)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onBack,
+            )
+    )
+
+    // Dark plates over the painted example money; the real figures on top.
+    MoneyPlate(k, 480f, 82f, 636f, 128f) {
+        OutlinedText(
+            formatMoney(vm.bankroll),
+            fontSize = (34 * k).sp, color = P.WinGlow, outlineWidth = 1.dp,
         )
+    }
+    MoneyPlate(k, 718f, 82f, 905f, 128f) {
+        OutlinedText(
+            formatMoney(vm.totalStaked.toDouble()),
+            fontSize = (34 * k).sp, color = P.OffWhite, outlineWidth = 1.dp,
+        )
+    }
+    Box(
+        Modifier
+            .artBox(k, 100f, 140f, 841f, 182f)
+            .background(Color(0xFF040308)),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            "PUNTO BANCO · 8 DECKS · ${vm.shoeCount} CARDS IN SHOE",
+            fontSize = (23 * k).sp,
+            letterSpacing = 0.28.em,
+            color = P.OffWhite.copy(alpha = 0.55f),
+            maxLines = 1,
+        )
+    }
+
+    // Hand totals, pinned beside the painted names once cards show.
+    if (vm.revealedPlayer > 0 && hand != null) {
+        TotalBadge(
+            BaccaratEngine.handTotal(hand.player.take(vm.revealedPlayer)),
+            P.PlayerBlue, Modifier.artBox(k, 380f, 202f, 458f, 246f),
+        )
+    }
+    if (vm.revealedBanker > 0 && hand != null) {
+        TotalBadge(
+            BaccaratEngine.handTotal(hand.banker.take(vm.revealedBanker)),
+            P.BankerRed, Modifier.artBox(k, 800f, 202f, 878f, 246f),
+        )
+    }
+
+    // The cards, over the painted slots. Nothing dealt leaves the painted
+    // dashed slot to say so itself.
+    CardRow(
+        cards = hand?.player ?: emptyList(),
+        dealt = vm.dealtPlayer, shown = vm.revealedPlayer, k = k,
+        modifier = Modifier.artBox(k, 74f, 275f, 454f, 448f),
+    )
+    CardRow(
+        cards = hand?.banker ?: emptyList(),
+        dealt = vm.dealtBanker, shown = vm.revealedBanker, k = k,
+        modifier = Modifier.artBox(k, 487f, 275f, 867f, 448f),
+    )
+
+    // The table talk, on a plate over the painted greeting.
+    Box(
+        Modifier
+            .artBox(k, 205f, 436f, 737f, 496f)
+            .clip(RoundedCornerShape((10 * k).dp))
+            .background(Color(0xFF060012)),
+        contentAlignment = Alignment.Center,
+    ) {
+        val highlight = vm.phase == Phase.RESULT && vm.lastReturn > 0
+        OutlinedText(
+            vm.message + if (highlight) " · returned ${formatMoney(vm.lastReturn)}" else "",
+            fontSize = (30 * k).sp,
+            color = if (highlight) P.WinGlow else P.OffWhite,
+            outlineWidth = 1.dp,
+            textAlign = TextAlign.Center,
+        )
+    }
+
+    // The painted spots, live: a tap band, the chip and the win glow each.
+    SPOTS.forEach { def ->
+        val amount = vm.bets[def.type] ?: 0
+        val won = def.type in winningSpots
+        val shape: Shape =
+            if (def.round) CircleShape else RoundedCornerShape((def.corner * k).dp)
         Box(
             Modifier
-                .clip(RoundedCornerShape(10.dp))
-                .background(Color(0xE60E0A0B))
-                .border(1.5.dp, P.GoldTrim, RoundedCornerShape(10.dp))
-                .clickable(onClick = onToggle)
-                .padding(horizontal = 20.dp, vertical = 4.dp),
+                .artBox(k, def.x0, def.y0, def.x1, def.y1)
+                .clip(shape)
+                .background(
+                    when {
+                        won -> P.WinGlow.copy(alpha = 0.22f)
+                        amount > 0 -> Color(0x21000000)
+                        else -> Color.Transparent
+                    }
+                )
+                .then(
+                    when {
+                        won -> Modifier.border(2.5.dp, P.WinGlow, shape)
+                        amount > 0 -> Modifier.border(1.5.dp, Color(0x8CFFFFFF), shape)
+                        else -> Modifier
+                    }
+                )
+                .clickable(
+                    enabled = vm.phase == Phase.BETTING,
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                ) { vm.addBet(def.type) },
             contentAlignment = Alignment.Center,
         ) {
+            PlacedBetChip(amount, size = (110 * k).dp)
+        }
+    }
+}
+
+@Composable
+private fun MoneyPlate(
+    k: Float,
+    x0: Float, y0: Float, x1: Float, y1: Float,
+    content: @Composable () -> Unit,
+) {
+    Box(
+        Modifier
+            .artBox(k, x0, y0, x1, y1)
+            .background(Color(0xFF040308)),
+        contentAlignment = Alignment.CenterStart,
+    ) {
+        content()
+    }
+}
+
+@Composable
+private fun TotalBadge(total: Int, color: Color, modifier: Modifier) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .background(color, RoundedCornerShape(999.dp))
+                .border(2.dp, P.Ink, RoundedCornerShape(999.dp))
+                .padding(horizontal = 9.dp, vertical = 1.dp)
+        ) {
             Text(
-                "▼",
-                fontSize = 10.sp,
-                color = P.GoldTrim,
-                modifier = Modifier.graphicsLayer { rotationZ = arrowRotation },
+                "$total",
+                color = P.OffWhite,
+                fontSize = 14.sp,
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
             )
         }
     }
 }
 
 @Composable
-private fun TopBar(onBack: () -> Unit, vm: BaccaratViewModel) {
-    Row(
-        Modifier.fillMaxWidth().padding(top = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(
-            "‹ LOBBY",
-            color = P.OffWhite.copy(alpha = 0.8f),
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 0.1.em,
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .clickable(onClick = onBack)
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-        )
-        Spacer(Modifier.weight(1f))
-        // End padding keeps clear of the road drawer tab in the corner.
-        BankrollRow(vm, Modifier.padding(end = 58.dp))
-    }
-}
-
-@Composable
-private fun Watermarks() {
-    Box(Modifier.fillMaxSize()) {
-        Watermark(38.sp, Modifier.align(Alignment.TopCenter).padding(top = 30.dp))
-        Watermark(30.sp, Modifier.align(Alignment.CenterStart).offset(x = (-30).dp, y = (-140).dp))
-        Watermark(30.sp, Modifier.align(Alignment.CenterEnd).offset(x = 30.dp, y = (-140).dp))
-        Watermark(34.sp, Modifier.align(Alignment.Center))
-        Watermark(28.sp, Modifier.align(Alignment.BottomStart).offset(x = (-24).dp, y = (-160).dp))
-        Watermark(28.sp, Modifier.align(Alignment.BottomEnd).offset(x = 24.dp, y = (-160).dp))
-        Watermark(36.sp, Modifier.align(Alignment.BottomCenter).padding(bottom = 26.dp))
-    }
-}
-
-@Composable
-private fun Watermark(size: TextUnit, modifier: Modifier = Modifier) {
-    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            "for the boys",
-            fontFamily = FontFamily.Cursive,
-            fontSize = size,
-            color = Color(0x1AF5E1D7),
-            maxLines = 1,
-        )
-        Text(
-            "HOTEL & CASINO",
-            fontSize = size * 0.24f,
-            letterSpacing = 0.45.em,
-            fontWeight = FontWeight.SemiBold,
-            color = Color(0x29C85A50),
-            maxLines = 1,
-        )
-    }
-}
-
-@Composable
-private fun HandsRow(vm: BaccaratViewModel) {
-    val hand = vm.hand
-    Row(
-        Modifier.fillMaxWidth().widthIn(max = 460.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Top,
-    ) {
-        HandSide(
-            name = "PLAYER",
-            color = P.PlayerBlue,
-            cards = hand?.player ?: emptyList(),
-            dealt = vm.dealtPlayer,
-            shown = vm.revealedPlayer,
-            dimmed = vm.phase == Phase.RESULT && hand != null &&
-                hand.outcome != Outcome.PLAYER && hand.outcome != Outcome.TIE,
-            modifier = Modifier.weight(1f),
-        )
-        Box(
-            Modifier
-                .padding(top = 8.dp)
-                .size(width = 3.dp, height = 36.dp)
-                .background(P.OffWhite, RoundedCornerShape(2.dp))
-        )
-        HandSide(
-            name = "BANKER",
-            color = P.BankerRed,
-            cards = hand?.banker ?: emptyList(),
-            dealt = vm.dealtBanker,
-            shown = vm.revealedBanker,
-            dimmed = vm.phase == Phase.RESULT && hand != null &&
-                hand.outcome != Outcome.BANKER && hand.outcome != Outcome.TIE,
-            modifier = Modifier.weight(1f),
-        )
-    }
-}
-
-@Composable
-private fun HandSide(
-    name: String,
-    color: Color,
-    cards: List<Card>,
+private fun CardRow(
+    cards: List<com.example.casinogames.games.core.Card>,
     dealt: Int,
     shown: Int,
-    dimmed: Boolean,
-    modifier: Modifier = Modifier,
+    k: Float,
+    modifier: Modifier,
 ) {
-    val total = BaccaratEngine.handTotal(cards.take(shown))
-    Column(
-        modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.alpha(if (dimmed) 0.55f else 1f),
-        ) {
-            OutlinedText(name, fontSize = 21.sp, color = color, letterSpacing = 0.06.em)
-            if (shown > 0) {
-                Box(
-                    Modifier
-                        .background(color, RoundedCornerShape(999.dp))
-                        .border(2.dp, P.Ink, RoundedCornerShape(999.dp))
-                        .padding(horizontal = 9.dp, vertical = 1.dp)
-                ) {
-                    Text(
-                        "$total",
-                        color = P.OffWhite,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Black,
-                    )
-                }
-            }
-        }
-        Box(
-            Modifier
-                .padding(top = 6.dp, bottom = 12.dp)
-                .fillMaxWidth()
-                .height(3.dp)
-                .background(P.OffWhite, RoundedCornerShape(2.dp))
-        )
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (cards.isEmpty() || dealt == 0) {
-                EmptyCardSlot()
-            } else {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        if (cards.isNotEmpty() && dealt > 0) {
+            // The painted slot is 117 art px wide; the card view scales to it.
+            val scale = (117f * k) / 52f
+            Row(horizontalArrangement = Arrangement.spacedBy((6 * k).dp)) {
                 cards.take(dealt).forEachIndexed { i, card ->
-                    PlayingCardView(card, faceUp = i < shown)
+                    PlayingCardView(card, faceUp = i < shown, scale = scale)
                 }
             }
         }
     }
-}
-
-@Composable
-private fun MessageLine(vm: BaccaratViewModel) {
-    val highlight = vm.phase == Phase.RESULT && vm.lastReturn > 0
-    val text = vm.message +
-        if (highlight) " · returned ${formatMoney(vm.lastReturn)}" else ""
-    OutlinedText(
-        text,
-        fontSize = 14.sp,
-        color = if (highlight) P.WinGlow else P.OffWhite,
-        outlineWidth = 1.dp,
-        textAlign = TextAlign.Center,
-    )
 }
 
 @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
@@ -418,7 +397,7 @@ private fun MessageLine(vm: BaccaratViewModel) {
 private fun WinningsRow(vm: BaccaratViewModel) {
     if (vm.phase != Phase.RESULT || vm.lastWinnings.isEmpty()) return
     androidx.compose.foundation.layout.FlowRow(
-        Modifier.widthIn(max = 420.dp).padding(top = 6.dp),
+        Modifier.widthIn(max = 420.dp).padding(top = 2.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
@@ -439,371 +418,15 @@ private fun WinningsRow(vm: BaccaratViewModel) {
                 Text(
                     type.displayName,
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
                     color = P.OffWhite,
                 )
                 Text(
                     if (won) "+${formatMoney(profit)}" else "push",
                     fontSize = 11.sp,
-                    fontWeight = FontWeight.Black,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
                     color = if (won) P.WinGlow else P.OffWhite.copy(alpha = 0.7f),
                 )
-            }
-        }
-    }
-}
-
-private data class PairBoxDef(
-    val type: BetType,
-    val top: String,
-    val mid: String?,
-    val pays: String,
-    val color: Color,
-    val big: Boolean = false,
-)
-
-@Composable
-private fun PairTieRow(vm: BaccaratViewModel, winningSpots: Set<BetType>) {
-    val boxes = listOf(
-        PairBoxDef(BetType.PLAYER_PAIR, "PLAYER", "PAIR", "11 to 1", P.PlayerBlue),
-        PairBoxDef(BetType.TIE, "TIE", null, "8 to 1", P.TieGreen, big = true),
-        PairBoxDef(BetType.BANKER_PAIR, "BANKER", "PAIR", "11 to 1", P.BankerRed),
-    )
-    Row(
-        Modifier
-            .widthIn(max = 440.dp)
-            .height(IntrinsicSize.Min)
-            .clip(RoundedCornerShape(12.dp))
-            .border(4.dp, P.OffWhite, RoundedCornerShape(12.dp)),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        boxes.forEachIndexed { i, box ->
-            if (i > 0) Box(Modifier.width(4.dp).fillMaxHeight().background(P.OffWhite))
-            val active = (vm.bets[box.type] ?: 0) > 0
-            val won = box.type in winningSpots
-            Box(
-                Modifier
-                    .weight(if (box.big) 1.1f else 1f)
-                    .fillMaxHeight()
-                    .background(
-                        when {
-                            won -> P.WinGlow.copy(alpha = 0.25f)
-                            active -> Color(0x38000000)
-                            else -> Color.Transparent
-                        }
-                    )
-                    .clickable(enabled = vm.phase == Phase.BETTING) { vm.addBet(box.type) }
-                    .padding(top = 12.dp, bottom = 16.dp),
-                contentAlignment = Alignment.TopCenter,
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    OutlinedText(
-                        box.top,
-                        fontSize = if (box.big) 26.sp else 15.sp,
-                        color = box.color,
-                        outlineWidth = 1.5.dp,
-                        letterSpacing = 0.05.em,
-                    )
-                    if (box.mid != null) {
-                        OutlinedText(box.mid, fontSize = 15.sp, color = box.color, outlineWidth = 1.5.dp)
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    OutlinedText(box.pays, fontSize = 14.sp, color = P.OffWhite, outlineWidth = 1.5.dp)
-                }
-                PlacedBetChip(
-                    vm.bets[box.type] ?: 0,
-                    Modifier.align(Alignment.Center),
-                )
-            }
-        }
-    }
-}
-
-private data class PlacardDef(
-    val type: BetType,
-    val title: String,
-    val cjk: String,
-    val gradient: List<Color>,
-    val columns: List<List<String>>,
-    val textDark: Boolean = true,
-)
-
-@Composable
-private fun SidePlacards(vm: BaccaratViewModel, winningSpots: Set<BetType>) {
-    val placards = listOf(
-        PlacardDef(
-            BetType.FORTUNE_7, "FORTUNE 7", "威連好運 7",
-            listOf(Color(0xFFF5A623), Color(0xFFE08A12)),
-            listOf(listOf("Banker Wins with", "a 3-Card 7", "PAYS 40 to 1")),
-        ),
-        PlacardDef(
-            BetType.GOLDEN_8, "GOLDEN 8", "金牌平安 8",
-            listOf(Color(0xFF9BBF3B), Color(0xFF7FA32A)),
-            listOf(listOf("Player Wins with", "a 3-Card 8", "PAYS 25 to 1")),
-        ),
-        PlacardDef(
-            BetType.HEAVENLY_9, "HEAVENLY 9", "天上人間 9",
-            listOf(Color(0xFFBFDCEF), Color(0xFF9CC4E0)),
-            listOf(
-                listOf("P & B Have", "3-Card 9", "PAYS 75 to 1"),
-                listOf("P or B Has", "3-Card 9", "PAYS 10 to 1"),
-            ),
-        ),
-        PlacardDef(
-            BetType.BLAZING_7S, "BLAZING 7s", "燒倍烈火 7s",
-            listOf(Color(0xFFD6402A), Color(0xFFB02415)),
-            listOf(
-                listOf("P & B Have", "3-Card 7s", "PAYS 200 to 1"),
-                listOf("P & B Have", "2-Card 7s", "PAYS 60 to 1"),
-            ),
-            textDark = false,
-        ),
-    )
-    Box(Modifier.widthIn(max = 460.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            placards.chunked(2).forEach { rowDefs ->
-                Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    rowDefs.forEach { def ->
-                        Placard(
-                            def,
-                            amount = vm.bets[def.type] ?: 0,
-                            won = def.type in winningSpots,
-                            enabled = vm.phase == Phase.BETTING,
-                            onClick = { vm.addBet(def.type) },
-                            modifier = Modifier.weight(1f),
-                        )
-                    }
-                }
-            }
-        }
-        CoverAllMedallion(vm, winningSpots, Modifier.align(Alignment.Center))
-    }
-}
-
-@Composable
-private fun Placard(
-    def: PlacardDef,
-    amount: Int,
-    won: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Box(
-        modifier
-            .then(
-                if (won) Modifier.border(3.dp, P.WinGlow, RoundedCornerShape(14.dp))
-                else if (amount > 0) Modifier.border(2.dp, Color(0xA6FFFFFF), RoundedCornerShape(14.dp))
-                else Modifier
-            )
-            .padding(if (won) 3.dp else if (amount > 0) 2.dp else 0.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Brush.verticalGradient(def.gradient))
-            .border(3.dp, P.Ink, RoundedCornerShape(12.dp))
-            .clickable(enabled = enabled, onClick = onClick)
-            .padding(top = 8.dp, bottom = 14.dp, start = 6.dp, end = 6.dp),
-        contentAlignment = Alignment.TopCenter,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            OutlinedText(
-                def.title,
-                fontSize = 16.sp,
-                color = P.GoldText,
-                outlineWidth = 1.5.dp,
-                letterSpacing = 0.04.em,
-                textAlign = TextAlign.Center,
-            )
-            OutlinedText(def.cjk, fontSize = 12.sp, color = P.GoldText, outlineWidth = 1.dp)
-            Spacer(Modifier.height(6.dp))
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                def.columns.forEachIndexed { i, lines ->
-                    if (i > 0) {
-                        Box(
-                            Modifier
-                                .width(2.dp)
-                                .fillMaxHeight()
-                                .background(
-                                    if (def.textDark) P.Ink else P.GoldText.copy(alpha = 0.8f)
-                                )
-                        )
-                    }
-                    Column(
-                        Modifier.weight(1f).padding(horizontal = 5.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        lines.forEach { line ->
-                            if (def.textDark) {
-                                Text(
-                                    line,
-                                    color = P.Ink,
-                                    fontSize = 10.sp,
-                                    lineHeight = 13.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    textAlign = TextAlign.Center,
-                                )
-                            } else {
-                                OutlinedText(
-                                    line,
-                                    fontSize = 10.sp,
-                                    lineHeight = 13.sp,
-                                    color = P.GoldText,
-                                    outlineWidth = 1.dp,
-                                    textAlign = TextAlign.Center,
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        PlacedBetChip(amount, Modifier.align(Alignment.Center))
-    }
-}
-
-@Composable
-private fun CoverAllMedallion(
-    vm: BaccaratViewModel,
-    winningSpots: Set<BetType>,
-    modifier: Modifier = Modifier,
-) {
-    val amount = vm.bets[BetType.COVER_ALL] ?: 0
-    val won = BetType.COVER_ALL in winningSpots
-    Box(
-        modifier
-            .size(96.dp)
-            .then(
-                if (won) Modifier.border(3.dp, P.WinGlow, CircleShape)
-                else if (amount > 0) Modifier.border(2.dp, Color(0xA6FFFFFF), CircleShape)
-                else Modifier
-            )
-            .background(
-                Brush.radialGradient(
-                    listOf(Color(0xFFFFE45C), Color(0xFFD9A21B)),
-                    center = androidx.compose.ui.geometry.Offset.Unspecified,
-                ),
-                CircleShape,
-            )
-            .border(3.dp, P.Ink, CircleShape)
-            .clip(CircleShape)
-            .clickable(enabled = vm.phase == Phase.BETTING) { vm.addBet(BetType.COVER_ALL) },
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "THE FORTUNE EVENT PAYS",
-                fontSize = 6.sp, fontWeight = FontWeight.ExtraBold,
-                color = P.Ink, letterSpacing = 0.05.em,
-            )
-            OutlinedText("COVER", fontSize = 15.sp, color = Color(0xFFC22A18), outlineWidth = 1.dp, lineHeight = 15.sp)
-            OutlinedText("ALL", fontSize = 15.sp, color = Color(0xFFC22A18), outlineWidth = 1.dp, lineHeight = 15.sp)
-            Text(
-                "PAYS 6 TO 1",
-                fontSize = 6.sp, fontWeight = FontWeight.ExtraBold,
-                color = P.Ink, letterSpacing = 0.05.em,
-            )
-        }
-        PlacedBetChip(amount)
-    }
-}
-
-@Composable
-private fun MainCircles(vm: BaccaratViewModel, winningSpots: Set<BetType>) {
-    Row(horizontalArrangement = Arrangement.spacedBy(50.dp)) {
-        MainCircle("PLAYER", P.PlayerBlue, BetType.PLAYER, vm, BetType.PLAYER in winningSpots)
-        MainCircle("BANKER", P.BankerRed, BetType.BANKER, vm, BetType.BANKER in winningSpots)
-    }
-}
-
-@Composable
-private fun MainCircle(
-    label: String,
-    color: Color,
-    type: BetType,
-    vm: BaccaratViewModel,
-    won: Boolean,
-) {
-    val active = (vm.bets[type] ?: 0) > 0
-    Box(Modifier.size(width = 140.dp, height = 136.dp)) {
-        ArchedLabel(
-            label, color,
-            Modifier.align(Alignment.TopCenter).size(width = 140.dp, height = 56.dp),
-        )
-        Box(
-            Modifier
-                .align(Alignment.BottomCenter)
-                .size(102.dp)
-                .background(
-                    when {
-                        won -> P.WinGlow.copy(alpha = 0.18f)
-                        active -> Color(0x33000000)
-                        else -> Color.Transparent
-                    },
-                    CircleShape,
-                )
-                .border(2.dp, if (won) P.WinGlow else P.Ink, CircleShape)
-                .padding(2.dp)
-                .border(6.dp, color, CircleShape)
-                .padding(6.dp)
-                .border(2.dp, P.Ink, CircleShape)
-                .clip(CircleShape)
-                .clickable(enabled = vm.phase == Phase.BETTING) { vm.addBet(type) },
-        )
-        PlacedBetChip(
-            vm.bets[type] ?: 0,
-            Modifier.align(Alignment.BottomCenter).offset(y = (-26).dp),
-        )
-    }
-}
-
-@Composable
-private fun ArchedLabel(text: String, color: Color, modifier: Modifier) {
-    val fillColor = color.toArgb()
-    val inkColor = P.Ink.toArgb()
-    Canvas(modifier) {
-        val w = size.width
-        val h = size.height
-        val path = android.graphics.Path().apply {
-            moveTo(w * 0.04f, h * 0.98f)
-            quadTo(w * 0.5f, -h * 0.05f, w * 0.96f, h * 0.98f)
-        }
-        val paint = android.graphics.Paint().apply {
-            isAntiAlias = true
-            textSize = 18.sp.toPx()
-            typeface = android.graphics.Typeface.create(
-                android.graphics.Typeface.SANS_SERIF, android.graphics.Typeface.BOLD
-            )
-            textAlign = android.graphics.Paint.Align.CENTER
-        }
-        val tracking = paint.textSize * 0.1f
-        val glyphWidths = FloatArray(text.length)
-        paint.getTextWidths(text, glyphWidths)
-        val textLength = glyphWidths.sum() + tracking * (text.length - 1)
-
-        val measure = android.graphics.PathMeasure(path, false)
-        // Draw each glyph rotated to the arc's tangent; unlike drawTextOnPath,
-        // this never silently drops glyphs that run past the measured path.
-        val pos = FloatArray(2)
-        val tan = FloatArray(2)
-        drawIntoCanvas { canvas ->
-            var distance = (measure.length - textLength) / 2f
-            for (i in text.indices) {
-                val center = (distance + glyphWidths[i] / 2f)
-                    .coerceIn(0f, measure.length)
-                measure.getPosTan(center, pos, tan)
-                val angle = Math.toDegrees(
-                    kotlin.math.atan2(tan[1].toDouble(), tan[0].toDouble())
-                ).toFloat()
-                canvas.nativeCanvas.save()
-                canvas.nativeCanvas.rotate(angle, pos[0], pos[1])
-                paint.style = android.graphics.Paint.Style.STROKE
-                paint.strokeWidth = 2.dp.toPx()
-                paint.color = inkColor
-                canvas.nativeCanvas.drawText(text, i, i + 1, pos[0], pos[1], paint)
-                paint.style = android.graphics.Paint.Style.FILL
-                paint.color = fillColor
-                canvas.nativeCanvas.drawText(text, i, i + 1, pos[0], pos[1], paint)
-                canvas.nativeCanvas.restore()
-                distance += glyphWidths[i] + tracking
             }
         }
     }
@@ -843,13 +466,13 @@ private fun ActionButtons(vm: BaccaratViewModel) {
                 PillButton("Clear", solid = false, onClick = vm::clearBets)
             }
             Phase.RESULT -> {
-                PillButton("REBET", solid = true, onClick = { vm.nextHand(true) })
                 PillButton("New bets", solid = false, onClick = { vm.nextHand(false) })
+                PillButton("REBET", solid = true, onClick = { vm.nextHand(true) })
             }
             Phase.DEALING -> {
                 Text(
                     "DEALING",
-                    fontWeight = FontWeight.Black,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
                     letterSpacing = 0.15.em,
                     color = P.OffWhite.copy(alpha = 0.8f),
                     modifier = Modifier.padding(vertical = 10.dp),
@@ -876,42 +499,10 @@ private fun PillButton(text: String, solid: Boolean, onClick: () -> Unit) {
         Text(
             text,
             color = if (solid) P.Ink else P.OffWhite,
-            fontWeight = FontWeight.ExtraBold,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
             fontSize = 13.sp,
             letterSpacing = 0.08.em,
         )
-    }
-}
-
-@Composable
-private fun BankrollRow(vm: BaccaratViewModel, modifier: Modifier = Modifier) {
-    Row(
-        modifier,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "BANKROLL ",
-                fontSize = 9.sp, letterSpacing = 0.12.em,
-                color = P.OffWhite.copy(alpha = 0.6f),
-            )
-            OutlinedText(
-                formatMoney(vm.bankroll),
-                fontSize = 14.sp, color = P.WinGlow, outlineWidth = 1.dp,
-            )
-        }
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                "STAKED ",
-                fontSize = 9.sp, letterSpacing = 0.12.em,
-                color = P.OffWhite.copy(alpha = 0.6f),
-            )
-            OutlinedText(
-                formatMoney(vm.totalStaked.toDouble()),
-                fontSize = 14.sp, color = P.OffWhite, outlineWidth = 1.dp,
-            )
-        }
     }
 }
 
@@ -992,7 +583,7 @@ private fun BeadRoad(vm: BaccaratViewModel) {
                                 else -> "even"
                             },
                             fontSize = 11.sp,
-                            fontWeight = FontWeight.ExtraBold,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold,
                             color = when {
                                 net > 0 -> P.WinGlow
                                 net < 0 -> Color(0xFFFF9C8A)
@@ -1020,6 +611,6 @@ private fun Bead(outcome: Outcome) {
             .border(1.5.dp, P.Ink, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        Text(letter, fontSize = 8.sp, fontWeight = FontWeight.ExtraBold, color = P.OffWhite)
+        Text(letter, fontSize = 8.sp, fontWeight = androidx.compose.ui.text.font.FontWeight.ExtraBold, color = P.OffWhite)
     }
 }
