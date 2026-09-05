@@ -568,6 +568,21 @@ private fun DieView(
             textAlign = android.graphics.Paint.Align.CENTER
         }
     }
+    // Face and edge paints round their corners the way the web cube does.
+    val facePaint = remember(sizePx) {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.FILL
+            pathEffect = android.graphics.CornerPathEffect(sizePx * 0.16f)
+        }
+    }
+    val edgePaint = remember(sizePx) {
+        android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+            style = android.graphics.Paint.Style.STROKE
+            strokeWidth = sizePx * 0.03f
+            pathEffect = android.graphics.CornerPathEffect(sizePx * 0.16f)
+            color = android.graphics.Color.argb(90, 0, 0, 0)
+        }
+    }
     Box(
         Modifier
             .offset { IntOffset((die.x - sizePx / 2).roundToInt(), (die.y - sizePx / 2).roundToInt()) }
@@ -580,7 +595,8 @@ private fun DieView(
                 if (die.held) {
                     drawCircle(Color(0x59FF40A0), radius = size.width * 0.72f, center = center)
                 }
-                drawDieCube(die.rot, die.tumble, die.roll, face, ink, letter, glyphPaint)
+                drawDieCube(die.rot, die.tumble, die.roll, face, ink, letter,
+                    glyphPaint, facePaint, edgePaint)
             },
     )
 }
@@ -593,6 +609,8 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDieCube(
     ink: Color,
     letterDie: Boolean,
     glyphPaint: android.graphics.Paint,
+    facePaint: android.graphics.Paint,
+    edgePaint: android.graphics.Paint,
 ) {
     val half = size.width * 0.46f
     val persp = size.width * 3.6f
@@ -633,15 +651,19 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDieCube(
         val br = proj(turn(def[1] + t1x + t2x, def[2] + t1y + t2y, def[3] + t1z + t2z))
         val bl = proj(turn(def[1] - t1x + t2x, def[2] - t1y + t2y, def[3] - t1z + t2z))
         val light = (0.5 + 0.5 * n[2]).toFloat()
-        val lit = Color(face.red * light, face.green * light, face.blue * light, 1f)
-        val quad = androidx.compose.ui.graphics.Path().apply {
+        // Rounded like the web cube: the corner effect on a filled native
+        // path is what a projected quad with soft corners takes.
+        val quad = android.graphics.Path().apply {
             moveTo(tl.x, tl.y); lineTo(tr.x, tr.y); lineTo(br.x, br.y); lineTo(bl.x, bl.y); close()
         }
-        drawPath(quad, lit)
-        drawPath(
-            quad, Color(0f, 0f, 0f, 0.35f),
-            style = Stroke(width = size.width * 0.03f),
+        facePaint.color = android.graphics.Color.argb(
+            255,
+            (face.red * light * 255).roundToInt(),
+            (face.green * light * 255).roundToInt(),
+            (face.blue * light * 255).roundToInt(),
         )
+        drawContext.canvas.nativeCanvas.drawPath(quad, facePaint)
+        drawContext.canvas.nativeCanvas.drawPath(quad, edgePaint)
         // The face's own character, warped onto it with the quad.
         dstPts[0] = tl.x; dstPts[1] = tl.y; dstPts[2] = tr.x; dstPts[3] = tr.y
         dstPts[4] = br.x; dstPts[5] = br.y; dstPts[6] = bl.x; dstPts[7] = bl.y

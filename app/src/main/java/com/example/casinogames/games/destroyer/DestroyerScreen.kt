@@ -136,8 +136,6 @@ fun DestroyerScreen(
                     letterSpacing = 0.08.em,
                 )
             }
-            Spacer(Modifier.height(2.dp))
-            MessageLine(vm)
             ResultRows(vm)
             Spacer(Modifier.height(6.dp))
             // The bottom of the felt: chips and the bet while betting, the
@@ -160,6 +158,20 @@ fun DestroyerScreen(
                     }
                 } else {
                     DiceTray(tray, Modifier.fillMaxSize())
+                }
+                // The table talk lives inside the box, along its top edge:
+                // the verdict line, and the throwing instructions under it.
+                Column(
+                    Modifier.align(Alignment.TopCenter).padding(top = 10.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    MessageLine(vm)
+                    if (vm.phase == DzPhase.TARGETING) {
+                        Text(
+                            "flick the dice to fire",
+                            color = SteelDim, fontSize = 12.sp, fontStyle = FontStyle.Italic,
+                        )
+                    }
                 }
             }
             Spacer(Modifier.height(8.dp))
@@ -616,15 +628,8 @@ private fun Actions(vm: DestroyerViewModel) {
                 ActionButton("DEAL", Brass, true, Modifier.weight(1.4f), vm::deal)
             }
             DzPhase.TARGETING -> {
-                // No fire button: the dice in the tray are the trigger.
-                Text(
-                    "flick the dice to fire",
-                    color = SteelDim,
-                    fontSize = 12.sp,
-                    fontStyle = FontStyle.Italic,
-                    modifier = Modifier.weight(1f).padding(vertical = 14.dp),
-                    textAlign = TextAlign.Center,
-                )
+                // No buttons at all: the dice are the trigger, and the row
+                // collapses so the tray takes the height instead.
             }
             DzPhase.RESULT -> {
                 ActionButton("NEW BET", Steel, false, Modifier.weight(1f)) { vm.nextHand(false) }
