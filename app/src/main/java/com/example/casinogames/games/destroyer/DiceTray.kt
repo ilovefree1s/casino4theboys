@@ -117,6 +117,12 @@ class TrayDie {
  */
 class DiceTrayState(
     val count: Int = 2,
+    /**
+     * A die that calls its face as a letter, battleship-style: A for 1 up to
+     * F for 6. The physics neither knows nor cares — it is the same die read
+     * out loud differently. -1 for an all-numbers tray.
+     */
+    val letterDie: Int = -1,
     private val random: Random = Random(System.nanoTime()),
 ) {
     val dice = List(count) { TrayDie().apply { value = 1 + random.nextInt(6) } }
@@ -420,6 +426,7 @@ private fun DieView(
                 else Modifier
             )
             .drawBehind {
+                if (index == state.letterDie) return@drawBehind
                 val pips = PIPS[die.value] ?: return@drawBehind
                 val cell = size.width * 0.24f
                 val start = size.width * 0.26f
@@ -432,7 +439,17 @@ private fun DieView(
                 }
             }
             .pointerInput(index) { trayDrag(state, die) },
-    )
+        contentAlignment = Alignment.Center,
+    ) {
+        if (index == state.letterDie) {
+            Text(
+                ('A' + die.value - 1).toString(),
+                color = pipColor,
+                fontSize = with(LocalDensity.current) { (sizePx * 0.44f).toSp() },
+                fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
+            )
+        }
+    }
 }
 
 /**

@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -14,7 +15,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -32,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
@@ -85,7 +89,8 @@ fun DestroyerScreen(
         )
         // The tray's dice ARE the dice: their settle is the shot. One state
         // outside the composables, so a hand survives recomposition.
-        val tray = remember { DiceTrayState() }
+        // Die 0 calls the row letter, die 1 calls the column number.
+        val tray = remember { DiceTrayState(letterDie = 0) }
         LaunchedEffect(Unit) {
             tray.onSettle = { values -> vm.shotLands(values[0] - 1, values[1] - 1) }
         }
@@ -180,70 +185,119 @@ private fun TopBar(vm: DestroyerViewModel, onBack: () -> Unit) {
     }
 }
 
+/*
+ * The battle map is the player's own art, and its geometry is measured off
+ * it: the grid runs x 180..1221 and y 43..1031 of the 1254px square, letters
+ * down the side naming the rows and numbers along the foot naming the
+ * columns — so the letter die calls the row and the number die the column.
+ */
+private const val MAP_ART = 1254f
+private const val MAP_X0 = 180f / MAP_ART
+private const val MAP_X1 = 1221f / MAP_ART
+private const val MAP_Y0 = 43f / MAP_ART
+private const val MAP_Y1 = 1031f / MAP_ART
+
 /**
- * The player's own waters: their ships in outline, red pegs where the dice
- * hit them, pale pegs in open sea. A sunk ship's whole hull goes red.
+ * The player's own waters: the battle map with their ships lying on it, red
+ * pegs where the dice hit, pale pegs in open sea, and the last shot ringed
+ * in brass. A sunk ship burns red.
  */
 @Composable
 private fun Board(vm: DestroyerViewModel) {
     val hits = vm.hitCells.toSet()
     val misses = vm.missCells.toSet()
-    val shipCells = vm.fleet.flatMap { it.cells }.toSet()
-    val sunkCells = vm.fleet
-        .filter { ship -> ship.cells.all { it in hits } }
-        .flatMap { it.cells }.toSet()
     val target = vm.lastRoll?.let { (r, c) -> r * GRID + c }
 
-    Column(
-        Modifier
-            .clip(RoundedCornerShape(10.dp))
-            .background(Color(0xFF06111C))
-            .border(1.5.dp, SeaLine, RoundedCornerShape(10.dp))
-            .padding(8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        repeat(GRID) { row ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                repeat(GRID) { col ->
-                    val cell = row * GRID + col
-                    val onShip = cell in shipCells
+    BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
+        val w = maxWidth
+        val cellW = w * (MAP_X1 - MAP_X0) / GRID
+        val cellH = w * (MAP_Y1 - MAP_Y0) / GRID
+        fun left(col: Int) = w * MAP_X0 + cellW * col
+        fun top(row: Int) = w * MAP_Y0 + cellH * row
+
+        Image(
+            painter = painterResource(R.drawable.battlemap),
+            contentDescription = "Battle map",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.FillBounds,
+        )
+
+        // The fleet, each hull lying across its cells. The art is drawn
+        // lengthwise, so a ship standing in a column is turned on its side.
+        var thirdSeen = false
+        vm.fleet.forEach { ship ->
+            val res = when (ship.size) {
+                4 -> R.drawable.fourslots
+                2 -> R.drawable.twoslot
+                else -> if (thirdSeen) R.drawable.second3slot
+                else { thirdSeen = true; R.drawable.first3slot }
+            }
+            val rows = ship.cells.map { it / GRID }
+            val cols = ship.cells.map { it % GRID }
+            val horizontal = rows.distinct().size == 1
+            val sunk = ship.cells.all { it in hits }
+            val boxW = if (horizontal) cellW * ship.size else cellW
+            val boxH = if (horizontal) cellH else cellH * ship.size
+            Box(
+                Modifier
+                    .offset(x = left(cols.min()), y = top(rows.min()))
+                    .size(boxW, boxH),
+                contentAlignment = Alignment.Center,
+            ) {
+                Image(
+                    painter = painterResource(res),
+                    contentDescription = "${ship.size}-ship",
+                    modifier = (
+                        if (horizontal) Modifier.fillMaxSize()
+                        else Modifier
+                            .requiredSize(width = boxH, height = boxW)
+                            .graphicsLayer { rotationZ = 90f }
+                        ).padding(2.dp)
+                        .alpha(if (sunk) 0.55f else 1f),
+                    contentScale = ContentScale.Fit,
+                )
+                if (sunk) {
                     Box(
                         Modifier
-                            .size(44.dp)
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(
-                                when {
-                                    cell in sunkCells -> HitRed.copy(alpha = 0.30f)
-                                    onShip -> Steel.copy(alpha = 0.16f)
-                                    else -> Color(0x14FFFFFF)
-                                }
-                            )
-                            .border(
-                                if (cell == target) 2.dp else 1.dp,
-                                when {
-                                    cell == target -> Brass
-                                    cell in sunkCells -> HitRed
-                                    onShip -> SteelDim
-                                    else -> Color(0x1AFFFFFF)
-                                },
-                                RoundedCornerShape(6.dp),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        when {
-                            cell in hits -> Peg(HitRed)
-                            cell in misses -> Peg(Color(0x66F5F1E8))
-                        }
-                    }
+                            .fillMaxSize()
+                            .padding(3.dp)
+                            .background(HitRed.copy(alpha = 0.22f), RoundedCornerShape(8.dp))
+                            .border(1.5.dp, HitRed, RoundedCornerShape(8.dp))
+                    )
                 }
             }
         }
-    }
-}
 
-@Composable
-private fun Peg(color: Color) {
-    Box(Modifier.size(14.dp).clip(CircleShape).background(color))
+        // Pegs and the last shot's ring, cell by cell.
+        for (cell in 0 until DestroyerRules.CELLS) {
+            val row = cell / GRID
+            val col = cell % GRID
+            if (cell == target) {
+                Box(
+                    Modifier
+                        .offset(x = left(col), y = top(row))
+                        .size(cellW, cellH)
+                        .padding(3.dp)
+                        .border(2.dp, Brass, RoundedCornerShape(8.dp))
+                )
+            }
+            val peg = when {
+                cell in hits -> HitRed
+                cell in misses -> Color(0x8CF5F1E8)
+                else -> null
+            }
+            if (peg != null) {
+                Box(
+                    Modifier
+                        .offset(x = left(col) + cellW / 2 - 7.dp, y = top(row) + cellH / 2 - 7.dp)
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(peg)
+                        .border(1.dp, Color(0x66000000), CircleShape)
+                )
+            }
+        }
+    }
 }
 
 /** Shots left as shells in the rack, the last roll, and the way to the pays. */
@@ -263,7 +317,8 @@ private fun StatusRow(vm: DestroyerViewModel, onShowPays: () -> Unit) {
         Spacer(Modifier.width(14.dp))
         val roll = vm.lastRoll
         Text(
-            if (roll == null) "— · —" else "${roll.first + 1} · ${roll.second + 1}",
+            // Called the battleship way: the column letter, then the row.
+            if (roll == null) "——" else "${'A' + roll.first}${roll.second + 1}",
             color = Steel, fontSize = 13.sp, fontWeight = FontWeight.Black,
         )
         Spacer(Modifier.width(14.dp))
