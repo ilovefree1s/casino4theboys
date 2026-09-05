@@ -119,8 +119,16 @@ fun DestroyerScreen(
         ) {
             TopBar(vm, onBack)
             Spacer(Modifier.height(6.dp))
-            // The top of the felt: chips and the bet while betting, the dice
-            // once the hand is on. It takes whatever height the board leaves.
+            Board(vm)
+            Spacer(Modifier.height(6.dp))
+            StatusRow(vm, onShowPays = { showPays = true })
+            Spacer(Modifier.height(2.dp))
+            MessageLine(vm)
+            ResultRows(vm)
+            Spacer(Modifier.height(6.dp))
+            // The bottom of the felt: chips and the bet while betting, the
+            // dice once the hand is on. It takes whatever height the board
+            // leaves — the throw still runs up the tray, away from the hand.
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -140,13 +148,6 @@ fun DestroyerScreen(
                     DiceTray(tray, Modifier.fillMaxSize())
                 }
             }
-            Spacer(Modifier.height(6.dp))
-            StatusRow(vm, onShowPays = { showPays = true })
-            Spacer(Modifier.height(2.dp))
-            MessageLine(vm)
-            ResultRows(vm)
-            Spacer(Modifier.height(6.dp))
-            Board(vm)
             Spacer(Modifier.height(8.dp))
             Actions(vm)
         }
