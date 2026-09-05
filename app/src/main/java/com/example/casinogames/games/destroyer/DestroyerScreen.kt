@@ -128,7 +128,7 @@ fun DestroyerScreen(
             Spacer(Modifier.height(6.dp))
             StatusRow(vm, onShowPays = { showPays = true })
             // What the hits so far pay if the hand ended right here.
-            if (vm.phase == DzPhase.TARGETING) {
+            if (vm.phase == DzPhase.TARGETING || vm.phase == DzPhase.OFFER) {
                 val owed = DestroyerRules.settle(vm.fleet, vm.hitCells.toSet()) * vm.stake
                 Text(
                     "PAYING $" + formatMoney(owed.toDouble()),
@@ -630,6 +630,13 @@ private fun Actions(vm: DestroyerViewModel) {
             DzPhase.TARGETING -> {
                 // No buttons at all: the dice are the trigger, and the row
                 // collapses so the tray takes the height instead.
+            }
+            DzPhase.OFFER -> {
+                ActionButton("COLLECT", Steel, false, Modifier.weight(1f)) { vm.collectHand() }
+                ActionButton(
+                    "MISSILE $${formatMoney(vm.missilePrice.toDouble())}",
+                    Brass, true, Modifier.weight(1.4f),
+                ) { vm.buyMissile() }
             }
             DzPhase.RESULT -> {
                 ActionButton("NEW BET", Steel, false, Modifier.weight(1f)) { vm.nextHand(false) }

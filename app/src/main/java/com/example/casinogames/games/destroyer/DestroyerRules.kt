@@ -109,4 +109,48 @@ object DestroyerRules {
     /** How many ships in [fleet] are fully under [hitCells]. */
     fun sunkCount(fleet: List<Ship>, hitCells: Set<Int>): Int =
         fleet.count { ship -> ship.cells.all { it in hitCells } }
+
+    /**
+     * What one more shot is worth, in expected units above what the board
+     * already pays — the free-roll chain included, exactly: a fresh hit rolls
+     * again, and only a miss (or the fleet going down) ends it. The state is
+     * small enough to walk outright, so this is the true figure, not a guess.
+     */
+    fun extraShotEv(fleet: List<Ship>, hitCells: Set<Int>): Double {
+        val shipCells = fleet.flatMap { it.cells }
+        val index = shipCells.withIndex().associate { (i, c) -> c to i }
+        val full = (1 shl shipCells.size) - 1
+        val memo = HashMap<Int, Double>()
+        fun payout(mask: Int): Int {
+            val hits = HashSet<Int>()
+            for ((i, c) in shipCells.withIndex()) if (mask and (1 shl i) != 0) hits.add(c)
+            return settle(fleet, hits)
+        }
+        fun v(mask: Int): Double {
+            memo[mask]?.let { return it }
+            val out: Double
+            if (mask == full) {
+                out = payout(mask).toDouble()
+            } else {
+                var sum = 0.0
+                var fresh = 0
+                for (i in shipCells.indices) {
+                    if (mask and (1 shl i) == 0) { fresh++; sum += v(mask or (1 shl i)) }
+                }
+                out = (sum + (CELLS - fresh) * payout(mask)) / CELLS
+            }
+            memo[mask] = out
+            return out
+        }
+        var mask = 0
+        for (c in hitCells) index[c]?.let { mask = mask or (1 shl it) }
+        return v(mask) - payout(mask)
+    }
+
+    /**
+     * What the house sells that shot for: 25/22 of its expected value — the
+     * floor machine's own pricing, a flat 12% edge on the purchase.
+     */
+    fun missilePrice(fleet: List<Ship>, hitCells: Set<Int>, stake: Int): Int =
+        Math.round(extraShotEv(fleet, hitCells) * stake * 25.0 / 22.0).toInt().coerceAtLeast(1)
 }

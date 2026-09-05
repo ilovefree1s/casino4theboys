@@ -3299,10 +3299,49 @@
       return { units: settle(fleet, hitSet), lives: lives, hitSet: hitSet };
     }
 
+    /**
+     * What one more shot is worth, in expected units above what the board
+     * already pays — the free-roll chain included, exactly: a fresh hit
+     * rolls again, and only a miss (or the fleet going down) ends it.
+     */
+    function extraShotEv(fleet, hitSet) {
+      var shipCells = [];
+      fleet.forEach(function (s) { s.forEach(function (c) { shipCells.push(c); }); });
+      var full = (1 << shipCells.length) - 1;
+      var memo = {};
+      function payout(mask) {
+        var hs = {};
+        for (var i = 0; i < shipCells.length; i++) if (mask & (1 << i)) hs[shipCells[i]] = true;
+        return settle(fleet, hs);
+      }
+      function v(mask) {
+        if (memo[mask] != null) return memo[mask];
+        var out;
+        if (mask === full) out = payout(mask);
+        else {
+          var sum = 0, fresh = 0;
+          for (var i = 0; i < shipCells.length; i++) {
+            if (!(mask & (1 << i))) { fresh++; sum += v(mask | (1 << i)); }
+          }
+          out = (sum + (CELLS - fresh) * payout(mask)) / CELLS;
+        }
+        memo[mask] = out;
+        return out;
+      }
+      var mask = 0;
+      for (var j = 0; j < shipCells.length; j++) if (hitSet[shipCells[j]]) mask |= (1 << j);
+      return v(mask) - payout(mask);
+    }
+    /** The floor machine's own price for that shot: 25/22 of its worth. */
+    function missilePrice(fleet, hitSet, stake) {
+      return Math.max(1, Math.round(extraShotEv(fleet, hitSet) * stake * 25 / 22));
+    }
+
     return { GRID: GRID, CELLS: CELLS, LIVES: LIVES, MILESTONES: MILESTONES,
              FLEET_BONUS: FLEET_BONUS, placeFleet: placeFleet, shipPay: shipPay,
              settle: settle, sunkCount: sunkCount, replay: replay,
-             shipAt: shipAt, clearOf: clearOf };
+             shipAt: shipAt, clearOf: clearOf,
+             extraShotEv: extraShotEv, missilePrice: missilePrice };
   })();
   window.DZ = DZ;   // exposed so the rules can be exercised directly
 
@@ -5680,7 +5719,7 @@
       $("dz-roll").textContent = lastRoll
         ? String.fromCharCode(65 + (DZ.GRID - 1 - lastRoll[0])) + (lastRoll[1] + 1) : "——";
       // What the hits so far pay if the hand ended right here.
-      $("dz-owed").textContent = phase === "targeting"
+      $("dz-owed").textContent = phase === "targeting" || phase === "offer"
         ? "PAYING $" + fmt(DZ.settle(fleet, hitSet) * stake) : "";
     }
     function renderResults() {
@@ -5737,6 +5776,9 @@
         a.appendChild(actionBtn("DEAL", BRASS, deal));
       } else if (phase === "targeting") {
         a.appendChild(actionBtn("FIRE", RED, fire));
+      } else if (phase === "offer") {
+        a.appendChild(actionBtn("COLLECT", DIM, settleHand));
+        a.appendChild(actionBtn("MISSILE $" + fmt(missileCost), BRASS, buyMissile));
       } else if (phase === "result") {
         a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
         a.appendChild(actionBtn("REBET", BRASS, function () { nextHand(true); }));
@@ -5884,11 +5926,36 @@
         setMessage(onShip ? "Same water twice — that costs a shot" : "Miss");
       }
       var allSunk = DZ.sunkCount(fleet, hitSet) === fleet.length;
-      if (lives <= 0 || allSunk) t(480, settleHand);
+      if (allSunk) t(480, settleHand);
+      else if (lives <= 0) t(480, offerMissile);
       renderBoard(); renderStatus(); renderActions();
     }
-    function settleHand() {
+    /**
+     * The rack is empty but the fleet still floats: the house offers one
+     * more missile at the floor machine's own price — 25/22 of what the
+     * shot is worth on this exact board. No purse for it, and the hand
+     * just settles.
+     */
+    var missileCost = 0;
+    function offerMissile() {
       if (phase !== "targeting") return;
+      missileCost = DZ.missilePrice(fleet, hitSet, stake);
+      if (bankroll < missileCost) { settleHand(); return; }
+      phase = "offer";
+      setMessage("Out of shells — one more missile?");
+      renderStatus(); renderActions();
+    }
+    function buyMissile() {
+      if (phase !== "offer" || bankroll < missileCost) return;
+      bankroll -= missileCost;
+      syncWallet();
+      lives = 1;
+      phase = "targeting";
+      setMessage("One missile in the rack — make it count");
+      renderTop(); renderStatus(); renderActions();
+    }
+    function settleHand() {
+      if (phase !== "targeting" && phase !== "offer") return;
       rolling = false;
       $("dz-tray").classList.remove("on");
       var units = DZ.settle(fleet, hitSet);

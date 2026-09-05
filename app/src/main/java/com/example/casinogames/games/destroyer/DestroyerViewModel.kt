@@ -16,7 +16,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.random.Random
 
-enum class DzPhase { BETTING, TARGETING, RESULT }
+enum class DzPhase { BETTING, TARGETING, OFFER, RESULT }
 
 data class DzResult(val label: String, val units: Int)
 
@@ -82,6 +82,9 @@ class DestroyerViewModel : ViewModel() {
     var results by mutableStateOf<List<DzResult>>(emptyList())
         private set
     var lastWin by mutableIntStateOf(0)
+        private set
+    /** What the house wants for one more missile, priced off the live board. */
+    var missilePrice by mutableIntStateOf(0)
         private set
 
     val totalAtRisk: Int
@@ -190,16 +193,42 @@ class DestroyerViewModel : ViewModel() {
             else "Miss"
         }
         val allSunk = DestroyerRules.sunkCount(fleet, hitCells.toSet()) == fleet.size
-        if (lives <= 0 || allSunk) {
-            viewModelScope.launch {
-                delay(480)
-                settleHand()
-            }
+        if (allSunk) {
+            viewModelScope.launch { delay(480); settleHand() }
+        } else if (lives <= 0) {
+            viewModelScope.launch { delay(480); offerMissile() }
         }
     }
 
-    private fun settleHand() {
+    /**
+     * The rack is empty but the fleet still floats: the house offers one more
+     * missile at the floor machine's own price — 25/22 of what the shot is
+     * worth on this exact board. No purse for it, and the hand just settles.
+     */
+    private fun offerMissile() {
         if (phase != DzPhase.TARGETING) return
+        val price = DestroyerRules.missilePrice(fleet, hitCells.toSet(), stake)
+        if (bankroll < price) { settleHand(); return }
+        missilePrice = price
+        phase = DzPhase.OFFER
+        message = "Out of shells — one more missile?"
+    }
+
+    fun buyMissile() {
+        if (phase != DzPhase.OFFER || bankroll < missilePrice) return
+        spend(missilePrice.toDouble())
+        lives = 1
+        phase = DzPhase.TARGETING
+        message = "One missile in the rack — make it count"
+    }
+
+    fun collectHand() {
+        if (phase != DzPhase.OFFER) return
+        settleHand()
+    }
+
+    private fun settleHand() {
+        if (phase != DzPhase.TARGETING && phase != DzPhase.OFFER) return
         val hits = hitCells.toSet()
         val units = DestroyerRules.settle(fleet, hits)
         lastWin = units * stake
