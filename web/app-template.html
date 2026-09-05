@@ -771,8 +771,9 @@
   /* Ships sit straight on the board, centred on their cells, so a vertical
      hull is the same art turned on its side with its true proportions. */
   .dz-board .shipimg {
-    position: absolute; object-fit: contain;
+    position: absolute; object-fit: fill;
     transform: translate(-50%,-50%);
+    touch-action: none; user-select: none; -webkit-user-drag: none;
   }
   .dz-board .shipimg.vert { transform: translate(-50%,-50%) rotate(90deg); }
   .dz-board .shipimg.sunk { opacity: .55; }
@@ -3125,6 +3126,23 @@
       }
     }
 
+    /** A straight hull anchored at row,col, or null when it runs off the map. */
+    function shipAt(row, col, size, horiz) {
+      var cells = [];
+      for (var i = 0; i < size; i++) {
+        var r = horiz ? row : row + i, c = horiz ? col + i : col;
+        if (r < 0 || r >= GRID || c < 0 || c >= GRID) return null;
+        cells.push(r * GRID + c);
+      }
+      return cells;
+    }
+    /** Whether the hull lies in open water, clear of every other. */
+    function clearOf(cells, others) {
+      return others.every(function (o) {
+        return o.every(function (c) { return cells.indexOf(c) < 0; });
+      });
+    }
+
     /** What one ship pays for the hits it took — the highest rung reached. */
     function shipPay(size, hits) {
       var rungs = MILESTONES[size], best = 0;
@@ -3166,7 +3184,8 @@
 
     return { GRID: GRID, CELLS: CELLS, LIVES: LIVES, MILESTONES: MILESTONES,
              FLEET_BONUS: FLEET_BONUS, placeFleet: placeFleet, shipPay: shipPay,
-             settle: settle, sunkCount: sunkCount, replay: replay };
+             settle: settle, sunkCount: sunkCount, replay: replay,
+             shipAt: shipAt, clearOf: clearOf };
   })();
   window.DZ = DZ;   // exposed so the rules can be exercised directly
 
@@ -5418,7 +5437,7 @@
       var cw = (MAP.x1 - MAP.x0) / DZ.GRID * 100, ch = (MAP.y1 - MAP.y0) / DZ.GRID * 100;
       var html = '<img class="map" src="__DZ_MAP__" alt="Battle map">';
       var thirds = 0;
-      fleet.forEach(function (ship) {
+      fleet.forEach(function (ship, shipIndex) {
         var rows = ship.map(function (c) { return Math.floor(c / DZ.GRID); });
         var cols = ship.map(function (c) { return c % DZ.GRID; });
         var horiz = rows.every(function (r) { return r === rows[0]; });
@@ -5430,6 +5449,7 @@
         var midX = cellPct(Math.min.apply(null, cols) + (horiz ? ship.length / 2 : 0.5), "x");
         var midY = cellPct(Math.min.apply(null, rows) + (horiz ? 0.5 : ship.length / 2), "y");
         html += '<img class="shipimg' + (horiz ? "" : " vert") + (sunk ? " sunk" : "") + '"' +
+          ' data-ship="' + shipIndex + '" draggable="false"' +
           ' src="' + art + '" alt="' + ship.length + '-ship"' +
           ' style="left:' + midX.toFixed(2) + '%;top:' + midY.toFixed(2) + '%;' +
           'width:' + longW.toFixed(2) + '%;height:' + thinH.toFixed(2) + '%">';
@@ -5450,6 +5470,55 @@
         else if (missSet[cell]) html += '<span class="peg miss" style="left:' + cx + '%;top:' + cy + '%"></span>';
       }
       host.innerHTML = html;
+      if (phase === "betting") {
+        [].forEach.call(host.querySelectorAll(".shipimg"), armShip);
+      }
+    }
+    /** Drag a hull to move it, tap it to turn it — betting phase only. */
+    function armShip(el) {
+      el.style.cursor = "grab";
+      el.addEventListener("pointerdown", function (e) {
+        if (phase !== "betting") return;
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
+        var x0 = e.clientX, y0 = e.clientY, dx = 0, dy = 0, moved = false;
+        var base = el.style.transform || "";
+        var vert = el.classList.contains("vert");
+        // The berth this drag started from. Read now, not at the drop: if the
+        // board re-renders under the gesture, the delta must still apply to
+        // the water the hull actually left.
+        var startAnchor = Math.min.apply(null, fleet[+el.getAttribute("data-ship")]);
+        function onMove(ev) {
+          dx = ev.clientX - x0; dy = ev.clientY - y0;
+          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
+          el.style.transform = "translate(-50%,-50%) translate(" + dx + "px," + dy + "px)" +
+            (vert ? " rotate(90deg)" : "");
+          el.style.zIndex = 3;
+        }
+        function onUp() {
+          el.removeEventListener("pointermove", onMove);
+          el.removeEventListener("pointerup", onUp);
+          el.removeEventListener("pointercancel", onUp);
+          el.style.transform = base;
+          el.style.zIndex = "";
+          // A gesture whose element the board has already replaced is stale.
+          if (!el.isConnected) return;
+          var i = +el.getAttribute("data-ship");
+          if (moved) {
+            var rect = $("dz-board").getBoundingClientRect();
+            var cw = (MAP.x1 - MAP.x0) / DZ.GRID * rect.width;
+            var ch = (MAP.y1 - MAP.y0) / DZ.GRID * rect.height;
+            moveShip(i, Math.floor(startAnchor / DZ.GRID) + Math.round(dy / ch),
+              startAnchor % DZ.GRID + Math.round(dx / cw));
+          } else {
+            rotateShip(i);
+          }
+          renderBoard();
+        }
+        el.addEventListener("pointermove", onMove);
+        el.addEventListener("pointerup", onUp);
+        el.addEventListener("pointercancel", onUp);
+      });
     }
     function renderStatus() {
       var shots = "";
@@ -5553,6 +5622,37 @@
       if (phase !== "betting") return;
       fleet = DZ.placeFleet(Math.random);
       renderBoard();
+    }
+    /**
+     * The player's own admiralty, while the bet is open: drag a hull to new
+     * water, tap it to swing it round its anchor. The anchor is clamped onto
+     * the map, and a berth another ship holds is refused.
+     */
+    function isHoriz(ship) {
+      var r0 = Math.floor(ship[0] / DZ.GRID);
+      return ship.every(function (c) { return Math.floor(c / DZ.GRID) === r0; });
+    }
+    function refit(index, row, col, horiz) {
+      var old = fleet[index];
+      var maxRow = horiz ? DZ.GRID - 1 : DZ.GRID - old.length;
+      var maxCol = horiz ? DZ.GRID - old.length : DZ.GRID - 1;
+      row = Math.max(0, Math.min(maxRow, row));
+      col = Math.max(0, Math.min(maxCol, col));
+      var cells = DZ.shipAt(row, col, old.length, horiz);
+      if (!cells) return false;
+      var others = fleet.filter(function (_, i) { return i !== index; });
+      if (!DZ.clearOf(cells, others)) return false;
+      fleet[index] = cells;
+      return true;
+    }
+    function moveShip(index, row, col) {
+      if (phase !== "betting") return false;
+      return refit(index, row, col, isHoriz(fleet[index]));
+    }
+    function rotateShip(index) {
+      if (phase !== "betting") return false;
+      var anchor = Math.min.apply(null, fleet[index]);
+      return refit(index, Math.floor(anchor / DZ.GRID), anchor % DZ.GRID, !isHoriz(fleet[index]));
     }
 
     // ---------- the hand ----------

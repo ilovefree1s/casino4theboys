@@ -114,6 +114,42 @@ class DestroyerViewModel : ViewModel() {
         fleet = DestroyerRules.placeFleet(random)
     }
 
+    /**
+     * The player's own admiralty, while the bet is still open: drag a hull to
+     * new water. The anchor is clamped onto the map, and a move that would
+     * lay it across another ship is refused — the hull springs back.
+     */
+    fun moveShip(index: Int, row: Int, col: Int): Boolean {
+        if (phase != DzPhase.BETTING) return false
+        val old = fleet.getOrNull(index) ?: return false
+        val horizontal = old.cells.map { it / DestroyerRules.GRID }.distinct().size == 1
+        val maxRow = if (horizontal) DestroyerRules.GRID - 1 else DestroyerRules.GRID - old.size
+        val maxCol = if (horizontal) DestroyerRules.GRID - old.size else DestroyerRules.GRID - 1
+        val ship = DestroyerRules.shipAt(
+            row.coerceIn(0, maxRow), col.coerceIn(0, maxCol), old.size, horizontal,
+        ) ?: return false
+        if (!DestroyerRules.clearOf(ship, fleet.filterIndexed { i, _ -> i != index })) return false
+        fleet = fleet.toMutableList().also { it[index] = ship }
+        return true
+    }
+
+    /** Tap a hull to swing it about its anchor, if the water there is open. */
+    fun rotateShip(index: Int): Boolean {
+        if (phase != DzPhase.BETTING) return false
+        val old = fleet.getOrNull(index) ?: return false
+        val horizontal = old.cells.map { it / DestroyerRules.GRID }.distinct().size == 1
+        val row = old.cells.min() / DestroyerRules.GRID
+        val col = old.cells.min() % DestroyerRules.GRID
+        val maxRow = if (!horizontal) DestroyerRules.GRID - 1 else DestroyerRules.GRID - old.size
+        val maxCol = if (!horizontal) DestroyerRules.GRID - old.size else DestroyerRules.GRID - 1
+        val ship = DestroyerRules.shipAt(
+            row.coerceIn(0, maxRow), col.coerceIn(0, maxCol), old.size, !horizontal,
+        ) ?: return false
+        if (!DestroyerRules.clearOf(ship, fleet.filterIndexed { i, _ -> i != index })) return false
+        fleet = fleet.toMutableList().also { it[index] = ship }
+        return true
+    }
+
     fun deal() {
         if (phase != DzPhase.BETTING) return
         if (bet <= 0) { message = "Place your bet first"; return }

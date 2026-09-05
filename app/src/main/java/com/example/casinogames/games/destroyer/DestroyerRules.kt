@@ -69,6 +69,21 @@ object DestroyerRules {
         }
     }
 
+    /** A straight hull anchored at [row],[col], or null when it runs off the map. */
+    fun shipAt(row: Int, col: Int, size: Int, horizontal: Boolean): Ship? {
+        val cells = (0 until size).map { i ->
+            val r = if (horizontal) row else row + i
+            val c = if (horizontal) col + i else col
+            if (r !in 0 until GRID || c !in 0 until GRID) return null
+            r * GRID + c
+        }
+        return Ship(cells)
+    }
+
+    /** Whether [ship] lies in open water, clear of every hull in [others]. */
+    fun clearOf(ship: Ship, others: List<Ship>): Boolean =
+        others.none { other -> other.cells.any { it in ship.cells } }
+
     /** What one ship pays for the hits it took — the highest rung reached. */
     fun shipPay(size: Int, hits: Int): Int {
         val rungs = MILESTONES.getValue(size)
