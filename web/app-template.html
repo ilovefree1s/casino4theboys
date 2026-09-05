@@ -760,24 +760,36 @@
   }
   .dz-table { justify-content: space-between; }
   .dz-top, .dz-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; }
+  /* The battle map is the player's own art; the grid geometry is measured
+     off it, and ships, pegs and the last shot's ring are laid on in
+     percentages of the square. */
   .dz-board {
-    display: grid; grid-template-columns: repeat(6, 44px); gap: 4px;
-    padding: 8px; border-radius: 10px; background: #140610;
-    border: 1.5px solid #6E1C4A;
+    position: relative; width: 100%; max-width: 380px; aspect-ratio: 1;
+    border-radius: 10px; overflow: hidden;
   }
-  .dz-cell {
-    width: 44px; height: 44px; border-radius: 6px; position: relative;
-    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.1);
+  .dz-board > img.map { position: absolute; inset: 0; width: 100%; height: 100%; }
+  /* Ships sit straight on the board, centred on their cells, so a vertical
+     hull is the same art turned on its side with its true proportions. */
+  .dz-board .shipimg {
+    position: absolute; object-fit: contain;
+    transform: translate(-50%,-50%);
   }
-  .dz-cell.ship { background: rgba(255,64,160,.16); border-color: rgba(255,64,160,.6); }
-  .dz-cell.sunk { background: rgba(255,59,77,.30); border-color: #FF3B4D; }
-  .dz-cell.target { border: 2px solid #E8C169; }
-  .dz-cell .peg {
-    position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
-    border-radius: 50%; transform: translate(-50%,-50%);
+  .dz-board .shipimg.vert { transform: translate(-50%,-50%) rotate(90deg); }
+  .dz-board .shipimg.sunk { opacity: .55; }
+  .dz-board .wreck {
+    position: absolute; border-radius: 8px; transform: translate(-50%,-50%);
+    background: rgba(255,59,77,.22); border: 1.5px solid #FF3B4D;
   }
-  .dz-cell .peg.hit { background: #FF3B4D; }
-  .dz-cell .peg.miss { background: rgba(245,241,232,.4); }
+  .dz-board .peg {
+    position: absolute; width: 3.9%; height: 3.9%; border-radius: 50%;
+    transform: translate(-50%,-50%); border: 1px solid rgba(0,0,0,.4);
+  }
+  .dz-board .peg.hit { background: #FF3B4D; }
+  .dz-board .peg.miss { background: rgba(245,241,232,.55); }
+  .dz-board .ring {
+    position: absolute; border: 2px solid #E8C169; border-radius: 8px;
+    transform: translate(-50%,-50%);
+  }
   .dz-status {
     display: flex; align-items: center; gap: 10px; margin-top: 8px;
   }
@@ -820,6 +832,12 @@
   }
   #dz-tray.on { display: block; }
   #dz-tray .dt-field { min-height: 0; }
+  /* The letter die's faces: the word instead of the pips. */
+  #dz-tray .dt-face.dz-letter {
+    display: flex; align-items: center; justify-content: center;
+    font: 900 26px system-ui, sans-serif; color: var(--dt-pip, #140610);
+    padding: 0;
+  }
 
   .uth-rebuy {
     position: absolute; inset: 0; z-index: 30; display: none;
@@ -5386,29 +5404,52 @@
       $("dz-bankroll").textContent = fmt(bankroll);
       $("dz-risk").textContent = fmt(atRisk());
     }
+    /* The map art's grid, measured off the 1254px square: columns x 180..1221,
+       rows y 43..1031. Letters name the rows, numbers name the columns. */
+    var MAP = { x0: 180 / 1254, x1: 1221 / 1254, y0: 43 / 1254, y1: 1031 / 1254 };
+    var SHIP_ART = { 4: "__DZ_SHIP4__", 2: "__DZ_SHIP2__" };
+    var SHIP3_ART = ["__DZ_SHIP3A__", "__DZ_SHIP3B__"];
+    function cellPct(v, axis) {
+      var a0 = axis === "x" ? MAP.x0 : MAP.y0, a1 = axis === "x" ? MAP.x1 : MAP.y1;
+      return (a0 + (a1 - a0) * v / DZ.GRID) * 100;
+    }
     function renderBoard() {
       var host = $("dz-board");
-      host.innerHTML = "";
-      var shipCells = {};
-      fleet.forEach(function (ship) { ship.forEach(function (c) { shipCells[c] = ship; }); });
-      var sunkCells = {};
+      var cw = (MAP.x1 - MAP.x0) / DZ.GRID * 100, ch = (MAP.y1 - MAP.y0) / DZ.GRID * 100;
+      var html = '<img class="map" src="__DZ_MAP__" alt="Battle map">';
+      var thirds = 0;
       fleet.forEach(function (ship) {
-        if (ship.every(function (c) { return hitSet[c]; })) {
-          ship.forEach(function (c) { sunkCells[c] = true; });
+        var rows = ship.map(function (c) { return Math.floor(c / DZ.GRID); });
+        var cols = ship.map(function (c) { return c % DZ.GRID; });
+        var horiz = rows.every(function (r) { return r === rows[0]; });
+        var sunk = ship.every(function (c) { return hitSet[c]; });
+        var art = ship.length === 3 ? SHIP3_ART[Math.min(thirds++, 1)] : SHIP_ART[ship.length];
+        // The hull's own long-and-thin size; a vertical ship is the same art
+        // rotated about the centre of its cells.
+        var longW = cw * ship.length, thinH = ch;
+        var midX = cellPct(Math.min.apply(null, cols) + (horiz ? ship.length / 2 : 0.5), "x");
+        var midY = cellPct(Math.min.apply(null, rows) + (horiz ? 0.5 : ship.length / 2), "y");
+        html += '<img class="shipimg' + (horiz ? "" : " vert") + (sunk ? " sunk" : "") + '"' +
+          ' src="' + art + '" alt="' + ship.length + '-ship"' +
+          ' style="left:' + midX.toFixed(2) + '%;top:' + midY.toFixed(2) + '%;' +
+          'width:' + longW.toFixed(2) + '%;height:' + thinH.toFixed(2) + '%">';
+        if (sunk) {
+          html += '<span class="wreck" style="left:' + midX.toFixed(2) + '%;top:' + midY.toFixed(2) + '%;' +
+            'width:' + (horiz ? longW : cw).toFixed(2) + '%;height:' + (horiz ? ch : ch * ship.length).toFixed(2) + '%"></span>';
         }
       });
       var target = lastRoll ? lastRoll[0] * DZ.GRID + lastRoll[1] : -1;
       for (var cell = 0; cell < DZ.CELLS; cell++) {
-        var d = document.createElement("div");
-        var cls = "dz-cell";
-        if (sunkCells[cell]) cls += " sunk";
-        else if (shipCells[cell]) cls += " ship";
-        if (cell === target) cls += " target";
-        d.className = cls;
-        if (hitSet[cell]) d.innerHTML = '<span class="peg hit"></span>';
-        else if (missSet[cell]) d.innerHTML = '<span class="peg miss"></span>';
-        host.appendChild(d);
+        var row = Math.floor(cell / DZ.GRID), col = cell % DZ.GRID;
+        var cx = cellPct(col + 0.5, "x").toFixed(2), cy = cellPct(row + 0.5, "y").toFixed(2);
+        if (cell === target) {
+          html += '<span class="ring" style="left:' + cx + '%;top:' + cy + "%;" +
+            'width:' + (cw * 0.86).toFixed(2) + '%;height:' + (ch * 0.86).toFixed(2) + '%"></span>';
+        }
+        if (hitSet[cell]) html += '<span class="peg hit" style="left:' + cx + '%;top:' + cy + '%"></span>';
+        else if (missSet[cell]) html += '<span class="peg miss" style="left:' + cx + '%;top:' + cy + '%"></span>';
       }
+      host.innerHTML = html;
     }
     function renderStatus() {
       var shots = "";
@@ -5416,8 +5457,9 @@
         shots += '<span class="pip' + (i < lives ? "" : " spent") + '"></span>';
       }
       $("dz-shots").innerHTML = shots;
+      // Called the battleship way: the row letter, then the column number.
       $("dz-roll").textContent = lastRoll
-        ? (lastRoll[0] + 1) + " · " + (lastRoll[1] + 1) : "— · —";
+        ? String.fromCharCode(65 + lastRoll[0]) + (lastRoll[1] + 1) : "——";
     }
     function renderResults() {
       var host = $("dz-results");
@@ -5540,7 +5582,18 @@
       tray = DiceTray.create($("dz-tray"), {
         count: 2, size: 52, volume: 0.7,
         sound: { url: DICE_SND },
+        // Die 0 calls the row letter, die 1 the column number.
         onSettle: function (vals) { impact(vals[0] - 1, vals[1] - 1); }
+      });
+      // Die 0 speaks letters, battleship-style: its faces trade their pips
+      // for A..F. The physics neither knows nor cares.
+      [].forEach.call($("dz-tray").querySelectorAll('[data-die="0"] .dt-face'), function (f) {
+        for (var v = 1; v <= 6; v++) {
+          if (f.classList.contains("dt-f" + v)) {
+            f.classList.add("dz-letter");
+            f.textContent = String.fromCharCode(64 + v);
+          }
+        }
       });
       return tray;
     }

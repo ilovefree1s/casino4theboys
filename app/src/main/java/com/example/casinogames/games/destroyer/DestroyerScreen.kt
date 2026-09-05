@@ -34,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -215,6 +216,20 @@ private fun Board(vm: DestroyerViewModel) {
         fun left(col: Int) = w * MAP_X0 + cellW * col
         fun top(row: Int) = w * MAP_Y0 + cellH * row
 
+        // Open water under the grid: the map's cells are glass, and the sea
+        // shows through them.
+        Box(
+            Modifier
+                .offset(x = w * MAP_X0, y = w * MAP_Y0)
+                .size(w * (MAP_X1 - MAP_X0), w * (MAP_Y1 - MAP_Y0))
+                .background(
+                    // The 1000 chip's own electric blue, sampled off its art.
+                    Brush.verticalGradient(
+                        listOf(Color(0xFF0230A0), Color(0xFF0350D0), Color(0xFF0464F0))
+                    ),
+                    RoundedCornerShape(6.dp),
+                )
+        )
         Image(
             painter = painterResource(R.drawable.battlemap),
             contentDescription = "Battle map",
