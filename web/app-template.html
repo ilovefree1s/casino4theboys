@@ -799,6 +799,11 @@
     display: block; font-style: normal; font-size: 6px;
     color: rgba(245,241,232,.6); letter-spacing: .05em;
   }
+  /* The called row and column wash gold and converge on the cell. */
+  .dz-board .sweep {
+    position: absolute; background: rgba(232,193,105,.13);
+    border-radius: 6px; pointer-events: none;
+  }
   /* The called coordinate lights its letter and number badges — a quiet
      brass glow on the octagons that name it, hit or miss. */
   .dz-board .call {
@@ -5566,6 +5571,14 @@
         });
       });
       if (lastRoll) {
+        // The whole row and column wash gold, converging on the called
+        // cell — which wears both washes and reads brightest.
+        html += '<span class="sweep" style="left:' + (MAP.x0 * 100).toFixed(2) +
+          '%;top:' + cellPct(lastRoll[0], "y").toFixed(2) +
+          '%;width:' + ((MAP.x1 - MAP.x0) * 100).toFixed(2) + '%;height:' + ch.toFixed(2) + '%"></span>';
+        html += '<span class="sweep" style="left:' + cellPct(lastRoll[1], "x").toFixed(2) +
+          '%;top:' + (MAP.y0 * 100).toFixed(2) +
+          '%;width:' + cw.toFixed(2) + '%;height:' + ((MAP.y1 - MAP.y0) * 100).toFixed(2) + '%"></span>';
         // Badge centres measured off the art: letters at x 93, numbers at
         // y 1131 of the 1254 square, ~155px across.
         var bd = (155 / 1254 * 100).toFixed(2);

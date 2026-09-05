@@ -373,9 +373,24 @@ private fun Board(vm: DestroyerViewModel) {
             }
         }
 
-        // The called coordinate lights its letter and number badges — a
-        // quiet brass glow on the octagons that name it, hit or miss.
+        // The called coordinate lights its letter and number badges — and
+        // its whole row and column wash gold, converging on the cell where
+        // they cross. Two quiet washes; the target cell wears both.
         vm.lastRoll?.let { (r, c) ->
+            Box(
+                Modifier
+                    .offset(x = w * MAP_X0, y = top(r))
+                    .size(w * (MAP_X1 - MAP_X0), cellH)
+                    .zIndex(3f)
+                    .background(Brass.copy(alpha = 0.13f), RoundedCornerShape(6.dp))
+            )
+            Box(
+                Modifier
+                    .offset(x = left(c), y = w * MAP_Y0)
+                    .size(cellW, w * (MAP_Y1 - MAP_Y0))
+                    .zIndex(3f)
+                    .background(Brass.copy(alpha = 0.13f), RoundedCornerShape(6.dp))
+            )
             val badge = w * (155f / MAP_ART)
             val glow = Modifier
                 .size(badge)
