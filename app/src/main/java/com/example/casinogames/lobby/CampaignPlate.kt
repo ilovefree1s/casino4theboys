@@ -1,5 +1,6 @@
 package com.example.casinogames.lobby
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -7,6 +8,8 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,8 +35,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.casinogames.R
 import com.example.casinogames.campaign.Campaign
 import com.example.casinogames.campaign.Room
 import com.example.casinogames.ui.common.formatMoney
@@ -164,10 +170,21 @@ private fun MarkerPlate(scale: Float) {
     }
 }
 
+/*
+ * The floor art, measured: five cards on the 941x1672 sheet, every one of
+ * them painted WALK IN — the live layer decides which of them mean it.
+ */
+private const val FLOOR_ART_W = 941f
+private const val FLOOR_ART_H = 1672f
+private val FLOOR_BANDS = arrayOf(
+    384f to 561f, 585f to 760f, 784f to 965f, 989f to 1168f, 1192f to 1373f,
+)
+
 /**
- * The floor, room by room. Anything at or below where you are is always open
- * — walking down is free — and going up wants the buy-in and a clean slate
- * with the house.
+ * The floor, room by room, on the painted sheet. Anything at or below where
+ * you are is always open — walking down is free — and going up wants the
+ * buy-in and a clean slate with the house. A shut room dims and wears the
+ * reason over its painted WALK IN; the room you are in wears a gold ring.
  */
 @Composable
 private fun RoomPicker(onDismiss: () -> Unit) {
@@ -178,98 +195,74 @@ private fun RoomPicker(onDismiss: () -> Unit) {
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(0xF2050408))
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null,
-                onClick = onDismiss,
-            ),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(
-            Modifier.widthIn(max = 380.dp).padding(horizontal = 20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+        BoxWithConstraints(
+            Modifier
+                .fillMaxSize()
+                .background(Color(0xFF040209))
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onClick = onDismiss,
+                ),
         ) {
-            Text(
-                "THE FLOOR",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.16.em,
-                color = RoomGold,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                if (Campaign.debt > 0) "Square the marker before moving up"
-                else "Higher rooms pay faster and bust quicker",
-                fontSize = 11.sp,
-                color = if (Campaign.debt > 0) MarkerRed else Color(0x99FFFFFF),
-            )
-            Spacer(Modifier.height(16.dp))
-            Room.entries.forEach { room ->
-                RoomRow(room, onPick = { Campaign.enter(room); onDismiss() })
-                Spacer(Modifier.height(8.dp))
+            val artW = minOf(maxWidth, maxHeight * (FLOOR_ART_W / FLOOR_ART_H))
+            val artH = artW * (FLOOR_ART_H / FLOOR_ART_W)
+            val k = artW.value / FLOOR_ART_W
+            Box(Modifier.align(Alignment.Center).width(artW).height(artH)) {
+                Image(
+                    painter = painterResource(R.drawable.floorrooms),
+                    contentDescription = "The floor",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.FillBounds,
+                )
+                Room.entries.forEachIndexed { i, room ->
+                    val (y0, y1) = FLOOR_BANDS[i]
+                    val here = Campaign.room == room
+                    val open = Campaign.canEnter(room)
+                    val shut = Campaign.blockedReason(room)
+                    Box(
+                        Modifier
+                            .offset(x = (44 * k).dp, y = (y0 * k).dp)
+                            .width(((897 - 44) * k).dp)
+                            .height(((y1 - y0) * k).dp)
+                            .clip(RoundedCornerShape((26 * k).dp))
+                            .then(
+                                if (here) {
+                                    Modifier.border(2.dp, RoomGold, RoundedCornerShape((26 * k).dp))
+                                } else Modifier
+                            )
+                            .clickable(enabled = open && !here) {
+                                Campaign.enter(room)
+                                onDismiss()
+                            },
+                        contentAlignment = Alignment.CenterEnd,
+                    ) {
+                        if (!open) Box(Modifier.fillMaxSize().background(Color(0xA6050308)))
+                        when {
+                            here -> FloorTag("YOU ARE HERE", RoomGold, k)
+                            !open -> FloorTag(shut?.uppercase() ?: "LOCKED", MarkerRed, k)
+                        }
+                    }
+                }
             }
         }
     }
-    }
 }
 
+/** A small plate laid over the card's painted WALK IN, saying otherwise. */
 @Composable
-private fun RoomRow(room: Room, onPick: () -> Unit) {
-    val here = Campaign.room == room
-    val open = Campaign.canEnter(room)
-    val shut = Campaign.blockedReason(room)
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .background(if (here) Color(0x1FE8C169) else Color(0xCC0B0713))
-            .border(
-                if (here) 1.5.dp else 1.dp,
-                when {
-                    here -> RoomGold
-                    open -> Color(0x59B98CFF)
-                    else -> Color(0x1AFFFFFF)
-                },
-                RoundedCornerShape(10.dp),
-            )
-            .clickable(enabled = open && !here, onClick = onPick)
-            .padding(horizontal = 13.dp, vertical = 9.dp),
-    ) {
-        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                room.roomName.uppercase(),
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.1.em,
-                color = if (open) RoomGold else Color(0x59FFFFFF),
-            )
-            Spacer(Modifier.weight(1f))
-            Text(
-                when {
-                    here -> "YOU ARE HERE"
-                    shut != null -> shut
-                    else -> "WALK IN"
-                },
-                fontSize = 9.sp,
-                fontWeight = FontWeight.Black,
-                letterSpacing = 0.08.em,
-                color = when {
-                    here -> Color(0xCCFFFFFF)
-                    shut != null -> Color(0x73FF3B5C)
-                    else -> Color(0x99FFFFFF)
-                },
-            )
-        }
-        Spacer(Modifier.height(3.dp))
-        Text(
-            "${room.sign}  ·  ${room.sideSign}",
-            fontSize = 11.sp,
-            fontWeight = FontWeight.Bold,
-            color = if (open) Color(0xB3FFFFFF) else Color(0x40FFFFFF),
-        )
-    }
+private fun FloorTag(text: String, color: Color, k: Float) {
+    Text(
+        text,
+        fontSize = (25 * k).sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 0.06.em,
+        color = color,
+        modifier = Modifier
+            .padding(end = (38 * k).dp)
+            .clip(RoundedCornerShape(999.dp))
+            .background(Color(0xE60B0713))
+            .border(1.dp, color.copy(alpha = 0.8f), RoundedCornerShape(999.dp))
+            .padding(horizontal = (20 * k).dp, vertical = (10 * k).dp),
+    )
 }
