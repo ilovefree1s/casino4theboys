@@ -41,6 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.ContentScale
@@ -113,7 +114,25 @@ fun BaccaratScreen(
         else emptySet()
     var roadOpen by rememberSaveable { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxSize().background(Color(0xFF040308))) {
+    // A soft violet floor-glow rises from the bottom edge, so the working
+    // strip below the sheet reads as the same room, not dead black.
+    Box(
+        Modifier
+            .fillMaxSize()
+            .drawBehind {
+                drawRect(Color(0xFF040308))
+                val c = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height)
+                drawCircle(
+                    brush = androidx.compose.ui.graphics.Brush.radialGradient(
+                        listOf(Color(0x4D5A1E8C), Color(0x00000000)),
+                        center = c,
+                        radius = size.width * 0.95f,
+                    ),
+                    radius = size.width * 0.95f,
+                    center = c,
+                )
+            }
+    ) {
         Column(
             Modifier
                 .fillMaxSize()
