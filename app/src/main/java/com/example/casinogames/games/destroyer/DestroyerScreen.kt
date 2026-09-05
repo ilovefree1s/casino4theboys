@@ -382,14 +382,14 @@ private fun Board(vm: DestroyerViewModel) {
                     .offset(x = w * MAP_X0, y = top(r))
                     .size(w * (MAP_X1 - MAP_X0), cellH)
                     .zIndex(3f)
-                    .background(Brass.copy(alpha = 0.13f), RoundedCornerShape(6.dp))
+                    .background(Brass.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
             )
             Box(
                 Modifier
                     .offset(x = left(c), y = w * MAP_Y0)
                     .size(cellW, w * (MAP_Y1 - MAP_Y0))
                     .zIndex(3f)
-                    .background(Brass.copy(alpha = 0.13f), RoundedCornerShape(6.dp))
+                    .background(Brass.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
             )
             val badge = w * (155f / MAP_ART)
             val glow = Modifier

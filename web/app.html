@@ -801,7 +801,7 @@
   }
   /* The called row and column wash gold and converge on the cell. */
   .dz-board .sweep {
-    position: absolute; background: rgba(232,193,105,.13);
+    position: absolute; background: rgba(232,193,105,.28);
     border-radius: 6px; pointer-events: none;
   }
   /* The called coordinate lights its letter and number badges — a quiet
@@ -853,8 +853,15 @@
   }
   #dz-tray.on { display: block; }
   #dz-tray .dt-field { min-height: 0; }
-  /* The letter die's faces: the word instead of the pips. */
+  /* The letter die wears battleship red with white call letters; the
+     number die calls a plain numeral instead of pips. */
+  #dz-tray [data-die="0"] .dt-face { background: #C81428; }
   #dz-tray .dt-face.dz-letter {
+    display: flex; align-items: center; justify-content: center;
+    font: 900 26px system-ui, sans-serif; color: #fff;
+    padding: 0;
+  }
+  #dz-tray .dt-face.dz-number {
     display: flex; align-items: center; justify-content: center;
     font: 900 26px system-ui, sans-serif; color: var(--dt-pip, #140610);
     padding: 0;
@@ -5811,12 +5818,21 @@
         onSettle: function (vals) { impact(DZ.GRID - vals[0], vals[1] - 1); }
       });
       // Die 0 speaks letters, battleship-style: its faces trade their pips
-      // for A..F. The physics neither knows nor cares.
+      // for A..F. Die 1 trades its pips for the numeral itself. The physics
+      // neither knows nor cares.
       [].forEach.call($("dz-tray").querySelectorAll('[data-die="0"] .dt-face'), function (f) {
         for (var v = 1; v <= 6; v++) {
           if (f.classList.contains("dt-f" + v)) {
             f.classList.add("dz-letter");
             f.textContent = String.fromCharCode(64 + v);
+          }
+        }
+      });
+      [].forEach.call($("dz-tray").querySelectorAll('[data-die="1"] .dt-face'), function (f) {
+        for (var v = 1; v <= 6; v++) {
+          if (f.classList.contains("dt-f" + v)) {
+            f.classList.add("dz-number");
+            f.textContent = v;
           }
         }
       });
