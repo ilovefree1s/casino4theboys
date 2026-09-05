@@ -11,10 +11,10 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.campaign.limitsFor
 import kotlinx.coroutines.launch
 
-private const val STARTING_BANKROLL = 5000.0
 
 /** How long the reel runs, and how far it travels before it starts to die. */
 const val SPIN_MILLIS = 3400
@@ -24,7 +24,7 @@ enum class RoulettePhase { BETTING, SPINNING, RESULT }
 
 class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     /** Play testing has its own purse; the campaign shares one with every table. */
-    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    private var freePurse by mutableDoubleStateOf(FreePlay.buyIn)
     val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
 
     private fun spend(amount: Double) {
@@ -96,7 +96,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         phase = RoulettePhase.BETTING
         bets.clear(); defs.clear(); chipHistory.clear()
         pocket = null; lastWin = 0.0; history = emptyList()
-        if (!campaignMode) freePurse = STARTING_BANKROLL
+        if (!campaignMode) freePurse = FreePlay.buyIn
         notice = null
         message = "Place your bets"
     }
@@ -123,7 +123,7 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         // them or they read as a live bet and the refill never lands.
         if (phase == RoulettePhase.RESULT) nextSpin()
         if (totalStaked > 0 || bankroll >= 25) return
-        if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+        if (campaign) Campaign.takeMarker() else freePurse = FreePlay.buyIn
         notice = null
         message = if (campaign) "Marker signed — dig out" else "Place your bets"
     }

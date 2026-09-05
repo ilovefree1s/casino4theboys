@@ -10,13 +10,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.campaign.limitsFor
 import com.example.casinogames.games.core.Card
 import com.example.casinogames.games.core.Shoe
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-private const val STARTING_BANKROLL = 5000.0
 private const val RESHUFFLE_AT = 15
 
 enum class DjPhase { BETTING, DEALING, DECISION, SHOWDOWN, RESULT }
@@ -41,7 +41,7 @@ class DjWildViewModel(app: Application) : AndroidViewModel(app) {
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
     /** Play testing has its own purse; the campaign shares one with every table. */
-    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    private var freePurse by mutableDoubleStateOf(FreePlay.buyIn)
     val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
 
     private fun spend(amount: Double) {
@@ -116,7 +116,7 @@ class DjWildViewModel(app: Application) : AndroidViewModel(app) {
         anteStake = 0; blindStake = 0; playStake = 0; tripsStake = 0; badBeatStake = 0
         dealerRevealed = false; folded = false
         settlement = null; results = emptyList()
-        if (!campaignMode) freePurse = STARTING_BANKROLL
+        if (!campaignMode) freePurse = FreePlay.buyIn
         message = "Place your ante"
     }
 
@@ -136,7 +136,7 @@ class DjWildViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun buyBackIn() {
         if (phase != DjPhase.BETTING || totalAtRisk > 0 || bankroll >= 25) return
-        if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+        if (campaign) Campaign.takeMarker() else freePurse = FreePlay.buyIn
         message = "Place your ante"
     }
 

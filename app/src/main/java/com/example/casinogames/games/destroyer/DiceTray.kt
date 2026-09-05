@@ -65,8 +65,8 @@ import kotlin.random.Random
 /* Pixels-per-dp and seconds, tuned off the web tray's CSS pixels — the
    bounce and drag run a little livelier here, asked for at the table. */
 private const val GRAVITY = 2600f
-private const val BOUNCE = 0.56f
-private const val FLOOR_DRAG = 0.85f
+private const val BOUNCE = 0.48f
+private const val FLOOR_DRAG = 0.83f
 private const val AIR = 0.995f
 private const val FLICK = 0.55f
 private const val LOB = 0.12f

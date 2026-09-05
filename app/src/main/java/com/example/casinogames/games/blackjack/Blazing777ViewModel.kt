@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.campaign.limitsFor
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -19,7 +20,6 @@ import kotlinx.coroutines.launch
 
 private const val DECKS = 8
 private const val RESHUFFLE_AT = 30
-private const val STARTING_BANKROLL = 5000.0
 
 /** Which spot a chip went on, so Undo can take it back off the right one. */
 private enum class Spot { MAIN, TRILUX }
@@ -35,7 +35,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
     /** Play testing has its own purse; the campaign shares one with every table. */
-    private var freePurse by mutableDoubleStateOf(STARTING_BANKROLL)
+    private var freePurse by mutableDoubleStateOf(FreePlay.buyIn)
     val bankroll: Double get() = if (campaign) Campaign.bankroll else freePurse
 
     private fun spend(amount: Double) {
@@ -102,7 +102,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         results = emptyList()
         holeRevealed = false
         activeHand = 0
-        if (!campaignMode) freePurse = STARTING_BANKROLL
+        if (!campaignMode) freePurse = FreePlay.buyIn
         message = "Place your bet"
     }
 
@@ -120,7 +120,7 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         if (phase == BjPhase.BETTING && bet == 0 && bankroll < 25) {
             // Broke in the campaign is a marker, not a free reset: five
             // thousand over the table, seven and a half written down.
-            if (campaign) Campaign.takeMarker() else freePurse = STARTING_BANKROLL
+            if (campaign) Campaign.takeMarker() else freePurse = FreePlay.buyIn
             message = if (campaign) "Marker signed — dig out" else "Place your bet"
         }
     }

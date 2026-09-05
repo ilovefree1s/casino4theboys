@@ -24,6 +24,14 @@ const val MARKER_INTEREST = 0.5
 const val DEBT_CEILING = 25_000.0
 
 /**
+ * Play testing's chosen stake, picked on the way in. Session-only — the
+ * banner says nothing saved, and it means it.
+ */
+object FreePlay {
+    var buyIn by mutableDoubleStateOf(5_000.0)
+}
+
+/**
  * A room on the floor. The buy-in is what it takes to get in; the limits are
  * what it lets you put down once you are.
  *
