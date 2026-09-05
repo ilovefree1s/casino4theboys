@@ -415,6 +415,9 @@ private fun DieView(
     faceColor: Color,
     pipColor: Color,
 ) {
+    // The letter die wears battleship red with white call letters; the
+    // number die keeps the bone face and dark pips.
+    val letter = index == state.letterDie
     Box(
         Modifier
             .offset { IntOffset((die.x - sizePx / 2).roundToInt(), (die.y - sizePx / 2).roundToInt()) }
@@ -424,7 +427,7 @@ private fun DieView(
                 val s = if (die.held) 1.1f else 1f
                 scaleX = s; scaleY = s
             }
-            .background(faceColor, RoundedCornerShape(10.dp))
+            .background(if (letter) Color(0xFFC81428) else faceColor, RoundedCornerShape(10.dp))
             .then(
                 if (die.held) Modifier.border(2.dp, Color(0x80FF40A0), RoundedCornerShape(10.dp))
                 else Modifier
@@ -444,10 +447,10 @@ private fun DieView(
             },
         contentAlignment = Alignment.Center,
     ) {
-        if (index == state.letterDie) {
+        if (letter) {
             Text(
                 ('A' + die.value - 1).toString(),
-                color = pipColor,
+                color = Color.White,
                 fontSize = with(LocalDensity.current) { (sizePx * 0.44f).toSp() },
                 fontWeight = androidx.compose.ui.text.font.FontWeight.Black,
             )
