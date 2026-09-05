@@ -237,10 +237,11 @@ private fun RoomPicker(onDismiss: () -> Unit) {
                             },
                         contentAlignment = Alignment.CenterEnd,
                     ) {
-                        if (!open) Box(Modifier.fillMaxSize().background(Color(0xA6050308)))
-                        when {
-                            here -> FloorTag("YOU ARE HERE", RoomGold, k)
-                            !open -> FloorTag(shut?.uppercase() ?: "LOCKED", MarkerRed, k)
+                        // The room you hold keeps just its gold ring — the
+                        // painted WALK IN stands for every open door.
+                        if (!open) {
+                            Box(Modifier.fillMaxSize().background(Color(0xA6050308)))
+                            FloorTag(shut?.uppercase() ?: "LOCKED", MarkerRed, k)
                         }
                     }
                 }
