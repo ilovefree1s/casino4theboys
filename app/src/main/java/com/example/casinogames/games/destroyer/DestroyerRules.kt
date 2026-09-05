@@ -19,6 +19,8 @@ object DestroyerRules {
     const val GRID = 6
     const val CELLS = GRID * GRID
     const val LIVES = 4
+    /** The house sells at most this many bonus missiles a hand. */
+    const val MISSILE_LIMIT = 3
 
     /** Ship sizes, largest first so placement fails less often. */
     val SHIP_SIZES = listOf(4, 3, 3, 2)

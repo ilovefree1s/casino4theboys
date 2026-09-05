@@ -86,6 +86,10 @@ class DestroyerViewModel : ViewModel() {
     /** What the house wants for one more missile, priced off the live board. */
     var missilePrice by mutableIntStateOf(0)
         private set
+    private var missilesBought = 0
+    /** True while the shot in the rack was a bought one: a hit off it earns
+     *  the right to buy one more, so a hot missile keeps the shop open. */
+    private var boughtShotLive = false
 
     val totalAtRisk: Int
         get() = if (phase == DzPhase.BETTING) bet else stake
@@ -163,6 +167,8 @@ class DestroyerViewModel : ViewModel() {
         hitCells.clear(); missCells.clear()
         lives = DestroyerRules.LIVES
         lastRoll = null
+        missilesBought = 0
+        boughtShotLive = false
         results = emptyList(); lastWin = 0
         phase = DzPhase.TARGETING
         message = "Fire — ${DestroyerRules.LIVES} shots in the rack"
@@ -181,6 +187,10 @@ class DestroyerViewModel : ViewModel() {
         val struck = fleet.firstOrNull { cell in it.cells }
         if (struck != null && cell !in hitCells) {
             hitCells.add(cell)
+            if (boughtShotLive) {
+                missilesBought = (missilesBought - 1).coerceAtLeast(0)
+                boughtShotLive = false
+            }
             val sunk = struck.cells.all { it in hitCells }
             message = when {
                 sunk -> "${struck.size}-ship sunk!"
@@ -189,6 +199,7 @@ class DestroyerViewModel : ViewModel() {
         } else {
             if (cell !in hitCells && struck == null) missCells.add(cell)
             lives--
+            boughtShotLive = false
             message = if (struck != null) "Same water twice — that costs a shot"
             else "Miss"
         }
@@ -208,7 +219,9 @@ class DestroyerViewModel : ViewModel() {
     private fun offerMissile() {
         if (phase != DzPhase.TARGETING) return
         val price = DestroyerRules.missilePrice(fleet, hitCells.toSet(), stake)
-        if (bankroll < price) { settleHand(); return }
+        if (missilesBought >= DestroyerRules.MISSILE_LIMIT || bankroll < price) {
+            settleHand(); return
+        }
         missilePrice = price
         phase = DzPhase.OFFER
         message = "Out of shells — one more missile?"
@@ -217,6 +230,8 @@ class DestroyerViewModel : ViewModel() {
     fun buyMissile() {
         if (phase != DzPhase.OFFER || bankroll < missilePrice) return
         spend(missilePrice.toDouble())
+        missilesBought++
+        boughtShotLive = true
         lives = 1
         phase = DzPhase.TARGETING
         message = "One missile in the rack — make it count"

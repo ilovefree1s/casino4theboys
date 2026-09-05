@@ -5859,6 +5859,7 @@
       lastBet = bet; stake = bet; bet = 0;
       hitSet = {}; missSet = {}; lives = DZ.LIVES;
       lastRoll = null; results = []; lastWin = 0;
+      missilesBought = 0; boughtShotLive = false;
       phase = "targeting";
       $("dz-tray").classList.add("on");
       ensureTray();
@@ -5917,12 +5918,17 @@
       var onShip = fleet.some(function (ship) { return ship.indexOf(cell) >= 0; });
       if (onShip && !hitSet[cell]) {
         hitSet[cell] = true;
+        if (boughtShotLive) {
+          missilesBought = Math.max(0, missilesBought - 1);
+          boughtShotLive = false;
+        }
         var struck = fleet.filter(function (s) { return s.indexOf(cell) >= 0; })[0];
         var sunk = struck.every(function (c) { return hitSet[c]; });
         setMessage(sunk ? struck.length + "-ship sunk!" : "Hit — free shot");
       } else {
         if (!onShip && !hitSet[cell]) missSet[cell] = true;
         lives--;
+        boughtShotLive = false;
         setMessage(onShip ? "Same water twice — that costs a shot" : "Miss");
       }
       var allSunk = DZ.sunkCount(fleet, hitSet) === fleet.length;
@@ -5936,11 +5942,14 @@
      * shot is worth on this exact board. No purse for it, and the hand
      * just settles.
      */
-    var missileCost = 0;
+    // A hit off a bought missile earns the right to buy one more, so a hot
+    // missile keeps the shop open past the three.
+    var missileCost = 0, missilesBought = 0, boughtShotLive = false;
     function offerMissile() {
       if (phase !== "targeting") return;
       missileCost = DZ.missilePrice(fleet, hitSet, stake);
-      if (bankroll < missileCost) { settleHand(); return; }
+      // The house sells at most three a hand.
+      if (missilesBought >= 3 || bankroll < missileCost) { settleHand(); return; }
       phase = "offer";
       setMessage("Out of shells — one more missile?");
       renderStatus(); renderActions();
@@ -5949,6 +5958,8 @@
       if (phase !== "offer" || bankroll < missileCost) return;
       bankroll -= missileCost;
       syncWallet();
+      missilesBought++;
+      boughtShotLive = true;
       lives = 1;
       phase = "targeting";
       setMessage("One missile in the rack — make it count");
