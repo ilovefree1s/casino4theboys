@@ -62,10 +62,11 @@ import kotlin.random.Random
  * the tumble visible without the box.
  */
 
-/* Pixels-per-dp and seconds, matching the web tray's CSS-pixel tuning. */
+/* Pixels-per-dp and seconds, tuned off the web tray's CSS pixels — the
+   bounce and drag run a little livelier here, asked for at the table. */
 private const val GRAVITY = 2600f
-private const val BOUNCE = 0.42f
-private const val FLOOR_DRAG = 0.82f
+private const val BOUNCE = 0.56f
+private const val FLOOR_DRAG = 0.85f
 private const val AIR = 0.995f
 private const val FLICK = 0.55f
 private const val LOB = 0.12f
@@ -414,14 +415,18 @@ fun DiceTray(
                     if (speed > 26f * state.density) moving++
                     // Over and over about two axes at once, at a rate set by
                     // how fast it travels — no throw looks like the last one.
-                    b.tumble += speed * 0.8f * dt / state.density
-                    b.roll += speed * 0.55f * dt / state.density
+                    // The flat spin feeds the tumble a little too, so a die
+                    // still spinning keeps turning faces while it slows.
+                    b.tumble += (speed * 1.15f / state.density + abs(b.spin) * 0.12f) * dt
+                    b.roll += (speed * 0.8f / state.density + abs(b.spin) * 0.08f) * dt
                     // The face is read live off the same angles the settle
                     // will read, so the numbers flicker honestly as it goes.
                     b.value = faceToward(b.rot, b.tumble, b.roll)
                 }
+                // The stand-up begins while there is still a breath of life
+                // in the dice, so lying sideways never reads as a pause.
                 still = if (moving > 0) 0 else still + 1
-                if (still >= 8 || now - began > 6_000_000_000L) {
+                if (still >= 4 || now - began > 6_000_000_000L) {
                     settle(state)
                 }
             }
@@ -484,15 +489,18 @@ private fun settle(state: DiceTrayState) {
 }
 
 /**
- * The last quarter-turn onto the face, played out over about a fifth of a
- * second: the die rocks flat instead of snapping there, which is what it looks
- * like when a real one stops rolling. Only when it has finished is the throw
- * called, so the number arrives with the picture rather than ahead of it.
+ * The last turn onto the face, played out over about four tenths of a second
+ * with a small overshoot: the die tips past flat by a few degrees and rocks
+ * back, which is what a real one does when it stops rolling — never a snap.
+ * Only when it has finished is the throw called, so the number arrives with
+ * the picture rather than ahead of it.
  */
 private fun standStep(state: DiceTrayState, now: Long) {
     if (state.standStart == 0L) state.standStart = now
-    val t = ((now - state.standStart) / 2.2e8f).coerceIn(0f, 1f)
-    val e = 1f - (1f - t) * (1f - t) * (1f - t)
+    val t = ((now - state.standStart) / 4.2e8f).coerceIn(0f, 1f)
+    // Ease-out with a rock past the flat: back-out, softened.
+    val u = t - 1f
+    val e = 1f + 2.3f * u * u * u + 1.3f * u * u
     for (b in state.dice) {
         b.rot = b.fromRot + (b.toRot - b.fromRot) * e
         b.tumble = b.fromTumble + (b.toTumble - b.fromTumble) * e
