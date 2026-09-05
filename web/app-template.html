@@ -930,6 +930,11 @@
     position: absolute; left: 0; right: 0; bottom: 1.2%;
     display: flex; flex-direction: column; align-items: center; gap: 4px;
   }
+  .bacc-imgbtn {
+    background: none; border: 0; padding: 0; cursor: pointer;
+    height: 46px; border-radius: 999px; overflow: hidden;
+  }
+  .bacc-imgbtn img { height: 100%; display: block; }
   .bspot .placed {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
     display: none;
@@ -6183,10 +6188,19 @@
         b.addEventListener("click", fn);
         a.appendChild(b);
       }
+      // The blackjack tables' button art, worn here too — one house style.
+      function imgBtn(src, label, fn) {
+        var b = document.createElement("button");
+        b.className = "bacc-imgbtn";
+        b.setAttribute("aria-label", label);
+        b.innerHTML = '<img src="' + src + '" alt="' + label + '">';
+        b.addEventListener("click", fn);
+        a.appendChild(b);
+      }
       if (phase === "betting") {
-        btn("Undo", false, undoBet);
-        btn("DEAL", true, deal);
-        btn("Clear", false, clearBets);
+        imgBtn("__BTN_UNDO__", "Undo", undoBet);
+        imgBtn("__BTN_DEAL__", "Deal", deal);
+        imgBtn("__BTN_CLEAR__", "Clear", clearBets);
         if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
           btn("Buy back in", true, function () {
             openBuyIn(function (v) {
@@ -6196,8 +6210,8 @@
           });
         }
       } else if (phase === "result") {
-        btn("New bets", false, function () { nextHand(false); });
-        btn("REBET", true, function () { nextHand(true); });
+        imgBtn("__BTN_NEWBET__", "New bets", function () { nextHand(false); });
+        imgBtn("__BTN_REBET__", "Rebet", function () { nextHand(true); });
       } else {
         var d = document.createElement("span");
         d.className = "dealing-label";

@@ -19,7 +19,12 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -188,11 +193,15 @@ fun BaccaratScreen(
         }
 
         // The open top of the sheet: the live top bar, the names and the
-        // cards — the part the paint leaves to the game.
+        // cards — the part the paint leaves to the game. Safe-drawing
+        // padding, not just the status bar: a deep camera cutout must not
+        // take a bite out of BANKROLL.
         Column(
             Modifier
                 .fillMaxWidth()
-                .statusBarsPadding()
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+                )
                 .padding(horizontal = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -232,7 +241,9 @@ fun BaccaratScreen(
             onToggle = { roadOpen = !roadOpen },
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .statusBarsPadding()
+                .windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(WindowInsetsSides.Top)
+                )
                 .padding(end = 12.dp)
                 .zIndex(2f),
         )
@@ -516,57 +527,55 @@ private fun ChipRack(vm: BaccaratViewModel) {
     }
 }
 
+/** The blackjack tables' button art, worn here too — one house style. */
 @Composable
 private fun ActionButtons(vm: BaccaratViewModel) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 36.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         when (vm.phase) {
             Phase.BETTING -> {
-                PillButton("Undo", solid = false, onClick = vm::undoBet)
-                PillButton("DEAL", solid = true, onClick = vm::deal)
-                PillButton("Clear", solid = false, onClick = vm::clearBets)
+                ImgButton(R.drawable.btn_undo, "Undo", vm::undoBet)
+                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
+                ImgButton(R.drawable.btn_clear, "Clear", vm::clearBets)
             }
             Phase.RESULT -> {
-                PillButton("New bets", solid = false, onClick = { vm.nextHand(false) })
-                PillButton("REBET", solid = true, onClick = { vm.nextHand(true) })
+                ImgButton(R.drawable.btn_newbet, "New bet") { vm.nextHand(false) }
+                ImgButton(R.drawable.btn_rebet, "Rebet") { vm.nextHand(true) }
             }
             Phase.DEALING -> {
+                Spacer(Modifier.weight(1f))
                 Text(
                     "DEALING",
                     fontWeight = FontWeight.Black,
                     letterSpacing = 0.15.em,
                     color = P.OffWhite.copy(alpha = 0.8f),
-                    modifier = Modifier.padding(vertical = 10.dp),
+                    modifier = Modifier.padding(vertical = 14.dp),
                 )
+                Spacer(Modifier.weight(1f))
             }
         }
     }
 }
 
 @Composable
-private fun PillButton(text: String, solid: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier
+private fun androidx.compose.foundation.layout.RowScope.ImgButton(
+    res: Int,
+    desc: String,
+    onClick: () -> Unit,
+) {
+    Image(
+        painter = painterResource(res),
+        contentDescription = desc,
+        modifier = Modifier
+            .weight(1f)
+            .height(50.dp)
             .clip(RoundedCornerShape(999.dp))
-            .background(if (solid) P.GoldTrim else Color(0x8C0A0510))
-            .border(
-                if (solid) 2.dp else 1.5.dp,
-                if (solid) P.Ink else P.OffWhite.copy(alpha = 0.45f),
-                RoundedCornerShape(999.dp),
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 22.dp, vertical = 11.dp)
-    ) {
-        Text(
-            text,
-            color = if (solid) P.Ink else P.OffWhite,
-            fontWeight = FontWeight.ExtraBold,
-            fontSize = 13.sp,
-            letterSpacing = 0.08.em,
-        )
-    }
+            .clickable(onClick = onClick),
+        contentScale = ContentScale.Fit,
+    )
 }
 
 @Composable
