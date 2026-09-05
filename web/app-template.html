@@ -5529,9 +5529,9 @@
         shots += '<span class="pip' + (i < lives ? "" : " spent") + '"></span>';
       }
       $("dz-shots").innerHTML = shots;
-      // Called the battleship way: the row letter, then the column number.
+      // Called the battleship way, lettered from the bottom row up.
       $("dz-roll").textContent = lastRoll
-        ? String.fromCharCode(65 + lastRoll[0]) + (lastRoll[1] + 1) : "——";
+        ? String.fromCharCode(65 + (DZ.GRID - 1 - lastRoll[0])) + (lastRoll[1] + 1) : "——";
     }
     function renderResults() {
       var host = $("dz-results");
@@ -5685,8 +5685,9 @@
       tray = DiceTray.create($("dz-tray"), {
         count: 2, size: 52, volume: 0.7,
         sound: { url: DICE_SND },
-        // Die 0 calls the row letter, die 1 the column number.
-        onSettle: function (vals) { impact(vals[0] - 1, vals[1] - 1); }
+        // Die 0 calls the row letter, die 1 the column number. Rows are
+        // lettered from the bottom up — A is the near water.
+        onSettle: function (vals) { impact(DZ.GRID - vals[0], vals[1] - 1); }
       });
       // Die 0 speaks letters, battleship-style: its faces trade their pips
       // for A..F. The physics neither knows nor cares.

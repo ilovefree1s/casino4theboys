@@ -100,10 +100,12 @@ fun DestroyerScreen(
         )
         // The tray's dice ARE the dice: their settle is the shot. One state
         // outside the composables, so a hand survives recomposition.
-        // Die 0 calls the row letter, die 1 calls the column number.
+        // Die 0 calls the row letter, die 1 calls the column number. Rows
+        // are lettered from the bottom up — A is the near water — so the
+        // letter counts back from the last row.
         val tray = remember { DiceTrayState(letterDie = 0) }
         LaunchedEffect(Unit) {
-            tray.onSettle = { values -> vm.shotLands(values[0] - 1, values[1] - 1) }
+            tray.onSettle = { values -> vm.shotLands(GRID - values[0], values[1] - 1) }
         }
         LaunchedEffect(vm.phase) {
             if (vm.phase == DzPhase.TARGETING) tray.home()
@@ -381,8 +383,8 @@ private fun StatusRow(vm: DestroyerViewModel, onShowPays: () -> Unit) {
         Spacer(Modifier.width(14.dp))
         val roll = vm.lastRoll
         Text(
-            // Called the battleship way: the column letter, then the row.
-            if (roll == null) "——" else "${'A' + roll.first}${roll.second + 1}",
+            // Called the battleship way, lettered from the bottom row up.
+            if (roll == null) "——" else "${'A' + (GRID - 1 - roll.first)}${roll.second + 1}",
             color = Steel, fontSize = 13.sp, fontWeight = FontWeight.Black,
         )
         Spacer(Modifier.width(14.dp))
