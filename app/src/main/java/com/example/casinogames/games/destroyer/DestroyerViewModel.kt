@@ -76,8 +76,6 @@ class DestroyerViewModel : ViewModel() {
     /** The last roll as row to column, or null before the first. */
     var lastRoll by mutableStateOf<Pair<Int, Int>?>(null)
         private set
-    var rolling by mutableStateOf(false)
-        private set
 
     var message by mutableStateOf("Place your bet")
         private set
@@ -131,38 +129,36 @@ class DestroyerViewModel : ViewModel() {
         message = "Fire — ${DestroyerRules.LIVES} shots in the rack"
     }
 
-    /** One press, one roll. A fresh hit is a free shot; anything else burns one. */
-    fun roll() {
-        if (phase != DzPhase.TARGETING || rolling) return
-        rolling = true
-        viewModelScope.launch {
-            delay(260)
-            val row = random.nextInt(DestroyerRules.GRID)
-            val col = random.nextInt(DestroyerRules.GRID)
-            lastRoll = row to col
-            val cell = row * DestroyerRules.GRID + col
-            val struck = fleet.firstOrNull { cell in it.cells }
-            if (struck != null && cell !in hitCells) {
-                hitCells.add(cell)
-                val sunk = struck.cells.all { it in hitCells }
-                message = when {
-                    sunk -> "${struck.size}-ship sunk!"
-                    else -> "Hit — free shot"
-                }
-            } else {
-                if (cell !in hitCells && struck == null) missCells.add(cell)
-                lives--
-                message = if (struck != null) "Same water twice — that costs a shot"
-                else "Miss"
+    /**
+     * Where the dice said the shot went — the tray's physics settles and
+     * hands the faces here. A fresh hit is a free shot; anything else burns
+     * one. A settle that lands after the hand is over — a stray flick in the
+     * closing pause — must not fire a phantom shot or settle the hand twice.
+     */
+    fun shotLands(row: Int, col: Int) {
+        if (phase != DzPhase.TARGETING || lives <= 0) return
+        lastRoll = row to col
+        val cell = row * DestroyerRules.GRID + col
+        val struck = fleet.firstOrNull { cell in it.cells }
+        if (struck != null && cell !in hitCells) {
+            hitCells.add(cell)
+            val sunk = struck.cells.all { it in hitCells }
+            message = when {
+                sunk -> "${struck.size}-ship sunk!"
+                else -> "Hit — free shot"
             }
-            val allSunk = DestroyerRules.sunkCount(fleet, hitCells.toSet()) == fleet.size
-            if (lives <= 0 || allSunk) {
-                // The trigger stays locked through the pause, or a quick tap
-                // here would fire a phantom shot — and settle the hand twice.
+        } else {
+            if (cell !in hitCells && struck == null) missCells.add(cell)
+            lives--
+            message = if (struck != null) "Same water twice — that costs a shot"
+            else "Miss"
+        }
+        val allSunk = DestroyerRules.sunkCount(fleet, hitCells.toSet()) == fleet.size
+        if (lives <= 0 || allSunk) {
+            viewModelScope.launch {
                 delay(480)
                 settleHand()
             }
-            rolling = false
         }
     }
 
@@ -214,7 +210,7 @@ class DestroyerViewModel : ViewModel() {
         hitCells.clear(); missCells.clear()
         lives = DestroyerRules.LIVES
         lastRoll = null
-        rolling = false
+
         results = emptyList(); lastWin = 0
         fleet = DestroyerRules.placeFleet(random)
     }

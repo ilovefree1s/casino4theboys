@@ -83,37 +83,56 @@ fun DestroyerScreen(
             modifier = Modifier.fillMaxSize().alpha(0.19f),
             contentScale = ContentScale.Crop,
         )
-        BoxWithConstraints(
+        // The tray's dice ARE the dice: their settle is the shot. One state
+        // outside the composables, so a hand survives recomposition.
+        val tray = remember { DiceTrayState() }
+        LaunchedEffect(Unit) {
+            tray.onSettle = { values -> vm.shotLands(values[0] - 1, values[1] - 1) }
+        }
+        LaunchedEffect(vm.phase) {
+            if (vm.phase == DzPhase.TARGETING) tray.home()
+        }
+        Column(
             Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
                 .navigationBarsPadding()
                 .padding(horizontal = 14.dp)
                 .padding(bottom = 18.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Column(
-                Modifier.fillMaxWidth().align(Alignment.TopCenter),
-                horizontalAlignment = Alignment.CenterHorizontally,
+            TopBar(vm, onBack)
+            Spacer(Modifier.height(6.dp))
+            // The top of the felt: chips and the bet while betting, the dice
+            // once the hand is on. It takes whatever height the board leaves.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color(0x8C140610))
+                    .border(1.5.dp, Steel.copy(alpha = 0.35f), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
             ) {
-                TopBar(vm, onBack)
-                Spacer(Modifier.height(10.dp))
-                Board(vm)
-                Spacer(Modifier.height(8.dp))
-                StatusRow(vm, onShowPays = { showPays = true })
-                Spacer(Modifier.height(4.dp))
-                MessageLine(vm)
-                ResultRows(vm)
+                if (vm.phase == DzPhase.BETTING) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        BetRow(vm)
+                        Spacer(Modifier.height(14.dp))
+                        ChipRail(vm)
+                    }
+                } else {
+                    DiceTray(tray, Modifier.fillMaxSize())
+                }
             }
-            Column(
-                Modifier.fillMaxWidth().align(Alignment.BottomCenter),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                BetRow(vm)
-                Spacer(Modifier.height(6.dp))
-                if (vm.phase == DzPhase.BETTING) ChipRail(vm)
-                Spacer(Modifier.height(6.dp))
-                Actions(vm)
-            }
+            Spacer(Modifier.height(6.dp))
+            StatusRow(vm, onShowPays = { showPays = true })
+            Spacer(Modifier.height(2.dp))
+            MessageLine(vm)
+            ResultRows(vm)
+            Spacer(Modifier.height(6.dp))
+            Board(vm)
+            Spacer(Modifier.height(8.dp))
+            Actions(vm)
         }
 
         if (showPays) PayTable { showPays = false }
@@ -370,9 +389,14 @@ private fun Actions(vm: DestroyerViewModel) {
                 ActionButton("DEAL", Brass, true, Modifier.weight(1.4f), vm::deal)
             }
             DzPhase.TARGETING -> {
-                ActionButton(
-                    if (vm.rolling) "…" else "FIRE", HitRed, true, Modifier.weight(1f),
-                    vm::roll.takeIf { !vm.rolling },
+                // No fire button: the dice in the tray are the trigger.
+                Text(
+                    "flick the dice to fire",
+                    color = SteelDim,
+                    fontSize = 12.sp,
+                    fontStyle = FontStyle.Italic,
+                    modifier = Modifier.weight(1f).padding(vertical = 14.dp),
+                    textAlign = TextAlign.Center,
                 )
             }
             DzPhase.RESULT -> {
