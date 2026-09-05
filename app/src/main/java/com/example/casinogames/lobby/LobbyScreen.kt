@@ -41,32 +41,32 @@ enum class GameId(val available: Boolean) {
 // tint behind it showed as a band where the image stops.
 private val LobbyBlack = Color(0xFF000000)
 
-/** The page art, and where each card's band sits inside it (941 x 1680). */
+/** The page art, and where each card's band sits inside it (941 x 1766). */
 private const val PageWidth = 941f
-private const val PageHeight = 1680f
+private const val PageHeight = 1766f
 /**
- * Measured off the art itself. The page came in as a phone screenshot with a
- * status bar on it, so it was cropped, the printed campaign line healed out
- * to read live, and the cards dropped down the page — the canvas grown 70px
- * at the foot to make the room — so the live room plate stands clear of the
- * baccarat card.
+ * Measured off the art itself — the all-games page with craps unlocked. It
+ * came in as a phone screenshot, so the baked status bar was wiped, the
+ * printed campaign line healed out to read live, and the five cards dropped
+ * 94px down the page — the canvas grown to match — so the live room plate
+ * stands clear of the baccarat card.
  */
 private val CardBands = listOf(
-    GameId.BACCARAT to (736f to 929f),
-    GameId.BLACKJACK to (942f to 1130f),
-    GameId.POKER to (1139f to 1326f),
-    GameId.ROULETTE to (1339f to 1509f),
-    GameId.CRAPS to (1519f to 1670f),
+    GameId.BACCARAT to (734f to 920f),
+    GameId.BLACKJACK to (924f to 1118f),
+    GameId.POKER to (1119f to 1310f),
+    GameId.ROULETTE to (1311f to 1497f),
+    GameId.CRAPS to (1498f to 1696f),
 )
 /**
- * The art paints the menu button itself, so only its press is caught. It was
- * moved down the page to sit level with the HOTEL & CASINO line. The campaign
- * line was healed out of the page and is drawn live on its mark.
+ * The art paints the menu button itself, so only its press is caught. This
+ * page draws it back in the top corner. The campaign line was healed out of
+ * the page and is drawn live on its mark.
  */
-private const val MenuCentreX = 78f
-private const val MenuCentreY = 523f
-private const val MenuDiameter = 86f
-private const val CampaignCentreY = 578f
+private const val MenuCentreX = 75f
+private const val MenuCentreY = 87f
+private const val MenuDiameter = 90f
+private const val CampaignCentreY = 620f
 
 /**
  * The lobby is one piece of art. Rather than rebuilding the cards, it is drawn
