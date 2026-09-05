@@ -77,6 +77,8 @@ import com.example.casinogames.ui.common.EmptyCardSlot
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
+import com.example.casinogames.campaign.FreePlay
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
@@ -160,8 +162,10 @@ fun BaccaratScreen(
             Spacer(Modifier.height(10.dp))
             ActionButtons(vm)
             if (!vm.campaign && vm.bankroll < 25 && vm.totalStaked == 0 && vm.phase == Phase.BETTING) {
-                Spacer(Modifier.height(16.dp))
-                PillButton("Buy back in (5,000)", solid = true, onClick = vm::buyBackIn)
+                FreePlayBuyIn(
+                    onDismiss = {},
+                    onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                )
             }
             }
         }

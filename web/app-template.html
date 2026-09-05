@@ -1027,6 +1027,21 @@
   }
   .ov.on { display: flex; }
   .ov .box { padding: 20px; }
+  /* Play testing's buy-in picker: the front door, and the bust rescue. */
+  .fp-box {
+    min-width: 270px; border: 1.5px solid rgba(185,140,255,.6); border-radius: 18px;
+    background: rgba(10,6,18,.97); padding: 22px 24px;
+  }
+  .fp-ttl { color: #B98CFF; font-size: 13px; font-weight: 900; letter-spacing: .2em; }
+  .fp-sub { color: rgba(255,255,255,.6); font-size: 10px; letter-spacing: .14em; margin-top: 10px; }
+  .fp-amt { color: #E8C169; font-size: 28px; font-weight: 900; margin: 2px 0 10px; }
+  #fp-range { width: 100%; accent-color: #B98CFF; }
+  .fp-ends { display: flex; justify-content: space-between; color: rgba(255,255,255,.4); font-size: 10px; margin-top: 4px; }
+  .fp-seat {
+    margin-top: 16px; border: none; border-radius: 999px; background: #B98CFF;
+    color: #0A0612; font-size: 13px; font-weight: 900; letter-spacing: .1em;
+    padding: 11px 26px; cursor: pointer;
+  }
   .ov .big { font-family: var(--display); font-size: 40px; letter-spacing: .12em; }
   .ov .big.dead { color: #FF3B5C; }
   .ov .big.rich { color: var(--campaign-gold); font-size: 28px; }
@@ -1338,6 +1353,17 @@
   <div class="uth-rebuy" id="dz-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="dz-buyin">BUY BACK IN</button>
+  </div>
+  <!-- Play testing's front door and its bust rescue: pick the buy-in. -->
+  <div class="ov" id="fp-buyin">
+    <div class="box fp-box">
+      <div class="fp-ttl">PLAY TESTING</div>
+      <div class="fp-sub">BUY-IN</div>
+      <div class="fp-amt" id="fp-amount">5,000</div>
+      <input type="range" id="fp-range" min="5000" max="50000" step="2500" value="5000">
+      <div class="fp-ends"><span>$5K</span><span>$50K</span></div>
+      <button class="fp-seat" id="fp-seat">TAKE A SEAT</button>
+    </div>
   </div>
   <div class="ov" id="dz-paytable">
     <div class="box dz-paybox">
@@ -2478,6 +2504,16 @@
   var CAMPAIGN_START = 5000, CAMPAIGN_GOAL = 1000000;
   /** Free-play sandbox stake, matching the campaign's starting purse. */
   var TESTING_BANKROLL = 5000;
+  /* Play testing's chosen stake, picked on a slider on the way in — and
+     picked again whenever a busted purse buys back. */
+  var FREEPLAY = { buyIn: TESTING_BANKROLL };
+  var fpThen = null;
+  function openBuyIn(then) {
+    fpThen = then || null;
+    $("fp-range").value = FREEPLAY.buyIn;
+    $("fp-amount").textContent = fmt(FREEPLAY.buyIn);
+    $("fp-buyin").classList.add("on");
+  }
   var store = (function () {
     var mem = {};
     function get(k, dflt) {
@@ -2688,7 +2724,21 @@
   };
 
   $("mm-campaign").addEventListener("click", function () { Shell.showLobby("campaign"); });
-  $("mm-testing").addEventListener("click", function () { Shell.showLobby("testing"); });
+  $("mm-testing").addEventListener("click", function () {
+    openBuyIn(function () { Shell.showLobby("testing"); });
+  });
+  $("fp-range").addEventListener("input", function () {
+    $("fp-amount").textContent = fmt(+this.value);
+  });
+  $("fp-seat").addEventListener("click", function () {
+    FREEPLAY.buyIn = +$("fp-range").value;
+    $("fp-buyin").classList.remove("on");
+    var then = fpThen; fpThen = null;
+    if (then) then(FREEPLAY.buyIn);
+  });
+  $("fp-buyin").addEventListener("click", function (e) {
+    if (e.target === this) { this.classList.remove("on"); fpThen = null; }
+  });
   $("mm-settings").addEventListener("click", function () { Shell.show("settings"); });
   $("st-back").addEventListener("click", function () { Shell.showMenu(); });
   $("lb-back").addEventListener("click", function () { Shell.showMenu(); });
@@ -3249,7 +3299,7 @@
   var Blackjack = (function () {
     var DECKS = 8, RESHUFFLE_AT = 30;
     var shoe = buildShoe(DECKS);
-    var bankroll = TESTING_BANKROLL, bet = 0, potBet = 0, potStake = 0, freeCoins = 0;
+    var bankroll = FREEPLAY.buyIn, bet = 0, potBet = 0, potStake = 0, freeCoins = 0;
     var selectedChip = 25, chipHist = [], lastBet = 0, lastPotBet = 0;
     var hands = [], dealer = [], holeUp = false, active = 0;
     var phase = "betting", results = [], timers = [];
@@ -3602,7 +3652,7 @@
           buy.className = "btn solid";
           buy.textContent = "Buy back in";
           buy.addEventListener("click", function () {
-            bankroll = TESTING_BANKROLL; renderAll(); setMessage("Place your bet");
+            openBuyIn(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
           });
           a.appendChild(buy);
         }
@@ -3954,7 +4004,7 @@
     function enter(v) {
       clearTimers();
       variant = v === "blazing" ? "blazing" : "freebet";
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       bet = 0; potBet = 0; potStake = 0; freeCoins = 0; chipHist = [];
       triluxBet = 0; triluxStake = 0;
       blazingWin = null; triluxWin = null;
@@ -3995,7 +4045,7 @@
   var DoubleDown = (function () {
     var DECKS = 8, RESHUFFLE_AT = 30;
     var shoe = buildShoe(DECKS);
-    var bankroll = TESTING_BANKROLL, bet = 0, push22Bet = 0, push22Stake = 0;
+    var bankroll = FREEPLAY.buyIn, bet = 0, push22Bet = 0, push22Stake = 0;
     /**
      * Pair Square. It is read off the first two cards, and on this table the
      * second comes mid-hand, so it is answered the moment that card lands.
@@ -4295,7 +4345,7 @@
           buy.className = "btn solid";
           buy.textContent = "Buy back in";
           buy.addEventListener("click", function () {
-            bankroll = TESTING_BANKROLL; renderAll(); setMessage("Place your bet");
+            openBuyIn(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
           });
           a.appendChild(buy);
         }
@@ -4560,7 +4610,7 @@
     }
     function enter() {
       clearTimers();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       bet = 0; push22Bet = 0; push22Stake = 0; push22Win = null; pushed22 = false;
       chipHist = []; hand = null; dealer = []; holeUp = false; results = [];
       phase = "betting";
@@ -4595,7 +4645,7 @@
     var DECKS = 1, RESHUFFLE_AT = 20;
     var GREEN = "#90FF3D", DIM = "rgba(98,184,43,.6)", FAINT = "rgba(144,255,61,.4)";
     var shoe = buildShoe(DECKS);
-    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     /** Pending bets while betting; the Blind always matches the Ante. */
     var ante = 0, trips = 0, chipHist = [], lastAnte = 0, lastTrips = 0;
     /** Locked-in stakes once the hand is dealt. */
@@ -5006,16 +5056,14 @@
     }
     function enter() {
       reset();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       setMessage("Place your ante");
       renderAll();
       Shell.gate(refresh);
     }
     $("uth-buyin").addEventListener("click", function () {
       if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
-      bankroll = TESTING_BANKROLL;
-      setMessage("Place your ante");
-      renderAll();
+      openBuyIn(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
     return { enter: enter };
   })();
@@ -5029,7 +5077,7 @@
     var NEON = "#2097F9", ICE = "#9BE3FB", DIM = "rgba(32,151,249,.6)",
         FAINT = "rgba(32,151,249,.4)", RED = "#FF4D4D";
     var shoe = buildDjShoe();
-    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     /** Pending bets while betting; the Blind always matches the Ante. */
     var ante = 0, trips = 0, badBeat = 0, chipHist = [];
     var lastAnte = 0, lastTrips = 0, lastBadBeat = 0;
@@ -5420,16 +5468,14 @@
     }
     function enter() {
       reset();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       setMessage("Place your ante");
       renderAll();
       Shell.gate(refresh);
     }
     $("dj-buyin").addEventListener("click", function () {
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
-      bankroll = TESTING_BANKROLL;
-      setMessage("Place your ante");
-      renderAll();
+      openBuyIn(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
     return { enter: enter };
   })();
@@ -5440,7 +5486,7 @@
   var Destroyer = (function () {
     var PINK = "#FF40A0", DIM = "rgba(255,64,160,.6)", BRASS = "#E8C169", RED = "#FF3B4D";
     var DICE_SND = "__DICE_MP3__";
-    var bankroll = TESTING_BANKROLL, selectedChip = 25;
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     var bet = 0, stake = 0, lastBet = 0;
     // betting | targeting | result
     var phase = "betting";
@@ -5853,7 +5899,7 @@
     }
     function enter() {
       reset();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       setMessage("Place your bet");
       renderAll();
       Shell.gate(refresh);
@@ -5864,9 +5910,7 @@
     $("dz-paytable").addEventListener("click", function () { $("dz-paytable").classList.remove("on"); });
     $("dz-buyin").addEventListener("click", function () {
       if (phase !== "betting" || bet !== 0 || bankroll >= 25) return;
-      bankroll = TESTING_BANKROLL;
-      setMessage("Place your bet");
-      renderAll();
+      openBuyIn(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });
     });
     return { enter: enter };
   })();
@@ -5955,7 +5999,7 @@
     }
 
     var shoe = buildShoe(DECKS);
-    var bankroll = TESTING_BANKROLL, bets = {}, selectedChip = 25;
+    var bankroll = FREEPLAY.buyIn, bets = {}, selectedChip = 25;
     var phase = "betting", hand = null, history = [], lastBets = null;
     var chipHistory = [], timers = [];
 
@@ -6043,9 +6087,11 @@
         btn("DEAL", true, deal);
         btn("Clear", false, clearBets);
         if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
-          btn("Buy back in (5,000)", true, function () {
-            bankroll = TESTING_BANKROLL;
-            updateMoney(); renderActions(); renderRack(); setMessage("Place your bets");
+          btn("Buy back in", true, function () {
+            openBuyIn(function (v) {
+              bankroll = v;
+              updateMoney(); renderActions(); renderRack(); setMessage("Place your bets");
+            });
           });
         }
       } else if (phase === "result") {
@@ -6254,7 +6300,7 @@
     }
     function enter() {
       clearTimers();
-      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : TESTING_BANKROLL;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       bets = {}; chipHistory = []; hand = null; phase = "betting";
       $("bacc-sub").innerHTML = Shell.mode === "campaign"
         ? 'CAMPAIGN · GOAL $' + fmt(Shell.getGoal()) + ' · <span id="shoeCount">' + shoe.length + "</span> CARDS"

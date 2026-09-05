@@ -57,6 +57,8 @@ import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
 import com.example.casinogames.ui.common.chipsFor
+import com.example.casinogames.campaign.FreePlay
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
@@ -145,7 +147,10 @@ fun DjWildScreen(
             if (vm.campaign) {
                 CampaignGameOver(onDone = onGameOverExit)
             } else {
-                RebuyPrompt { vm.buyBackIn() }
+                FreePlayBuyIn(
+                    onDismiss = {},
+                    onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                )
             }
         }
     }
@@ -648,26 +653,6 @@ private fun ActionButton(
  * Free play has no campaign to lose, so a bust is just a refill — but it still
  * has to be offered, or the table sits there refusing every press.
  */
-@Composable
-private fun RebuyPrompt(onBuyIn: () -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0xCC02050A)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("OUT OF CHIPS", color = LossRed, fontSize = 20.sp, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(14.dp))
-            Text(
-                "BUY BACK IN",
-                color = IceBlue, fontSize = 14.sp, fontWeight = FontWeight.Black,
-                modifier = Modifier
-                    .border(1.5.dp, NeonBlue, RoundedCornerShape(999.dp))
-                    .clickable(onClick = onBuyIn)
-                    .padding(horizontal = 24.dp, vertical = 12.dp),
-            )
-        }
-    }
-}
 
 /** Tap any ladder and all three fill the screen, since they are set small. */
 @Composable

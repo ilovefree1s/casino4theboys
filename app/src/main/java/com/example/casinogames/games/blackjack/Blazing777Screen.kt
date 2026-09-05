@@ -58,6 +58,8 @@ import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
 import com.example.casinogames.ui.common.CardWidth
 import com.example.casinogames.ui.common.chipsFor
+import com.example.casinogames.campaign.FreePlay
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
@@ -562,7 +564,10 @@ private fun ActionButtons(vm: Blazing777ViewModel) {
                 ImgButton(R.drawable.r_btn_deal, "Deal", vm::deal)
                 ImgButton(R.drawable.r_btn_clear, "Clear", vm::clearBet)
                 if (!vm.campaign && vm.bankroll < 25 && vm.bet == 0) {
-                    PillButton("Buy back in", onClick = vm::buyBackIn)
+                    FreePlayBuyIn(
+                        onDismiss = {},
+                        onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                    )
                 }
             }
             BjPhase.PLAYER_TURN -> {

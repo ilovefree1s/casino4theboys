@@ -61,6 +61,8 @@ import com.example.casinogames.ui.common.CampaignGameOver
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.CASINO_CHIPS
 import com.example.casinogames.ui.common.chipsFor
+import com.example.casinogames.campaign.FreePlay
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import kotlin.math.floor
 
@@ -129,7 +131,10 @@ fun RouletteScreen(
             if (vm.campaign) {
                 CampaignGameOver(onDone = onGameOverExit)
             } else {
-                RebuyPrompt(onBuyIn = vm::buyBackIn)
+                FreePlayBuyIn(
+                    onDismiss = {},
+                    onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                )
             }
         } else if (vm.campaign && settled && vm.bankroll >= vm.goal) {
             CampaignComplete(
@@ -159,39 +164,6 @@ private fun Modifier.tap(onClick: () -> Unit): Modifier = this.clickable(
  * Free play has no campaign to lose, so a bust is just a refill — but it
  * still has to be offered, or the table sits there refusing every press.
  */
-@Composable
-private fun RebuyPrompt(onBuyIn: () -> Unit) {
-    Box(
-        Modifier
-            .fillMaxSize()
-            .background(Color(0xCC050308))
-            .tap {},
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                "OUT OF CHIPS",
-                color = Color(0xFFFF3B5C),
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Black,
-                fontStyle = FontStyle.Italic,
-            )
-            Spacer(Modifier.height(16.dp))
-            Text(
-                "BUY BACK IN",
-                color = Color(0xFFE4D7FF),
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Black,
-                fontStyle = FontStyle.Italic,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .border(1.5.dp, NeonPurple, RoundedCornerShape(999.dp))
-                    .tap(onBuyIn)
-                    .padding(horizontal = 26.dp, vertical = 13.dp),
-            )
-        }
-    }
-}
 
 /** The house badge, clipped round: the art it came on has black corners. */
 @Composable

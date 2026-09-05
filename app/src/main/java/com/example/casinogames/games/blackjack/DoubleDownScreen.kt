@@ -63,6 +63,8 @@ import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
 import com.example.casinogames.ui.common.chipsFor
+import com.example.casinogames.campaign.FreePlay
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.ui.theme.CasinoPalette as P
 
@@ -694,7 +696,10 @@ private fun ActionButtons(vm: DoubleDownViewModel) {
                 ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
                 ImgButton(R.drawable.btn_clear, "Clear", vm::clearBet)
                 if (!vm.campaign && vm.bankroll < 25 && vm.nothingAtStake) {
-                    PillButton("Buy back in", onClick = vm::buyBackIn)
+                    FreePlayBuyIn(
+                        onDismiss = {},
+                        onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                    )
                 }
             }
             BjPhase.PLAYER_TURN -> {

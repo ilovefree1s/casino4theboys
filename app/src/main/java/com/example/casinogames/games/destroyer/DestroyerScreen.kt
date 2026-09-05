@@ -57,10 +57,11 @@ import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlin.math.roundToInt
 import com.example.casinogames.R
-import com.example.casinogames.campaign.MARKER_AMOUNT
+import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.games.destroyer.DestroyerRules.GRID
 import com.example.casinogames.ui.common.CampaignComplete
 import com.example.casinogames.ui.common.CampaignGameOver
+import com.example.casinogames.ui.common.FreePlayBuyIn
 import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.chipsFor
@@ -166,7 +167,12 @@ fun DestroyerScreen(
             if (vm.campaign) {
                 CampaignGameOver(onDone = onGameOverExit)
             } else {
-                RebuyPrompt { vm.buyBackIn() }
+                // Busted at play testing: the buy-in slider comes straight
+                // back up, and the seat refills at whatever it says.
+                FreePlayBuyIn(
+                    onDismiss = {},
+                    onConfirm = { FreePlay.buyIn = it; vm.buyBackIn() },
+                )
             }
         }
     }
@@ -652,25 +658,3 @@ private fun PayRow(label: String, pay: String) {
     }
 }
 
-@Composable
-private fun RebuyPrompt(onBuyIn: () -> Unit) {
-    Box(
-        Modifier.fillMaxSize().background(Color(0xE6000000)),
-        contentAlignment = Alignment.Center,
-    ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("OUT OF CHIPS", color = HitRed, fontSize = 20.sp, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(14.dp))
-            Text(
-                "BUY BACK IN (${formatMoney(MARKER_AMOUNT)})",
-                color = Color(0xFF050408),
-                fontSize = 13.sp, fontWeight = FontWeight.Black,
-                modifier = Modifier
-                    .clip(RoundedCornerShape(999.dp))
-                    .background(Brass)
-                    .clickable(onClick = onBuyIn)
-                    .padding(horizontal = 22.dp, vertical = 12.dp),
-            )
-        }
-    }
-}
