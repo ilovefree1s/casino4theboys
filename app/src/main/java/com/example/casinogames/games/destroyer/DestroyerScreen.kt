@@ -219,6 +219,16 @@ private const val MAP_X1 = 1221f / MAP_ART
 private const val MAP_Y0 = 43f / MAP_ART
 private const val MAP_Y1 = 1031f / MAP_ART
 
+/*
+ * Cell centres measured off the painted borders themselves: the art's grid
+ * breathes a little (the last column and row run tighter), and a uniform
+ * grid left every peg sitting up-left of its cell.
+ */
+private val COL_CX = floatArrayOf(271f, 449.5f, 625.5f, 802f, 978f, 1146.5f)
+private val ROW_CY = floatArrayOf(123.5f, 293f, 463f, 633.5f, 801f, 959f)
+private const val CELL_W_ART = 175f
+private const val CELL_H_ART = 168f
+
 /**
  * The player's own waters: the battle map with their ships lying on it, red
  * pegs where the dice hit, pale pegs in open sea, and the last shot ringed
@@ -231,10 +241,10 @@ private fun Board(vm: DestroyerViewModel) {
 
     BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
         val w = maxWidth
-        val cellW = w * (MAP_X1 - MAP_X0) / GRID
-        val cellH = w * (MAP_Y1 - MAP_Y0) / GRID
-        fun left(col: Int) = w * MAP_X0 + cellW * col
-        fun top(row: Int) = w * MAP_Y0 + cellH * row
+        val cellW = w * (CELL_W_ART / MAP_ART)
+        val cellH = w * (CELL_H_ART / MAP_ART)
+        fun left(col: Int) = w * (COL_CX[col] / MAP_ART) - cellW / 2
+        fun top(row: Int) = w * (ROW_CY[row] / MAP_ART) - cellH / 2
 
         // Open water under the grid: the map's cells are glass, and the sea
         // shows through them.
@@ -278,8 +288,10 @@ private fun Board(vm: DestroyerViewModel) {
             val cols = ship.cells.map { it % GRID }
             val horizontal = rows.distinct().size == 1
             val sunk = ship.cells.all { it in hits }
-            val boxW = if (horizontal) cellW * ship.size else cellW
-            val boxH = if (horizontal) cellH else cellH * ship.size
+            // Spanned off the measured cells, so a long hull ends where its
+            // last berth really is, not where a uniform grid says it should.
+            val boxW = if (horizontal) left(cols.max()) + cellW - left(cols.min()) else cellW
+            val boxH = if (horizontal) cellH else top(rows.max()) + cellH - top(rows.min())
             var dragPx by remember(ship) { mutableStateOf(Offset.Zero) }
             Box(
                 Modifier
@@ -354,23 +366,18 @@ private fun Board(vm: DestroyerViewModel) {
                         .zIndex(3f),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Column(
-                        Modifier
+                    // The tag talks money, not odds: the stake times the rung
+                    // the next hit reaches.
+                    Text(
+                        "$" + formatMoney((nextPay * vm.stake).toDouble()),
+                        color = Brass, fontSize = 11.sp,
+                        fontWeight = FontWeight.Black, lineHeight = 12.sp,
+                        modifier = Modifier
                             .clip(RoundedCornerShape(6.dp))
                             .background(Color(0xCC0A1420))
                             .border(1.dp, Brass.copy(alpha = 0.7f), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 5.dp, vertical = 1.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            "$nextPay", color = Brass, fontSize = 11.sp,
-                            fontWeight = FontWeight.Black, lineHeight = 12.sp,
-                        )
-                        Text(
-                            "FOR 1", color = P.OffWhite.copy(alpha = 0.6f),
-                            fontSize = 6.sp, letterSpacing = 0.05.em, lineHeight = 7.sp,
-                        )
-                    }
+                            .padding(horizontal = 5.dp, vertical = 2.dp),
+                    )
                 }
             }
         }
@@ -381,15 +388,15 @@ private fun Board(vm: DestroyerViewModel) {
         vm.lastRoll?.let { (r, c) ->
             Box(
                 Modifier
-                    .offset(x = w * MAP_X0, y = top(r))
-                    .size(w * (MAP_X1 - MAP_X0), cellH)
+                    .offset(x = left(0), y = top(r))
+                    .size(left(GRID - 1) + cellW - left(0), cellH)
                     .zIndex(3f)
                     .background(Brass.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
             )
             Box(
                 Modifier
-                    .offset(x = left(c), y = w * MAP_Y0)
-                    .size(cellW, w * (MAP_Y1 - MAP_Y0))
+                    .offset(x = left(c), y = top(0))
+                    .size(cellW, top(GRID - 1) + cellH - top(0))
                     .zIndex(3f)
                     .background(Brass.copy(alpha = 0.28f), RoundedCornerShape(6.dp))
             )
@@ -430,19 +437,19 @@ private fun Board(vm: DestroyerViewModel) {
             } else if (cell in misses) {
                 Box(
                     Modifier
-                        .offset(x = left(col) + cellW / 2 - 9.dp, y = top(row) + cellH / 2 - 9.dp)
-                        .size(18.dp)
+                        .offset(x = left(col) + cellW / 2 - 12.dp, y = top(row) + cellH / 2 - 12.dp)
+                        .size(24.dp)
                         .zIndex(3f)
                         .drawBehind {
                             val s = size.width
                             val pad = s * 0.18f
                             drawLine(
                                 HitRed, Offset(pad, pad), Offset(s - pad, s - pad),
-                                strokeWidth = s * 0.16f, cap = StrokeCap.Round,
+                                strokeWidth = s * 0.19f, cap = StrokeCap.Round,
                             )
                             drawLine(
                                 HitRed, Offset(s - pad, pad), Offset(pad, s - pad),
-                                strokeWidth = s * 0.16f, cap = StrokeCap.Round,
+                                strokeWidth = s * 0.19f, cap = StrokeCap.Round,
                             )
                         }
                 )

@@ -791,7 +791,7 @@
   .dz-board .peg.miss {
     background: transparent; border: 0; border-radius: 0;
     width: auto; height: auto; color: #FF3B4D;
-    font: 900 15px/1 system-ui, sans-serif;
+    font: 900 20px/1 system-ui, sans-serif;
     text-shadow: 0 1px 2px rgba(0,0,0,.65);
   }
   /* A wounded ship's unstruck cells wear what the next hit is worth. */
@@ -5532,18 +5532,24 @@
       $("dz-bankroll").textContent = fmt(bankroll);
       $("dz-risk").textContent = fmt(atRisk());
     }
-    /* The map art's grid, measured off the 1254px square: columns x 180..1221,
-       rows y 43..1031. Letters name the rows, numbers name the columns. */
+    /* Cell centres measured off the painted borders themselves: the art's
+       grid breathes a little (the last column and row run tighter), and a
+       uniform grid left every peg sitting up-left of its cell. */
     var MAP = { x0: 180 / 1254, x1: 1221 / 1254, y0: 43 / 1254, y1: 1031 / 1254 };
+    var COL_CX = [271, 449.5, 625.5, 802, 978, 1146.5];
+    var ROW_CY = [123.5, 293, 463, 633.5, 801, 959];
+    var CELL_W = 175 / 1254 * 100, CELL_H = 168 / 1254 * 100;
     var SHIP_ART = { 4: "__DZ_SHIP4__", 2: "__DZ_SHIP2__" };
     var SHIP3_ART = ["__DZ_SHIP3A__", "__DZ_SHIP3B__"];
     function cellPct(v, axis) {
-      var a0 = axis === "x" ? MAP.x0 : MAP.y0, a1 = axis === "x" ? MAP.x1 : MAP.y1;
-      return (a0 + (a1 - a0) * v / DZ.GRID) * 100;
+      var arr = axis === "x" ? COL_CX : ROW_CY;
+      var cell = axis === "x" ? CELL_W : CELL_H;
+      var i = Math.min(Math.floor(v), DZ.GRID - 1);
+      return arr[i] / 1254 * 100 + (v - i - 0.5) * cell;
     }
     function renderBoard() {
       var host = $("dz-board");
-      var cw = (MAP.x1 - MAP.x0) / DZ.GRID * 100, ch = (MAP.y1 - MAP.y0) / DZ.GRID * 100;
+      var cw = CELL_W, ch = CELL_H;
       var html = '<img class="map" src="__DZ_MAP__" alt="Battle map">';
       var thirds = 0;
       fleet.forEach(function (ship, shipIndex) {
@@ -5577,21 +5583,22 @@
         if (!nextPay) return;
         ship.forEach(function (c) {
           if (hitSet[c]) return;
+          // The tag talks money, not odds: stake times the rung reached.
           html += '<span class="nextpay" style="left:' +
             cellPct((c % DZ.GRID) + 0.5, "x").toFixed(2) + '%;top:' +
-            cellPct(Math.floor(c / DZ.GRID) + 0.5, "y").toFixed(2) + '%">' +
-            nextPay + '<i>FOR 1</i></span>';
+            cellPct(Math.floor(c / DZ.GRID) + 0.5, "y").toFixed(2) + '%">$' +
+            fmt(nextPay * stake) + '</span>';
         });
       });
       if (lastRoll) {
         // The whole row and column wash gold, converging on the called
         // cell — which wears both washes and reads brightest.
-        html += '<span class="sweep" style="left:' + (MAP.x0 * 100).toFixed(2) +
+        html += '<span class="sweep" style="left:' + cellPct(0, "x").toFixed(2) +
           '%;top:' + cellPct(lastRoll[0], "y").toFixed(2) +
-          '%;width:' + ((MAP.x1 - MAP.x0) * 100).toFixed(2) + '%;height:' + ch.toFixed(2) + '%"></span>';
+          '%;width:' + (cellPct(DZ.GRID, "x") - cellPct(0, "x")).toFixed(2) + '%;height:' + ch.toFixed(2) + '%"></span>';
         html += '<span class="sweep" style="left:' + cellPct(lastRoll[1], "x").toFixed(2) +
-          '%;top:' + (MAP.y0 * 100).toFixed(2) +
-          '%;width:' + cw.toFixed(2) + '%;height:' + ((MAP.y1 - MAP.y0) * 100).toFixed(2) + '%"></span>';
+          '%;top:' + cellPct(0, "y").toFixed(2) +
+          '%;width:' + cw.toFixed(2) + '%;height:' + (cellPct(DZ.GRID, "y") - cellPct(0, "y")).toFixed(2) + '%"></span>';
         // Badge centres measured off the art: letters at x 93, numbers at
         // y 1131 of the 1254 square, ~155px across.
         var bd = (155 / 1254 * 100).toFixed(2);
