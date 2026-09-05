@@ -220,7 +220,6 @@ private const val MAP_Y1 = 1031f / MAP_ART
 private fun Board(vm: DestroyerViewModel) {
     val hits = vm.hitCells.toSet()
     val misses = vm.missCells.toSet()
-    val target = vm.lastRoll?.let { (r, c) -> r * GRID + c }
 
     BoxWithConstraints(Modifier.fillMaxWidth().aspectRatio(1f)) {
         val w = maxWidth
@@ -331,21 +330,32 @@ private fun Board(vm: DestroyerViewModel) {
             }
         }
 
-        // Pegs and the last shot's ring, cell by cell — floated above the
-        // hulls, or a red peg on a ship would vanish under its own target.
+        // The called coordinate lights its letter and number badges — a
+        // quiet brass glow on the octagons that name it, hit or miss.
+        vm.lastRoll?.let { (r, c) ->
+            val badge = w * (155f / MAP_ART)
+            val glow = Modifier
+                .size(badge)
+                .zIndex(3f)
+                .border(1.5.dp, Brass.copy(alpha = 0.75f), CircleShape)
+                .background(Brass.copy(alpha = 0.10f), CircleShape)
+            Box(
+                Modifier
+                    .offset(x = w * (93f / MAP_ART) - badge / 2, y = top(r) + cellH / 2 - badge / 2)
+                    .then(glow)
+            )
+            Box(
+                Modifier
+                    .offset(x = left(c) + cellW / 2 - badge / 2, y = w * (1131f / MAP_ART) - badge / 2)
+                    .then(glow)
+            )
+        }
+
+        // Pegs cell by cell — floated above the hulls, or a red peg on a
+        // ship would vanish under its own target.
         for (cell in 0 until DestroyerRules.CELLS) {
             val row = cell / GRID
             val col = cell % GRID
-            if (cell == target) {
-                Box(
-                    Modifier
-                        .offset(x = left(col), y = top(row))
-                        .size(cellW, cellH)
-                        .zIndex(3f)
-                        .padding(3.dp)
-                        .border(2.dp, Brass, RoundedCornerShape(8.dp))
-                )
-            }
             val peg = when {
                 cell in hits -> HitRed
                 cell in misses -> Color(0x8CF5F1E8)

@@ -788,8 +788,11 @@
   }
   .dz-board .peg.hit { background: #FF3B4D; }
   .dz-board .peg.miss { background: rgba(245,241,232,.55); }
-  .dz-board .ring {
-    position: absolute; border: 2px solid #E8C169; border-radius: 8px;
+  /* The called coordinate lights its letter and number badges — a quiet
+     brass glow on the octagons that name it, hit or miss. */
+  .dz-board .call {
+    position: absolute; border: 1.5px solid rgba(232,193,105,.75);
+    border-radius: 50%; background: rgba(232,193,105,.1);
     transform: translate(-50%,-50%);
   }
   .dz-status {
@@ -5461,14 +5464,18 @@
             'width:' + (horiz ? longW : cw).toFixed(2) + '%;height:' + (horiz ? ch : ch * ship.length).toFixed(2) + '%"></span>';
         }
       });
-      var target = lastRoll ? lastRoll[0] * DZ.GRID + lastRoll[1] : -1;
+      if (lastRoll) {
+        // Badge centres measured off the art: letters at x 93, numbers at
+        // y 1131 of the 1254 square, ~155px across.
+        var bd = (155 / 1254 * 100).toFixed(2);
+        html += '<span class="call" style="left:7.42%;top:' +
+          cellPct(lastRoll[0] + 0.5, "y").toFixed(2) + '%;width:' + bd + '%;height:' + bd + '%"></span>';
+        html += '<span class="call" style="left:' + cellPct(lastRoll[1] + 0.5, "x").toFixed(2) +
+          '%;top:90.19%;width:' + bd + '%;height:' + bd + '%"></span>';
+      }
       for (var cell = 0; cell < DZ.CELLS; cell++) {
         var row = Math.floor(cell / DZ.GRID), col = cell % DZ.GRID;
         var cx = cellPct(col + 0.5, "x").toFixed(2), cy = cellPct(row + 0.5, "y").toFixed(2);
-        if (cell === target) {
-          html += '<span class="ring" style="left:' + cx + '%;top:' + cy + "%;" +
-            'width:' + (cw * 0.86).toFixed(2) + '%;height:' + (ch * 0.86).toFixed(2) + '%"></span>';
-        }
         if (hitSet[cell]) html += '<span class="peg hit" style="left:' + cx + '%;top:' + cy + '%"></span>';
         else if (missSet[cell]) html += '<span class="peg miss" style="left:' + cx + '%;top:' + cy + '%"></span>';
       }
