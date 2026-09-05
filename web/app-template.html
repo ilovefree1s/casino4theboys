@@ -787,7 +787,13 @@
     transform: translate(-50%,-50%); border: 1px solid rgba(0,0,0,.4);
   }
   .dz-board .peg.hit { background: #FF3B4D; }
-  .dz-board .peg.miss { background: rgba(245,241,232,.55); }
+  /* A miss is a little red X right where the washes converge. */
+  .dz-board .peg.miss {
+    background: transparent; border: 0; border-radius: 0;
+    width: auto; height: auto; color: #FF3B4D;
+    font: 900 15px/1 system-ui, sans-serif;
+    text-shadow: 0 1px 2px rgba(0,0,0,.65);
+  }
   /* A wounded ship's unstruck cells wear what the next hit is worth. */
   .dz-board .nextpay {
     position: absolute; transform: translate(-50%,-50%); text-align: center;
@@ -5598,7 +5604,7 @@
         var row = Math.floor(cell / DZ.GRID), col = cell % DZ.GRID;
         var cx = cellPct(col + 0.5, "x").toFixed(2), cy = cellPct(row + 0.5, "y").toFixed(2);
         if (hitSet[cell]) html += '<span class="peg hit" style="left:' + cx + '%;top:' + cy + '%"></span>';
-        else if (missSet[cell]) html += '<span class="peg miss" style="left:' + cx + '%;top:' + cy + '%"></span>';
+        else if (missSet[cell]) html += '<span class="peg miss" style="left:' + cx + '%;top:' + cy + '%">&#10005;</span>';
       }
       host.innerHTML = html;
       if (phase === "betting") {

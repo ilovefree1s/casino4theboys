@@ -38,6 +38,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -410,24 +412,39 @@ private fun Board(vm: DestroyerViewModel) {
         }
 
         // Pegs cell by cell — floated above the hulls, or a red peg on a
-        // ship would vanish under its own target.
+        // ship would vanish under its own target. A hit is the classic red
+        // peg; a miss is a little red X right where the washes converge.
         for (cell in 0 until DestroyerRules.CELLS) {
             val row = cell / GRID
             val col = cell % GRID
-            val peg = when {
-                cell in hits -> HitRed
-                cell in misses -> Color(0x8CF5F1E8)
-                else -> null
-            }
-            if (peg != null) {
+            if (cell in hits) {
                 Box(
                     Modifier
                         .offset(x = left(col) + cellW / 2 - 7.dp, y = top(row) + cellH / 2 - 7.dp)
                         .size(14.dp)
                         .zIndex(3f)
                         .clip(CircleShape)
-                        .background(peg)
+                        .background(HitRed)
                         .border(1.dp, Color(0x66000000), CircleShape)
+                )
+            } else if (cell in misses) {
+                Box(
+                    Modifier
+                        .offset(x = left(col) + cellW / 2 - 9.dp, y = top(row) + cellH / 2 - 9.dp)
+                        .size(18.dp)
+                        .zIndex(3f)
+                        .drawBehind {
+                            val s = size.width
+                            val pad = s * 0.18f
+                            drawLine(
+                                HitRed, Offset(pad, pad), Offset(s - pad, s - pad),
+                                strokeWidth = s * 0.16f, cap = StrokeCap.Round,
+                            )
+                            drawLine(
+                                HitRed, Offset(s - pad, pad), Offset(pad, s - pad),
+                                strokeWidth = s * 0.16f, cap = StrokeCap.Round,
+                            )
+                        }
                 )
             }
         }
