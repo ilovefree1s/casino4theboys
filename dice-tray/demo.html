@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dice Tray</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #10182A; color: #E8EEF9;
+               font: 15px/1.4 system-ui, -apple-system, sans-serif; }
+  body { display: flex; flex-direction: column; }
+  header { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .total { font-size: 30px; font-weight: 900; min-width: 56px; }
+  .row { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+  button { background: #1E2A44; color: #E8EEF9; border: 1px solid #33456B;
+           border-radius: 10px; padding: 9px 13px; font: inherit; font-weight: 700;
+           cursor: pointer; }
+  button:active { background: #2A3A5E; }
+  #tray { flex: 1 1 auto; }
+  p.hint { margin: 0; padding: 0 14px 10px; opacity: .6; font-size: 13px; }
+  .log { padding: 6px 14px 12px; opacity: .55; font-size: 12px; min-height: 16px; }
+</style>
+</head>
+<body>
+  <header>
+    <div class="total" id="total">—</div>
+    <div class="row">
+      <button id="less">&minus;</button>
+      <span id="count">2 dice</span>
+      <button id="more">+</button>
+      <button id="throw">Throw</button>
+    </div>
+  </header>
+  <p class="hint">Grab a die to flick or shake it &middot; drag to move &middot; carry one up over the dashed line to throw</p>
+  <div id="tray"></div>
+  <div class="log" id="log"></div>
+
+  <script src="dice-tray.js"></script>
+  <script>
+    var total = document.getElementById("total");
+    var count = document.getElementById("count");
+    var log = document.getElementById("log");
+
+    var tray = DiceTray.create(document.getElementById("tray"), {
+      count: 2,
+      // Chain Reaction's own clip, if it is sitting next to this file. The
+      // offsets are the defaults, spelled out here so they are easy to retune
+      // for a different recording.
+      sound: { url: "dice.mp3", shakeFrom: 0, shakeLen: 1.13,
+               rollFrom: 1.13, rollLen: 0.62, rollDelay: 0.4 },
+      volume: 0.7,
+      onChange: function (vals, sum) { total.textContent = sum; },
+      onSettle: function (vals, sum) {
+        log.textContent = "settled on " + vals.join(" + ") + " = " + sum;
+      }
+    });
+
+    total.textContent = tray.total();
+    document.getElementById("throw").onclick = function () { tray.roll(0.7); };
+    document.getElementById("less").onclick = function () { step(-1); };
+    document.getElementById("more").onclick = function () { step(1); };
+    function step(n) {
+      tray.setCount(tray.count + n);
+      count.textContent = tray.count + (tray.count === 1 ? " die" : " dice");
+      total.textContent = tray.total();
+    }
+  </script>
+</body>
+</html>
