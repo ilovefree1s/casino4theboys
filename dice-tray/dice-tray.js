@@ -35,6 +35,11 @@
  *              places. Defaults match Chain Reaction's dice.mp3: rattle 0..1.13,
  *              landing from 1.13 for 0.62, held back 0.4s so the dice have left
  *              the hand before they are heard to arrive. Omit for silence.
+ *   upright    stand a settled die square and the right way up (default true)
+ *              Leave it on for any face with a top and a bottom — a letter, a
+ *              numeral. Turn it off for pips if you want the looser pose: the
+ *              die then stops however the throw left it, which on a pip face
+ *              nobody can tell and on a lettered one is unreadable.
  *   onSettle   (values, total) once a throw has come to rest
  *   onChange   (values, total) every time the numbers change, rattle included
  *
@@ -134,6 +139,19 @@
      of a real die sum to seven, so naming three of them fixes the other three. */
   var FACING = { 1: [0, 0], 6: [0, 180], 3: [0, -90], 4: [0, 90], 5: [-90, 0], 2: [90, 0] };
 
+  /* The same angle, in whichever revolution sits nearest [near]: the die has
+     been over and over, and standing it up must not unwind every turn of it. */
+  function sameTurnAs(angle, near) {
+    while (angle - near > 180) angle -= 360;
+    while (near - angle > 180) angle += 360;
+    return angle;
+  }
+  /* Value [v] square to the screen and the right way up, reached from wherever
+     the die actually stopped. */
+  function standing(v, z, x, y) {
+    var f = FACING[v] || FACING[1];
+    return [sameTurnAs(0, z), sameTurnAs(f[0], x), sameTurnAs(f[1], y)];
+  }
   function facesHtml() {
     var out = "";
     for (var v = 1; v <= 6; v++) {
@@ -222,6 +240,10 @@
     t.max = Math.min(6, opts.max || 6);
     t.size = opts.size || 74;
     t.volume = typeof opts.volume === "number" ? opts.volume : 0.7;
+    // Stand a settled die square and the right way up. It only shows on faces
+    // that have a top and a bottom — a letter, a numeral — but it costs a pip
+    // die nothing, so it is on unless a caller asks for the loose version.
+    t.upright = opts.upright !== false;
     t.snd = opts.sound
       ? {
           url: opts.sound.url,
@@ -735,7 +757,18 @@
         el.style.transform = "";
       }
       if (cube) {
-        cube.style.transform = "rotateZ(" + sx + "deg) rotateX(" + sy + "deg) rotateY(" + sz + "deg)";
+        // Then stand it up. The number was decided on the line above, off the
+        // angles the throw actually left, and turning the cube about the face
+        // already pointing at you cannot change which face that is.
+        //
+        // Pips never needed this — a 6 lying on its side is still a 6, so the
+        // die could stop however it liked and nobody could tell. Put a letter
+        // or a numeral on the face and it shows: snapping each axis to its own
+        // nearest 90 leaves only a quarter of throws standing upright, a
+        // quarter on their head and half on their side.
+        var pose = t.upright ? standing(t.vals[i], sx, sy, sz) : [sx, sy, sz];
+        cube.style.transform = "rotateZ(" + pose[0] + "deg) rotateX(" + pose[1] +
+          "deg) rotateY(" + pose[2] + "deg)";
       }
     }
     t.sim = null;
