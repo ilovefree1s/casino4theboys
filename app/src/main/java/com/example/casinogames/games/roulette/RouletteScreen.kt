@@ -45,6 +45,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
@@ -123,9 +124,35 @@ fun RouletteScreen(
                 // Chip anchors live here so a stack dragged between the felt
                 // and the outside bands keeps one shared record of where it
                 // sits.
+                // The zeroes wear casino green over the painted purple; the
+                // wash lets the painted 0 and 00 glyphs shine through.
+                val cellW3 = (A.GRID_RIGHT - A.GRID_LEFT) / 3f
+                val zeroShape = RoundedCornerShape((10 * k).dp)
+                Box(
+                    Modifier
+                        .artBox(
+                            k,
+                            A.GRID_LEFT + 5f, A.ZERO_TOP + 5f,
+                            A.GRID_LEFT + 1.5f * cellW3 - 8f, A.ZERO_BOTTOM - 5f,
+                        )
+                        .background(ZeroGreen.copy(alpha = 0.55f), zeroShape)
+                )
+                Box(
+                    Modifier
+                        .artBox(
+                            k,
+                            A.GRID_LEFT + 1.5f * cellW3 + 8f, A.ZERO_TOP + 5f,
+                            A.GRID_RIGHT - 5f, A.ZERO_BOTTOM - 5f,
+                        )
+                        .background(ZeroGreen.copy(alpha = 0.55f), zeroShape)
+                )
                 val anchors = remember { mutableStateOf(mapOf<String, Anchor>()) }
                 Felt(vm, k, anchors)
                 Outside(vm, k, anchors)
+                // The winning pocket wears a big gold star until the felt is
+                // cleared for the next round.
+                val hit = vm.pocket
+                if (vm.phase == RoulettePhase.RESULT && hit != null) WinStar(hit, k)
                 Rack(vm, k)
                 Buttons(vm, k)
                 Message(vm, k)
@@ -375,7 +402,9 @@ private fun Felt(
                 Modifier
                     .artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)
                     .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
-                    .zIndex(if (dragPx != Offset.Zero) 5f else 1f)
+                    // Above the win star always: a chip that survived the
+                    // sweep is the point of the picture.
+                    .zIndex(if (dragPx != Offset.Zero) 8f else 7f)
                     .chipDrag(vm, k, density, id, x, y, anchors) { dragPx = it }
             ) {
                 PlacedBetChip(amount, size = (d * k).dp)
@@ -434,6 +463,61 @@ private fun resolveDropSpot(
         }
     }
     return null
+}
+
+/** The big gold star on the pocket the ball found. */
+@Composable
+private fun WinStar(pocket: Int, k: Float) {
+    val cellW = (A.GRID_RIGHT - A.GRID_LEFT) / 3f
+    val cx: Float
+    val cy: Float
+    when (pocket) {
+        0 -> { cx = A.GRID_LEFT + 0.75f * cellW; cy = (A.ZERO_TOP + A.ZERO_BOTTOM) / 2f }
+        DOUBLE_ZERO -> { cx = A.GRID_LEFT + 2.25f * cellW; cy = (A.ZERO_TOP + A.ZERO_BOTTOM) / 2f }
+        else -> {
+            cx = A.GRID_LEFT + ((pocket - 1) % 3 + 0.5f) * cellW
+            cy = A.GRID_TOP + ((pocket - 1) / 3 + 0.5f) * A.ROW_PITCH
+        }
+    }
+    val r = A.ROW_PITCH * 0.72f
+    Canvas(Modifier.artBox(k, cx - r, cy - r, cx + r, cy + r).zIndex(6f)) {
+        val star = androidx.compose.ui.graphics.Path()
+        val outer = size.minDimension / 2f
+        val inner = outer * 0.44f
+        for (i in 0 until 10) {
+            val ang = -Math.PI / 2 + i * Math.PI / 5
+            val rad = if (i % 2 == 0) outer else inner
+            val px = (size.width / 2f + kotlin.math.cos(ang) * rad).toFloat()
+            val py = (size.height / 2f + kotlin.math.sin(ang) * rad).toFloat()
+            if (i == 0) star.moveTo(px, py) else star.lineTo(px, py)
+        }
+        star.close()
+        drawPath(star, MarkerGold)
+        drawPath(
+            star, Color(0xFF1A0E00),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(
+                width = size.minDimension * 0.05f,
+                join = androidx.compose.ui.graphics.StrokeJoin.Round,
+            ),
+        )
+        // The number rides the star, so a pocket nobody bet still reads.
+        drawContext.canvas.nativeCanvas.apply {
+            val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                color = android.graphics.Color.rgb(26, 14, 0)
+                textSize = inner * 1.05f
+                textAlign = android.graphics.Paint.Align.CENTER
+                typeface = android.graphics.Typeface.create(
+                    android.graphics.Typeface.DEFAULT_BOLD, android.graphics.Typeface.BOLD,
+                )
+            }
+            drawText(
+                RouletteEngine.label(pocket),
+                size.width / 2f,
+                size.height / 2f - (paint.ascent() + paint.descent()) / 2f,
+                paint,
+            )
+        }
+    }
 }
 
 /** Drag a placed stack to another spot; the drop lands the way a tap would. */
@@ -586,8 +670,8 @@ private fun Rack(vm: RouletteViewModel, k: Float) {
 @Composable
 private fun Buttons(vm: RouletteViewModel, k: Float) {
     val live = vm.phase != RoulettePhase.SPINNING
-    val actions = listOf<() -> Unit>(vm::undoChip, vm::spin, vm::rebet)
-    val labels = listOf("UNDO", "SPIN", "REBET")
+    val actions = listOf<() -> Unit>(vm::clearBets, vm::spin, vm::rebet)
+    val labels = listOf("CLEAR", "SPIN", "REBET")
     A.BUTTON_EDGES.forEachIndexed { i, (x0, x1) ->
         val spin = i == 1
         val pill = RoundedCornerShape(50)

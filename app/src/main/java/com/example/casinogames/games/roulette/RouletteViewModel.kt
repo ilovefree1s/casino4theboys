@@ -185,6 +185,8 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun clearBets() {
+        // On a finished round CLEAR is the fresh start: felt swept, star down.
+        if (phase == RoulettePhase.RESULT) { nextSpin(); return }
         if (phase != RoulettePhase.BETTING) return
         bets.clear(); defs.clear(); chipHistory.clear()
         notice = null
@@ -245,13 +247,18 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun settle(result: Int) {
         var totalReturn = 0.0
+        val staked = totalStaked
         bets.forEach { (id, stake) ->
             totalReturn += RouletteEngine.settle(defs.getValue(id), stake.toDouble(), result)
         }
         collect(totalReturn)
         lastWin = totalReturn
         history = (listOf(result) + history).take(12)
-        val net = totalReturn - totalStaked
+        // The croupier's sweep: losing chips leave the felt, winners stand.
+        bets.keys.filter { result !in defs.getValue(it).pockets }.forEach {
+            bets.remove(it); defs.remove(it)
+        }
+        val net = totalReturn - staked
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
             net > 0 -> "${RouletteEngine.label(result)} — you win ${"%,.0f".format(totalReturn)}"
