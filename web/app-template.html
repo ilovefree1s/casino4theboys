@@ -895,6 +895,98 @@
 
   /* ================= BACCARAT ================= */
   #screen-baccarat { position: relative; background: var(--night); }
+  /* ---- roulette: the painted felt, live pieces on measured art marks ---- */
+  #screen-roulette { position: relative; background: #080509; }
+  .rl-wrap { display: flex; justify-content: center; width: 100%; background: #080509; }
+  .rl-sheet { position: relative; width: min(440px, 100vw, calc(100dvh * 836 / 1722)); --sw: 440px; }
+  .rl-sheet .rl-art { width: 100%; display: block; }
+  .rl-back { position: absolute; left: 0; top: 0; width: 23.9%; height: 6.4%; background: none; border: 0; cursor: pointer; }
+  .rl-badge { position: absolute; left: 42.1%; top: .58%; width: 15.79%; border-radius: 50%; }
+  .rl-money {
+    position: absolute; right: 4.3%; text-align: right; white-space: nowrap;
+    color: #fff; font-weight: 900; font-style: italic;
+    font-size: calc(var(--sw) * 26 / 836);
+  }
+  .rl-money.bank { top: 1.05%; }
+  .rl-money.staked { top: 3.84%; }
+  .rl-belt {
+    position: absolute; left: 2.63%; top: 8.71%; width: 94.98%; height: 7.67%;
+    overflow: hidden; border-radius: calc(var(--sw) * 10 / 836);
+    background: rgba(5,3,10,.8); border: 2px solid rgba(185,140,255,.55);
+  }
+  .rl-strip { position: absolute; left: 50%; top: 0; height: 100%; display: flex; }
+  .rl-strip .rl-cell {
+    width: calc(var(--sw) * 96 / 836); height: 100%; flex: none;
+    display: flex; align-items: center; justify-content: center;
+    padding: calc(var(--sw) * 6 / 836) calc(var(--sw) * 3 / 836); box-sizing: border-box;
+  }
+  .rl-strip .rl-cell > span {
+    width: 100%; height: 100%; border-radius: calc(var(--sw) * 8 / 836);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 900; font-style: italic; font-size: calc(var(--sw) * 46 / 836);
+  }
+  .rl-belt .fade {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(90deg, #080509 0%, transparent 11%, transparent 89%, #080509 100%);
+  }
+  .rl-marker {
+    position: absolute; left: 50%; top: 0; height: 100%;
+    width: calc(var(--sw) * 96 / 836); transform: translateX(-50%); pointer-events: none;
+  }
+  .rl-marker .frame {
+    position: absolute; inset: calc(var(--sw) * 3 / 836) 0;
+    border: 3px solid #FFD24D; border-radius: calc(var(--sw) * 8 / 836);
+  }
+  .rl-marker .point {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 0; height: 0; border-left: calc(var(--sw) * 17 / 836) solid transparent;
+    border-right: calc(var(--sw) * 17 / 836) solid transparent;
+    border-top: calc(var(--sw) * 22 / 836) solid #FFD24D;
+  }
+  .rl-felt { position: absolute; inset: 0; }
+  .rl-felt .rl-tap { position: absolute; }
+  .rl-felt .rl-chip {
+    position: absolute; transform: translate(-50%,-50%);
+    width: calc(var(--sw) * 62 / 836); height: calc(var(--sw) * 62 / 836);
+    touch-action: none; cursor: grab; z-index: 7;
+  }
+  .rl-felt .rl-chip img { width: 106%; height: 106%; margin: -3%; display: block; }
+  .rl-felt .rl-chip .scrim {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(14,10,11,.64); border-radius: 50%; color: #57E06A; font-weight: 900;
+  }
+  .rl-felt .rl-star {
+    position: absolute; transform: translate(-50%,-50%); z-index: 6; pointer-events: none;
+    display: flex; align-items: center; justify-content: center;
+    color: #1A0E00; font-weight: 900; font-style: italic;
+  }
+  .rl-felt .rl-zero {
+    position: absolute; background: rgba(29,122,52,.55);
+    border-radius: calc(var(--sw) * 10 / 836); pointer-events: none;
+  }
+  .rl-msg {
+    position: absolute; left: 2.63%; width: 77.4%; top: 22.15%;
+    display: none; justify-content: center; z-index: 8; pointer-events: none;
+  }
+  .rl-msg > span {
+    background: rgba(0,0,0,.85); border-radius: 999px; text-align: center;
+    padding: calc(var(--sw) * 8 / 836) calc(var(--sw) * 24 / 836);
+    font-weight: 900; font-style: italic; font-size: calc(var(--sw) * 30 / 836);
+  }
+  .rl-btn {
+    position: absolute; top: 94.66%; height: 4.99%; border-radius: 999px;
+    color: #E4D7FF; font-weight: 900; font-style: italic; letter-spacing: 2px;
+    font-size: calc(var(--sw) * 36 / 836); cursor: pointer;
+    background: linear-gradient(180deg, rgba(23,14,36,.8), rgba(11,7,19,.8));
+    border: 2.5px solid rgba(185,140,255,.7);
+  }
+  .rl-btn.clear { left: 2.63%; width: 27.27%; }
+  .rl-btn.rebet { left: 70.33%; width: 27.27%; }
+  .rl-btn.spin {
+    left: 32.06%; width: 36.12%; color: #fff; font-size: calc(var(--sw) * 44 / 836);
+    background: linear-gradient(180deg, #6B32B8, #32135F); border: 3.5px solid #D9BBFF;
+  }
+  .rl-btn.dead { opacity: .4; pointer-events: none; }
   /* ---- baccarat: the painted table, live pieces on measured spots ---- */
   .bacc-wrap {
     display: flex; flex-direction: column; align-items: center; width: 100%;
@@ -1176,7 +1268,7 @@
       <button class="lb-imgcard" id="lb-baccarat"><img src="__LB_BACCARAT__" alt="Baccarat — play"></button>
       <button class="lb-imgcard" id="lb-blackjack"><img src="__LB_BLACKJACK__" alt="Free Bet Blackjack — play"></button>
       <button class="lb-imgcard" id="lb-poker"><img src="__LB_POKER__" alt="Poker — Ultimate Texas Hold'em or DJ Wild"></button>
-      <div class="lb-imgcard soon"><img src="__LB_ROULETTE__" alt="Roulette — coming soon"></div>
+      <button class="lb-imgcard" id="lb-roulette"><img src="__LB_ROULETTE__" alt="Roulette — play"></button>
       <button class="lb-imgcard" id="lb-craps"><img src="__LB_CRAPS__" alt="Destroyer — battleship dice"></button>
     </div>
   </div>
@@ -1386,6 +1478,25 @@
   <div class="uth-rebuy" id="dj-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="dj-buyin">BUY BACK IN</button>
+  </div>
+</div>
+
+<!-- ================= ROULETTE ================= -->
+<div class="screen" id="screen-roulette">
+  <div class="rl-wrap">
+    <div class="rl-sheet" id="rl-sheet">
+      <img class="rl-art" src="__ROULETTE_FELT__" alt="Roulette table">
+      <button class="rl-back" id="rl-back" aria-label="Back to lobby"></button>
+      <img class="rl-badge" src="__SPOT_BOYS__" alt="4 The Boys">
+      <div class="rl-money bank" id="rl-bankroll">BANKROLL  5,000</div>
+      <div class="rl-money staked" id="rl-staked">STAKED  0</div>
+      <div class="rl-belt" id="rl-belt"><div class="rl-strip" id="rl-strip"></div><div class="fade"></div><div class="rl-marker"><div class="frame"></div><div class="point"></div></div></div>
+      <div class="rl-felt" id="rl-felt"></div>
+      <div class="rl-msg" id="rl-msg"></div>
+      <button class="rl-btn clear" id="rl-clear">CLEAR</button>
+      <button class="rl-btn spin" id="rl-spin">SPIN</button>
+      <button class="rl-btn rebet" id="rl-rebet">REBET</button>
+    </div>
   </div>
 </div>
 
@@ -2764,6 +2875,8 @@
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
   $("lb-craps").addEventListener("click", function () { Destroyer.enter(); Shell.show("destroyer"); });
   $("dz-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("lb-roulette").addEventListener("click", function () { Roulette.enter(); Shell.show("roulette"); });
+  $("rl-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-freebet").addEventListener("click", function () {
     Blackjack.enter("freebet"); Shell.show("blackjack");
   });
@@ -6495,6 +6608,427 @@
     });
     $("roadTab").addEventListener("click", function () {
       $("roadDrawer").classList.toggle("open");
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     ROULETTE — American double-zero, ported from the Compose table.
+     ============================================================ */
+  var Roulette = (function () {
+    var DZERO = 37, SPIN_MS = 3400, TURNS = 5;
+    var RED = { 1:1,3:1,5:1,7:1,9:1,12:1,14:1,16:1,18:1,19:1,21:1,23:1,25:1,27:1,30:1,32:1,34:1,36:1 };
+    var WHEEL = [0,28,9,26,30,11,7,20,32,17,5,22,34,15,3,24,36,13,1,DZERO,
+                 27,10,25,29,12,8,19,31,18,6,21,33,16,4,23,35,14,2];
+    function label(p) { return p === DZERO ? "00" : "" + p; }
+    function isRed(p) { return !!RED[p]; }
+    function pocketColor(p) { return (p === 0 || p === DZERO) ? "#1D7A34" : isRed(p) ? "#B3222E" : "#15121A"; }
+    function names(set) { return set.slice().sort(function (a, b) { return a - b; }).map(label).join("-"); }
+    function straight(p) { return { name: label(p), pockets: [p], pays: 35 }; }
+    function split(a, b) { return { name: label(a) + "-" + label(b), pockets: [a, b], pays: 17 }; }
+    function street(ps) { return { name: names(ps), pockets: ps, pays: 11 }; }
+    function corner(ps) { return { name: names(ps), pockets: ps, pays: 8 }; }
+    function sixline(ps) { return { name: names(ps), pockets: ps, pays: 5 }; }
+    var TOP_LINE = { name: "Top Line", pockets: [0, DZERO, 1, 2, 3], pays: 6 };
+    function dozen(i) { var s = i * 12 + 1, a = []; for (var n = s; n < s + 12; n++) a.push(n);
+      return { name: ["1st 12", "2nd 12", "3rd 12"][i], pockets: a, pays: 2 }; }
+    function column(i) { var a = []; for (var r = 0; r < 12; r++) a.push(r * 3 + i + 1);
+      return { name: ["Col 1", "Col 2", "Col 3"][i], pockets: a, pays: 2 }; }
+    function evenSet(pred) { var a = []; for (var n = 1; n <= 36; n++) if (pred(n)) a.push(n); return a; }
+    var REDB = { name: "Red", pockets: evenSet(isRed), pays: 1 };
+    var BLACKB = { name: "Black", pockets: evenSet(function (n) { return !isRed(n); }), pays: 1 };
+    var ODDB = { name: "Odd", pockets: evenSet(function (n) { return n % 2 === 1; }), pays: 1 };
+    var EVENB = { name: "Even", pockets: evenSet(function (n) { return n % 2 === 0; }), pays: 1 };
+    var LOWB = { name: "1 to 18", pockets: evenSet(function (n) { return n <= 18; }), pays: 1 };
+    var HIGHB = { name: "19 to 36", pockets: evenSet(function (n) { return n >= 19; }), pays: 1 };
+
+    var A = {
+      W: 836, H: 1722,
+      ZERO_TOP: 284, ZERO_BOTTOM: 367, GRID_TOP: 371, ROW_PITCH: 79.92, ROWS: 12,
+      GRID_LEFT: 22, GRID_RIGHT: 669,
+      DOZENS_LEFT: 680, DOZENS_RIGHT: 816,
+      COL_EDGES: [22, 237, 453, 669],
+      COL_BETS_TOP: 1337, COL_BETS_BOTTOM: 1405,
+      EVEN_TOP: 1414, EVEN_BOTTOM: 1487, EVEN_EDGES: [22, 153, 286, 422, 551, 683, 816],
+      BELT_CELL: 96
+    };
+    var CELLW = (A.GRID_RIGHT - A.GRID_LEFT) / 3;
+    function PX(x) { return (x / A.W * 100).toFixed(3) + "%"; }
+    function PY(y) { return (y / A.H * 100).toFixed(3) + "%"; }
+
+    function resolveTap(tx, ty) {
+      var cellW = CELLW, cellH = A.ROW_PITCH, snapX = cellW * 0.18, snapY = cellH * 0.15, abs = Math.abs;
+      if (ty < cellH + snapY) {
+        var onB = ty > cellH - snapY;
+        if (!onB && abs(tx - cellW * 1.5) < snapX) return { id: "sp-0-00", bet: split(0, DZERO), ax: 1.5, ay: 0.5 };
+        if (!onB && tx < cellW * 1.5) return { id: "s-0", bet: straight(0), ax: 0.75, ay: 0.5 };
+        if (!onB) return { id: "s-00", bet: straight(DZERO), ax: 2.25, ay: 0.5 };
+        if (tx < snapX) return { id: "tl", bet: TOP_LINE, ax: 0, ay: 1 };
+        if (tx < cellW) return { id: "sp-0-1", bet: split(0, 1), ax: 0.5, ay: 1 };
+        if (tx < cellW * 2) return { id: "st-z", bet: street([0, DZERO, 2]), ax: 1.5, ay: 1 };
+        return { id: "sp-00-3", bet: split(DZERO, 3), ax: 2.5, ay: 1 };
+      }
+      var r = Math.min(11, Math.max(0, Math.floor((ty - cellH) / cellH)));
+      var c = Math.min(2, Math.max(0, Math.floor(tx / cellW)));
+      var n = r * 3 + c + 1;
+      var nearLeft = (tx % cellW) < snapX && c > 0;
+      var nearRight = (tx % cellW) > cellW - snapX && c < 2;
+      var yInRow = (ty - cellH) % cellH;
+      var nearTop = yInRow < snapY, nearBottom = yInRow > cellH - snapY && r < 11;
+      if (tx < snapX) {
+        if (nearBottom || (nearTop && r > 0)) {
+          var top = nearTop ? r - 1 : r, six = [];
+          for (var k = top * 3 + 1; k <= top * 3 + 6; k++) six.push(k);
+          return { id: "sl-" + top, bet: sixline(six), ax: 0, ay: top + 2 };
+        }
+        return { id: "st-" + r, bet: street([r * 3 + 1, r * 3 + 2, r * 3 + 3]), ax: 0, ay: r + 1.5 };
+      }
+      var vert = nearLeft || nearRight, horiz = (nearTop && r > 0) || nearBottom;
+      if (vert && horiz) {
+        var tR = nearTop ? r - 1 : r, lC = nearLeft ? c - 1 : c, tl = tR * 3 + lC + 1;
+        return { id: "c-" + tl, bet: corner([tl, tl + 1, tl + 3, tl + 4]), ax: lC + 1, ay: tR + 2 };
+      }
+      if (vert) {
+        var left = nearLeft ? n - 1 : n;
+        return { id: "sp-" + left + "-" + (left + 1), bet: split(left, left + 1), ax: nearLeft ? c : c + 1, ay: r + 1.5 };
+      }
+      if (horiz) {
+        var up = nearTop ? n - 3 : n;
+        return { id: "sp-" + up + "-" + (up + 3), bet: split(up, up + 3), ax: c + 0.5, ay: (nearTop ? r : r + 1) + 1 };
+      }
+      return { id: "s-" + n, bet: straight(n), ax: c + 0.5, ay: r + 1.5 };
+    }
+    function anchorPx(ax, ay) {
+      return {
+        x: A.GRID_LEFT + ax * CELLW,
+        y: ay <= 1 ? A.ZERO_TOP + ay * (A.ZERO_BOTTOM - A.ZERO_TOP) : A.GRID_TOP + (ay - 1) * A.ROW_PITCH
+      };
+    }
+    function routeArt(artX, artY) {
+      var gridBottom = A.GRID_TOP + A.ROWS * A.ROW_PITCH;
+      if (artX >= A.GRID_LEFT && artX <= A.GRID_RIGHT && artY >= A.ZERO_TOP && artY <= gridBottom) {
+        var x = artX - A.GRID_LEFT;
+        var y = artY < A.GRID_TOP
+          ? (artY - A.ZERO_TOP) / (A.ZERO_BOTTOM - A.ZERO_TOP) * A.ROW_PITCH
+          : A.ROW_PITCH + (artY - A.GRID_TOP);
+        var hit = resolveTap(x, y);
+        if (!hit) return null;
+        var p = anchorPx(hit.ax, hit.ay);
+        return { id: hit.id, bet: hit.bet, cx: p.x, cy: p.y };
+      }
+      var i;
+      for (i = 0; i < 3; i++) {
+        var dt = A.GRID_TOP + i * 4 * A.ROW_PITCH, db = A.GRID_TOP + (i + 1) * 4 * A.ROW_PITCH;
+        if (artX >= A.DOZENS_LEFT && artX <= A.DOZENS_RIGHT && artY >= dt && artY <= db)
+          return { id: "dz-" + i, bet: dozen(i), cx: (A.DOZENS_LEFT + A.DOZENS_RIGHT) / 2, cy: (dt + db) / 2 };
+      }
+      for (i = 0; i < 3; i++) {
+        if (artX >= A.COL_EDGES[i] && artX <= A.COL_EDGES[i + 1] && artY >= A.COL_BETS_TOP && artY <= A.COL_BETS_BOTTOM)
+          return { id: "col-" + i, bet: column(i), cx: (A.COL_EDGES[i] + A.COL_EDGES[i + 1]) / 2, cy: (A.COL_BETS_TOP + A.COL_BETS_BOTTOM) / 2 };
+      }
+      var evens = [["low", LOWB], ["even", EVENB], ["red", REDB], ["black", BLACKB], ["odd", ODDB], ["high", HIGHB]];
+      for (i = 0; i < 6; i++) {
+        if (artX >= A.EVEN_EDGES[i] && artX <= A.EVEN_EDGES[i + 1] && artY >= A.EVEN_TOP && artY <= A.EVEN_BOTTOM)
+          return { id: evens[i][0], bet: evens[i][1], cx: (A.EVEN_EDGES[i] + A.EVEN_EDGES[i + 1]) / 2, cy: (A.EVEN_TOP + A.EVEN_BOTTOM) / 2 };
+      }
+      return null;
+    }
+
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
+    var bets = {}, defs = {}, cens = {}, chipHist = [], lastBets = {}, lastDefs = {}, lastCens = {};
+    var phase = "betting", pocket = null, lastWin = 0, reelStop = 0, staked = 0, raf = null, dragGuard = 0, renderRing = null;
+    function totalStaked() { var t = 0, k; for (k in bets) t += bets[k]; return t; }
+    function syncWallet() { if (Shell.mode === "campaign") { Shell.setBankroll(bankroll); Shell.demoteIfBroke(); } }
+
+    function setSheetVar() { var s = $("rl-sheet"); s.style.setProperty("--sw", s.clientWidth + "px"); }
+    function renderMoney() {
+      $("rl-bankroll").textContent = "BANKROLL  " + fmt(bankroll);
+      $("rl-staked").textContent = "STAKED  " + fmt(totalStaked());
+    }
+    var noteText = "", msgText = "";
+    function setMessage() {
+      var m = $("rl-msg"), betting = phase === "betting";
+      var text = betting ? noteText : msgText;
+      if (betting && !noteText) { m.style.display = "none"; return; }
+      var net = lastWin - staked, col;
+      if (betting) col = "#FFD24D";
+      else if (phase === "result" && net > 0) col = "#57E06A";
+      else if (phase === "result" && lastWin <= 0) col = "#FF4D4D";
+      else col = "#fff";
+      m.style.display = "flex";
+      m.innerHTML = '<span style="color:' + col + '">' + text + "</span>";
+    }
+    function note(t) { noteText = t || ""; setMessage(); }
+    function msg(t) { msgText = t || ""; setMessage(); }
+    function renderButtons() {
+      var live = phase !== "spinning";
+      ["rl-clear", "rl-spin", "rl-rebet"].forEach(function (id) { $(id).classList.toggle("dead", !live); });
+    }
+    function starCentre(p) {
+      if (p === 0) return { x: A.GRID_LEFT + 0.75 * CELLW, y: (A.ZERO_TOP + A.ZERO_BOTTOM) / 2 };
+      if (p === DZERO) return { x: A.GRID_LEFT + 2.25 * CELLW, y: (A.ZERO_TOP + A.ZERO_BOTTOM) / 2 };
+      return { x: A.GRID_LEFT + ((p - 1) % 3 + 0.5) * CELLW, y: A.GRID_TOP + (Math.floor((p - 1) / 3) + 0.5) * A.ROW_PITCH };
+    }
+    function starSvg() {
+      var pts = [];
+      for (var i = 0; i < 10; i++) {
+        var ang = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 === 0 ? 50 : 22;
+        pts.push((50 + Math.cos(ang) * rad).toFixed(1) + "," + (50 + Math.sin(ang) * rad).toFixed(1));
+      }
+      return '<svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%">' +
+        '<polygon points="' + pts.join(" ") + '" fill="#FFD24D" stroke="#1A0E00" stroke-width="5" stroke-linejoin="round"/></svg>';
+    }
+    function renderFelt() {
+      var host = $("rl-felt");
+      host.innerHTML = "";
+      var zc = CELLW;
+      [[A.GRID_LEFT + 5, A.GRID_LEFT + 1.5 * zc - 8], [A.GRID_LEFT + 1.5 * zc + 8, A.GRID_RIGHT - 5]].forEach(function (span) {
+        var z = document.createElement("div");
+        z.className = "rl-zero";
+        z.style.left = PX(span[0]); z.style.top = PY(A.ZERO_TOP + 5);
+        z.style.width = PX(span[1] - span[0]); z.style.height = PY((A.ZERO_BOTTOM - 5) - (A.ZERO_TOP + 5));
+        host.appendChild(z);
+      });
+      if (phase === "result" && pocket != null) {
+        var sc = starCentre(pocket), sz = A.ROW_PITCH * 1.44;
+        var star = document.createElement("div");
+        star.className = "rl-star";
+        star.style.left = PX(sc.x); star.style.top = PY(sc.y);
+        star.style.width = PX(sz); star.style.height = PY(sz);
+        star.style.fontSize = "calc(var(--sw) * " + (A.ROW_PITCH * 0.6) + " / 836)";
+        star.innerHTML = starSvg() + '<span style="position:relative">' + label(pocket) + "</span>";
+        host.appendChild(star);
+      }
+      Object.keys(bets).forEach(function (id) {
+        var cen = cens[id]; if (!cen) return;
+        var chip = document.createElement("div");
+        chip.className = "rl-chip";
+        chip.style.left = PX(cen.x); chip.style.top = PY(cen.y);
+        chip.innerHTML = chipHtml(bets[id], 62);
+        armDrag(chip, id);
+        host.appendChild(chip);
+      });
+    }
+    function renderAll() { renderMoney(); renderFelt(); renderButtons(); setMessage(); }
+
+    function addChip(route) {
+      if (phase === "spinning") return;
+      if (phase === "result") nextSpin();
+      var affordable = Math.min(selectedChip, Math.floor(bankroll - totalStaked()));
+      if (affordable <= 0) { note("No bankroll left"); return; }
+      var lim = Shell.limits();
+      var amount = allow(lim, affordable, bets[route.id] || 0, false);
+      if (amount <= 0) { note(refusal(lim, false)); return; }
+      bets[route.id] = (bets[route.id] || 0) + amount;
+      defs[route.id] = route.bet;
+      cens[route.id] = { x: route.cx, y: route.cy };
+      chipHist.push([route.id, amount]);
+      note("");
+      renderMoney(); renderFelt();
+    }
+    function moveChip(fromId, toRoute) {
+      if (phase !== "betting" || fromId === toRoute.id) return;
+      var amt = bets[fromId]; if (!amt) return;
+      var lim = Shell.limits();
+      var allowed = allow(lim, amt, bets[toRoute.id] || 0, false);
+      if (allowed < amt) {
+        delete bets[fromId]; delete defs[fromId]; delete cens[fromId];
+        chipHist = chipHist.filter(function (h) { return h[0] !== fromId; });
+        note(toRoute.bet.name + " is full — bet taken down");
+      } else {
+        delete bets[fromId]; delete defs[fromId]; delete cens[fromId];
+        bets[toRoute.id] = (bets[toRoute.id] || 0) + amt;
+        defs[toRoute.id] = toRoute.bet;
+        cens[toRoute.id] = { x: toRoute.cx, y: toRoute.cy };
+        chipHist.forEach(function (h) { if (h[0] === fromId) h[0] = toRoute.id; });
+        note("");
+      }
+      renderMoney(); renderFelt();
+    }
+    function clearBets() {
+      if (phase === "result") { nextSpin(); renderAll(); return; }
+      if (phase !== "betting") return;
+      bets = {}; defs = {}; cens = {}; chipHist = [];
+      note(""); renderAll();
+    }
+    function rebet() {
+      if (phase === "spinning") return;
+      if (phase === "result") nextSpin();
+      if (Object.keys(bets).length) { renderAll(); return; }
+      var keys = Object.keys(lastBets); if (!keys.length) { renderAll(); return; }
+      var sum = 0; keys.forEach(function (k) { sum += lastBets[k]; });
+      if (sum > bankroll) { note("Not enough for that bet"); return; }
+      keys.forEach(function (k) {
+        bets[k] = lastBets[k]; defs[k] = lastDefs[k]; cens[k] = lastCens[k];
+        chipHist.push([k, lastBets[k]]);
+      });
+      note(""); renderAll();
+    }
+
+    function cubicBezierY(p1y, p2y, t) {
+      var u = 1 - t;
+      return 3 * u * u * t * p1y + 3 * u * t * t * p2y + t * t * t;
+    }
+    function layBelt(val) {
+      var strip = $("rl-strip");
+      var base = Math.floor(val), frac = val - base;
+      var cellPx = $("rl-sheet").clientWidth * A.BELT_CELL / A.W;
+      var html = "";
+      for (var i = -6; i <= 6; i++) {
+        var p = WHEEL[(((base + i) % 38) + 38) % 38];
+        html += '<div class="rl-cell"><span style="background:' + pocketColor(p) + '">' + label(p) + "</span></div>";
+      }
+      strip.innerHTML = html;
+      strip.style.transform = "translateX(" + (-(6.5 + frac) * cellPx) + "px)";
+    }
+    function animateBelt(from, to) {
+      if (raf) cancelAnimationFrame(raf);
+      var start = performance.now();
+      function frame(now) {
+        var t = Math.min(1, (now - start) / SPIN_MS);
+        var e = cubicBezierY(0.82, 1, t);
+        layBelt(from + (to - from) * e);
+        if (t < 1) raf = requestAnimationFrame(frame); else raf = null;
+      }
+      raf = requestAnimationFrame(frame);
+    }
+    function spin() {
+      if (phase === "spinning") return;
+      if (phase === "result") nextSpin();
+      if (totalStaked() <= 0) { note("Place a bet first"); return; }
+      staked = totalStaked();
+      bankroll -= staked; syncWallet();
+      lastBets = {}; lastDefs = {}; lastCens = {};
+      Object.keys(bets).forEach(function (k) { lastBets[k] = bets[k]; lastDefs[k] = defs[k]; lastCens[k] = cens[k]; });
+      phase = "spinning";
+      note(""); msg("No more bets");
+      renderMoney(); renderButtons(); setMessage();
+      var result = WHEEL[Math.floor(Math.random() * 38)];
+      var slot = WHEEL.indexOf(result);
+      var stop = reelStop + TURNS * WHEEL.length;
+      stop += (((slot - (stop % WHEEL.length)) % WHEEL.length) + WHEEL.length) % WHEEL.length;
+      animateBelt(reelStop, stop);
+      reelStop = stop;
+      setTimeout(function () { pocket = result; settle(result); }, SPIN_MS + 350);
+    }
+    function settle(result) {
+      var totalReturn = 0;
+      Object.keys(bets).forEach(function (id) {
+        if (defs[id].pockets.indexOf(result) >= 0) totalReturn += bets[id] * (defs[id].pays + 1);
+      });
+      bankroll += totalReturn; syncWallet();
+      lastWin = totalReturn;
+      Object.keys(bets).forEach(function (id) {
+        if (defs[id].pockets.indexOf(result) < 0) { delete bets[id]; delete defs[id]; delete cens[id]; }
+      });
+      var net = totalReturn - staked;
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) msg("🏆 GOAL REACHED!");
+      else if (net > 0) msg(label(result) + " — you win " + fmt(totalReturn));
+      else if (totalReturn > 0) msg(label(result) + " — back " + fmt(totalReturn));
+      else msg(label(result) + " — house takes it");
+      phase = "result";
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function nextSpin() {
+      if (phase !== "result") return;
+      phase = "betting";
+      bets = {}; defs = {}; cens = {}; chipHist = [];
+      pocket = null; lastWin = 0;
+      note(""); msg("");
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+
+    function localArt(clientX, clientY) {
+      var r = $("rl-sheet").getBoundingClientRect();
+      return { x: (clientX - r.left) / r.width * A.W, y: (clientY - r.top) / r.height * A.H };
+    }
+    function armDrag(chip, id) {
+      chip.onpointerdown = function (e) {
+        if (phase !== "betting") return;
+        e.preventDefault(); e.stopPropagation();
+        try { chip.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
+        var x0 = e.clientX, y0 = e.clientY, moved = false;
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
+          chip.style.transform = "translate(-50%,-50%) translate(" + dx + "px," + dy + "px)";
+          chip.style.zIndex = 30;
+        }
+        function up(ev) {
+          chip.removeEventListener("pointermove", mv);
+          chip.removeEventListener("pointerup", up);
+          if (moved) {
+            dragGuard = Date.now();
+            var art = localArt(ev.clientX, ev.clientY);
+            var route = routeArt(art.x, art.y);
+            if (route) moveChip(id, route);
+          }
+          renderFelt();
+        }
+        chip.addEventListener("pointermove", mv);
+        chip.addEventListener("pointerup", up);
+      };
+    }
+
+    function enter() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
+      bets = {}; defs = {}; cens = {}; chipHist = []; lastBets = {}; lastDefs = {}; lastCens = {};
+      phase = "betting"; pocket = null; lastWin = 0; staked = 0;
+      selectedChip = clampChip(selectedChip, bankroll);
+      note(""); msg("");
+      renderAll();
+      if (renderRing) renderRing();
+      // The screen is shown right after enter(), so the sheet has no width
+      // yet — size the belt and the --sw scale once it is on the glass.
+      requestAnimationFrame(function () {
+        setSheetVar(); layBelt(reelStop); renderAll(); if (renderRing) renderRing();
+      });
+      Shell.gate(refresh);
+    }
+
+    $("rl-felt").addEventListener("pointerdown", function (e) {
+      if (e.target.closest && e.target.closest(".rl-chip")) return;
+      if (Date.now() - dragGuard < 400) return;
+      var art = localArt(e.clientX, e.clientY);
+      var route = routeArt(art.x, art.y);
+      if (route) addChip(route);
+    });
+    (function () {
+      // The painted rack: five chips picked by a transparent overlay strip.
+      var rack = document.createElement("div");
+      rack.style.cssText = "position:absolute;left:" + PX(110) + ";top:" + PY(1512) +
+        ";width:" + PX(636 - 110) + ";height:" + PY(1611 - 1512) + ";display:flex;z-index:9";
+      var vals = [25, 100, 500, 1000, 5000];
+      vals.forEach(function (v) {
+        var b = document.createElement("button");
+        b.style.cssText = "flex:1;background:none;border:0;cursor:pointer;border-radius:50%;margin:0 2%";
+        b.setAttribute("data-chip", v);
+        b.addEventListener("click", function () {
+          if (chipsFor(bankroll, Shell.limits()).indexOf(v) < 0) return;
+          selectedChip = v; renderRing();
+        });
+        rack.appendChild(b);
+      });
+      renderRing = function () {
+        var rackv = chipsFor(bankroll, Shell.limits());
+        [].forEach.call(rack.children, function (b) {
+          var v = +b.getAttribute("data-chip"), out = rackv.indexOf(v) < 0;
+          b.style.boxShadow = v === selectedChip ? "inset 0 0 0 3px #FFD24D" : "";
+          b.style.opacity = out ? ".001" : "1";
+          b.style.background = out ? "rgba(5,3,10,.85)" : "none";
+        });
+      };
+      $("rl-sheet").appendChild(rack);
+    })();
+    $("rl-clear").addEventListener("click", clearBets);
+    $("rl-spin").addEventListener("click", spin);
+    $("rl-rebet").addEventListener("click", rebet);
+    window.addEventListener("resize", function () {
+      if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelt(reelStop); }
     });
     return { enter: enter };
   })();
