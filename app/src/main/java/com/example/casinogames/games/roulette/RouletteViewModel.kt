@@ -152,6 +152,31 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         message = if (amount < selectedChip) "All in!" else def.name
     }
 
+    /** Slides a whole stack from one spot to another, limits permitting. */
+    fun moveChip(fromId: String, toId: String, toDef: RouletteEngine.Bet) {
+        if (phase != RoulettePhase.BETTING || fromId == toId) return
+        val amount = bets[fromId] ?: return
+        val allowed = limits.allow(amount, bets[toId] ?: 0)
+        if (allowed < amount) {
+            // Dropped on a spot already at its cap: the stack comes off the
+            // felt and the money never left the purse — staking happens at
+            // the spin.
+            bets.remove(fromId); defs.remove(fromId)
+            chipHistory.removeAll { it.first == fromId }
+            notice = "${toDef.name} is full — bet taken down"
+            return
+        }
+        bets.remove(fromId); defs.remove(fromId)
+        bets[toId] = (bets[toId] ?: 0) + amount
+        defs[toId] = toDef
+        // The history follows the chips, so undo keeps meaning something.
+        for (i in chipHistory.indices) {
+            if (chipHistory[i].first == fromId) chipHistory[i] = toId to chipHistory[i].second
+        }
+        notice = null
+        message = toDef.name
+    }
+
     fun undoChip() {
         if (phase != RoulettePhase.BETTING) return
         val (id, amount) = chipHistory.removeLastOrNull() ?: return

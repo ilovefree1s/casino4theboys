@@ -11,6 +11,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -52,6 +55,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
@@ -62,6 +67,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlin.math.roundToInt
 import com.example.casinogames.R
 import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.games.core.Card
@@ -101,6 +107,19 @@ private data class SpotDef(
     val corner: Float,
     val round: Boolean = false,
 )
+
+/** The spot under an art-pixel point; round spots answer by their circle. */
+private fun spotAt(cx: Float, cy: Float): SpotDef? =
+    SPOTS.firstOrNull { s ->
+        s.round && run {
+            val r = (s.x1 - s.x0) / 2f
+            val mx = (s.x0 + s.x1) / 2f
+            val my = (s.y0 + s.y1) / 2f
+            (cx - mx) * (cx - mx) + (cy - my) * (cy - my) <= r * r
+        }
+    } ?: SPOTS.firstOrNull { s ->
+        !s.round && cx >= s.x0 && cx <= s.x1 && cy >= s.y0 && cy <= s.y1
+    }
 
 private val SPOTS = listOf(
     SpotDef(BetType.PLAYER_PAIR, 75f, 645f, 311f, 775f, 14f),
@@ -145,16 +164,22 @@ fun BaccaratScreen(
             val won = def.type in winningSpots
             val shape: Shape =
                 if (def.round) CircleShape else RoundedCornerShape((def.corner * kx).dp)
+            var dragPx by remember(def.type) {
+                mutableStateOf(androidx.compose.ui.geometry.Offset.Zero)
+            }
             Box(
                 Modifier
                     .artBox(kx, ky, def.x0, def.y0, def.x1, def.y1)
-                    .clip(shape)
+                    .zIndex(if (dragPx != androidx.compose.ui.geometry.Offset.Zero) 6f else 0f)
+                    // Shaped, not clipped: a chip dragged off the spot must
+                    // stay visible on its way to the next one.
                     .background(
                         when {
                             won -> P.WinGlow.copy(alpha = 0.22f)
                             amount > 0 -> Color(0x21000000)
                             else -> Color.Transparent
-                        }
+                        },
+                        shape,
                     )
                     .then(
                         when {
@@ -170,7 +195,40 @@ fun BaccaratScreen(
                     ) { vm.addBet(def.type) },
                 contentAlignment = Alignment.Center,
             ) {
-                PlacedBetChip(amount, size = (150 * kx).dp)
+                if (amount > 0) {
+                    // The stack is a live thing: drag it to another spot to
+                    // move the whole bet; a plain tap still adds a chip.
+                    val density = androidx.compose.ui.platform.LocalDensity.current.density
+                    Box(
+                        Modifier
+                            .offset {
+                                androidx.compose.ui.unit.IntOffset(
+                                    dragPx.x.roundToInt(), dragPx.y.roundToInt(),
+                                )
+                            }
+                            .zIndex(if (dragPx != androidx.compose.ui.geometry.Offset.Zero) 5f else 1f)
+                            .pointerInput(def.type, kx, ky) {
+                                awaitEachGesture {
+                                    val down = awaitFirstDown()
+                                    if (vm.phase != Phase.BETTING) return@awaitEachGesture
+                                    var total = androidx.compose.ui.geometry.Offset.Zero
+                                    drag(down.id) { change ->
+                                        total += change.positionChange()
+                                        change.consume()
+                                        dragPx = total
+                                    }
+                                    dragPx = androidx.compose.ui.geometry.Offset.Zero
+                                    if (total.getDistance() < 14f) return@awaitEachGesture
+                                    val cx = (def.x0 + def.x1) / 2f + total.x / (kx * density)
+                                    val cy = (def.y0 + def.y1) / 2f + total.y / (ky * density)
+                                    val target = spotAt(cx, cy) ?: return@awaitEachGesture
+                                    vm.moveBet(def.type, target.type)
+                                }
+                            },
+                    ) {
+                        PlacedBetChip(amount, size = (150 * kx).dp)
+                    }
+                }
             }
         }
 

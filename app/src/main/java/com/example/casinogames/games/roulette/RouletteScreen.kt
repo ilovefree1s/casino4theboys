@@ -8,7 +8,10 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.drag
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -43,6 +46,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -50,9 +54,12 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlin.math.roundToInt
 import com.example.casinogames.R
 import com.example.casinogames.games.roulette.RouletteArt as A
 import com.example.casinogames.games.roulette.RouletteEngine.DOUBLE_ZERO
@@ -113,8 +120,12 @@ fun RouletteScreen(
                 Badge(k)
                 Money(vm, k)
                 Belt(vm, k)
-                Felt(vm, k)
-                Outside(vm, k)
+                // Chip anchors live here so a stack dragged between the felt
+                // and the outside bands keeps one shared record of where it
+                // sits.
+                val anchors = remember { mutableStateOf(mapOf<String, Anchor>()) }
+                Felt(vm, k, anchors)
+                Outside(vm, k, anchors)
                 Rack(vm, k)
                 Buttons(vm, k)
                 Message(vm, k)
@@ -316,8 +327,11 @@ private fun Belt(vm: RouletteViewModel, k: Float) {
  * chips already placed drawn back over the same marks.
  */
 @Composable
-private fun Felt(vm: RouletteViewModel, k: Float) {
-    val anchors = remember { mutableStateOf(mapOf<String, Anchor>()) }
+private fun Felt(
+    vm: RouletteViewModel,
+    k: Float,
+    anchors: androidx.compose.runtime.MutableState<Map<String, Anchor>>,
+) {
     val gridBottom = A.GRID_TOP + A.ROWS * A.ROW_PITCH
     val cellW = (A.GRID_RIGHT - A.GRID_LEFT) / 3f
 
@@ -355,25 +369,125 @@ private fun Felt(vm: RouletteViewModel, k: Float) {
                 A.GRID_TOP + (a.y - 1f) * A.ROW_PITCH
             }
             val d = 46f
-            Box(Modifier.artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)) {
+            var dragPx by remember(id) { mutableStateOf(Offset.Zero) }
+            val density = LocalDensity.current.density
+            Box(
+                Modifier
+                    .artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)
+                    .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
+                    .zIndex(if (dragPx != Offset.Zero) 5f else 1f)
+                    .chipDrag(vm, k, density, id, x, y, anchors) { dragPx = it }
+            ) {
                 PlacedBetChip(amount, size = (d * k).dp)
             }
         }
     }
 }
 
+/**
+ * The spot under a dropped chip, resolved the way a tap would be: the grid
+ * hands the point to the tap resolver, the outside bands answer by rect.
+ */
+private fun resolveDropSpot(
+    artX: Float,
+    artY: Float,
+): Triple<String, RouletteEngine.Bet, Anchor?>? {
+    val gridBottom = A.GRID_TOP + A.ROWS * A.ROW_PITCH
+    val cellW = (A.GRID_RIGHT - A.GRID_LEFT) / 3f
+    if (artX >= A.GRID_LEFT && artX <= A.GRID_RIGHT &&
+        artY >= A.ZERO_TOP && artY <= gridBottom
+    ) {
+        val x = artX - A.GRID_LEFT
+        val y = if (artY < A.GRID_TOP) {
+            (artY - A.ZERO_TOP) / (A.ZERO_BOTTOM - A.ZERO_TOP) * A.ROW_PITCH
+        } else {
+            A.ROW_PITCH + (artY - A.GRID_TOP)
+        }
+        val hit = resolveTap(Offset(x, y), cellW, A.ROW_PITCH) ?: return null
+        return Triple(hit.first, hit.second, hit.third)
+    }
+    A.DOZEN_BANDS.forEachIndexed { i, (top, bottom) ->
+        if (artX >= A.DOZENS_LEFT && artX <= A.DOZENS_RIGHT && artY >= top && artY <= bottom) {
+            return Triple("dz-$i", RouletteEngine.dozen(i), null)
+        }
+    }
+    for (c in 0..2) {
+        if (artX >= A.COLUMN_EDGES[c] && artX <= A.COLUMN_EDGES[c + 1] &&
+            artY >= A.COLUMN_BETS_TOP && artY <= A.COLUMN_BETS_BOTTOM
+        ) {
+            return Triple("col-$c", RouletteEngine.column(c), null)
+        }
+    }
+    val even = listOf(
+        "low" to RouletteEngine.LOW,
+        "even" to RouletteEngine.EVEN,
+        "red" to RouletteEngine.RED,
+        "black" to RouletteEngine.BLACK,
+        "odd" to RouletteEngine.ODD,
+        "high" to RouletteEngine.HIGH,
+    )
+    even.forEachIndexed { i, (id, def) ->
+        if (artX >= A.EVEN_MONEY_EDGES[i] && artX <= A.EVEN_MONEY_EDGES[i + 1] &&
+            artY >= A.EVEN_MONEY_TOP && artY <= A.EVEN_MONEY_BOTTOM
+        ) {
+            return Triple(id, def, null)
+        }
+    }
+    return null
+}
+
+/** Drag a placed stack to another spot; the drop lands the way a tap would. */
+private fun Modifier.chipDrag(
+    vm: RouletteViewModel,
+    k: Float,
+    density: Float,
+    id: String,
+    startX: Float,
+    startY: Float,
+    anchors: androidx.compose.runtime.MutableState<Map<String, Anchor>>,
+    onDrag: (Offset) -> Unit,
+): Modifier = this.pointerInput(id, k) {
+    awaitEachGesture {
+        val down = awaitFirstDown()
+        if (vm.phase != RoulettePhase.BETTING) return@awaitEachGesture
+        var total = Offset.Zero
+        drag(down.id) { change ->
+            total += change.positionChange()
+            change.consume()
+            onDrag(total)
+        }
+        onDrag(Offset.Zero)
+        if (total.getDistance() < 14f) return@awaitEachGesture
+        val artX = startX + total.x / (k * density)
+        val artY = startY + total.y / (k * density)
+        val hit = resolveDropSpot(artX, artY) ?: return@awaitEachGesture
+        if (hit.first == id) return@awaitEachGesture
+        vm.moveChip(id, hit.first, hit.second)
+        val third = hit.third
+        anchors.value = if (third != null && vm.bets.containsKey(hit.first)) {
+            anchors.value.filterKeys { it in vm.bets } + (hit.first to third)
+        } else {
+            anchors.value.filterKeys { it in vm.bets }
+        }
+    }
+}
+
 /** Dozens down the side, the 2-to-1 row, and the even-money row. */
 @Composable
-private fun Outside(vm: RouletteViewModel, k: Float) {
+private fun Outside(
+    vm: RouletteViewModel,
+    k: Float,
+    anchors: androidx.compose.runtime.MutableState<Map<String, Anchor>>,
+) {
     A.DOZEN_BANDS.forEachIndexed { i, (top, bottom) ->
         OutsideSpot(
-            vm, k, "dz-$i", RouletteEngine.dozen(i),
+            vm, k, anchors, "dz-$i", RouletteEngine.dozen(i),
             A.DOZENS_LEFT, top, A.DOZENS_RIGHT, bottom,
         )
     }
     (0..2).forEach { c ->
         OutsideSpot(
-            vm, k, "col-$c", RouletteEngine.column(c),
+            vm, k, anchors, "col-$c", RouletteEngine.column(c),
             A.COLUMN_EDGES[c], A.COLUMN_BETS_TOP, A.COLUMN_EDGES[c + 1], A.COLUMN_BETS_BOTTOM,
         )
     }
@@ -387,7 +501,7 @@ private fun Outside(vm: RouletteViewModel, k: Float) {
     )
     even.forEachIndexed { i, (id, def) ->
         OutsideSpot(
-            vm, k, id, def,
+            vm, k, anchors, id, def,
             A.EVEN_MONEY_EDGES[i], A.EVEN_MONEY_TOP, A.EVEN_MONEY_EDGES[i + 1], A.EVEN_MONEY_BOTTOM,
         )
     }
@@ -397,6 +511,7 @@ private fun Outside(vm: RouletteViewModel, k: Float) {
 private fun OutsideSpot(
     vm: RouletteViewModel,
     k: Float,
+    anchors: androidx.compose.runtime.MutableState<Map<String, Anchor>>,
     id: String,
     def: RouletteEngine.Bet,
     x0: Float,
@@ -408,7 +523,21 @@ private fun OutsideSpot(
         Modifier.artBox(k, x0, y0, x1, y1).tap { vm.addChip(id, def) },
         contentAlignment = Alignment.Center,
     ) {
-        vm.bets[id]?.let { PlacedBetChip(it, size = (46f * k).dp) }
+        vm.bets[id]?.let { amount ->
+            var dragPx by remember(id) { mutableStateOf(Offset.Zero) }
+            val density = LocalDensity.current.density
+            Box(
+                Modifier
+                    .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
+                    .zIndex(if (dragPx != Offset.Zero) 5f else 1f)
+                    .chipDrag(
+                        vm, k, density, id,
+                        (x0 + x1) / 2f, (y0 + y1) / 2f, anchors,
+                    ) { dragPx = it },
+            ) {
+                PlacedBetChip(amount, size = (46f * k).dp)
+            }
+        }
     }
 }
 

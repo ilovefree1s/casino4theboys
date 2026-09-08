@@ -937,7 +937,7 @@
   .bacc-imgbtn img { height: 100%; display: block; }
   .bspot .placed {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-    display: none;
+    display: none; touch-action: none; cursor: grab;
   }
   .bacc-sheet .bet-circle { position: absolute; inset: 0; background: none; border: 0; border-radius: 50%; cursor: pointer; }
   .bacc-sheet .bet-circle.active { background: rgba(0,0,0,.18); }
@@ -6126,16 +6126,72 @@
       $("staked").textContent = fmt(totalStaked());
       $("shoeCount").textContent = shoe.length;
     }
+    /** Slides a whole stack from one spot to another. A drop on a spot
+     *  already at its cap leaves that bet be — the dragged stack comes off
+     *  the felt instead, and the money never left the purse. */
+    var dragGuard = 0;
+    function moveBet(from, to) {
+      if (phase !== "betting" || from === to) return;
+      var amt = bets[from];
+      if (!amt) return;
+      var lim = Shell.limits();
+      var side = to !== "player" && to !== "banker" && to !== "tie";
+      var allowed = allow(lim, amt, bets[to] || 0, side);
+      delete bets[from];
+      if (allowed < amt) {
+        setMessage(BET_NAMES[to] + " is full — bet taken down");
+      } else {
+        bets[to] = (bets[to] || 0) + amt;
+        chipHistory.forEach(function (h) { if (h[0] === from) h[0] = to; });
+        setMessage(BET_NAMES[to] + " — bet moved");
+      }
+      if (allowed < amt) chipHistory = chipHistory.filter(function (h) { return h[0] !== from; });
+      updateMoney(); updatePlaced();
+    }
+    function armChipDrag(el, key) {
+      el.onpointerdown = function (e) {
+        if (phase !== "betting") return;
+        e.preventDefault();
+        try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
+        var x0 = e.clientX, y0 = e.clientY, moved = false;
+        var base = el.style.transform || "translate(-50%,-50%)";
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
+          el.style.transform = base + " translate(" + dx + "px," + dy + "px)";
+          el.style.zIndex = 30;
+        }
+        function up(ev) {
+          el.removeEventListener("pointermove", mv);
+          el.removeEventListener("pointerup", up);
+          if (moved) {
+            dragGuard = Date.now();
+            el.style.display = "none";
+            var t = document.elementFromPoint(ev.clientX, ev.clientY);
+            var spot = t && t.closest ? t.closest(".bspot") : null;
+            if (spot && spot.id.indexOf("spot-") === 0) {
+              moveBet(key, spot.id.slice(5));
+            }
+          }
+          updatePlaced();
+        }
+        el.addEventListener("pointermove", mv);
+        el.addEventListener("pointerup", up);
+      };
+    }
     function updatePlaced() {
       var spots = ["player", "banker", "tie", "playerPair", "bankerPair", "fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"];
       spots.forEach(function (key) {
         var el = document.querySelector("#spot-" + key + " .placed");
         if (!el) return;
         var amt = bets[key] || 0;
-        if (amt <= 0) { el.style.display = "none"; el.innerHTML = ""; return; }
+        el.style.zIndex = ""; el.style.transform = "";
+        if (amt <= 0) { el.style.display = "none"; el.innerHTML = ""; el.onpointerdown = null; return; }
         el.innerHTML = chipHtml(amt);
         el.style.display = "block";
         if (key === "player" || key === "banker") { el.style.top = "auto"; el.style.bottom = "25px"; el.style.transform = "translate(-50%,50%)"; }
+        else { el.style.top = ""; el.style.bottom = ""; }
+        armChipDrag(el, key);
       });
       ["playerPair", "tie", "bankerPair"].forEach(function (key) {
         $("spot-" + key).classList.toggle("active", (bets[key] || 0) > 0 && phase === "betting");
@@ -6430,7 +6486,11 @@
     ["player", "banker", "tie", "playerPair", "bankerPair", "fortune7", "golden8", "heavenly9", "blazing7s", "coverAll"].forEach(function (key) {
       var spot = $("spot-" + key);
       var target = spot.querySelector(".bet-circle") || spot;
-      target.addEventListener("click", function () { addBet(key); });
+      target.addEventListener("click", function () {
+        // The click that trails a chip drag is the drag, not a bet.
+        if (Date.now() - dragGuard < 400) return;
+        addBet(key);
+      });
     });
     $("roadTab").addEventListener("click", function () {
       $("roadDrawer").classList.toggle("open");

@@ -131,6 +131,29 @@ class BaccaratViewModel(app: Application) : AndroidViewModel(app) {
         message = if (amount < selectedChip) "All in!" else "Place your bets"
     }
 
+    /** Slides a whole stack from one spot to another, limits permitting. */
+    fun moveBet(from: BetType, to: BetType) {
+        if (phase != Phase.BETTING || from == to) return
+        val amount = bets[from] ?: return
+        val allowed = limits.allow(amount, bets[to] ?: 0, to.isSide)
+        if (allowed < amount) {
+            // Dropped on a spot already at its cap: the stack comes off the
+            // felt and the money never left the purse — staking happens at
+            // the deal.
+            bets.remove(from)
+            chipHistory.removeAll { it.first == from }
+            message = "${to.displayName} is full — bet taken down"
+            return
+        }
+        bets.remove(from)
+        bets[to] = (bets[to] ?: 0) + amount
+        // The history follows the chips, so undo keeps meaning something.
+        for (i in chipHistory.indices) {
+            if (chipHistory[i].first == from) chipHistory[i] = to to chipHistory[i].second
+        }
+        message = "${to.displayName} — bet moved"
+    }
+
     fun clearBets() {
         if (phase != Phase.BETTING) return
         bets.clear()
