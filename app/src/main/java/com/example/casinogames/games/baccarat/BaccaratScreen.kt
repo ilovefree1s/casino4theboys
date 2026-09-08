@@ -130,8 +130,8 @@ private val SPOTS = listOf(
     SpotDef(BetType.HEAVENLY_9, 77f, 1001f, 407f, 1193f, 22f),
     SpotDef(BetType.BLAZING_7S, 443f, 1001f, 774f, 1193f, 22f),
     SpotDef(BetType.COVER_ALL, 331f, 899f, 519f, 1087f, 0f, round = true),
-    SpotDef(BetType.PLAYER, 150f, 1258f, 356f, 1466f, 0f, round = true),
-    SpotDef(BetType.BANKER, 492f, 1270f, 698f, 1476f, 0f, round = true),
+    SpotDef(BetType.PLAYER, 150f, 1260f, 356f, 1468f, 0f, round = true),
+    SpotDef(BetType.BANKER, 492f, 1260f, 698f, 1468f, 0f, round = true),
 )
 
 @Composable

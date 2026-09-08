@@ -923,8 +923,8 @@
   #spot-heavenly9 { left: 9.04%; top: 54.22%; width: 38.7%; height: 10.40%; }
   #spot-blazing7s { left: 52.00%; top: 54.22%; width: 38.9%; height: 10.40%; }
   #spot-coverAll { left: 38.85%; top: 48.70%; width: 22.1%; height: 10.18%; }
-  #spot-player { left: 17.61%; top: 68.15%; width: 24.2%; height: 11.27%; }
-  #spot-banker { left: 57.75%; top: 68.80%; width: 24.2%; height: 11.16%; }
+  #spot-player { left: 17.61%; top: 68.26%; width: 24.2%; height: 11.27%; }
+  #spot-banker { left: 57.75%; top: 68.26%; width: 24.2%; height: 11.27%; }
   /* The painted floor carries the working strip. */
   .bacc-bottom {
     position: absolute; left: 0; right: 0; bottom: 1.2%;
@@ -6189,8 +6189,9 @@
         if (amt <= 0) { el.style.display = "none"; el.innerHTML = ""; el.onpointerdown = null; return; }
         el.innerHTML = chipHtml(amt);
         el.style.display = "block";
-        if (key === "player" || key === "banker") { el.style.top = "auto"; el.style.bottom = "25px"; el.style.transform = "translate(-50%,50%)"; }
-        else { el.style.top = ""; el.style.bottom = ""; }
+        // Every chip sits dead-centre of its spot; the old circle layout's
+        // bottom-hung hack for player and banker retired with it.
+        el.style.top = ""; el.style.bottom = "";
         armChipDrag(el, key);
       });
       ["playerPair", "tie", "bankerPair"].forEach(function (key) {
