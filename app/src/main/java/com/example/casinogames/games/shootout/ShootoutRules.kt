@@ -15,25 +15,25 @@ object ShootoutRules {
 
     /**
      * The Bonus, on the player's own best five, win or lose. This is Galaxy's
-     * common pay table:
+     * top-heavy pay table, the one the user picked for its big numbers:
      *
-     *   Suited Five of a Kind .. 1,000 to 1      Four of a Kind ...... 7 to 1
-     *   Royal Flush ............. 200 to 1       Full House .......... 3 to 1
-     *   Straight Flush ........... 75 to 1       Flush ............... 2 to 1
-     *   Five of a Kind ........... 40 to 1       Straight ............ 1 to 1
-     *                                            Three of a Kind ..... push
+     *   Suited Five of a Kind .. 5,000 to 1      Four of a Kind ...... 5 to 1
+     *   Royal Flush ............. 500 to 1       Full House .......... 3 to 1
+     *   Straight Flush .......... 100 to 1       Flush ............... 2 to 1
+     *   Five of a Kind ........... 50 to 1       Straight ............ 1 to 1
+     *
+     * Three of a kind and under lose on this table; the common table pushes
+     * trips and pays quads 7, but its ceiling is a fifth of this one's.
      */
     enum class BonusPay(val label: String, val payout: Int) {
-        FIVE_KIND_SUITED("Suited Five of a Kind", 1_000),
-        ROYAL_FLUSH("Royal Flush", 200),
-        STRAIGHT_FLUSH("Straight Flush", 75),
-        FIVE_KIND("Five of a Kind", 40),
-        FOUR_KIND("Four of a Kind", 7),
+        FIVE_KIND_SUITED("Suited Five of a Kind", 5_000),
+        ROYAL_FLUSH("Royal Flush", 500),
+        STRAIGHT_FLUSH("Straight Flush", 100),
+        FIVE_KIND("Five of a Kind", 50),
+        FOUR_KIND("Four of a Kind", 5),
         FULL_HOUSE("Full House", 3),
         FLUSH("Flush", 2),
         STRAIGHT("Straight", 1),
-        /** Trips gets the stake back and nothing more. */
-        THREE_KIND("Three of a Kind", 0),
     }
 
     fun bonusRung(hand: ShootoutHandValue): BonusPay? = when (hand.category) {
@@ -45,7 +45,6 @@ object ShootoutRules {
         ShootoutCategory.FULL_HOUSE -> BonusPay.FULL_HOUSE
         ShootoutCategory.FLUSH -> BonusPay.FLUSH
         ShootoutCategory.STRAIGHT -> BonusPay.STRAIGHT
-        ShootoutCategory.THREE_KIND -> BonusPay.THREE_KIND
         else -> null
     }
 

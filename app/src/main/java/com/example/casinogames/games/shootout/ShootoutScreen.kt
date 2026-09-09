@@ -715,9 +715,9 @@ private fun PayTables(onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(6.dp))
             Text(
-                "Paid on your best five, win or lose. Six decks in the shoe, so the " +
-                    "same card can come twice and five of a kind is real — five of the " +
-                    "very same card tops the ladder.",
+                "Paid on your best five, win or lose; a straight is the floor. Six decks " +
+                    "in the shoe, so the same card can come twice and five of a kind is " +
+                    "real — five of the very same card tops the ladder.",
                 color = P.OffWhite.copy(alpha = 0.6f), fontSize = 10.sp,
             )
             Spacer(Modifier.height(12.dp))
