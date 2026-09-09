@@ -154,6 +154,30 @@
     background: none; border: 0; border-radius: 20px;
   }
   .bjm-band:active { transform: scale(.985); }
+  /* Texas Shootout came after the poker page was painted: a live card in the
+     black the art left under DJ Wild, the painted cards' width, amber so it
+     is neither hold'em's green nor DJ Wild's blue. */
+  .pk-shootout {
+    position: absolute; left: 8.9%; width: 82.3%; top: 85.6%; height: 12%;
+    padding: 0; border-radius: 20px; background: #120B03; cursor: pointer;
+    border: 2px solid #FFB13D;
+    box-shadow: 0 0 14px rgba(255,177,61,.35), inset 0 0 30px rgba(255,177,61,.12);
+    display: flex; align-items: center; color: #F5F1E8; line-height: 1.1; text-align: left;
+  }
+  .pk-shootout:active { transform: scale(.985); }
+  /* Everything inside is sized off the page width, as the painted cards are. */
+  .pk-shootout .pip { font-size: clamp(26px, 9vw, 36px); color: rgba(255,177,61,.5); margin: 0 8px 0 12px; flex: none; }
+  .pk-shootout .txt { flex: 1; min-width: 0; }
+  .pk-shootout .nm {
+    font-family: var(--display); font-style: italic; font-size: clamp(11px, 3.9vw, 16px);
+    color: #FFB13D; letter-spacing: .01em; white-space: nowrap;
+  }
+  .pk-shootout .ln { font-size: clamp(6.5px, 2.2vw, 9px); letter-spacing: .03em; margin-top: 4px; white-space: nowrap; }
+  .pk-shootout .play {
+    width: clamp(44px, 14vw, 58px); height: clamp(44px, 14vw, 58px); border-radius: 50%;
+    border: 2px solid #FFB13D; display: grid; place-items: center;
+    font-size: clamp(12px, 3.8vw, 15px); letter-spacing: .04em; margin-right: 14px; flex: none;
+  }
 
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
@@ -752,6 +776,62 @@
     #screen-djwild .card .mid { font-size: 18px; }
   }
 
+  /* ========== TEXAS SHOOTOUT ==========
+     Amber, so it is neither hold'em's green nor DJ Wild's blue. The shared
+     background art is washed into the table's own colour, the way the
+     hold'em table swings it green. */
+  #screen-shootout { position: relative; background: #0A0602; --uth-green: #FFB13D; }
+  .so-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .42; pointer-events: none;
+    filter: sepia(1) saturate(2.4) hue-rotate(-8deg) brightness(.85);
+  }
+  #screen-shootout .uth-money .val { color: #FFE0A3; }
+  #screen-shootout .uth-money .val.risk { color: var(--bone); }
+  #screen-shootout .uth-label .nm { color: rgba(255,177,61,.85); }
+  #screen-shootout .uth-label.brass .nm { color: #FFE0A3; }
+  .so-drop { height: 3vh; max-height: 24px; }
+  .so-hand { gap: 5px; }
+  .so-board { gap: 4px; }
+  .so-board .card, .so-board .slot { width: 48px; height: 72px; }
+  .so-board .card .mid { font-size: 18px; }
+  /* Picking is the game: a picked card lifts and rings amber, a discard fades. */
+  .so-hand .card.pick { cursor: pointer; }
+  .so-hand .card.sel { transform: translateY(-8px); }
+  .so-hand .card.sel .front { box-shadow: inset 0 0 0 2px #FFB13D, 0 4px 10px rgba(0,0,0,.5); }
+  .so-hand .card.out { opacity: .3; }
+  /* A split shows as two pairs with a gap between, each with its own tag. */
+  .so-hand.split { gap: 18px; }
+  .so-hand .hd { display: flex; flex-direction: column; align-items: center; }
+  .so-hand .tag {
+    font-family: var(--display); font-size: 9px; letter-spacing: .08em;
+    margin-top: 3px; color: rgba(255,224,163,.7);
+  }
+  .so-hand .tag.w { color: #57E06A; }
+  .so-hand .tag.l { color: #FF4D4D; }
+  #screen-shootout .uth-spot .cap { color: rgba(255,177,61,.75); }
+  #screen-shootout .uth-spot.brass .cap { color: rgba(255,224,163,.75); }
+  .so-side {
+    display: flex; flex-direction: column; align-items: center;
+    text-align: center; padding: 0 6px 2px 0;
+  }
+  .so-side .t { font-family: var(--display); font-size: 9px; letter-spacing: .08em; color: rgba(255,177,61,.85); }
+  .so-side .s { font-size: 8px; line-height: 10px; color: rgba(245,241,232,.7); }
+  .so-side .u { font-family: var(--display); font-size: 8px; letter-spacing: .08em; color: rgba(255,177,61,.7); margin-top: 4px; }
+  .so-pays .uth-pays .hd .ttl, .so-pays .uth-pays .row .val { color: #FFE0A3; }
+  .so-pays .uth-pays .hd .bar { background: #FFE0A3; }
+  #screen-shootout .dj-pill.w { border-color: #FFE0A3; }
+  #screen-shootout .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFE0A3, 0 5px 12px rgba(0,0,0,.5); }
+  #screen-shootout .uth-message.bonus { color: #FFE0A3; }
+  #screen-shootout .uth-btn[disabled] { opacity: .4; }
+  @media (max-height: 860px) {
+    .so-drop { height: 0; }
+    #screen-shootout .card { width: 46px; height: 69px; }
+    #screen-shootout .cards { min-height: 69px; }
+    #screen-shootout .card .mid { font-size: 18px; }
+    #screen-shootout .so-board .card, #screen-shootout .so-board .slot { width: 42px; height: 63px; }
+  }
+
   /* ========== DESTROYER ==========
      The felt's colours are taken off pink4theboys.png itself: the hot magenta
      ring and its pale glow. Hits stay battleship red, the money stays brass. */
@@ -1303,6 +1383,15 @@
       <img src="__POKER_PAGE__" alt="Poker variants">
       <button class="bjm-band" id="pk-uth" style="top:50.65%;height:15.18%" aria-label="Ultimate Texas Hold'em — play"></button>
       <button class="bjm-band" id="pk-djwild" style="top:67.79%;height:15.62%" aria-label="DJ Wild — play"></button>
+      <button class="pk-shootout" id="pk-shootout" aria-label="Texas Shootout — play">
+        <span class="pip">♠</span>
+        <span class="txt">
+          <div class="nm">TEXAS SHOOTOUT</div>
+          <div class="ln">FOUR CARDS · KEEP TWO OR SPLIT</div>
+          <div class="ln">BONUS &nbsp;•&nbsp; DEALER WINS TIES</div>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
     </div>
   </div>
 </div>
@@ -1478,6 +1567,49 @@
   <div class="uth-rebuy" id="dj-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="dj-buyin">BUY BACK IN</button>
+  </div>
+</div>
+
+<!-- ================= TEXAS SHOOTOUT ================= -->
+<div class="screen" id="screen-shootout">
+  <img class="so-bg" src="__BG__" alt="">
+  <div class="uth-table dj-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="backlink" id="so-back">‹ POKER</button>
+        <div class="uth-money">
+          <span class="lbl">BANKROLL</span><span class="val" id="so-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="so-risk">0</span>
+        </div>
+      </div>
+      <div class="so-drop"></div>
+      <div class="uth-label" id="so-dealer-label"><span class="nm">DEALER</span></div>
+      <div class="cards so-hand" id="so-dealer" style="margin-top:4px"></div>
+      <div style="height:6px"></div>
+      <div class="uth-rule"></div>
+      <div style="height:8px"></div>
+      <div class="uth-label" id="so-board-label"><span class="nm">BOARD</span></div>
+      <div class="cards so-board" id="so-board" style="margin-top:4px"></div>
+      <div style="height:8px"></div>
+      <div class="uth-rule"></div>
+      <div style="height:8px"></div>
+      <div class="uth-label brass" id="so-hand-label"><span class="nm">YOUR HAND</span></div>
+      <div class="cards so-hand" id="so-hole" style="margin-top:4px"></div>
+      <div class="uth-message" id="so-message">Place your poker bet</div>
+      <div class="dj-pills" id="so-results"></div>
+    </div>
+    <!-- The spots and buttons stand on the bottom edge, as on DJ Wild. -->
+    <div class="dj-bottom">
+      <div class="uth-spots" id="so-spots"></div>
+      <div id="so-rack"></div>
+      <div class="uth-actions" id="so-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="so-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="so-buyin">BUY BACK IN</button>
   </div>
 </div>
 
@@ -2870,6 +3002,8 @@
   $("pk-back").addEventListener("click", function () { Shell.showLobby(); });
   $("pk-uth").addEventListener("click", function () { Holdem.enter(); Shell.show("holdem"); });
   $("pk-djwild").addEventListener("click", function () { DjWild.enter(); Shell.show("djwild"); });
+  $("pk-shootout").addEventListener("click", function () { Shootout.enter(); Shell.show("shootout"); });
+  $("so-back").addEventListener("click", function () { Shell.show("poker"); });
   $("uth-back").addEventListener("click", function () { Shell.show("poker"); });
   $("dj-back").addEventListener("click", function () { Shell.show("poker"); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
@@ -3295,6 +3429,159 @@
     };
   })();
   window.DJ = DJ;   // exposed so the rules can be exercised directly
+
+  /* ============================================================
+     Texas Shootout engine — mirrors ShootoutHand.kt and ShootoutRules.kt
+     so both builds settle a hand the same way. Six decks are in the shoe,
+     so the same card can turn up twice and five of a kind is real.
+     ============================================================ */
+  var SO = (function () {
+    /* Ascending strength, so the index ranks them. Five of a kind sits
+       between quads and a straight flush; five of the very same card tops
+       everything. */
+    var CAT = ["High Card", "Pair", "Two Pair", "Three of a Kind", "Straight",
+               "Flush", "Full House", "Four of a Kind", "Five of a Kind",
+               "Straight Flush", "Royal Flush", "Suited Five of a Kind"];
+    var DECKS = 6;
+
+    function straightHigh(desc) {
+      var d = desc.filter(function (v, i) { return desc.indexOf(v) === i; });
+      if (d.length !== 5) return 0;
+      if (d[0] - d[4] === 4) return d[0];
+      if (d[0] === 14 && d[1] === 5 && d[4] === 2) return 5;   // the wheel
+      return 0;
+    }
+    /** Scores exactly five cards; a duplicate is an ordinary card here. */
+    function score5(hand) {
+      var v = hand.map(function (c) { return UTH.val(c.rank); })
+                  .sort(function (a, b) { return b - a; });
+      var flush = hand.every(function (c) { return c.suit === hand[0].suit; });
+      var sh = straightHigh(v);
+      var counts = {};
+      v.forEach(function (x) { counts[x] = (counts[x] || 0) + 1; });
+      var grouped = Object.keys(counts).map(Number).sort(function (a, b) {
+        return counts[b] - counts[a] || b - a;
+      });
+      var shape = grouped.map(function (r) { return counts[r]; });
+      if (shape[0] === 5 && flush) return { cat: 11, tie: grouped };
+      if (flush && sh === 14) return { cat: 10, tie: [14] };
+      if (flush && sh > 0) return { cat: 9, tie: [sh] };
+      if (shape[0] === 5) return { cat: 8, tie: grouped };
+      if (shape[0] === 4) return { cat: 7, tie: grouped };
+      if (shape[0] === 3 && shape[1] === 2) return { cat: 6, tie: grouped };
+      if (flush) return { cat: 5, tie: v };
+      if (sh > 0) return { cat: 4, tie: [sh] };
+      if (shape[0] === 3) return { cat: 3, tie: grouped };
+      if (shape[0] === 2 && shape[1] === 2) return { cat: 2, tie: grouped };
+      if (shape[0] === 2) return { cat: 1, tie: grouped };
+      return { cat: 0, tie: v };
+    }
+    function cmp(a, b) {
+      if (a.cat !== b.cat) return a.cat - b.cat;
+      for (var i = 0; i < a.tie.length; i++) {
+        var x = a.tie[i], y = b.tie[i] || 0;
+        if (x !== y) return x - y;
+      }
+      return 0;
+    }
+    function combos5(cards) {
+      var out = [];
+      for (var a = 0; a < cards.length - 4; a++)
+      for (var b = a + 1; b < cards.length - 3; b++)
+      for (var c = b + 1; c < cards.length - 2; c++)
+      for (var d = c + 1; d < cards.length - 1; d++)
+      for (var e = d + 1; e < cards.length; e++)
+        out.push([cards[a], cards[b], cards[c], cards[d], cards[e]]);
+      return out;
+    }
+    /** Best five of the seven: {cat, tie, cards, label}. */
+    function best(cards) {
+      var bestHand = null;
+      combos5(cards).forEach(function (five) {
+        var s = score5(five);
+        if (!bestHand || cmp(s, bestHand) > 0) { s.cards = five; bestHand = s; }
+      });
+      bestHand.label = CAT[bestHand.cat];
+      return bestHand;
+    }
+
+    /* The Bonus, on the player's own best five, win or lose. Galaxy's common
+       pay table: [category, pays]. Three of a kind pushes. */
+    var BONUS = [[11, 1000], [10, 200], [9, 75], [8, 40], [7, 7], [6, 3], [5, 2], [4, 1], [3, 0]];
+    function bonusRung(cat) {
+      for (var i = 0; i < BONUS.length; i++) if (BONUS[i][0] === cat) return i;
+      return -1;
+    }
+
+    /* The dealer's house way, Galaxy's list top to bottom. Every two of the
+       four is graded and the best grade kept; within a grade the higher cards
+       win. Suited means the same suit — from six decks, the very same card
+       twice counts. */
+    var SUIT_ORDER = { "♠": 0, "♥": 1, "♦": 2, "♣": 3 };
+    /** High card first; between equal ranks, suits in s h d c order. */
+    function orderPair(a, b) {
+      var va = UTH.val(a.rank), vb = UTH.val(b.rank);
+      if (va > vb) return [a, b];
+      if (va < vb) return [b, a];
+      return SUIT_ORDER[a.suit] <= SUIT_ORDER[b.suit] ? [a, b] : [b, a];
+    }
+    /** The tier, then the cards negated so ascending order prefers the higher. */
+    function grade(high, low) {
+      var h = UTH.val(high.rank), l = UTH.val(low.rank);
+      var suited = high.suit === low.suit, pair = h === l;
+      var tier =
+        pair && h >= 8 ? 1 :
+        h === 14 && l >= 11 ? 2 :
+        pair && suited ? 3 :
+        pair ? 4 :
+        h === 14 && suited ? 5 :
+        l >= 10 && suited ? 6 :
+        l >= 10 ? 7 :
+        h === 14 ? 8 :
+        h >= 11 && suited ? 9 :
+        h >= 11 ? 10 :
+        h - l === 1 && suited ? 11 :
+        h - l === 1 ? 12 :
+        suited ? 13 : 14;
+      return [tier, -h, -l];
+    }
+    function cmpGrade(a, b) {
+      for (var i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] - b[i];
+      return 0;
+    }
+    function houseWay(four) {
+      var bestPick = null, bestGrade = null;
+      for (var i = 0; i < 4; i++) for (var j = i + 1; j < 4; j++) {
+        var pick = orderPair(four[i], four[j]);
+        var g = grade(pick[0], pick[1]);
+        if (!bestGrade || cmpGrade(g, bestGrade) < 0) { bestPick = pick; bestGrade = g; }
+      }
+      return bestPick;
+    }
+
+    /**
+     * Settles one player hand against the dealer's kept two on the board.
+     * The dealer wins ties, so there is no push. Returns are gross — stake
+     * plus winnings — and the bonus rides the player's own five either way.
+     */
+    function settle(playerHole, dealerHole, board, poker, bonus) {
+      var p = best(playerHole.concat(board));
+      var d = best(dealerHole.concat(board));
+      var outcome = cmp(p, d) > 0 ? "win" : "lose";
+      var rung = bonus > 0 ? bonusRung(p.cat) : -1;
+      return {
+        player: p, dealer: d, outcome: outcome,
+        poker: outcome === "win" ? poker * 2 : 0,
+        bonus: rung >= 0 ? bonus * (BONUS[rung][1] + 1) : 0,
+        bonusWin: rung
+      };
+    }
+    return {
+      score5: score5, best: best, cmp: cmp, houseWay: houseWay, settle: settle,
+      bonusRung: bonusRung, CAT: CAT, BONUS: BONUS, DECKS: DECKS
+    };
+  })();
+  window.SO = SO;   // exposed so the rules can be exercised directly
 
   /* ============================================================
      Destroyer engine — mirrors DestroyerRules.kt so both builds pay a
@@ -5629,6 +5916,439 @@
     $("dj-buyin").addEventListener("click", function () {
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       openBuyIn(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     TEXAS SHOOTOUT
+     ============================================================ */
+  var Shootout = (function () {
+    /* Four each, five on the board, and a split can want four more. */
+    var RESHUFFLE_AT = 20;
+    var AMBER = "#FFB13D", BRASS = "#FFE0A3", DIM = "rgba(255,177,61,.6)",
+        FAINT = "rgba(255,177,61,.4)", GOLD = "#D9B23A";
+    var shoe = buildShoe(SO.DECKS);
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
+    /** Pending bets while betting. */
+    var poker = 0, bonus = 0, chipHist = [];
+    var lastPoker = 0, lastBonus = 0;
+    /** Locked-in stakes per hand once dealt; a split posts the same again. */
+    var pokerStake = 0, bonusStake = 0, split = false;
+    // betting | dealing | choosing | runout | showdown | result
+    var phase = "betting";
+    var playerFour = [], picked = [], hands = [];
+    var dealerFour = [], dealerKept = [], dealerUp = false, board = [];
+    var settlements = [], results = [], timers = [];
+
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function draw() { return shoe.pop(); }
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
+    function handCount() { return split ? 2 : 1; }
+    function atRisk() {
+      return phase === "betting" ? poker + bonus : (pokerStake + bonusStake) * handCount();
+    }
+    function splitCost() { return pokerStake + bonusStake; }
+    function canKeep() { return phase === "choosing" && picked.length === 2; }
+    function canSplit() { return canKeep() && bankroll >= splitCost(); }
+
+    // ---------- render ----------
+    function setMessage(text, tone) {
+      var m = $("so-message");
+      m.textContent = text;
+      m.className = "uth-message" + (tone ? " " + tone : "");
+    }
+    function renderTop() {
+      $("so-bankroll").textContent = fmt(bankroll);
+      $("so-risk").textContent = fmt(atRisk());
+    }
+    function renderLabel(id, text, badge) {
+      $(id).innerHTML = '<span class="nm">' + text + "</span>" +
+        (badge ? '<span class="badge">' + badge + "</span>" : "");
+    }
+    function slots(host, n) {
+      for (var i = 0; i < n; i++) {
+        var s = document.createElement("div");
+        s.className = "slot";
+        host.appendChild(s);
+      }
+    }
+    /** The dealer's four stay down until the showdown; then the two the
+        house way kept turn over and the discards fade. */
+    function renderDealer() {
+      var host = $("so-dealer");
+      host.innerHTML = "";
+      if (!dealerFour.length) slots(host, 4);
+      dealerFour.forEach(function (c) {
+        var kept = dealerUp && dealerKept.indexOf(c) >= 0;
+        var el = cardEl(c, kept);
+        if (dealerUp && !kept) el.classList.add("out");
+        host.appendChild(el);
+      });
+      renderLabel("so-dealer-label", "DEALER",
+        dealerUp && settlements.length ? SO.CAT[settlements[0].dealer.cat] : null);
+    }
+    function renderBoard() {
+      var host = $("so-board");
+      host.innerHTML = "";
+      if (!board.length) slots(host, 5);
+      board.forEach(function (c) { host.appendChild(cardEl(c, true)); });
+    }
+    /** Four face up to choose from; a tapped card lifts and rings amber.
+        Once the choice is made the discards fade, and a split shows as two
+        pairs with a gap between them. */
+    function renderPlayer() {
+      var host = $("so-hole");
+      host.innerHTML = "";
+      host.classList.toggle("split", hands.length === 2);
+      if (!playerFour.length) {
+        slots(host, 4);
+        renderLabel("so-hand-label", "YOUR HAND", null);
+        return;
+      }
+      if (hands.length === 2) {
+        hands.forEach(function (hand, h) {
+          var wrap = document.createElement("div");
+          wrap.className = "hd";
+          var row = document.createElement("div");
+          row.className = "cards so-hand";
+          hand.forEach(function (c) { row.appendChild(cardEl(c, true)); });
+          var tag = document.createElement("div");
+          var s = settlements[h];
+          tag.className = "tag" + (s ? (s.outcome === "win" ? " w" : " l") : "");
+          tag.textContent = s ? SO.CAT[s.player.cat] : "HAND " + (h + 1);
+          wrap.appendChild(row);
+          wrap.appendChild(tag);
+          host.appendChild(wrap);
+        });
+        renderLabel("so-hand-label", "YOUR HANDS", null);
+        return;
+      }
+      var choosing = phase === "choosing", chosen = hands.length === 1;
+      playerFour.forEach(function (c, i) {
+        var el = cardEl(c, true);
+        var isPicked = picked.indexOf(i) >= 0;
+        if (choosing) {
+          el.classList.add("pick");
+          if (isPicked) el.classList.add("sel");
+          el.addEventListener("click", function () { togglePick(i); });
+        }
+        if (chosen && !isPicked) el.classList.add("out");
+        host.appendChild(el);
+      });
+      renderLabel("so-hand-label", "YOUR HAND",
+        settlements.length === 1 ? SO.CAT[settlements[0].player.cat] : null);
+    }
+    function renderResults() {
+      var host = $("so-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net)
+          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        host.insertAdjacentHTML("beforeend",
+          '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
+          '</span><span class="amt">' + txt + "</span></div>");
+      });
+    }
+    function paysHtml(title, rows) {
+      var html = '<div class="uth-pays"><div class="hd"><span class="bar"></span>' +
+        '<span class="ttl">' + title + '</span><span class="bar"></span></div>';
+      rows.forEach(function (r) {
+        html += '<div class="row"><span class="nm">' + r[0] + "</span>" +
+          '<span class="dots"></span><span class="val">' + r[1] + "</span></div>";
+      });
+      return html + "</div>";
+    }
+    function bonusOdds() {
+      return SO.BONUS.map(function (row) {
+        return [SO.CAT[row[0]], row[1] > 0 ? fmt(row[1]) + "-to-1" : "push"];
+      });
+    }
+    function spotHtml(id, shape, label, amount, live, color, extra) {
+      return '<button class="uth-spot' + (extra || "") + '" id="' + id + '"' +
+        (live ? "" : " disabled") + '>' +
+        '<span class="' + shape + '" style="border-color:' +
+          (amount > 0 ? color : FAINT) + '"></span>' +
+        (amount > 0
+          ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
+          : '<span class="cap">' + label + "</span>") +
+        "</button>";
+    }
+    /** The poker bet and the bonus side by side, the bonus ladder in the
+        right gutter and the table's one rule in the left. */
+    function renderSpots() {
+      var betting = phase === "betting", n = handCount();
+      $("so-spots").innerHTML =
+        '<div class="uth-row so-pays">' +
+          '<div class="so-side"><div class="t">KEEP TWO OF FOUR</div>' +
+            '<div class="s">or split and play both<br>for a second poker bet</div>' +
+            '<div class="u">DEALER WINS TIES</div></div>' +
+          '<div class="mid" style="gap:18px">' +
+            spotHtml("so-poker", "ring", "POKER", betting ? poker : pokerStake * n, betting, AMBER) +
+            spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
+          "</div>" +
+          '<div style="padding:0 0 2px 6px">' + paysHtml("BONUS", bonusOdds()) + "</div>" +
+        "</div>";
+      if (betting) {
+        $("so-poker").addEventListener("click", function () { place("poker"); });
+        $("so-bonus").addEventListener("click", function () { place("bonus"); });
+      }
+    }
+    function renderRack() {
+      var host = $("so-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn, off) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.disabled = !!off;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("so-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        a.appendChild(actionBtn("DEAL", BRASS, deal));
+      } else if (phase === "choosing") {
+        // Short of the split: the pit lends at the felt rather than let a
+        // second good hand go for want of chips. Free play has no house.
+        if (Shell.mode === "campaign" && picked.length === 2 &&
+            bankroll < splitCost() && Shell.canTakeMarker()) {
+          a.appendChild(actionBtn("MARKER +5,000", GOLD, function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — split if you like");
+            renderAll();
+          }));
+        } else {
+          a.appendChild(actionBtn("SPLIT  " + fmt(splitCost()), AMBER, splitHands, !canSplit()));
+        }
+        a.appendChild(actionBtn("KEEP TWO", BRASS, keepTwo, !canKeep()));
+      } else if (phase === "result") {
+        a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", BRASS, function () { nextHand(true); }));
+      }
+    }
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && atRisk() === 0;
+      $("so-rebuy").classList.toggle("on", broke);
+    }
+    function renderAll() {
+      renderTop(); renderDealer(); renderBoard(); renderPlayer(); renderResults();
+      renderSpots(); renderRack(); renderActions(); renderRebuy();
+    }
+
+    // ---------- betting ----------
+    function place(spot) {
+      if (phase !== "betting") return;
+      var room = Math.floor(bankroll - (poker + bonus));
+      var affordable = Math.min(selectedChip, room);
+      if (affordable <= 0) { setMessage("Not enough for that chip"); return; }
+      var lim = Shell.limits(), side = spot === "bonus";
+      var amount = allow(lim, affordable, side ? bonus : poker, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
+      if (side) bonus += amount; else poker += amount;
+      chipHist.push({ spot: spot, v: amount });
+      setMessage(
+        amount < affordable ? refusal(lim, side)
+          : amount < selectedChip ? "All in!"
+          : side ? "Bonus riding" : "Poker bet posted"
+      );
+      renderTop(); renderSpots();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      poker = 0; bonus = 0; chipHist = [];
+      setMessage("Place your poker bet");
+      renderTop(); renderSpots();
+    }
+
+    // ---------- deal ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (poker <= 0) {
+        setMessage(bonus > 0 ? "The bonus rides with a poker bet" : "Place a poker bet first");
+        return;
+      }
+      if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(SO.DECKS);
+      bankroll -= poker + bonus;
+      syncWallet();
+      lastPoker = poker; lastBonus = bonus;
+      pokerStake = poker; bonusStake = bonus; split = false;
+      chipHist = [];
+      clearCards();
+      poker = 0; bonus = 0;
+      phase = "dealing";
+      setMessage("Dealing…");
+      renderAll();
+      // Four each, alternating, the way they come off the shoe.
+      for (var i = 0; i < 4; i++) {
+        (function (n) {
+          t(180 + n * 260, function () { playerFour.push(draw()); renderPlayer(); });
+          t(300 + n * 260, function () { dealerFour.push(draw()); renderDealer(); });
+        })(i);
+      }
+      t(1400, function () {
+        phase = "choosing";
+        setMessage("Pick two cards to keep");
+        renderPlayer(); renderActions();
+      });
+    }
+
+    // ---------- the one decision ----------
+    function togglePick(i) {
+      if (phase !== "choosing") return;
+      var at = picked.indexOf(i);
+      if (at >= 0) picked.splice(at, 1);
+      else {
+        if (picked.length >= 2) picked.shift();
+        picked.push(i);
+      }
+      setMessage(picked.length === 2 ? "Keep these two, or split and play both" : "Pick one more");
+      renderPlayer(); renderActions();
+    }
+    function keepTwo() {
+      if (!canKeep()) return;
+      split = false;
+      var kept = picked.slice().sort();
+      hands = [kept.map(function (i) { return playerFour[i]; })];
+      runOut();
+    }
+    /** A split posts the poker bet again, and the bonus again if there was one. */
+    function splitHands() {
+      if (!canSplit()) return;
+      bankroll -= splitCost();
+      syncWallet();
+      split = true;
+      var kept = picked.slice().sort();
+      var rest = [0, 1, 2, 3].filter(function (i) { return kept.indexOf(i) < 0; });
+      hands = [
+        kept.map(function (i) { return playerFour[i]; }),
+        rest.map(function (i) { return playerFour[i]; })
+      ];
+      runOut();
+    }
+    function runOut() {
+      phase = "runout";
+      dealerKept = SO.houseWay(dealerFour);
+      setMessage(split ? "Two hands in — the board comes out" : "The board comes out");
+      renderAll();
+      for (var i = 0; i < 5; i++) {
+        t(350 + i * 230, function () { board.push(draw()); renderBoard(); });
+      }
+      t(1500, function () {
+        phase = "showdown";
+        setMessage("Dealer sets a hand…");
+        renderActions();
+      });
+      t(2000, function () { dealerUp = true; renderDealer(); });
+      t(2700, settle);
+    }
+    function settle() {
+      settlements = hands.map(function (h) {
+        return SO.settle(h, dealerKept, board, pokerStake, bonusStake);
+      });
+      results = [];
+      settlements.forEach(function (s, i) {
+        var tag = split ? "Hand " + (i + 1) + " · " : "";
+        results.push({ label: tag + "Poker", net: s.poker - pokerStake });
+        if (bonusStake > 0) {
+          results.push({
+            label: tag + (s.bonusWin >= 0 ? "Bonus · " + SO.CAT[SO.BONUS[s.bonusWin][0]] : "Bonus"),
+            net: s.bonus - bonusStake
+          });
+        }
+      });
+      var totalReturn = 0, wins = 0, bigBonus = -1;
+      settlements.forEach(function (s) {
+        totalReturn += s.poker + s.bonus;
+        if (s.outcome === "win") wins++;
+        if (s.bonusWin >= 0 && (bigBonus < 0 || s.bonusWin < bigBonus)) bigBonus = s.bonusWin;
+      });
+      bankroll += totalReturn;
+      syncWallet();
+      var staked = (pokerStake + bonusStake) * handCount();
+      var net = totalReturn - staked;
+      var pays = bigBonus >= 0 ? SO.BONUS[bigBonus][1] : 0;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        pays >= 40 ? SO.CAT[SO.BONUS[bigBonus][0]] + " — bonus pays " + fmt(pays) + " to 1" :
+        split && wins === 2 ? "Both hands win!" :
+        split && wins === 1 ? "One hand each" :
+        wins === 1 ? "You win with " + SO.CAT[settlements[0].player.cat] :
+        net > 0 ? "Up " + fmt(net) + " on the bonus" :
+        "Dealer wins with " + SO.CAT[settlements[0].dealer.cat];
+      setMessage(msg, pays > 0 ? "bonus" : wins > 0 ? "win" : "lose");
+      renderAll();
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
+    }
+
+    // ---------- table ----------
+    function clearCards() {
+      playerFour = []; picked = []; hands = [];
+      dealerFour = []; dealerKept = []; dealerUp = false; board = [];
+      settlements = []; results = [];
+    }
+    function reset() {
+      clearTimers();
+      phase = "betting";
+      clearCards();
+      chipHist = [];
+      poker = 0; bonus = 0;
+      pokerStake = 0; bonusStake = 0; split = false;
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      reset();
+      if (repeat && lastPoker + lastBonus <= bankroll) {
+        poker = lastPoker; bonus = lastBonus;
+      } else if (repeat && lastPoker <= bankroll) {
+        poker = lastPoker;
+      }
+      setMessage("Place your poker bet");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      reset();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
+      setMessage("Place your poker bet");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    $("so-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
+      openBuyIn(function (v) { bankroll = v; setMessage("Place your poker bet"); renderAll(); });
     });
     return { enter: enter };
   })();

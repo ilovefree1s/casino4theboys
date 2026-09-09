@@ -25,6 +25,7 @@ import com.example.casinogames.games.djwild.DjWildScreen
 import com.example.casinogames.games.poker.PokerMenuScreen
 import com.example.casinogames.games.poker.PokerVariant
 import com.example.casinogames.games.roulette.RouletteScreen
+import com.example.casinogames.games.shootout.ShootoutScreen
 import com.example.casinogames.lobby.GameId
 import com.example.casinogames.lobby.LobbyScreen
 import com.example.casinogames.lobby.MainMenuScreen
@@ -95,6 +96,15 @@ class MainActivity : ComponentActivity() {
                         val back = "$mode:${GameId.POKER.name}"
                         BackHandler { screen = back }
                         DjWildScreen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == PokerVariant.TEXAS_SHOOTOUT.name -> {
+                        val back = "$mode:${GameId.POKER.name}"
+                        BackHandler { screen = back }
+                        ShootoutScreen(
                             onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
