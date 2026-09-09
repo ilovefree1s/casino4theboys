@@ -420,7 +420,9 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val gutter = (maxWidth - (spot * 2 + gap)) / 2
         Row(
-            Modifier.align(Alignment.BottomCenter),
+            // Lifted a little off the rail, so the spots sit mid-ladder
+            // rather than crowding the chips.
+            Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
