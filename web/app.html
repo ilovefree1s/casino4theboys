@@ -1207,26 +1207,8 @@
   .medallion.won { box-shadow: 0 0 0 3px var(--glow), 0 0 18px rgba(255,228,92,.5); }
   .medallion .tiny { font-size: 6px; font-weight: 800; color: var(--ink); letter-spacing: .05em; }
   .medallion .big { font-family: var(--display); font-size: 15px; color: #C22A18; line-height: .95; }
-  .circles { display: flex; gap: 48px; justify-content: center; margin-top: 14px; }
-  .circle-wrap { position: relative; width: 140px; height: 134px; }
-  .circle-wrap svg.arch { position: absolute; top: 0; left: 50%; transform: translateX(-50%); overflow: visible; }
-  .bet-circle {
-    position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100px; height: 100px; border-radius: 50%;
-    border: 7px solid; background: transparent; transition: background 160ms, box-shadow 160ms;
-    box-shadow: inset 0 0 0 2px var(--ink), 0 0 0 2px var(--ink);
-  }
-  .bet-circle.player { border-color: var(--player); }
-  .bet-circle.banker { border-color: var(--banker); }
-  .bet-circle.active { background: rgba(0,0,0,.2); }
-  .bet-circle.won {
-    background: rgba(255,228,92,.18);
-    box-shadow: 0 0 22px rgba(255,228,92,.55), inset 0 0 0 2px var(--ink), 0 0 0 2px var(--ink);
-  }
-  .arch text {
-    font-family: var(--display); font-size: 19px; font-weight: 900; letter-spacing: .12em;
-    stroke: var(--ink); stroke-width: 1.6px; paint-order: stroke;
-  }
+  /* The old code-drawn baccarat circles are gone; their .bet-circle box
+     shadow was bleeding an ink ring onto the painted rings. */
   .actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; min-height: 46px; }
   .road-drawer {
     position: fixed; top: env(safe-area-inset-top, 0px); z-index: 20;
@@ -7004,8 +6986,16 @@
             el.style.display = "none";
             var t = document.elementFromPoint(ev.clientX, ev.clientY);
             var spot = t && t.closest ? t.closest(".bspot") : null;
+            // Dropped back on the rack (or the buttons/strip below the felt):
+            // take the bet down, money stays in the purse until the deal.
+            var onRack = t && t.closest && t.closest(".rack, .bacc-bottom, .actions");
             if (spot && spot.id.indexOf("spot-") === 0) {
               moveBet(key, spot.id.slice(5));
+            } else if (onRack) {
+              delete bets[key];
+              chipHistory = chipHistory.filter(function (h) { return h[0] !== key; });
+              setMessage("Bet taken down");
+              updateMoney();
             }
           }
           updatePlaced();
@@ -7687,7 +7677,16 @@
             dragGuard = Date.now();
             var art = localArt(ev.clientX, ev.clientY);
             var route = routeArt(art.x, art.y);
+            // Dropped on the painted rack (or below the felt): take the bet
+            // down — the money never left the purse.
+            var onRack = art.y >= 1500 || art.y >= A.H;
             if (route) moveChip(id, route);
+            else if (onRack) {
+              delete bets[id]; delete defs[id]; delete cens[id];
+              chipHist = chipHist.filter(function (h) { return h[0] !== id; });
+              note("Bet taken down");
+              renderMoney();
+            }
           }
           renderFelt();
         }

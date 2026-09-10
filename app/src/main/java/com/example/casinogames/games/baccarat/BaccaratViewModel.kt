@@ -154,6 +154,15 @@ class BaccaratViewModel(app: Application) : AndroidViewModel(app) {
         message = "${to.displayName} — bet moved"
     }
 
+    /** Drag a stack off the felt onto the rack: the bet comes down. */
+    fun removeBet(type: BetType) {
+        if (phase != Phase.BETTING) return
+        if (bets.remove(type) != null) {
+            chipHistory.removeAll { it.first == type }
+            message = "Bet taken down"
+        }
+    }
+
     fun clearBets() {
         if (phase != Phase.BETTING) return
         bets.clear()

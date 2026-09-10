@@ -177,6 +177,17 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         message = toDef.name
     }
 
+    /** Drag a stack off the felt onto the rack: the bet comes down. */
+    fun removeChip(id: String) {
+        if (phase != RoulettePhase.BETTING) return
+        if (bets.remove(id) != null) {
+            defs.remove(id)
+            chipHistory.removeAll { it.first == id }
+            notice = null
+            message = "Bet taken down"
+        }
+    }
+
     fun undoChip() {
         if (phase != RoulettePhase.BETTING) return
         val (id, amount) = chipHistory.removeLastOrNull() ?: return

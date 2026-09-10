@@ -544,7 +544,12 @@ private fun Modifier.chipDrag(
         if (total.getDistance() < 14f) return@awaitEachGesture
         val artX = startX + total.x / (k * density)
         val artY = startY + total.y / (k * density)
-        val hit = resolveDropSpot(artX, artY) ?: return@awaitEachGesture
+        val hit = resolveDropSpot(artX, artY)
+        if (hit == null) {
+            // Dropped on the painted rack: take the bet down.
+            if (artY >= A.CHIPS_TOP) vm.removeChip(id)
+            return@awaitEachGesture
+        }
         if (hit.first == id) return@awaitEachGesture
         vm.moveChip(id, hit.first, hit.second)
         val third = hit.third

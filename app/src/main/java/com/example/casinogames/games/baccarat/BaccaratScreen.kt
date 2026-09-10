@@ -221,8 +221,12 @@ fun BaccaratScreen(
                                     if (total.getDistance() < 14f) return@awaitEachGesture
                                     val cx = (def.x0 + def.x1) / 2f + total.x / (kx * density)
                                     val cy = (def.y0 + def.y1) / 2f + total.y / (ky * density)
-                                    val target = spotAt(cx, cy) ?: return@awaitEachGesture
-                                    vm.moveBet(def.type, target.type)
+                                    val target = spotAt(cx, cy)
+                                    when {
+                                        target != null -> vm.moveBet(def.type, target.type)
+                                        // Dropped below the spots, onto the rack: take it down.
+                                        cy > 1500f -> vm.removeBet(def.type)
+                                    }
                                 }
                             },
                     ) {
