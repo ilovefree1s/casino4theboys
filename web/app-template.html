@@ -7722,14 +7722,20 @@
       if (route) addChip(route);
     });
     (function () {
-      // The painted rack: five chips picked by a transparent overlay strip.
+      // The painted rack: five chips, each picked by a round overlay sat on
+      // its exact painted centre (art 162 + i*127.5, diameter 104) so the
+      // selection ring lands dead on the chip, not the gaps.
       var rack = document.createElement("div");
-      rack.style.cssText = "position:absolute;left:" + PX(110) + ";top:" + PY(1512) +
-        ";width:" + PX(636 - 110) + ";height:" + PY(1611 - 1512) + ";display:flex;z-index:9";
+      rack.style.cssText = "position:absolute;inset:0;z-index:9;pointer-events:none";
       var vals = [25, 100, 500, 1000, 5000];
-      vals.forEach(function (v) {
+      var FIRST = 162, PITCH = 127.5, D = 104;
+      vals.forEach(function (v, i) {
+        var mid = FIRST + i * PITCH;
         var b = document.createElement("button");
-        b.style.cssText = "flex:1;background:none;border:0;cursor:pointer;border-radius:50%;margin:0 2%";
+        b.style.cssText = "position:absolute;pointer-events:auto;background:none;border:0;" +
+          "cursor:pointer;border-radius:50%;" +
+          "left:" + PX(mid - D / 2) + ";top:" + PY(1512) +
+          ";width:" + PX(D) + ";height:" + PY(1611 - 1512);
         b.setAttribute("data-chip", v);
         b.addEventListener("click", function () {
           if (chipsFor(bankroll, Shell.limits()).indexOf(v) < 0) return;
