@@ -1109,11 +1109,22 @@
     height: 46px; border-radius: 999px; overflow: hidden;
   }
   .bacc-imgbtn img { height: 100%; display: block; }
+  /* The placed chip rides ABOVE the circle button so a press lands on the
+     chip (to drag it), not the button beneath it. */
   .bspot .placed {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
-    display: none; touch-action: none; cursor: grab;
+    display: none; touch-action: none; cursor: grab; z-index: 5;
+    /* The shared .placed is pointer-events:none so it never blocks a tap in
+       the tap-only games; baccarat's chips are draggable, so they must catch
+       the press themselves. */
+    pointer-events: auto;
   }
-  .bacc-sheet .bet-circle { position: absolute; inset: 0; background: none; border: 0; border-radius: 50%; cursor: pointer; }
+  /* The chip image must not hijack the drag with the browser's native
+     image-drag, and events belong to the .placed handler, not the img. */
+  .bspot .placed img, .rl-felt .rl-chip img {
+    pointer-events: none; -webkit-user-drag: none; user-select: none;
+  }
+  .bacc-sheet .bet-circle { position: absolute; inset: 0; background: none; border: 0; border-radius: 50%; cursor: pointer; z-index: 1; }
   .bacc-sheet .bet-circle.active { background: rgba(0,0,0,.18); }
   .bacc-sheet .bet-circle.won { box-shadow: 0 0 0 3px #A8E063, inset 0 0 34px rgba(168,224,99,.35); }
   .bacc-wrap .pills { margin-top: 4px; }
@@ -6966,6 +6977,7 @@
       updateMoney(); updatePlaced();
     }
     function armChipDrag(el, key) {
+      el.ondragstart = function (e) { e.preventDefault(); return false; };
       el.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault();
@@ -6983,8 +6995,10 @@
         function up(ev) {
           window.removeEventListener("pointermove", mv);
           window.removeEventListener("pointerup", up);
+          // Guard the click that trails any chip press, so the spot beneath
+          // does not also fire.
+          dragGuard = Date.now();
           if (moved) {
-            dragGuard = Date.now();
             el.style.display = "none";
             var t = document.elementFromPoint(ev.clientX, ev.clientY);
             var spot = t && t.closest ? t.closest(".bspot") : null;
@@ -6999,6 +7013,10 @@
               setMessage("Bet taken down");
               updateMoney();
             }
+          } else {
+            // A tap on the chip stacks another, since the chip now covers
+            // the spot it sits on.
+            addBet(key);
           }
           updatePlaced();
         }
@@ -7661,6 +7679,7 @@
       return { x: (clientX - r.left) / r.width * A.W, y: (clientY - r.top) / r.height * A.H };
     }
     function armDrag(chip, id) {
+      chip.ondragstart = function (e) { e.preventDefault(); return false; };
       chip.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault(); e.stopPropagation();
