@@ -6969,9 +6969,11 @@
       el.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault();
-        try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
         var x0 = e.clientX, y0 = e.clientY, moved = false;
         var base = el.style.transform || "translate(-50%,-50%)";
+        // Move and up ride on window, not the chip: pointer capture is
+        // unreliable in some webviews, so the drag was dying the moment the
+        // finger left the chip. The window always hears the whole gesture.
         function mv(ev) {
           var dx = ev.clientX - x0, dy = ev.clientY - y0;
           if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
@@ -6979,8 +6981,8 @@
           el.style.zIndex = 30;
         }
         function up(ev) {
-          el.removeEventListener("pointermove", mv);
-          el.removeEventListener("pointerup", up);
+          window.removeEventListener("pointermove", mv);
+          window.removeEventListener("pointerup", up);
           if (moved) {
             dragGuard = Date.now();
             el.style.display = "none";
@@ -7000,8 +7002,8 @@
           }
           updatePlaced();
         }
-        el.addEventListener("pointermove", mv);
-        el.addEventListener("pointerup", up);
+        window.addEventListener("pointermove", mv);
+        window.addEventListener("pointerup", up);
       };
     }
     function updatePlaced() {
@@ -7662,8 +7664,9 @@
       chip.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault(); e.stopPropagation();
-        try { chip.setPointerCapture(e.pointerId); } catch (err) { /* synthetic */ }
         var x0 = e.clientX, y0 = e.clientY, moved = false;
+        // Move and up ride on window, not the chip — pointer capture is
+        // unreliable in some webviews and the drag was dying on the first move.
         function mv(ev) {
           var dx = ev.clientX - x0, dy = ev.clientY - y0;
           if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
@@ -7671,8 +7674,8 @@
           chip.style.zIndex = 30;
         }
         function up(ev) {
-          chip.removeEventListener("pointermove", mv);
-          chip.removeEventListener("pointerup", up);
+          window.removeEventListener("pointermove", mv);
+          window.removeEventListener("pointerup", up);
           if (moved) {
             dragGuard = Date.now();
             var art = localArt(ev.clientX, ev.clientY);
@@ -7690,8 +7693,8 @@
           }
           renderFelt();
         }
-        chip.addEventListener("pointermove", mv);
-        chip.addEventListener("pointerup", up);
+        window.addEventListener("pointermove", mv);
+        window.addEventListener("pointerup", up);
       };
     }
 
