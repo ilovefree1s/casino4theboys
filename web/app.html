@@ -963,7 +963,8 @@
   .rl-wrap { display: flex; justify-content: center; width: 100%; background: #080509; }
   .rl-sheet { position: relative; width: min(440px, 100vw, calc(100dvh * 836 / 1722)); --sw: 440px; }
   .rl-sheet .rl-art { width: 100%; display: block; }
-  .rl-back { position: absolute; left: 0; top: 0; width: 23.9%; height: 6.4%; background: none; border: 0; cursor: pointer; }
+  /* Above the felt layer, which spans the whole sheet and was swallowing the press. */
+  .rl-back { position: absolute; left: 0; top: 0; width: 23.9%; height: 6.4%; background: none; border: 0; cursor: pointer; z-index: 12; }
   .rl-badge { position: absolute; left: 42.1%; top: .58%; width: 15.79%; border-radius: 50%; }
   .rl-money {
     position: absolute; right: 4.3%; text-align: right; white-space: nowrap;
