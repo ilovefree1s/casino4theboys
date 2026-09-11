@@ -6142,7 +6142,7 @@
           // The poker bet rides above the two side bets, which sit tight
           // together under it.
           '<div class="mid so-cluster">' +
-            spotHtml("so-poker", "ring", "POKER", betting ? poker : pokerStake * n, betting, AMBER) +
+            spotHtml("so-poker", "ring", "BET", betting ? poker : pokerStake * n, betting, AMBER) +
             '<div class="so-sides">' +
               spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
               spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
@@ -6340,7 +6340,7 @@
       results = [];
       settlements.forEach(function (s, i) {
         var tag = split ? "Hand " + (i + 1) + " · " : "";
-        results.push({ label: tag + "Poker", net: s.poker - pokerStake });
+        results.push({ label: tag + "Bet", net: s.poker - pokerStake });
         if (bonusStake > 0) {
           results.push({
             label: tag + (s.bonusWin >= 0 ? "Bonus · " + SO.CAT[SO.BONUS[s.bonusWin][0]] : "Bonus"),

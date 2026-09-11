@@ -306,7 +306,7 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         val out = mutableListOf<ShootoutResult>()
         settled.forEachIndexed { i, s ->
             val tag = if (split) "Hand ${i + 1} · " else ""
-            out.add(ShootoutResult("${tag}Poker", s.pokerReturn - pokerStake))
+            out.add(ShootoutResult("${tag}Bet", s.pokerReturn - pokerStake))
             if (bonusStake > 0) {
                 out.add(
                     ShootoutResult(

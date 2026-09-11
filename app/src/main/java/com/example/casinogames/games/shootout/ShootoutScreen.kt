@@ -431,7 +431,7 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             CircleSpot(
-                "POKER", ShootoutAmber,
+                "BET", ShootoutAmber,
                 amount = if (betting) vm.poker else vm.pokerStake * vm.handCount,
                 size = spot,
                 onClick = { vm.addPoker() }.takeIf { betting },
