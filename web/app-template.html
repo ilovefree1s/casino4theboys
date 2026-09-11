@@ -7178,9 +7178,10 @@
         a.appendChild(b);
       }
       if (phase === "betting") {
-        imgBtn("__BTN_UNDO__", "Undo", undoBet);
-        imgBtn("__BTN_DEAL__", "Deal", deal);
+        // No undo: a chip drags back to the rack, and CLEAR takes the whole
+        // bet down. Quiet on the left, the go on the right.
         imgBtn("__BTN_CLEAR__", "Clear", clearBets);
+        imgBtn("__BTN_DEAL__", "Deal", deal);
         if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
           btn("Buy back in", true, function () {
             openBuyIn(function (v) {

@@ -618,9 +618,10 @@ private fun ActionButtons(vm: BaccaratViewModel) {
     ) {
         when (vm.phase) {
             Phase.BETTING -> {
-                ImgButton(R.drawable.btn_undo, "Undo", vm::undoBet)
-                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
+                // No undo: a chip drags back to the rack, and CLEAR takes the
+                // whole bet down. Quiet on the left, the go on the right.
                 ImgButton(R.drawable.btn_clear, "Clear", vm::clearBets)
+                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
             }
             Phase.RESULT -> {
                 ImgButton(R.drawable.btn_newbet, "New bet") { vm.nextHand(false) }
