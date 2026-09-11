@@ -3527,7 +3527,7 @@
 
     /* The Bonus, on the player's own best five, win or lose. Galaxy's
        top-heavy pay table: [category, pays]. A straight is the floor. */
-    var BONUS = [[12, 5000], [11, 500], [10, 1000], [9, 100], [8, 50], [7, 5], [6, 3], [5, 2], [4, 1]];
+    var BONUS = [[12, 5000], [11, 1000], [10, 500], [9, 100], [8, 50], [7, 5], [6, 3], [5, 2], [4, 1]];
     function bonusRung(cat) {
       for (var i = 0; i < BONUS.length; i++) if (BONUS[i][0] === cat) return i;
       return -1;

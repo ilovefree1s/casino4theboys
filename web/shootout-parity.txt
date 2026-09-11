@@ -19,7 +19,7 @@
 
 As Ks | 8h 8d 3c 4s | Ah Kd 2c 7h 9s | 25 25 25 | win 50 0 0 | Two Pair | Pair | 8h 8d
 Qs Jd | Qh Jc 3s 4d | Ah Kh Tc 9s 2c | 25 25 25 | lose 0 50 2525 | Straight | Straight | Qh Jc            # dealer wins the tie; the beaten straight pays
-Ah Kh | 2c 2d 9s 9h | Qh Jh Th 3c 4d | 25 25 25 | win 50 12525 0 | Royal Flush | Pair | 9s 9h
+Ah Kh | 2c 2d 9s 9h | Qh Jh Th 3c 4d | 25 25 25 | win 50 25025 0 | Royal Flush | Pair | 9s 9h
 7s 7s | Ac Kd 5h 6h | 7h 7d 7c 2s 3s | 25 25 25 | win 50 1275 250 | Five of a Kind | Three of a Kind | Ac Kd   # dealer trips go down
 9d 9d | 3c 4c 5c 6c | 9d 9d 9d Ks 2h | 25 25 25 | win 50 125025 250 | Suited Five of a Kind | Three of a Kind | 6c 5c
 5s 5h | Ad Qs 7c 7d | 5d Kc 9h 2s 3c | 25 25 25 | win 50 0 0 | Three of a Kind | High Card | Ad Qs       # trips lose the bonus
@@ -34,6 +34,6 @@ Ac Ad | Kc Kd 2s 3s | As Ah 5c 9d Jh | 50 0 0 | win 100 0 0 | Four of a Kind | T
 Ad 2d | 9c Tc 6d 6s | 3s 4h 5c Kd Qh | 25 25 25 | win 50 50 0 | Straight | Pair | 6s 6d                 # the wheel
 Ah 2h | Kh Jh Qc 4d | 2s 5c 7d 9h 3c | 25 25 25 | win 50 0 0 | Pair | High Card | Kh Jh                # both ten-plus suited over unsuited
 Ac Kc | 9s 9c Ts Td | 3h 4h 6h 8c 2d | 25 25 25 | lose 0 0 0 | High Card | Pair | Ts Td                 # the higher of two pairs
-Jc Jc | Ah Kd 4s 8h | Jc Jc 3d 7h Qs | 25 25 25 | win 50 25025 0 | Suited Four of a Kind | Pair | Ah Kd          # four of the very same card
-7s 7s | Ah Kd 2c 3c | 7s 7s 7h 4d 9c | 25 25 25 | win 50 25025 250 | Suited Four of a Kind | Three of a Kind | Ah Kd   # suited quads outrank the fifth seven
-8h 8h | Kc Kd 5s 6s | 8h 8h 8s Ac Ad | 25 25 25 | win 50 25025 10025 | Suited Four of a Kind | Full House | Kd Kc    # ...and the dealer's full house goes down
+Jc Jc | Ah Kd 4s 8h | Jc Jc 3d 7h Qs | 25 25 25 | win 50 12525 0 | Suited Four of a Kind | Pair | Ah Kd          # four of the very same card
+7s 7s | Ah Kd 2c 3c | 7s 7s 7h 4d 9c | 25 25 25 | win 50 12525 250 | Suited Four of a Kind | Three of a Kind | Ah Kd   # suited quads outrank the fifth seven
+8h 8h | Kc Kd 5s 6s | 8h 8h 8s Ac Ad | 25 25 25 | win 50 12525 10025 | Suited Four of a Kind | Full House | Kd Kc    # ...and the dealer's full house goes down

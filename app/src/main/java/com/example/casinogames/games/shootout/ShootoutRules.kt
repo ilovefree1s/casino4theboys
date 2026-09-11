@@ -18,20 +18,20 @@ object ShootoutRules {
      * top-heavy pay table, the one the user picked for its big numbers:
      *
      *   Suited Five of a Kind .. 5,000 to 1      Five of a Kind ...... 50 to 1
-     *   Royal Flush ............. 500 to 1       Four of a Kind ....... 5 to 1
-     *   Suited Four of a Kind . 1,000 to 1      Full House ........... 3 to 1
+     *   Royal Flush ........... 1,000 to 1      Four of a Kind ....... 5 to 1
+     *   Suited Four of a Kind ... 500 to 1      Full House ........... 3 to 1
      *   Straight Flush .......... 100 to 1       Flush ................ 2 to 1
      *                                            Straight ............. 1 to 1
      *
      * Three of a kind and under lose on this table; the common table pushes
      * trips and pays quads 7, but its ceiling is a fifth of this one's.
      * Suited quads is the house's own rung, ranked between the royal and
-     * the straight flush by rarity, and priced by the user: a grand to one.
+     * the straight flush by rarity, and priced a rung under the royal.
      */
     enum class BonusPay(val label: String, val payout: Int) {
         FIVE_KIND_SUITED("Suited Five of a Kind", 5_000),
-        ROYAL_FLUSH("Royal Flush", 500),
-        FOUR_KIND_SUITED("Suited Four of a Kind", 1_000),
+        ROYAL_FLUSH("Royal Flush", 1_000),
+        FOUR_KIND_SUITED("Suited Four of a Kind", 500),
         STRAIGHT_FLUSH("Straight Flush", 100),
         FIVE_KIND("Five of a Kind", 50),
         FOUR_KIND("Four of a Kind", 5),

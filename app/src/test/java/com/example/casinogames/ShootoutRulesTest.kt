@@ -168,6 +168,6 @@ class ShootoutRulesTest {
         assertEquals(ShootoutRules.Outcome.LOSE, s.outcome)
         assertEquals(0.0, s.pokerReturn, 0.001)
         assertEquals(ShootoutRules.BonusPay.ROYAL_FLUSH, s.bonusWin)
-        assertEquals(5010.0, s.bonusReturn, 0.001)
+        assertEquals(10010.0, s.bonusReturn, 0.001)
     }
 }
