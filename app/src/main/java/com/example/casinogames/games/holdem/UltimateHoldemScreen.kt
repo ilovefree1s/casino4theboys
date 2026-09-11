@@ -638,9 +638,9 @@ private fun Actions(vm: UltimateHoldemViewModel) {
     ) {
         when (vm.phase) {
             UthPhase.BETTING -> {
-                ActionButton("UNDO", NeonPurpleDim, Modifier.weight(1f)) { vm.undoChip() }
-                ActionButton("DEAL", NeonPurple, Modifier.weight(1f)) { vm.deal() }
+                // No undo: CLEAR takes the whole bet back. Quiet on the left, the go on the right.
                 ActionButton("CLEAR", NeonPurpleDim, Modifier.weight(1f)) { vm.clearBet() }
+                ActionButton("DEAL", NeonPurple, Modifier.weight(1.4f)) { vm.deal() }
             }
             UthPhase.PRE_FLOP, UthPhase.FLOP, UthPhase.RIVER -> {
                 vm.playChoices.forEach { mult ->

@@ -5277,9 +5277,9 @@
       var a = $("uth-actions");
       a.innerHTML = "";
       if (phase === "betting") {
-        a.appendChild(actionBtn("UNDO", DIM, undoChip));
-        a.appendChild(actionBtn("DEAL", GREEN, deal));
+        // No undo: CLEAR takes the whole bet back.
         a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        a.appendChild(actionBtn("DEAL", GREEN, deal));
       } else if (street()) {
         playChoices().forEach(function (m) {
           a.appendChild(actionBtn("PLAY " + m + "x", GREEN, function () { play(m); }));
