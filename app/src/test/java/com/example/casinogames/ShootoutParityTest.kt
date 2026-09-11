@@ -74,10 +74,12 @@ class ShootoutParityTest {
                 board = board,
                 poker = stakes[0].toDouble(),
                 bonus = stakes[1].toDouble(),
+                badBeat = stakes[2].toDouble(),
             )
             assertEquals("outcome · $line", expected[0], s.outcome.name.lowercase())
             assertEquals("poker · $line", expected[1].toDouble(), s.pokerReturn, 0.001)
             assertEquals("bonus · $line", expected[2].toDouble(), s.bonusReturn, 0.001)
+            assertEquals("bad beat · $line", expected[3].toDouble(), s.badBeatReturn, 0.001)
             assertEquals("player hand · $line", cols[5], s.playerHand.category.label)
             assertEquals("dealer hand · $line", cols[6], s.dealerHand.category.label)
         }

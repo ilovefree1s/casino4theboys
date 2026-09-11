@@ -25,18 +25,19 @@ enum class ShootoutPhase { BETTING, DEALING, CHOOSING, RUNOUT, SHOWDOWN, RESULT 
 /** One line of the settlement breakdown. */
 data class ShootoutResult(val label: String, val net: Double)
 
-private enum class Spot { POKER, BONUS }
+private enum class Spot { POKER, BONUS, BAD_BEAT }
 
 /**
- * Texas Shootout. Post a poker bet and, if wanted, a bonus; take four cards;
- * keep two of them — or split them into two hands for a second poker bet (and
- * a second bonus, if one was made). The dealer keeps two by house way, five
- * come out on the board, and the dealer takes every tie.
+ * Texas Shootout. Post a poker bet and, if wanted, a bonus and a bad beat;
+ * take four cards; keep two of them — or split them into two hands for a
+ * second poker bet (and second side bets, if any were made). The dealer keeps
+ * two by house way, five come out on the board, and the dealer takes every tie.
  */
 class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
     private val shoe = Shoe(decks = ShootoutRules.DECKS)
     private var lastPoker = 0
     private var lastBonus = 0
+    private var lastBadBeat = 0
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
     private var freePurse by mutableDoubleStateOf(FreePlay.buyIn)
@@ -58,11 +59,15 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var bonus by mutableIntStateOf(0)
         private set
+    var badBeat by mutableIntStateOf(0)
+        private set
 
     /** Locked-in stakes per hand once dealt; a split hand posts the same again. */
     var pokerStake by mutableIntStateOf(0)
         private set
     var bonusStake by mutableIntStateOf(0)
+        private set
+    var badBeatStake by mutableIntStateOf(0)
         private set
     var split by mutableStateOf(false)
         private set
@@ -93,8 +98,8 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
     val handCount: Int get() = if (split) 2 else 1
 
     val totalAtRisk: Int
-        get() = if (phase == ShootoutPhase.BETTING) poker + bonus
-        else (pokerStake + bonusStake) * handCount
+        get() = if (phase == ShootoutPhase.BETTING) poker + bonus + badBeat
+        else (pokerStake + bonusStake + badBeatStake) * handCount
 
     // ---- campaign ----
 
@@ -108,7 +113,7 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         campaign = campaignMode
         modeInitialized = true
         clearTable()
-        poker = 0; bonus = 0
+        poker = 0; bonus = 0; badBeat = 0
         if (!campaignMode) freePurse = FreePlay.buyIn
         message = "Place your poker bet"
     }
@@ -133,10 +138,11 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addPoker() = place(Spot.POKER)
     fun addBonus() = place(Spot.BONUS)
+    fun addBadBeat() = place(Spot.BAD_BEAT)
 
     private fun place(spot: Spot) {
         if (phase != ShootoutPhase.BETTING) return
-        val room = (bankroll - (poker + bonus)).toInt()
+        val room = (bankroll - (poker + bonus + badBeat)).toInt()
         val affordable = minOf(selectedChip, room)
         if (affordable <= 0) {
             message = "Not enough for that chip"
@@ -146,19 +152,25 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         val amount = when (spot) {
             Spot.POKER -> lim.allow(affordable, poker)
             Spot.BONUS -> lim.allow(affordable, bonus, side = true)
+            Spot.BAD_BEAT -> lim.allowBadBeat(affordable, badBeat)
         }
         if (amount <= 0) {
-            message = lim.refusal(side = spot == Spot.BONUS)
+            message = when (spot) {
+                Spot.BAD_BEAT -> lim.badBeatRefusal()
+                else -> lim.refusal(side = spot == Spot.BONUS)
+            }
             return
         }
         when (spot) {
             Spot.POKER -> poker += amount
             Spot.BONUS -> bonus += amount
+            Spot.BAD_BEAT -> badBeat += amount
         }
         chipHistory.add(spot to amount)
         message = when {
             amount < selectedChip -> "All in!"
             spot == Spot.BONUS -> "Bonus riding"
+            spot == Spot.BAD_BEAT -> "Bad Beat riding"
             else -> "Poker bet posted"
         }
     }
@@ -169,12 +181,13 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         when (last.first) {
             Spot.POKER -> poker = (poker - last.second).coerceAtLeast(0)
             Spot.BONUS -> bonus = (bonus - last.second).coerceAtLeast(0)
+            Spot.BAD_BEAT -> badBeat = (badBeat - last.second).coerceAtLeast(0)
         }
     }
 
     fun clearBets() {
         if (phase != ShootoutPhase.BETTING) return
-        poker = 0; bonus = 0
+        poker = 0; bonus = 0; badBeat = 0
         chipHistory.clear()
         message = "Place your poker bet"
     }
@@ -184,16 +197,17 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
     fun deal() {
         if (phase != ShootoutPhase.BETTING) return
         if (poker <= 0) {
-            message = if (bonus > 0) "The bonus rides with a poker bet" else "Place a poker bet first"
+            message = if (bonus > 0 || badBeat > 0) "The side bets ride with a poker bet"
+            else "Place a poker bet first"
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        spend((poker + bonus).toDouble())
-        lastPoker = poker; lastBonus = bonus
-        pokerStake = poker; bonusStake = bonus
+        spend((poker + bonus + badBeat).toDouble())
+        lastPoker = poker; lastBonus = bonus; lastBadBeat = badBeat
+        pokerStake = poker; bonusStake = bonus; badBeatStake = badBeat
         chipHistory.clear()
         clearCards()
-        poker = 0; bonus = 0
+        poker = 0; bonus = 0; badBeat = 0
         phase = ShootoutPhase.DEALING
         message = "Dealing…"
 
@@ -225,8 +239,8 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
 
     val canKeep: Boolean get() = phase == ShootoutPhase.CHOOSING && picked.size == 2
 
-    /** A split posts the poker bet again, and the bonus again if there was one. */
-    val splitCost: Int get() = pokerStake + bonusStake
+    /** A split posts the poker bet again, and the side bets again if there were any. */
+    val splitCost: Int get() = pokerStake + bonusStake + badBeatStake
     val canSplit: Boolean get() = canKeep && bankroll >= splitCost
 
     val canTakeMarker: Boolean
@@ -282,6 +296,7 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
                 board = board.toList(),
                 poker = pokerStake.toDouble(),
                 bonus = bonusStake.toDouble(),
+                badBeat = badBeatStake.toDouble(),
             )
         }
         settlements = settled
@@ -300,15 +315,25 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
                     ),
                 )
             }
+            if (badBeatStake > 0) {
+                out.add(
+                    ShootoutResult(
+                        tag + (s.badBeatWin?.let { "Bad Beat · ${it.label}" } ?: "Bad Beat"),
+                        s.badBeatReturn - badBeatStake,
+                    ),
+                )
+            }
         }
         results = out
 
-        val staked = (pokerStake + bonusStake) * handCount
+        val staked = (pokerStake + bonusStake + badBeatStake) * handCount
         val net = totalReturn - staked
         val wins = settled.count { it.outcome == ShootoutRules.Outcome.WIN }
         val bigBonus = settled.mapNotNull { it.bonusWin }.minByOrNull { it.ordinal }
+        val badBeatHit = settled.mapNotNull { it.badBeatWin }.minByOrNull { it.rung.ordinal }
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
+            badBeatHit != null -> "${badBeatHit.label} — bad beat pays ${formatWhole(badBeatHit.rung.payout)} to 1"
             bigBonus != null && bigBonus.payout >= 40 -> "${bigBonus.label} — bonus pays ${bigBonus.payout} to 1"
             split && wins == 2 -> "Both hands win!"
             split && wins == 1 -> "One hand each"
@@ -322,15 +347,17 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
     fun nextHand(repeat: Boolean) {
         if (phase != ShootoutPhase.RESULT) return
         clearTable()
-        if (repeat && lastPoker + lastBonus <= bankroll) {
-            poker = lastPoker; bonus = lastBonus
+        if (repeat && lastPoker + lastBonus + lastBadBeat <= bankroll) {
+            poker = lastPoker; bonus = lastBonus; badBeat = lastBadBeat
         } else if (repeat && lastPoker <= bankroll) {
-            poker = lastPoker; bonus = 0
+            poker = lastPoker; bonus = 0; badBeat = 0
         } else {
-            poker = 0; bonus = 0
+            poker = 0; bonus = 0; badBeat = 0
         }
         message = "Place your poker bet"
     }
+
+    private fun formatWhole(v: Int): String = String.format(java.util.Locale.US, "%,d", v)
 
     private fun clearCards() {
         playerFour.clear(); picked.clear(); hands = emptyList()
@@ -343,6 +370,6 @@ class ShootoutViewModel(app: Application) : AndroidViewModel(app) {
         phase = ShootoutPhase.BETTING
         clearCards()
         chipHistory.clear()
-        pokerStake = 0; bonusStake = 0; split = false
+        pokerStake = 0; bonusStake = 0; badBeatStake = 0; split = false
     }
 }

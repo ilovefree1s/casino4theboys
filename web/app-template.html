@@ -820,6 +820,10 @@
   .so-side .u { font-family: var(--display); font-size: 8px; letter-spacing: .08em; color: rgba(255,177,61,.7); margin-top: 4px; }
   /* The spots ride a little off the rail, mid-ladder rather than crowding the chips. */
   .so-pays .mid { padding-bottom: 12px; }
+  /* Three spots leave narrow gutters: the ladders must be allowed to shrink
+     into them rather than shove the right one off the glass. */
+  .so-pays { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .so-pays .uth-pays .row { font-size: 8px; line-height: 10px; }
   .so-pays .uth-pays .hd .ttl, .so-pays .uth-pays .row .val { color: #FFE0A3; }
   .so-pays .uth-pays .hd .bar { background: #FFE0A3; }
   #screen-shootout .dj-pill.w { border-color: #FFE0A3; }
@@ -3446,11 +3450,13 @@
      ============================================================ */
   var SO = (function () {
     /* Ascending strength, so the index ranks them. Five of a kind sits
-       between quads and a straight flush; five of the very same card tops
+       between quads and a straight flush; four of the very same card sits
+       between a straight flush and a royal; five of the very same card tops
        everything. */
     var CAT = ["High Card", "Pair", "Two Pair", "Three of a Kind", "Straight",
                "Flush", "Full House", "Four of a Kind", "Five of a Kind",
-               "Straight Flush", "Royal Flush", "Suited Five of a Kind"];
+               "Straight Flush", "Suited Four of a Kind", "Royal Flush",
+               "Suited Five of a Kind"];
     var DECKS = 6;
 
     function straightHigh(desc) {
@@ -3472,8 +3478,13 @@
         return counts[b] - counts[a] || b - a;
       });
       var shape = grouped.map(function (r) { return counts[r]; });
-      if (shape[0] === 5 && flush) return { cat: 11, tie: grouped };
-      if (flush && sh === 14) return { cat: 10, tie: [14] };
+      // Four of the very same card: the quads' rank, all four of it in one suit.
+      var suitedQuads = shape[0] === 4 && hand.filter(function (c) {
+        return UTH.val(c.rank) === grouped[0];
+      }).every(function (c, i, four) { return c.suit === four[0].suit; });
+      if (shape[0] === 5 && flush) return { cat: 12, tie: grouped };
+      if (flush && sh === 14) return { cat: 11, tie: [14] };
+      if (suitedQuads) return { cat: 10, tie: grouped };
       if (flush && sh > 0) return { cat: 9, tie: [sh] };
       if (shape[0] === 5) return { cat: 8, tie: grouped };
       if (shape[0] === 4) return { cat: 7, tie: grouped };
@@ -3516,10 +3527,28 @@
 
     /* The Bonus, on the player's own best five, win or lose. Galaxy's
        top-heavy pay table: [category, pays]. A straight is the floor. */
-    var BONUS = [[11, 5000], [10, 500], [9, 100], [8, 50], [7, 5], [6, 3], [5, 2], [4, 1]];
+    var BONUS = [[12, 5000], [11, 500], [10, 1000], [9, 100], [8, 50], [7, 5], [6, 3], [5, 2], [4, 1]];
     function bonusRung(cat) {
       for (var i = 0; i < BONUS.length; i++) if (BONUS[i][0] === cat) return i;
       return -1;
+    }
+    /* The Bad Beat, DJ Wild's ladder brought over: it pays off whichever hand
+       LOST the showdown, when that hand was trips or better. The shoe-only
+       hands slot in by rank. [category, pays]. */
+    var BAD_BEAT = [[12, 10000], [11, 10000], [10, 5000], [9, 5000], [8, 1000],
+                    [7, 500], [6, 400], [5, 300], [4, 100], [3, 9]];
+    function badBeatRung(cat) {
+      for (var i = 0; i < BAD_BEAT.length; i++) if (BAD_BEAT[i][0] === cat) return i;
+      return -1;
+    }
+    /** The dealer takes ties, so a tied player hand counts as beaten. */
+    function badBeat(p, d, outcome) {
+      var onDealer = outcome === "win";
+      var rung = badBeatRung((onDealer ? d : p).cat);
+      return rung >= 0 ? { rung: rung, onDealer: onDealer } : null;
+    }
+    function badBeatLabel(hit) {
+      return (hit.onDealer ? "Dealer " : "") + CAT[BAD_BEAT[hit.rung][0]];
     }
 
     /* The dealer's house way, Galaxy's list top to bottom. Every two of the
@@ -3573,21 +3602,25 @@
      * The dealer wins ties, so there is no push. Returns are gross — stake
      * plus winnings — and the bonus rides the player's own five either way.
      */
-    function settle(playerHole, dealerHole, board, poker, bonus) {
+    function settle(playerHole, dealerHole, board, poker, bonus, badBeatBet) {
       var p = best(playerHole.concat(board));
       var d = best(dealerHole.concat(board));
       var outcome = cmp(p, d) > 0 ? "win" : "lose";
       var rung = bonus > 0 ? bonusRung(p.cat) : -1;
+      var bb = badBeatBet > 0 ? badBeat(p, d, outcome) : null;
       return {
         player: p, dealer: d, outcome: outcome,
         poker: outcome === "win" ? poker * 2 : 0,
         bonus: rung >= 0 ? bonus * (BONUS[rung][1] + 1) : 0,
-        bonusWin: rung
+        bonusWin: rung,
+        badBeat: bb ? badBeatBet * (BAD_BEAT[bb.rung][1] + 1) : 0,
+        badBeatWin: bb
       };
     }
     return {
       score5: score5, best: best, cmp: cmp, houseWay: houseWay, settle: settle,
-      bonusRung: bonusRung, CAT: CAT, BONUS: BONUS, DECKS: DECKS
+      bonusRung: bonusRung, badBeatRung: badBeatRung, badBeat: badBeat,
+      badBeatLabel: badBeatLabel, CAT: CAT, BONUS: BONUS, BAD_BEAT: BAD_BEAT, DECKS: DECKS
     };
   })();
   window.SO = SO;   // exposed so the rules can be exercised directly
@@ -5940,10 +5973,10 @@
     var shoe = buildShoe(SO.DECKS);
     var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     /** Pending bets while betting. */
-    var poker = 0, bonus = 0, chipHist = [];
-    var lastPoker = 0, lastBonus = 0;
+    var poker = 0, bonus = 0, badBeat = 0, chipHist = [];
+    var lastPoker = 0, lastBonus = 0, lastBadBeat = 0;
     /** Locked-in stakes per hand once dealt; a split posts the same again. */
-    var pokerStake = 0, bonusStake = 0, split = false;
+    var pokerStake = 0, bonusStake = 0, badBeatStake = 0, split = false;
     // betting | dealing | choosing | runout | showdown | result
     var phase = "betting";
     var playerFour = [], picked = [], hands = [];
@@ -5960,9 +5993,10 @@
     }
     function handCount() { return split ? 2 : 1; }
     function atRisk() {
-      return phase === "betting" ? poker + bonus : (pokerStake + bonusStake) * handCount();
+      return phase === "betting" ? poker + bonus + badBeat
+        : (pokerStake + bonusStake + badBeatStake) * handCount();
     }
-    function splitCost() { return pokerStake + bonusStake; }
+    function splitCost() { return pokerStake + bonusStake + badBeatStake; }
     function canKeep() { return phase === "choosing" && picked.length === 2; }
     function canSplit() { return canKeep() && bankroll >= splitCost(); }
 
@@ -6075,9 +6109,16 @@
       });
       return html + "</div>";
     }
-    function bonusOdds() {
-      return SO.BONUS.map(function (row) {
-        return [SO.CAT[row[0]], row[1] > 0 ? fmt(row[1]) + "-to-1" : "push"];
+    /* The felt ladders are narrow with three spots between them; the hands
+       go by their short names there. */
+    var SHORT = {
+      "Suited Five of a Kind": "Suited Quints", "Suited Four of a Kind": "Suited Quads",
+      "Five of a Kind": "Quints", "Four of a Kind": "Quads", "Three of a Kind": "Trips"
+    };
+    function odds(table) {
+      return table.map(function (row) {
+        var nm = SO.CAT[row[0]];
+        return [SHORT[nm] || nm, fmt(row[1]) + "-to-1"];
       });
     }
     function spotHtml(id, shape, label, amount, live, color, extra) {
@@ -6090,22 +6131,22 @@
           : '<span class="cap">' + label + "</span>") +
         "</button>";
     }
-    /** The poker bet and the bonus side by side, the bonus ladder in the
-        right gutter and the table's one rule in the left. */
+    /** Each side bet stands under its own ladder — Bad Beat left, Bonus
+        right — with the poker bet between them. */
     function renderSpots() {
       var betting = phase === "betting", n = handCount();
       $("so-spots").innerHTML =
         '<div class="uth-row so-pays">' +
-          '<div class="so-side"><div class="t">KEEP TWO OF FOUR</div>' +
-            '<div class="s">or split and play both<br>for a second poker bet</div>' +
-            '<div class="u">DEALER WINS TIES</div></div>' +
-          '<div class="mid" style="gap:18px">' +
+          '<div style="padding:0 6px 2px 0">' + paysHtml("BAD BEAT", odds(SO.BAD_BEAT)) + "</div>" +
+          '<div class="mid" style="gap:10px">' +
+            spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
             spotHtml("so-poker", "ring", "POKER", betting ? poker : pokerStake * n, betting, AMBER) +
             spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
           "</div>" +
-          '<div style="padding:0 0 2px 6px">' + paysHtml("BONUS", bonusOdds()) + "</div>" +
+          '<div style="padding:0 0 2px 6px">' + paysHtml("BONUS", odds(SO.BONUS)) + "</div>" +
         "</div>";
       if (betting) {
+        $("so-badbeat").addEventListener("click", function () { place("badbeat"); });
         $("so-poker").addEventListener("click", function () { place("poker"); });
         $("so-bonus").addEventListener("click", function () { place("bonus"); });
       }
@@ -6175,24 +6216,33 @@
     // ---------- betting ----------
     function place(spot) {
       if (phase !== "betting") return;
-      var room = Math.floor(bankroll - (poker + bonus));
+      var room = Math.floor(bankroll - (poker + bonus + badBeat));
       var affordable = Math.min(selectedChip, room);
       if (affordable <= 0) { setMessage("Not enough for that chip"); return; }
-      var lim = Shell.limits(), side = spot === "bonus";
-      var amount = allow(lim, affordable, side ? bonus : poker, side);
-      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
-      if (side) bonus += amount; else poker += amount;
+      var lim = Shell.limits(), amount, refused;
+      if (spot === "poker") {
+        amount = allow(lim, affordable, poker, false); refused = refusal(lim, false);
+      } else if (spot === "bonus") {
+        amount = allow(lim, affordable, bonus, true); refused = refusal(lim, true);
+      } else {
+        amount = allowBadBeat(lim, affordable, badBeat); refused = badBeatRefusal(lim);
+      }
+      if (amount <= 0) { setMessage(refused); return; }
+      if (spot === "poker") poker += amount;
+      else if (spot === "bonus") bonus += amount;
+      else badBeat += amount;
       chipHist.push({ spot: spot, v: amount });
       setMessage(
-        amount < affordable ? refusal(lim, side)
+        amount < affordable ? refused
           : amount < selectedChip ? "All in!"
-          : side ? "Bonus riding" : "Poker bet posted"
+          : spot === "bonus" ? "Bonus riding"
+          : spot === "badbeat" ? "Bad Beat riding" : "Poker bet posted"
       );
       renderTop(); renderSpots();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      poker = 0; bonus = 0; chipHist = [];
+      poker = 0; bonus = 0; badBeat = 0; chipHist = [];
       setMessage("Place your poker bet");
       renderTop(); renderSpots();
     }
@@ -6201,17 +6251,17 @@
     function deal() {
       if (phase !== "betting") return;
       if (poker <= 0) {
-        setMessage(bonus > 0 ? "The bonus rides with a poker bet" : "Place a poker bet first");
+        setMessage(bonus + badBeat > 0 ? "The side bets ride with a poker bet" : "Place a poker bet first");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(SO.DECKS);
-      bankroll -= poker + bonus;
+      bankroll -= poker + bonus + badBeat;
       syncWallet();
-      lastPoker = poker; lastBonus = bonus;
-      pokerStake = poker; bonusStake = bonus; split = false;
+      lastPoker = poker; lastBonus = bonus; lastBadBeat = badBeat;
+      pokerStake = poker; bonusStake = bonus; badBeatStake = badBeat; split = false;
       chipHist = [];
       clearCards();
-      poker = 0; bonus = 0;
+      poker = 0; bonus = 0; badBeat = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -6280,7 +6330,7 @@
     }
     function settle() {
       settlements = hands.map(function (h) {
-        return SO.settle(h, dealerKept, board, pokerStake, bonusStake);
+        return SO.settle(h, dealerKept, board, pokerStake, bonusStake, badBeatStake);
       });
       results = [];
       settlements.forEach(function (s, i) {
@@ -6292,28 +6342,36 @@
             net: s.bonus - bonusStake
           });
         }
+        if (badBeatStake > 0) {
+          results.push({
+            label: tag + (s.badBeatWin ? "Bad Beat · " + SO.badBeatLabel(s.badBeatWin) : "Bad Beat"),
+            net: s.badBeat - badBeatStake
+          });
+        }
       });
-      var totalReturn = 0, wins = 0, bigBonus = -1;
+      var totalReturn = 0, wins = 0, bigBonus = -1, bbHit = null;
       settlements.forEach(function (s) {
-        totalReturn += s.poker + s.bonus;
+        totalReturn += s.poker + s.bonus + s.badBeat;
         if (s.outcome === "win") wins++;
         if (s.bonusWin >= 0 && (bigBonus < 0 || s.bonusWin < bigBonus)) bigBonus = s.bonusWin;
+        if (s.badBeatWin && (!bbHit || s.badBeatWin.rung < bbHit.rung)) bbHit = s.badBeatWin;
       });
       bankroll += totalReturn;
       syncWallet();
-      var staked = (pokerStake + bonusStake) * handCount();
+      var staked = (pokerStake + bonusStake + badBeatStake) * handCount();
       var net = totalReturn - staked;
       var pays = bigBonus >= 0 ? SO.BONUS[bigBonus][1] : 0;
       phase = "result";
       var msg =
         Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        bbHit ? SO.badBeatLabel(bbHit) + " — bad beat pays " + fmt(SO.BAD_BEAT[bbHit.rung][1]) + " to 1" :
         pays >= 40 ? SO.CAT[SO.BONUS[bigBonus][0]] + " — bonus pays " + fmt(pays) + " to 1" :
         split && wins === 2 ? "Both hands win!" :
         split && wins === 1 ? "One hand each" :
         wins === 1 ? "You win with " + SO.CAT[settlements[0].player.cat] :
         net > 0 ? "Up " + fmt(net) + " on the bonus" :
         "Dealer wins with " + SO.CAT[settlements[0].dealer.cat];
-      setMessage(msg, pays > 0 ? "bonus" : wins > 0 ? "win" : "lose");
+      setMessage(msg, bbHit || pays > 0 ? "bonus" : wins > 0 ? "win" : "lose");
       renderAll();
       if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
     }
@@ -6329,14 +6387,14 @@
       phase = "betting";
       clearCards();
       chipHist = [];
-      poker = 0; bonus = 0;
-      pokerStake = 0; bonusStake = 0; split = false;
+      poker = 0; bonus = 0; badBeat = 0;
+      pokerStake = 0; bonusStake = 0; badBeatStake = 0; split = false;
     }
     function nextHand(repeat) {
       if (phase !== "result") return;
       reset();
-      if (repeat && lastPoker + lastBonus <= bankroll) {
-        poker = lastPoker; bonus = lastBonus;
+      if (repeat && lastPoker + lastBonus + lastBadBeat <= bankroll) {
+        poker = lastPoker; bonus = lastBonus; badBeat = lastBadBeat;
       } else if (repeat && lastPoker <= bankroll) {
         poker = lastPoker;
       }

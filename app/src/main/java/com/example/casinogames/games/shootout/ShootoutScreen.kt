@@ -358,6 +358,7 @@ private fun MessageLine(vm: ShootoutViewModel) {
     val settled = vm.settlements
     val tone = when {
         vm.phase != ShootoutPhase.RESULT -> P.OffWhite.copy(alpha = 0.9f)
+        settled.any { it.badBeatWin != null } -> Brass
         settled.any { it.bonusWin != null && it.bonusWin.payout > 0 } -> Brass
         settled.any { it.outcome == ShootoutRules.Outcome.WIN } -> WinGreen
         else -> LossRed
@@ -415,10 +416,10 @@ private fun ResultRows(vm: ShootoutViewModel) {
 @Composable
 private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
     val betting = vm.phase == ShootoutPhase.BETTING
-    val spot = 52.dp
-    val gap = 18.dp
+    val spot = 48.dp
+    val gap = 10.dp
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val gutter = (maxWidth - (spot * 2 + gap)) / 2
+        val gutter = (maxWidth - (spot * 3 + gap * 2)) / 2
         Row(
             // Lifted a little off the rail, so the spots sit mid-ladder
             // rather than crowding the chips.
@@ -426,6 +427,14 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(gap),
         ) {
+            // Each side bet stands under its own ladder — Bad Beat left,
+            // Bonus right — with the poker bet between them.
+            DiamondSpot(
+                "BAD\nBEAT", Brass,
+                amount = if (betting) vm.badBeat else vm.badBeatStake * vm.handCount,
+                size = spot,
+                onClick = { vm.addBadBeat() }.takeIf { betting },
+            )
             CircleSpot(
                 "POKER", ShootoutAmber,
                 amount = if (betting) vm.poker else vm.pokerStake * vm.handCount,
@@ -439,38 +448,39 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
                 onClick = { vm.addBonus() }.takeIf { betting },
             )
         }
-        Column(
-            Modifier.align(Alignment.BottomStart).width(gutter - 6.dp).padding(bottom = 2.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            Text(
-                "KEEP TWO OF FOUR",
-                color = ShootoutAmber.copy(alpha = 0.85f), fontSize = 9.sp,
-                fontWeight = FontWeight.Black, letterSpacing = 0.08.em, textAlign = TextAlign.Center,
-            )
-            Text(
-                "or split and play both\nfor a second poker bet",
-                color = P.OffWhite.copy(alpha = 0.7f), fontSize = 8.sp, lineHeight = 10.sp,
-                textAlign = TextAlign.Center,
-            )
-            Spacer(Modifier.height(4.dp))
-            Text(
-                "DEALER WINS TIES",
-                color = ShootoutAmber.copy(alpha = 0.7f), fontSize = 8.sp,
-                fontWeight = FontWeight.Black, letterSpacing = 0.08.em,
-            )
-        }
+        FeltPayTable(
+            title = "BAD BEAT",
+            color = Brass,
+            rows = ShootoutRules.BadBeatPay.entries.map {
+                shortName(it.label) to "${formatWhole(it.payout)}-to-1"
+            },
+            width = gutter - 6.dp,
+            fontSize = 7.5.sp,
+            modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 2.dp),
+            onClick = onShowPays,
+        )
         FeltPayTable(
             title = "BONUS",
             color = Brass,
             rows = ShootoutRules.BonusPay.entries.map {
-                it.label to if (it.payout > 0) "${formatWhole(it.payout)}-to-1" else "push"
+                shortName(it.label) to "${formatWhole(it.payout)}-to-1"
             },
             width = gutter - 6.dp,
+            fontSize = 7.5.sp,
             modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 2.dp),
             onClick = onShowPays,
         )
     }
+}
+
+/** The felt ladders are narrow with three spots between them; the hands go by their short names there. */
+private fun shortName(label: String): String = when (label) {
+    "Suited Five of a Kind" -> "Suited Quints"
+    "Suited Four of a Kind" -> "Suited Quads"
+    "Five of a Kind" -> "Quints"
+    "Four of a Kind" -> "Quads"
+    "Three of a Kind" -> "Trips"
+    else -> label
 }
 
 private fun formatWhole(v: Int): String = String.format(java.util.Locale.US, "%,d", v)
@@ -579,6 +589,7 @@ private fun SpotContents(label: String, color: Color, amount: Int, size: Dp) {
             fontSize = 10.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.06.em,
+            lineHeight = 11.sp,
             textAlign = TextAlign.Center,
         )
     }
@@ -718,8 +729,30 @@ private fun PayTables(onDismiss: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Paid on your best five, win or lose; a straight is the floor. Six decks " +
-                    "in the shoe, so the same card can come twice and five of a kind is " +
-                    "real — five of the very same card tops the ladder.",
+                    "in the shoe, so the same card can come twice: four of the very same " +
+                    "card is suited quads, five of the very same card tops the ladder.",
+                color = P.OffWhite.copy(alpha = 0.6f), fontSize = 10.sp,
+            )
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "BAD BEAT", color = Brass, fontSize = 12.sp,
+                fontWeight = FontWeight.Black, letterSpacing = 0.1.em,
+            )
+            Spacer(Modifier.height(4.dp))
+            ShootoutRules.BadBeatPay.entries.forEach {
+                Row(Modifier.fillMaxWidth()) {
+                    Text(it.label, color = P.OffWhite, fontSize = 11.sp)
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        "${formatWhole(it.payout)}-to-1",
+                        color = Brass, fontSize = 11.sp, fontWeight = FontWeight.Black,
+                    )
+                }
+            }
+            Spacer(Modifier.height(6.dp))
+            Text(
+                "Pays the hand that lost the showdown, either side, when it was trips or " +
+                    "better. The dealer takes ties, so a tied hand of yours counts as beaten.",
                 color = P.OffWhite.copy(alpha = 0.6f), fontSize = 10.sp,
             )
             Spacer(Modifier.height(12.dp))

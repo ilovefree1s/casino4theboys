@@ -17,17 +17,21 @@ object ShootoutRules {
      * The Bonus, on the player's own best five, win or lose. This is Galaxy's
      * top-heavy pay table, the one the user picked for its big numbers:
      *
-     *   Suited Five of a Kind .. 5,000 to 1      Four of a Kind ...... 5 to 1
-     *   Royal Flush ............. 500 to 1       Full House .......... 3 to 1
-     *   Straight Flush .......... 100 to 1       Flush ............... 2 to 1
-     *   Five of a Kind ........... 50 to 1       Straight ............ 1 to 1
+     *   Suited Five of a Kind .. 5,000 to 1      Five of a Kind ...... 50 to 1
+     *   Royal Flush ............. 500 to 1       Four of a Kind ....... 5 to 1
+     *   Suited Four of a Kind . 1,000 to 1      Full House ........... 3 to 1
+     *   Straight Flush .......... 100 to 1       Flush ................ 2 to 1
+     *                                            Straight ............. 1 to 1
      *
      * Three of a kind and under lose on this table; the common table pushes
      * trips and pays quads 7, but its ceiling is a fifth of this one's.
+     * Suited quads is the house's own rung, ranked between the royal and
+     * the straight flush by rarity, and priced by the user: a grand to one.
      */
     enum class BonusPay(val label: String, val payout: Int) {
         FIVE_KIND_SUITED("Suited Five of a Kind", 5_000),
         ROYAL_FLUSH("Royal Flush", 500),
+        FOUR_KIND_SUITED("Suited Four of a Kind", 1_000),
         STRAIGHT_FLUSH("Straight Flush", 100),
         FIVE_KIND("Five of a Kind", 50),
         FOUR_KIND("Four of a Kind", 5),
@@ -39,6 +43,7 @@ object ShootoutRules {
     fun bonusRung(hand: ShootoutHandValue): BonusPay? = when (hand.category) {
         ShootoutCategory.FIVE_KIND_SUITED -> BonusPay.FIVE_KIND_SUITED
         ShootoutCategory.ROYAL_FLUSH -> BonusPay.ROYAL_FLUSH
+        ShootoutCategory.FOUR_KIND_SUITED -> BonusPay.FOUR_KIND_SUITED
         ShootoutCategory.STRAIGHT_FLUSH -> BonusPay.STRAIGHT_FLUSH
         ShootoutCategory.FIVE_KIND -> BonusPay.FIVE_KIND
         ShootoutCategory.FOUR_KIND -> BonusPay.FOUR_KIND
@@ -126,6 +131,59 @@ object ShootoutRules {
 
     enum class Outcome { WIN, LOSE }
 
+    /**
+     * The Bad Beat, DJ Wild's ladder brought over: it pays off whichever hand
+     * *lost* the showdown, when that hand was trips or better — the point
+     * being that a big hand went down. The shoe-only hands slot in by rank:
+     * suited quads beside the straight flush, five of a kind between that
+     * and quads.
+     *
+     *   Suited Five of a Kind .. 10,000 to 1     Four of a Kind ...... 500 to 1
+     *   Royal Flush ............ 10,000 to 1     Full House .......... 400 to 1
+     *   Suited Four of a Kind ... 5,000 to 1     Flush ............... 300 to 1
+     *   Straight Flush .......... 5,000 to 1     Straight ............ 100 to 1
+     *   Five of a Kind .......... 1,000 to 1     Three of a Kind ....... 9 to 1
+     *
+     * The dealer takes ties here, so a tied player hand counts as beaten.
+     */
+    enum class BadBeatPay(val label: String, val payout: Int) {
+        FIVE_KIND_SUITED("Suited Five of a Kind", 10_000),
+        ROYAL_FLUSH("Royal Flush", 10_000),
+        FOUR_KIND_SUITED("Suited Four of a Kind", 5_000),
+        STRAIGHT_FLUSH("Straight Flush", 5_000),
+        FIVE_KIND("Five of a Kind", 1_000),
+        FOUR_KIND("Four of a Kind", 500),
+        FULL_HOUSE("Full House", 400),
+        FLUSH("Flush", 300),
+        STRAIGHT("Straight", 100),
+        THREE_KIND("Three of a Kind", 9),
+    }
+
+    fun badBeatRung(hand: ShootoutHandValue): BadBeatPay? = when (hand.category) {
+        ShootoutCategory.FIVE_KIND_SUITED -> BadBeatPay.FIVE_KIND_SUITED
+        ShootoutCategory.ROYAL_FLUSH -> BadBeatPay.ROYAL_FLUSH
+        ShootoutCategory.FOUR_KIND_SUITED -> BadBeatPay.FOUR_KIND_SUITED
+        ShootoutCategory.STRAIGHT_FLUSH -> BadBeatPay.STRAIGHT_FLUSH
+        ShootoutCategory.FIVE_KIND -> BadBeatPay.FIVE_KIND
+        ShootoutCategory.FOUR_KIND -> BadBeatPay.FOUR_KIND
+        ShootoutCategory.FULL_HOUSE -> BadBeatPay.FULL_HOUSE
+        ShootoutCategory.FLUSH -> BadBeatPay.FLUSH
+        ShootoutCategory.STRAIGHT -> BadBeatPay.STRAIGHT
+        ShootoutCategory.THREE_KIND -> BadBeatPay.THREE_KIND
+        else -> null
+    }
+
+    /** What the Bad Beat found, and on whose hand. */
+    data class BadBeat(val rung: BadBeatPay, val onDealer: Boolean) {
+        val label: String get() = if (onDealer) "Dealer ${rung.label}" else rung.label
+    }
+
+    fun badBeat(playerHand: ShootoutHandValue, dealerHand: ShootoutHandValue, outcome: Outcome): BadBeat? {
+        val onDealer = outcome == Outcome.WIN
+        val losing = if (onDealer) dealerHand else playerHand
+        return badBeatRung(losing)?.let { BadBeat(it, onDealer) }
+    }
+
     /** One hand, settled. Returns are gross — stake plus winnings. */
     data class HandSettlement(
         val playerHand: ShootoutHandValue,
@@ -134,14 +192,17 @@ object ShootoutRules {
         val pokerReturn: Double,
         val bonusReturn: Double,
         val bonusWin: BonusPay?,
+        val badBeatReturn: Double = 0.0,
+        val badBeatWin: BadBeat? = null,
     ) {
-        val totalReturn: Double get() = pokerReturn + bonusReturn
+        val totalReturn: Double get() = pokerReturn + bonusReturn + badBeatReturn
     }
 
     /**
      * Settles one player hand against the dealer's kept two on the board. The
      * dealer wins ties, so a push does not exist here. The bonus rides the
-     * player's own five and pays whichever way the showdown went.
+     * player's own five and pays whichever way the showdown went; the Bad
+     * Beat reads the hand that lost, whichever side that was.
      */
     fun settle(
         playerHole: List<Card>,
@@ -149,6 +210,7 @@ object ShootoutRules {
         board: List<Card>,
         poker: Double,
         bonus: Double,
+        badBeat: Double = 0.0,
     ): HandSettlement {
         require(playerHole.size == 2 && dealerHole.size == 2 && board.size == 5)
         val playerHand = ShootoutEval.best(playerHole + board)
@@ -158,11 +220,16 @@ object ShootoutRules {
         val bonusWin = if (bonus > 0) bonusRung(playerHand) else null
         val bonusReturn = if (bonusWin != null) bonus * (bonusWin.payout + 1) else 0.0
 
+        val badBeatWin = if (badBeat > 0) badBeat(playerHand, dealerHand, outcome) else null
+        val badBeatReturn = if (badBeatWin != null) badBeat * (badBeatWin.rung.payout + 1) else 0.0
+
         return HandSettlement(
             playerHand, dealerHand, outcome,
             pokerReturn = if (outcome == Outcome.WIN) poker * 2 else 0.0,
             bonusReturn = bonusReturn,
             bonusWin = bonusWin,
+            badBeatReturn = badBeatReturn,
+            badBeatWin = badBeatWin,
         )
     }
 }

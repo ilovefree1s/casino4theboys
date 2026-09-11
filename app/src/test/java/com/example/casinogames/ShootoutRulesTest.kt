@@ -53,6 +53,73 @@ class ShootoutRulesTest {
     }
 
     @Test
+    fun `four of the very same card sits between a straight flush and a royal`() {
+        val suitedQuads = ShootoutEval.score(
+            List(4) { c(Rank.NINE, Suit.CLUBS) } + c(Rank.TWO, Suit.HEARTS)
+        )
+        val plainQuads = ShootoutEval.score(
+            listOf(
+                c(Rank.NINE, Suit.CLUBS), c(Rank.NINE, Suit.CLUBS), c(Rank.NINE, Suit.CLUBS),
+                c(Rank.NINE, Suit.SPADES), c(Rank.TWO, Suit.HEARTS),
+            )
+        )
+        val straightFlush = ShootoutEval.score(
+            listOf(
+                c(Rank.FIVE, Suit.HEARTS), c(Rank.SIX, Suit.HEARTS), c(Rank.SEVEN, Suit.HEARTS),
+                c(Rank.EIGHT, Suit.HEARTS), c(Rank.NINE, Suit.HEARTS),
+            )
+        )
+        val royal = ShootoutEval.score(
+            listOf(
+                c(Rank.ACE, Suit.SPADES), c(Rank.KING, Suit.SPADES), c(Rank.QUEEN, Suit.SPADES),
+                c(Rank.JACK, Suit.SPADES), c(Rank.TEN, Suit.SPADES),
+            )
+        )
+        assertEquals(ShootoutCategory.FOUR_KIND_SUITED, suitedQuads.category)
+        assertEquals(ShootoutCategory.FOUR_KIND, plainQuads.category)
+        assertTrue(suitedQuads > straightFlush)
+        assertTrue(royal > suitedQuads)
+        assertEquals(ShootoutRules.BonusPay.FOUR_KIND_SUITED, ShootoutRules.bonusRung(suitedQuads))
+    }
+
+    @Test
+    fun `the bad beat pays whichever side lost with trips or better`() {
+        val board = listOf(
+            c(Rank.NINE, Suit.HEARTS), c(Rank.NINE, Suit.DIAMONDS), c(Rank.FOUR, Suit.CLUBS),
+            c(Rank.SEVEN, Suit.SPADES), c(Rank.TWO, Suit.HEARTS),
+        )
+        // Dealer trips of nines go down to the player's full house: paid on the dealer.
+        val dealerBeaten = ShootoutRules.settle(
+            playerHole = listOf(c(Rank.FOUR, Suit.HEARTS), c(Rank.FOUR, Suit.DIAMONDS)),
+            dealerHole = listOf(c(Rank.NINE, Suit.CLUBS), c(Rank.ACE, Suit.SPADES)),
+            board = board, poker = 10.0, bonus = 0.0, badBeat = 10.0,
+        )
+        assertEquals(ShootoutRules.Outcome.WIN, dealerBeaten.outcome)
+        assertEquals(ShootoutRules.BadBeatPay.THREE_KIND, dealerBeaten.badBeatWin?.rung)
+        assertEquals(true, dealerBeaten.badBeatWin?.onDealer)
+        assertEquals(100.0, dealerBeaten.badBeatReturn, 0.001)
+
+        // The same full house losing to quads: paid on the player, at the full house rung.
+        val playerBeaten = ShootoutRules.settle(
+            playerHole = listOf(c(Rank.FOUR, Suit.HEARTS), c(Rank.FOUR, Suit.DIAMONDS)),
+            dealerHole = listOf(c(Rank.NINE, Suit.CLUBS), c(Rank.NINE, Suit.SPADES)),
+            board = board, poker = 10.0, bonus = 0.0, badBeat = 10.0,
+        )
+        assertEquals(ShootoutRules.Outcome.LOSE, playerBeaten.outcome)
+        assertEquals(ShootoutRules.BadBeatPay.FULL_HOUSE, playerBeaten.badBeatWin?.rung)
+        assertEquals(false, playerBeaten.badBeatWin?.onDealer)
+        assertEquals(4010.0, playerBeaten.badBeatReturn, 0.001)
+
+        // Nothing riding, nothing paid.
+        val noBet = ShootoutRules.settle(
+            playerHole = listOf(c(Rank.FOUR, Suit.HEARTS), c(Rank.FOUR, Suit.DIAMONDS)),
+            dealerHole = listOf(c(Rank.NINE, Suit.CLUBS), c(Rank.NINE, Suit.SPADES)),
+            board = board, poker = 10.0, bonus = 0.0,
+        )
+        assertEquals(0.0, noBet.badBeatReturn, 0.001)
+    }
+
+    @Test
     fun `a duplicated card still makes a pair`() {
         val hand = ShootoutEval.score(
             listOf(

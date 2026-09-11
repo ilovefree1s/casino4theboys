@@ -51,8 +51,8 @@
         return {
           line: line,
           player: cards(c[0]), dealerFour: cards(c[1]), board: cards(c[2]),
-          poker: +stakes[0], bonus: +stakes[1],
-          outcome: want[0], pokerReturn: +want[1], bonusReturn: +want[2],
+          poker: +stakes[0], bonus: +stakes[1], badBeat: +stakes[2],
+          outcome: want[0], pokerReturn: +want[1], bonusReturn: +want[2], badBeatReturn: +want[3],
           playerHand: c[5], dealerHand: c[6], keeps: c[7]
         };
       });
@@ -65,10 +65,11 @@
     }
     var kept = SO.houseWay(c.dealerFour);
     eq("dealer keeps", kept.map(token).join(" "), c.keeps);
-    var s = SO.settle(c.player, kept, c.board, c.poker, c.bonus);
+    var s = SO.settle(c.player, kept, c.board, c.poker, c.bonus, c.badBeat);
     eq("outcome", s.outcome, c.outcome);
     eq("poker", s.poker, c.pokerReturn);
     eq("bonus", s.bonus, c.bonusReturn);
+    eq("bad beat", s.badBeat, c.badBeatReturn);
     eq("player hand", SO.CAT[s.player.cat], c.playerHand);
     eq("dealer hand", SO.CAT[s.dealer.cat], c.dealerHand);
     return bad;

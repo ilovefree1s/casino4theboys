@@ -8,7 +8,9 @@ import com.example.casinogames.games.holdem.PokerEval
  * Poker categories in ascending strength. Texas Shootout deals from six
  * decks, so the same card can turn up twice and five of a kind is real. The
  * felt ranks it above quads and below a straight flush, and five *identical*
- * cards — suited five of a kind — beats everything.
+ * cards — suited five of a kind — beats everything. Four identical cards,
+ * suited quads, are rarer than a straight flush and commoner than a royal,
+ * so they sit between the two.
  */
 enum class ShootoutCategory(val label: String) {
     HIGH_CARD("High Card"),
@@ -21,6 +23,7 @@ enum class ShootoutCategory(val label: String) {
     FOUR_KIND("Four of a Kind"),
     FIVE_KIND("Five of a Kind"),
     STRAIGHT_FLUSH("Straight Flush"),
+    FOUR_KIND_SUITED("Suited Four of a Kind"),
     ROYAL_FLUSH("Royal Flush"),
     FIVE_KIND_SUITED("Suited Five of a Kind"),
 }
@@ -64,10 +67,15 @@ object ShootoutEval {
         val shape = grouped.map { it.value }
         val ranks = grouped.map { it.key }
 
+        // Four of the very same card: the quads' rank, and all four of it in one suit.
+        val suitedQuads = shape.firstOrNull() == 4 &&
+            hand.filter { value(it.rank) == ranks[0] }.map { it.suit }.distinct().size == 1
+
         return when {
             shape.firstOrNull() == 5 && flush ->
                 ShootoutHandValue(ShootoutCategory.FIVE_KIND_SUITED, ranks)
             flush && straightHigh == 14 -> ShootoutHandValue(ShootoutCategory.ROYAL_FLUSH, listOf(14))
+            suitedQuads -> ShootoutHandValue(ShootoutCategory.FOUR_KIND_SUITED, ranks)
             flush && straightHigh > 0 -> ShootoutHandValue(ShootoutCategory.STRAIGHT_FLUSH, listOf(straightHigh))
             shape.firstOrNull() == 5 -> ShootoutHandValue(ShootoutCategory.FIVE_KIND, ranks)
             shape.firstOrNull() == 4 -> ShootoutHandValue(ShootoutCategory.FOUR_KIND, ranks)
