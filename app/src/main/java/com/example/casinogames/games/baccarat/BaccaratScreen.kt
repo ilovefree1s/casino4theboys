@@ -196,41 +196,60 @@ fun BaccaratScreen(
                 contentAlignment = Alignment.Center,
             ) {
                 if (amount > 0) {
-                    // The stack is a live thing: drag it to another spot to
-                    // move the whole bet; a plain tap still adds a chip.
+                    // The stack is a live thing: a drag lifts the selected
+                    // chip's worth off it — the whole stack when the chip
+                    // covers it — to drop on another spot, or on the rack to
+                    // take it down. What stays behind keeps its place, and a
+                    // plain tap still adds a chip.
                     val density = androidx.compose.ui.platform.LocalDensity.current.density
+                    var peel by remember(def.type) { mutableStateOf(0) }
+                    val dragging = dragPx != androidx.compose.ui.geometry.Offset.Zero
+                    val chipSize = (150 * kx).dp
                     Box(
                         Modifier
-                            .offset {
-                                androidx.compose.ui.unit.IntOffset(
-                                    dragPx.x.roundToInt(), dragPx.y.roundToInt(),
-                                )
-                            }
-                            .zIndex(if (dragPx != androidx.compose.ui.geometry.Offset.Zero) 5f else 1f)
+                            .size(chipSize)
                             .pointerInput(def.type, kx, ky) {
                                 awaitEachGesture {
                                     val down = awaitFirstDown()
                                     if (vm.phase != Phase.BETTING) return@awaitEachGesture
+                                    peel = vm.peelAmount(def.type)
                                     var total = androidx.compose.ui.geometry.Offset.Zero
                                     drag(down.id) { change ->
                                         total += change.positionChange()
                                         change.consume()
                                         dragPx = total
                                     }
+                                    val lifted = peel
                                     dragPx = androidx.compose.ui.geometry.Offset.Zero
+                                    peel = 0
                                     if (total.getDistance() < 14f) return@awaitEachGesture
                                     val cx = (def.x0 + def.x1) / 2f + total.x / (kx * density)
                                     val cy = (def.y0 + def.y1) / 2f + total.y / (ky * density)
                                     val target = spotAt(cx, cy)
                                     when {
-                                        target != null -> vm.moveBet(def.type, target.type)
+                                        target != null -> vm.moveBet(def.type, target.type, lifted)
                                         // Dropped below the spots, onto the rack: take it down.
-                                        cy > 1500f -> vm.removeBet(def.type)
+                                        cy > 1500f -> vm.removeBet(def.type, lifted)
                                     }
                                 }
                             },
+                        contentAlignment = Alignment.Center,
                     ) {
-                        PlacedBetChip(amount, size = (150 * kx).dp)
+                        val resting = if (dragging) amount - peel else amount
+                        if (resting > 0) PlacedBetChip(resting, size = chipSize)
+                    }
+                    if (dragging && peel > 0) {
+                        Box(
+                            Modifier
+                                .offset {
+                                    androidx.compose.ui.unit.IntOffset(
+                                        dragPx.x.roundToInt(), dragPx.y.roundToInt(),
+                                    )
+                                }
+                                .zIndex(5f),
+                        ) {
+                            PlacedBetChip(peel, size = chipSize)
+                        }
                     }
                 }
             }

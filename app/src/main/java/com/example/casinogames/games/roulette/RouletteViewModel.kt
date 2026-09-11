@@ -11,6 +11,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.campaign.limitsFor
 import kotlinx.coroutines.launch
@@ -152,40 +153,69 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
         message = if (amount < selectedChip) "All in!" else def.name
     }
 
-    /** Slides a whole stack from one spot to another, limits permitting. */
-    fun moveChip(fromId: String, toId: String, toDef: RouletteEngine.Bet) {
+    /**
+     * What a drag lifts off a stack: the selected chip's worth, or the whole
+     * stack when the chip covers it. So a stack can be split, and the chip
+     * in hand says by how much.
+     */
+    fun peelAmount(id: String): Int = minOf(selectedChip, bets[id] ?: 0)
+
+    /** Peels [amount] off a spot's history, latest chips first, so undo keeps meaning something. */
+    private fun takeFromHistory(id: String, amount: Int) {
+        var left = amount
+        var i = chipHistory.lastIndex
+        while (i >= 0 && left > 0) {
+            val (t, v) = chipHistory[i]
+            if (t == id) {
+                if (v <= left) {
+                    chipHistory.removeAt(i)
+                    left -= v
+                } else {
+                    chipHistory[i] = t to (v - left)
+                    left = 0
+                }
+            }
+            i--
+        }
+    }
+
+    private fun takeOff(id: String, taking: Int) {
+        val have = bets[id] ?: 0
+        takeFromHistory(id, taking)
+        if (have - taking > 0) bets[id] = have - taking else { bets.remove(id); defs.remove(id) }
+    }
+
+    /** Slides [amount] of a stack to another spot, limits permitting. */
+    fun moveChip(fromId: String, toId: String, toDef: RouletteEngine.Bet, amount: Int) {
         if (phase != RoulettePhase.BETTING || fromId == toId) return
-        val amount = bets[fromId] ?: return
-        val allowed = limits.allow(amount, bets[toId] ?: 0)
-        if (allowed < amount) {
-            // Dropped on a spot already at its cap: the stack comes off the
-            // felt and the money never left the purse — staking happens at
-            // the spin.
-            bets.remove(fromId); defs.remove(fromId)
-            chipHistory.removeAll { it.first == fromId }
+        val taking = amount.coerceAtMost(bets[fromId] ?: 0)
+        if (taking <= 0) return
+        val allowed = limits.allow(taking, bets[toId] ?: 0)
+        takeOff(fromId, taking)
+        if (allowed < taking) {
+            // Dropped on a spot already at its cap: the lifted chips come off
+            // the felt and the money never left the purse — staking happens
+            // at the spin.
             notice = "${toDef.name} is full — bet taken down"
             return
         }
-        bets.remove(fromId); defs.remove(fromId)
-        bets[toId] = (bets[toId] ?: 0) + amount
+        bets[toId] = (bets[toId] ?: 0) + taking
         defs[toId] = toDef
-        // The history follows the chips, so undo keeps meaning something.
-        for (i in chipHistory.indices) {
-            if (chipHistory[i].first == fromId) chipHistory[i] = toId to chipHistory[i].second
-        }
+        chipHistory.add(toId to taking)
         notice = null
         message = toDef.name
     }
 
-    /** Drag a stack off the felt onto the rack: the bet comes down. */
-    fun removeChip(id: String) {
+    /** Drag chips off the felt onto the rack: that much of the bet comes down. */
+    fun removeChip(id: String, amount: Int) {
         if (phase != RoulettePhase.BETTING) return
-        if (bets.remove(id) != null) {
-            defs.remove(id)
-            chipHistory.removeAll { it.first == id }
-            notice = null
-            message = "Bet taken down"
-        }
+        val have = bets[id] ?: return
+        val taking = amount.coerceAtMost(have)
+        if (taking <= 0) return
+        takeOff(id, taking)
+        notice = null
+        message = if (have - taking > 0) "${formatMoney(taking.toDouble())} taken down"
+        else "Bet taken down"
     }
 
     fun undoChip() {

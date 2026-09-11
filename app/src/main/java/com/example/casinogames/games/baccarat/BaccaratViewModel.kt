@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.ui.common.formatMoney
 import com.example.casinogames.campaign.FreePlay
 import com.example.casinogames.campaign.limitsFor
 import androidx.lifecycle.AndroidViewModel
@@ -131,35 +132,66 @@ class BaccaratViewModel(app: Application) : AndroidViewModel(app) {
         message = if (amount < selectedChip) "All in!" else "Place your bets"
     }
 
-    /** Slides a whole stack from one spot to another, limits permitting. */
-    fun moveBet(from: BetType, to: BetType) {
+    /**
+     * What a drag lifts off a stack: the selected chip's worth, or the whole
+     * stack when the chip covers it. So a stack can be split, and the chip
+     * in hand says by how much.
+     */
+    fun peelAmount(type: BetType): Int = minOf(selectedChip, bets[type] ?: 0)
+
+    /** Peels [amount] off a spot's history, latest chips first, so undo keeps meaning something. */
+    private fun takeFromHistory(type: BetType, amount: Int) {
+        var left = amount
+        var i = chipHistory.lastIndex
+        while (i >= 0 && left > 0) {
+            val (t, v) = chipHistory[i]
+            if (t == type) {
+                if (v <= left) {
+                    chipHistory.removeAt(i)
+                    left -= v
+                } else {
+                    chipHistory[i] = t to (v - left)
+                    left = 0
+                }
+            }
+            i--
+        }
+    }
+
+    private fun takeOff(type: BetType, taking: Int) {
+        val have = bets[type] ?: 0
+        takeFromHistory(type, taking)
+        if (have - taking > 0) bets[type] = have - taking else bets.remove(type)
+    }
+
+    /** Slides [amount] of a stack from one spot to another, limits permitting. */
+    fun moveBet(from: BetType, to: BetType, amount: Int) {
         if (phase != Phase.BETTING || from == to) return
-        val amount = bets[from] ?: return
-        val allowed = limits.allow(amount, bets[to] ?: 0, to.isSide)
-        if (allowed < amount) {
-            // Dropped on a spot already at its cap: the stack comes off the
-            // felt and the money never left the purse — staking happens at
-            // the deal.
-            bets.remove(from)
-            chipHistory.removeAll { it.first == from }
+        val taking = amount.coerceAtMost(bets[from] ?: 0)
+        if (taking <= 0) return
+        val allowed = limits.allow(taking, bets[to] ?: 0, to.isSide)
+        takeOff(from, taking)
+        if (allowed < taking) {
+            // Dropped on a spot already at its cap: the lifted chips come off
+            // the felt and the money never left the purse — staking happens
+            // at the deal.
             message = "${to.displayName} is full — bet taken down"
             return
         }
-        bets.remove(from)
-        bets[to] = (bets[to] ?: 0) + amount
-        // The history follows the chips, so undo keeps meaning something.
-        for (i in chipHistory.indices) {
-            if (chipHistory[i].first == from) chipHistory[i] = to to chipHistory[i].second
-        }
+        bets[to] = (bets[to] ?: 0) + taking
+        chipHistory.add(to to taking)
         message = "${to.displayName} — bet moved"
     }
 
-    /** Drag a stack off the felt onto the rack: the bet comes down. */
-    fun removeBet(type: BetType) {
+    /** Drag chips off the felt onto the rack: that much of the bet comes down. */
+    fun removeBet(type: BetType, amount: Int) {
         if (phase != Phase.BETTING) return
-        if (bets.remove(type) != null) {
-            chipHistory.removeAll { it.first == type }
-            message = "Bet taken down"
+        val have = bets[type] ?: return
+        val taking = amount.coerceAtMost(have)
+        if (taking > 0) {
+            takeOff(type, taking)
+            message = if (have - taking > 0) "${formatMoney(taking.toDouble())} taken down"
+            else "Bet taken down"
         }
     }
 

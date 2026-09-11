@@ -1124,6 +1124,11 @@
   .bspot .placed img, .rl-felt .rl-chip img {
     pointer-events: none; -webkit-user-drag: none; user-select: none;
   }
+  /* The chips lifted off a stack mid-drag: they ride above everything and
+     take no presses, so the drop still hit-tests the felt beneath. */
+  .bspot .placed.ghost, .rl-felt .rl-chip.ghost {
+    display: block; pointer-events: none; z-index: 30;
+  }
   .bacc-sheet .bet-circle { position: absolute; inset: 0; background: none; border: 0; border-radius: 50%; cursor: pointer; z-index: 1; }
   .bacc-sheet .bet-circle.active { background: rgba(0,0,0,.18); }
   .bacc-sheet .bet-circle.won { box-shadow: 0 0 0 3px #A8E063, inset 0 0 34px rgba(168,224,99,.35); }
@@ -6954,43 +6959,74 @@
       $("staked").textContent = fmt(totalStaked());
       $("shoeCount").textContent = shoe.length;
     }
-    /** Slides a whole stack from one spot to another. A drop on a spot
-     *  already at its cap leaves that bet be — the dragged stack comes off
-     *  the felt instead, and the money never left the purse. */
+    /** Peels [amount] off a spot's history, latest chips first, so undo
+     *  keeps meaning something after a stack has been split. */
+    function takeFromHistory(key, amount) {
+      var left = amount;
+      for (var i = chipHistory.length - 1; i >= 0 && left > 0; i--) {
+        var h = chipHistory[i];
+        if (h.k !== key) continue;
+        if (h.v <= left) { left -= h.v; chipHistory.splice(i, 1); }
+        else { h.v -= left; left = 0; }
+      }
+    }
+    /** Slides [amount] of a stack from one spot to another. A drag lifts
+     *  the selected chip's worth, so a stack can be split; the whole stack
+     *  goes when the chip covers it. A drop on a spot already at its cap
+     *  leaves that bet be — the lifted chips come off the felt instead, and
+     *  the money never left the purse. */
     var dragGuard = 0;
-    function moveBet(from, to) {
+    function moveBet(from, to, amount) {
       if (phase !== "betting" || from === to) return;
-      var amt = bets[from];
-      if (!amt) return;
+      var have = bets[from] || 0, taking = Math.min(amount, have);
+      if (taking <= 0) return;
       var lim = Shell.limits();
-      var side = to !== "player" && to !== "banker" && to !== "tie";
-      var allowed = allow(lim, amt, bets[to] || 0, side);
-      delete bets[from];
-      if (allowed < amt) {
+      var allowed = allow(lim, taking, bets[to] || 0, isSideBet(to));
+      takeFromHistory(from, taking);
+      if (have - taking > 0) bets[from] = have - taking; else delete bets[from];
+      if (allowed < taking) {
         setMessage(BET_NAMES[to] + " is full — bet taken down");
       } else {
-        bets[to] = (bets[to] || 0) + amt;
-        chipHistory.forEach(function (h) { if (h[0] === from) h[0] = to; });
+        bets[to] = (bets[to] || 0) + taking;
+        chipHistory.push({ k: to, v: taking });
         setMessage(BET_NAMES[to] + " — bet moved");
       }
-      if (allowed < amt) chipHistory = chipHistory.filter(function (h) { return h[0] !== from; });
       updateMoney(); updatePlaced();
+    }
+    /** Dropped back on the rack: that much of the bet comes down. */
+    function removeBet(key, amount) {
+      var have = bets[key] || 0, taking = Math.min(amount, have);
+      if (taking <= 0) return;
+      takeFromHistory(key, taking);
+      if (have - taking > 0) bets[key] = have - taking; else delete bets[key];
+      setMessage(have - taking > 0 ? fmt(taking) + " taken down" : "Bet taken down");
+      updateMoney();
     }
     function armChipDrag(el, key) {
       el.ondragstart = function (e) { e.preventDefault(); return false; };
       el.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault();
-        var x0 = e.clientX, y0 = e.clientY, moved = false;
-        var base = el.style.transform || "translate(-50%,-50%)";
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null;
+        // A drag lifts the selected chip's worth off the stack — the whole
+        // stack when the chip covers it — so a stack can be split. The
+        // lifted chips ride a ghost; what stays behind keeps its place.
+        var lift = Math.min(selectedChip, bets[key] || 0);
         // Move and up ride on window, not the chip: pointer capture is
         // unreliable in some webviews, so the drag was dying the moment the
         // finger left the chip. The window always hears the whole gesture.
         function mv(ev) {
           var dx = ev.clientX - x0, dy = ev.clientY - y0;
-          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
-          el.style.transform = base + " translate(" + dx + "px," + dy + "px)";
-          el.style.zIndex = 30;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 8) {
+            moved = true;
+            ghost = document.createElement("div");
+            ghost.className = "placed ghost";
+            ghost.innerHTML = chipHtml(lift);
+            el.parentElement.appendChild(ghost);
+            var rest = (bets[key] || 0) - lift;
+            el.innerHTML = rest > 0 ? chipHtml(rest) : "";
+          }
+          if (ghost) ghost.style.transform = "translate(-50%,-50%) translate(" + dx + "px," + dy + "px)";
         }
         function up(ev) {
           window.removeEventListener("pointermove", mv);
@@ -6999,19 +7035,17 @@
           // does not also fire.
           dragGuard = Date.now();
           if (moved) {
+            if (ghost) ghost.remove();
             el.style.display = "none";
             var t = document.elementFromPoint(ev.clientX, ev.clientY);
             var spot = t && t.closest ? t.closest(".bspot") : null;
             // Dropped back on the rack (or the buttons/strip below the felt):
-            // take the bet down, money stays in the purse until the deal.
+            // take the lifted chips down, money stays in the purse until the deal.
             var onRack = t && t.closest && t.closest(".rack, .bacc-bottom, .actions");
             if (spot && spot.id.indexOf("spot-") === 0) {
-              moveBet(key, spot.id.slice(5));
+              moveBet(key, spot.id.slice(5), lift);
             } else if (onRack) {
-              delete bets[key];
-              chipHistory = chipHistory.filter(function (h) { return h[0] !== key; });
-              setMessage("Bet taken down");
-              updateMoney();
+              removeBet(key, lift);
             }
           } else {
             // A tap on the chip stacks another, since the chip now covers
@@ -7558,24 +7592,53 @@
       note("");
       renderMoney(); renderFelt();
     }
-    function moveChip(fromId, toRoute) {
+    /** Peels [amount] off a spot's history, latest chips first, so undo
+     *  keeps meaning something after a stack has been split. */
+    function takeFromHist(id, amount) {
+      var left = amount;
+      for (var i = chipHist.length - 1; i >= 0 && left > 0; i--) {
+        var h = chipHist[i];
+        if (h[0] !== id) continue;
+        if (h[1] <= left) { left -= h[1]; chipHist.splice(i, 1); }
+        else { h[1] -= left; left = 0; }
+      }
+    }
+    function dropFrom(id, taking) {
+      var left = (bets[id] || 0) - taking;
+      takeFromHist(id, taking);
+      if (left > 0) bets[id] = left;
+      else { delete bets[id]; delete defs[id]; delete cens[id]; }
+    }
+    /** Slides [amount] of a stack to another spot. A drag lifts the selected
+     *  chip's worth, so a stack can be split; the whole stack goes when the
+     *  chip covers it. A drop on a spot already at its cap leaves that bet
+     *  be — the lifted chips come off the felt instead. */
+    function moveChip(fromId, toRoute, amount) {
       if (phase !== "betting" || fromId === toRoute.id) return;
-      var amt = bets[fromId]; if (!amt) return;
+      var taking = Math.min(amount, bets[fromId] || 0);
+      if (taking <= 0) return;
       var lim = Shell.limits();
-      var allowed = allow(lim, amt, bets[toRoute.id] || 0, false);
-      if (allowed < amt) {
-        delete bets[fromId]; delete defs[fromId]; delete cens[fromId];
-        chipHist = chipHist.filter(function (h) { return h[0] !== fromId; });
+      var allowed = allow(lim, taking, bets[toRoute.id] || 0, false);
+      dropFrom(fromId, taking);
+      if (allowed < taking) {
         note(toRoute.bet.name + " is full — bet taken down");
       } else {
-        delete bets[fromId]; delete defs[fromId]; delete cens[fromId];
-        bets[toRoute.id] = (bets[toRoute.id] || 0) + amt;
+        bets[toRoute.id] = (bets[toRoute.id] || 0) + taking;
         defs[toRoute.id] = toRoute.bet;
         cens[toRoute.id] = { x: toRoute.cx, y: toRoute.cy };
-        chipHist.forEach(function (h) { if (h[0] === fromId) h[0] = toRoute.id; });
+        chipHist.push([toRoute.id, taking]);
         note("");
       }
       renderMoney(); renderFelt();
+    }
+    /** Dropped on the painted rack: that much of the bet comes down. */
+    function removeChip(id, amount) {
+      var taking = Math.min(amount, bets[id] || 0);
+      if (taking <= 0) return;
+      var partial = (bets[id] || 0) - taking > 0;
+      dropFrom(id, taking);
+      note(partial ? fmt(taking) + " taken down" : "Bet taken down");
+      renderMoney();
     }
     function clearBets() {
       if (phase === "result") { nextSpin(); renderAll(); return; }
@@ -7683,32 +7746,40 @@
       chip.onpointerdown = function (e) {
         if (phase !== "betting") return;
         e.preventDefault(); e.stopPropagation();
-        var x0 = e.clientX, y0 = e.clientY, moved = false;
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null;
+        // A drag lifts the selected chip's worth off the stack — the whole
+        // stack when the chip covers it — so a stack can be split. The
+        // lifted chips ride a ghost; what stays behind keeps its place.
+        var lift = Math.min(selectedChip, bets[id] || 0);
         // Move and up ride on window, not the chip — pointer capture is
         // unreliable in some webviews and the drag was dying on the first move.
         function mv(ev) {
           var dx = ev.clientX - x0, dy = ev.clientY - y0;
-          if (Math.abs(dx) + Math.abs(dy) > 8) moved = true;
-          chip.style.transform = "translate(-50%,-50%) translate(" + dx + "px," + dy + "px)";
-          chip.style.zIndex = 30;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 8) {
+            moved = true;
+            ghost = document.createElement("div");
+            ghost.className = "rl-chip ghost";
+            ghost.style.left = chip.style.left; ghost.style.top = chip.style.top;
+            ghost.innerHTML = chipHtml(lift, 62);
+            chip.parentElement.appendChild(ghost);
+            var rest = (bets[id] || 0) - lift;
+            chip.innerHTML = rest > 0 ? chipHtml(rest, 62) : "";
+          }
+          if (ghost) ghost.style.transform = "translate(-50%,-50%) translate(" + dx + "px," + dy + "px)";
         }
         function up(ev) {
           window.removeEventListener("pointermove", mv);
           window.removeEventListener("pointerup", up);
           if (moved) {
+            if (ghost) ghost.remove();
             dragGuard = Date.now();
             var art = localArt(ev.clientX, ev.clientY);
             var route = routeArt(art.x, art.y);
-            // Dropped on the painted rack (or below the felt): take the bet
-            // down — the money never left the purse.
+            // Dropped on the painted rack (or below the felt): take the
+            // lifted chips down — the money never left the purse.
             var onRack = art.y >= 1500 || art.y >= A.H;
-            if (route) moveChip(id, route);
-            else if (onRack) {
-              delete bets[id]; delete defs[id]; delete cens[id];
-              chipHist = chipHist.filter(function (h) { return h[0] !== id; });
-              note("Bet taken down");
-              renderMoney();
-            }
+            if (route) moveChip(id, route, lift);
+            else if (onRack) removeChip(id, lift);
           }
           renderFelt();
         }

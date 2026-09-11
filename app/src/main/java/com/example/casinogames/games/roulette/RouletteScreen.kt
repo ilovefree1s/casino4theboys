@@ -397,17 +397,33 @@ private fun Felt(
             }
             val d = 46f
             var dragPx by remember(id) { mutableStateOf(Offset.Zero) }
+            var peel by remember(id) { mutableStateOf(0) }
             val density = LocalDensity.current.density
+            val dragging = dragPx != Offset.Zero
             Box(
                 Modifier
                     .artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)
-                    .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
                     // Above the win star always: a chip that survived the
                     // sweep is the point of the picture.
-                    .zIndex(if (dragPx != Offset.Zero) 8f else 7f)
-                    .chipDrag(vm, k, density, id, x, y, anchors) { dragPx = it }
+                    .zIndex(7f)
+                    .chipDrag(vm, k, density, id, x, y, anchors) { off, lifted ->
+                        dragPx = off; peel = lifted
+                    }
             ) {
-                PlacedBetChip(amount, size = (d * k).dp)
+                // What the drag left behind stays put; the lifted chips ride
+                // the ghost below.
+                val resting = if (dragging) amount - peel else amount
+                if (resting > 0) PlacedBetChip(resting, size = (d * k).dp)
+            }
+            if (dragging && peel > 0) {
+                Box(
+                    Modifier
+                        .artBox(k, x - d / 2, y - d / 2, x + d / 2, y + d / 2)
+                        .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
+                        .zIndex(8f)
+                ) {
+                    PlacedBetChip(peel, size = (d * k).dp)
+                }
             }
         }
     }
@@ -520,7 +536,12 @@ private fun WinStar(pocket: Int, k: Float) {
     }
 }
 
-/** Drag a placed stack to another spot; the drop lands the way a tap would. */
+/**
+ * Drag chips off a placed stack — the selected chip's worth, or the whole
+ * stack when the chip covers it — to another spot, or to the rack to take
+ * them down; the drop lands the way a tap would. [onDrag] gets the offset
+ * and how much is in the air, and (zero, 0) when the gesture ends.
+ */
 private fun Modifier.chipDrag(
     vm: RouletteViewModel,
     k: Float,
@@ -529,29 +550,30 @@ private fun Modifier.chipDrag(
     startX: Float,
     startY: Float,
     anchors: androidx.compose.runtime.MutableState<Map<String, Anchor>>,
-    onDrag: (Offset) -> Unit,
+    onDrag: (Offset, Int) -> Unit,
 ): Modifier = this.pointerInput(id, k) {
     awaitEachGesture {
         val down = awaitFirstDown()
         if (vm.phase != RoulettePhase.BETTING) return@awaitEachGesture
+        val lifted = vm.peelAmount(id)
         var total = Offset.Zero
         drag(down.id) { change ->
             total += change.positionChange()
             change.consume()
-            onDrag(total)
+            onDrag(total, lifted)
         }
-        onDrag(Offset.Zero)
+        onDrag(Offset.Zero, 0)
         if (total.getDistance() < 14f) return@awaitEachGesture
         val artX = startX + total.x / (k * density)
         val artY = startY + total.y / (k * density)
         val hit = resolveDropSpot(artX, artY)
         if (hit == null) {
-            // Dropped on the painted rack: take the bet down.
-            if (artY >= A.CHIPS_TOP) vm.removeChip(id)
+            // Dropped on the painted rack: take the lifted chips down.
+            if (artY >= A.CHIPS_TOP) vm.removeChip(id, lifted)
             return@awaitEachGesture
         }
         if (hit.first == id) return@awaitEachGesture
-        vm.moveChip(id, hit.first, hit.second)
+        vm.moveChip(id, hit.first, hit.second, lifted)
         val third = hit.third
         anchors.value = if (third != null && vm.bets.containsKey(hit.first)) {
             anchors.value.filterKeys { it in vm.bets } + (hit.first to third)
@@ -614,17 +636,31 @@ private fun OutsideSpot(
     ) {
         vm.bets[id]?.let { amount ->
             var dragPx by remember(id) { mutableStateOf(Offset.Zero) }
+            var peel by remember(id) { mutableStateOf(0) }
             val density = LocalDensity.current.density
+            val dragging = dragPx != Offset.Zero
+            val chipSize = (46f * k).dp
             Box(
                 Modifier
-                    .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
-                    .zIndex(if (dragPx != Offset.Zero) 5f else 1f)
+                    .size(chipSize)
+                    .zIndex(1f)
                     .chipDrag(
                         vm, k, density, id,
                         (x0 + x1) / 2f, (y0 + y1) / 2f, anchors,
-                    ) { dragPx = it },
+                    ) { off, lifted -> dragPx = off; peel = lifted },
+                contentAlignment = Alignment.Center,
             ) {
-                PlacedBetChip(amount, size = (46f * k).dp)
+                val resting = if (dragging) amount - peel else amount
+                if (resting > 0) PlacedBetChip(resting, size = chipSize)
+            }
+            if (dragging && peel > 0) {
+                Box(
+                    Modifier
+                        .offset { IntOffset(dragPx.x.roundToInt(), dragPx.y.roundToInt()) }
+                        .zIndex(5f),
+                ) {
+                    PlacedBetChip(peel, size = chipSize)
+                }
             }
         }
     }
