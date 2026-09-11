@@ -1365,11 +1365,11 @@
 <div class="screen" id="screen-poker">
   <img class="mm-bg" src="__BG__" alt="" style="opacity:.35">
   <div class="bjm-col">
-    <div class="bjm-top">
-      <button class="lb-menu" id="pk-back" aria-label="Back to lobby">←</button>
-    </div>
-    <!-- The same page art the app draws, with each card's band as its tap target. -->
+    <!-- The same page art the app draws, with each card's band as its tap
+         target. The art paints the menu button itself, so only its press is
+         caught — no second button above it. -->
     <div class="bjm-page">
+      <button class="bjm-band" id="pk-back" style="left:3.19%;right:auto;width:9.56%;top:2.38%;height:5.1%;border-radius:50%" aria-label="Back to lobby"></button>
       <!-- The lobby page's own header with the three poker cards composited
            where the lobby's cards sit; bands measured off the 941x1766 art. -->
       <img src="__POKER_PAGE__" alt="Poker variants">
