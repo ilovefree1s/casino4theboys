@@ -417,36 +417,39 @@ private fun ResultRows(vm: ShootoutViewModel) {
 private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
     val betting = vm.phase == ShootoutPhase.BETTING
     val spot = 48.dp
-    val gap = 10.dp
+    val gap = 8.dp
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val gutter = (maxWidth - (spot * 3 + gap * 2)) / 2
-        Row(
+        // The poker bet rides above the two side bets, which sit tight
+        // together under it; each ladder stands in the gutter beside its
+        // own diamond — Bad Beat left, Bonus right.
+        val gutter = (maxWidth - (spot * 2 + gap)) / 2
+        Column(
             // Lifted a little off the rail, so the spots sit mid-ladder
             // rather than crowding the chips.
             Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(gap),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
-            // Each side bet stands under its own ladder — Bad Beat left,
-            // Bonus right — with the poker bet between them.
-            DiamondSpot(
-                "BAD\nBEAT", Brass,
-                amount = if (betting) vm.badBeat else vm.badBeatStake * vm.handCount,
-                size = spot,
-                onClick = { vm.addBadBeat() }.takeIf { betting },
-            )
             CircleSpot(
                 "POKER", ShootoutAmber,
                 amount = if (betting) vm.poker else vm.pokerStake * vm.handCount,
                 size = spot,
                 onClick = { vm.addPoker() }.takeIf { betting },
             )
-            DiamondSpot(
-                "BONUS", Brass,
-                amount = if (betting) vm.bonus else vm.bonusStake * vm.handCount,
-                size = spot,
-                onClick = { vm.addBonus() }.takeIf { betting },
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(gap)) {
+                DiamondSpot(
+                    "BAD\nBEAT", Brass,
+                    amount = if (betting) vm.badBeat else vm.badBeatStake * vm.handCount,
+                    size = spot,
+                    onClick = { vm.addBadBeat() }.takeIf { betting },
+                )
+                DiamondSpot(
+                    "BONUS", Brass,
+                    amount = if (betting) vm.bonus else vm.bonusStake * vm.handCount,
+                    size = spot,
+                    onClick = { vm.addBonus() }.takeIf { betting },
+                )
+            }
         }
         FeltPayTable(
             title = "BAD BEAT",
@@ -454,8 +457,7 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
             rows = ShootoutRules.BadBeatPay.entries.map {
                 shortName(it.label) to "${formatWhole(it.payout)}-to-1"
             },
-            width = gutter - 6.dp,
-            fontSize = 7.5.sp,
+            width = gutter - 10.dp,
             modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 2.dp),
             onClick = onShowPays,
         )
@@ -465,8 +467,7 @@ private fun BetSpots(vm: ShootoutViewModel, onShowPays: () -> Unit) {
             rows = ShootoutRules.BonusPay.entries.map {
                 shortName(it.label) to "${formatWhole(it.payout)}-to-1"
             },
-            width = gutter - 6.dp,
-            fontSize = 7.5.sp,
+            width = gutter - 10.dp,
             modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 2.dp),
             onClick = onShowPays,
         )

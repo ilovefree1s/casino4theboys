@@ -823,7 +823,8 @@
   /* Three spots leave narrow gutters: the ladders must be allowed to shrink
      into them rather than shove the right one off the glass. */
   .so-pays { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
-  .so-pays .uth-pays .row { font-size: 8px; line-height: 10px; }
+  .so-cluster { flex-direction: column; gap: 6px; }
+  .so-sides { display: flex; gap: 8px; }
   .so-pays .uth-pays .hd .ttl, .so-pays .uth-pays .row .val { color: #FFE0A3; }
   .so-pays .uth-pays .hd .bar { background: #FFE0A3; }
   #screen-shootout .dj-pill.w { border-color: #FFE0A3; }
@@ -6138,10 +6139,14 @@
       $("so-spots").innerHTML =
         '<div class="uth-row so-pays">' +
           '<div style="padding:0 6px 2px 0">' + paysHtml("BAD BEAT", odds(SO.BAD_BEAT)) + "</div>" +
-          '<div class="mid" style="gap:10px">' +
-            spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
+          // The poker bet rides above the two side bets, which sit tight
+          // together under it.
+          '<div class="mid so-cluster">' +
             spotHtml("so-poker", "ring", "POKER", betting ? poker : pokerStake * n, betting, AMBER) +
-            spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
+            '<div class="so-sides">' +
+              spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
+              spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
+            "</div>" +
           "</div>" +
           '<div style="padding:0 0 2px 6px">' + paysHtml("BONUS", odds(SO.BONUS)) + "</div>" +
         "</div>";
