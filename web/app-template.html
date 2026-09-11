@@ -5297,8 +5297,8 @@
         if (phase === "preflop" || phase === "flop") a.appendChild(actionBtn("CHECK", DIM, check));
         if (phase === "river") a.appendChild(actionBtn("FOLD", GREEN, fold));
       } else if (phase === "result") {
-        a.appendChild(actionBtn("REBET", GREEN, function () { nextHand(true); }));
         a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", GREEN, function () { nextHand(true); }));
       }
     }
     /** Free play buys back in; the campaign gets the shell's bust overlay. */

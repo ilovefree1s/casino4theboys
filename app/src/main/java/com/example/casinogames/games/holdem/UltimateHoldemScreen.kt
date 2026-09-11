@@ -661,8 +661,8 @@ private fun Actions(vm: UltimateHoldemViewModel) {
                 }
             }
             UthPhase.RESULT -> {
-                ActionButton("REBET", NeonPurple, Modifier.weight(1f)) { vm.nextHand(true) }
                 ActionButton("NEW BET", NeonPurpleDim, Modifier.weight(1f)) { vm.nextHand(false) }
+                ActionButton("REBET", NeonPurple, Modifier.weight(1f)) { vm.nextHand(true) }
             }
             else -> Spacer(Modifier.height(44.dp))
         }
