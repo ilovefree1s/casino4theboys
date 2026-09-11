@@ -753,7 +753,7 @@ private fun PayTables(onDismiss: () -> Unit) {
             Spacer(Modifier.height(6.dp))
             Text(
                 "Pays the hand that lost the showdown, either side, when it was trips or " +
-                    "better. The dealer takes ties, so a tied hand of yours counts as beaten.",
+                    "better. The dealer takes ties, but a tie beats nothing and pays no Bad Beat.",
                 color = P.OffWhite.copy(alpha = 0.6f), fontSize = 10.sp,
             )
             Spacer(Modifier.height(12.dp))

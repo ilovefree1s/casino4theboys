@@ -15,10 +15,10 @@
 # Returns are gross - stake plus winnings. "dealer keeps" is the house way's
 # pick, high card first, and between equal ranks in suit order s h d c. The
 # Bad Beat pays the hand that lost, either side, when it was trips or better;
-# the dealer takes ties, so a tied player hand counts as beaten.
+# the dealer takes ties, but a tie pays no Bad Beat.
 
 As Ks | 8h 8d 3c 4s | Ah Kd 2c 7h 9s | 25 25 25 | win 50 0 0 | Two Pair | Pair | 8h 8d
-Qs Jd | Qh Jc 3s 4d | Ah Kh Tc 9s 2c | 25 25 25 | lose 0 50 2525 | Straight | Straight | Qh Jc            # dealer wins the tie; the beaten straight pays
+Qs Jd | Qh Jc 3s 4d | Ah Kh Tc 9s 2c | 25 25 25 | lose 0 50 0 | Straight | Straight | Qh Jc               # dealer wins the tie, but a tie beats nothing
 Ah Kh | 2c 2d 9s 9h | Qh Jh Th 3c 4d | 25 25 25 | win 50 25025 0 | Royal Flush | Pair | 9s 9h
 7s 7s | Ac Kd 5h 6h | 7h 7d 7c 2s 3s | 25 25 25 | win 50 1275 250 | Five of a Kind | Three of a Kind | Ac Kd   # dealer trips go down
 9d 9d | 3c 4c 5c 6c | 9d 9d 9d Ks 2h | 25 25 25 | win 50 125025 250 | Suited Five of a Kind | Three of a Kind | 6c 5c

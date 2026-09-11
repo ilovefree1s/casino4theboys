@@ -144,7 +144,7 @@ object ShootoutRules {
      *   Straight Flush .......... 5,000 to 1     Straight ............ 100 to 1
      *   Five of a Kind .......... 1,000 to 1     Three of a Kind ....... 9 to 1
      *
-     * The dealer takes ties here, so a tied player hand counts as beaten.
+     * The dealer takes ties here, but a tie beats nothing: it pays no Bad Beat.
      */
     enum class BadBeatPay(val label: String, val payout: Int) {
         FIVE_KIND_SUITED("Suited Five of a Kind", 10_000),
@@ -179,6 +179,7 @@ object ShootoutRules {
     }
 
     fun badBeat(playerHand: ShootoutHandValue, dealerHand: ShootoutHandValue, outcome: Outcome): BadBeat? {
+        if (playerHand.compareTo(dealerHand) == 0) return null
         val onDealer = outcome == Outcome.WIN
         val losing = if (onDealer) dealerHand else playerHand
         return badBeatRung(losing)?.let { BadBeat(it, onDealer) }

@@ -164,9 +164,12 @@ class ShootoutRulesTest {
             board = board,
             poker = 100.0,
             bonus = 10.0,
+            badBeat = 10.0,
         )
         assertEquals(ShootoutRules.Outcome.LOSE, s.outcome)
         assertEquals(0.0, s.pokerReturn, 0.001)
+        // A tie beats nothing, so the Bad Beat pays nothing on it.
+        assertEquals(0.0, s.badBeatReturn, 0.001)
         assertEquals(ShootoutRules.BonusPay.ROYAL_FLUSH, s.bonusWin)
         assertEquals(10010.0, s.bonusReturn, 0.001)
     }
