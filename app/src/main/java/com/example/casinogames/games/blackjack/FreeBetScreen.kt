@@ -606,9 +606,9 @@ private fun ActionButtons(vm: FreeBetViewModel) {
     ) {
         when (vm.phase) {
             BjPhase.BETTING -> {
-                ImgButton(R.drawable.btn_undo, "Undo", vm::undoChip)
-                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
+                // No undo: CLEAR takes the whole bet back. Quiet on the left, the go on the right.
                 ImgButton(R.drawable.btn_clear, "Clear", vm::clearBet)
+                ImgButton(R.drawable.btn_deal, "Deal", vm::deal)
                 if (!vm.campaign && vm.bankroll < 25 && vm.bet == 0) {
                     FreePlayBuyIn(
                         onDismiss = {},

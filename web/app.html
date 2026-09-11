@@ -4099,9 +4099,9 @@
       // Each variant draws from its own button set.
       var ART = variant === "blazing" ? RED_BTN : BJ_ART;
       if (phase === "betting") {
-        a.appendChild(imgBtn(ART.btnUndo, "Undo", undoChip));
-        a.appendChild(imgBtn(ART.btnDeal, "Deal", deal));
+        // No undo: CLEAR takes the whole bet back.
         a.appendChild(imgBtn(ART.btnClear, "Clear", clearBet));
+        a.appendChild(imgBtn(ART.btnDeal, "Deal", deal));
         if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
           var buy = document.createElement("button");
           buy.className = "btn solid";
@@ -4792,9 +4792,9 @@
       var a = $("dd-actions");
       a.innerHTML = "";
       if (phase === "betting") {
-        a.appendChild(imgBtn(BJ_ART.btnUndo, "Undo", undoChip));
-        a.appendChild(imgBtn(BJ_ART.btnDeal, "Deal", deal));
+        // No undo: CLEAR takes the whole bet back.
         a.appendChild(imgBtn(BJ_ART.btnClear, "Clear", clearBet));
+        a.appendChild(imgBtn(BJ_ART.btnDeal, "Deal", deal));
         if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
           var buy = document.createElement("button");
           buy.className = "btn solid";
