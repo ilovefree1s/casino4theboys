@@ -41,6 +41,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.casinogames.R
 import com.example.casinogames.campaign.Campaign
+import com.example.casinogames.campaign.MARKER_AMOUNT
 import com.example.casinogames.campaign.Room
 import com.example.casinogames.ui.common.formatMoney
 
@@ -84,6 +85,9 @@ fun BoxScope.CampaignPlate(campaign: Boolean, artWidth: Dp, topOffset: Dp) {
         // card, so a marker takes the room plate's limits rather than a row
         // of its own.
         val owing = Campaign.debt > 0
+        // The pen comes out early: under the offer line the plate shows even
+        // with nothing owed, so a marker can be signed before going broke.
+        val offering = Campaign.canOfferMarker
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -91,10 +95,10 @@ fun BoxScope.CampaignPlate(campaign: Boolean, artWidth: Dp, topOffset: Dp) {
             RoomPlate(
                 room = Campaign.room,
                 scale = artWidth.value,
-                showLimits = !owing,
+                showLimits = !owing && !offering,
                 onClick = { showRooms = true },
             )
-            if (owing) MarkerPlate(scale = artWidth.value)
+            if (owing || offering) MarkerPlate(scale = artWidth.value, owing = owing, offering = offering)
         }
     }
     if (showRooms) RoomPicker(onDismiss = { showRooms = false })
@@ -135,9 +139,13 @@ private fun RoomPlate(room: Room, scale: Float, showLimits: Boolean, onClick: ()
     }
 }
 
-/** What is owed the house. Nothing moves up a room until it is squared. */
+/**
+ * What is owed the house, and the pen to sign for more. Nothing moves up a
+ * room until it is squared. [owing] shows the debt and PAY IT; [offering]
+ * adds a +5,000 to take another — or a first — while the purse is low.
+ */
 @Composable
-private fun MarkerPlate(scale: Float) {
+private fun MarkerPlate(scale: Float, owing: Boolean, offering: Boolean) {
     Row(
         Modifier
             .clip(RoundedCornerShape(999.dp))
@@ -148,26 +156,41 @@ private fun MarkerPlate(scale: Float) {
         horizontalArrangement = Arrangement.spacedBy(9.dp),
     ) {
         Text(
-            "MARKER ${formatMoney(Campaign.debt)}",
+            if (owing) "MARKER ${formatMoney(Campaign.debt)}" else "MARKER",
             fontSize = (scale * 0.025f).sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.08.em,
             color = MarkerRed,
         )
-        val payable = Campaign.canPayMarker
-        Text(
-            if (payable) "PAY IT" else "SHORT",
-            fontSize = (scale * 0.024f).sp,
-            fontWeight = FontWeight.Black,
-            letterSpacing = 0.08.em,
-            color = if (payable) Color(0xFF050408) else Color(0x66FFFFFF),
-            modifier = Modifier
-                .clip(RoundedCornerShape(999.dp))
-                .background(if (payable) RoomGold else Color(0x1AFFFFFF))
-                .clickable(enabled = payable) { Campaign.payMarker() }
-                .padding(horizontal = 9.dp, vertical = 2.dp),
-        )
+        if (owing) {
+            val payable = Campaign.canPayMarker
+            PlateButton(
+                if (payable) "PAY IT" else "SHORT",
+                scale, enabled = payable, fill = RoomGold,
+            ) { Campaign.payMarker() }
+        }
+        if (offering) {
+            PlateButton("+${formatMoney(MARKER_AMOUNT)}", scale, enabled = true, fill = MarkerRed) {
+                Campaign.takeMarker()
+            }
+        }
     }
+}
+
+@Composable
+private fun PlateButton(label: String, scale: Float, enabled: Boolean, fill: Color, onClick: () -> Unit) {
+    Text(
+        label,
+        fontSize = (scale * 0.024f).sp,
+        fontWeight = FontWeight.Black,
+        letterSpacing = 0.08.em,
+        color = if (enabled) Color(0xFF050408) else Color(0x66FFFFFF),
+        modifier = Modifier
+            .clip(RoundedCornerShape(999.dp))
+            .background(if (enabled) fill else Color(0x1AFFFFFF))
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 9.dp, vertical = 2.dp),
+    )
 }
 
 /*

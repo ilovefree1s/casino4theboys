@@ -108,15 +108,19 @@
   .lb-plate.room .lim { color: rgba(255,255,255,.7); font-size: 10px; }
   .lb-plate.room .arrow { color: #E8C169; font-size: 10px; }
   /* A marker takes the room plate's limits rather than a row of its own. */
-  #screen-lobby.owing .lb-plate.room .lim { display: none; }
+  #screen-lobby.owing .lb-plate.room .lim, #screen-lobby.credit .lb-plate.room .lim { display: none; }
   .lb-plate.marker { display: none; border: 1px solid rgba(255,59,92,.8); background: rgba(26,4,9,.85); }
-  #screen-lobby.owing .lb-plate.marker { display: flex; }
+  #screen-lobby.owing .lb-plate.marker, #screen-lobby.credit .lb-plate.marker { display: flex; }
   .lb-plate.marker .owed { color: #FF3B5C; font-size: 11px; letter-spacing: .08em; }
-  .lb-plate.marker .pay {
+  .lb-plate.marker .pay, .lb-plate.marker .take {
     border-radius: 999px; padding: 2px 9px; font-family: var(--display);
     font-size: 10px; letter-spacing: .08em; background: #E8C169; color: #050408;
+    display: none;
   }
+  #screen-lobby.owing .lb-plate.marker .pay { display: inline-block; }
   .lb-plate.marker .pay:disabled { background: rgba(255,255,255,.1); color: rgba(255,255,255,.4); }
+  /* The pen, in the marker's own red, only while the purse is under the offer line. */
+  #screen-lobby.credit .lb-plate.marker .take { display: inline-block; background: #FF3B5C; }
   /* ---- the floor: the painted sheet, five measured card bands ---- */
   .floor-art { position: relative; width: min(420px, 100vw, calc(100dvh * 941 / 1672)); pointer-events: none; }
   .floor-art img { width: 100%; display: block; }
@@ -1333,6 +1337,9 @@
       <div class="lb-plate marker" id="lb-markerplate">
         <span class="owed" id="lb-markerowed">MARKER 7,500</span>
         <button class="pay" id="lb-paymarker">PAY IT</button>
+        <!-- The pen comes out early: under the offer line this shows even
+             with nothing owed, so a marker can be signed before going broke. -->
+        <button class="take" id="lb-takemarker">+5,000</button>
       </div>
     </div>
     <div class="lb-cards">
@@ -2697,6 +2704,8 @@
 
   /** What the house hands over on a marker, and what it costs to clear it. */
   var MARKER_AMOUNT = 5000, MARKER_INTEREST = 0.5;
+  /** Under this the lobby offers a marker unprompted. */
+  var MARKER_OFFER_BELOW = 2500;
   /** The most the house will let anyone owe - three markers, then no more. */
   var DEBT_CEILING = 25000;
 
@@ -2819,6 +2828,10 @@
     canTakeMarker: function () {
       return this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING;
     },
+    /** The pit offers one unasked once the purse is under the offer line. */
+    canOfferMarker: function () {
+      return this.mode === "campaign" && this.getBankroll() < MARKER_OFFER_BELOW && this.canTakeMarker();
+    },
     takeMarker: function () {
       if (!this.canTakeMarker()) return;
       this.setBankroll(this.getBankroll() + MARKER_AMOUNT);
@@ -2858,9 +2871,10 @@
     renderRoomRow: function () {
       var r = this.getRoom(), owed = this.getDebt();
       $("screen-lobby").classList.toggle("owing", owed > 0);
+      $("screen-lobby").classList.toggle("credit", this.canOfferMarker());
       $("lb-roomname").textContent = r.name.toUpperCase();
       $("lb-roomlimits").textContent = roomSign(r) + " · " + roomSideSign(r);
-      $("lb-markerowed").textContent = "MARKER " + fmt(owed);
+      $("lb-markerowed").textContent = owed > 0 ? "MARKER " + fmt(owed) : "MARKER";
       var pay = $("lb-paymarker"), can = this.canPayMarker();
       pay.disabled = !can;
       pay.textContent = can ? "PAY IT" : "SHORT";
@@ -2975,6 +2989,11 @@
   $("lb-paymarker").addEventListener("click", function (e) {
     e.stopPropagation();
     Shell.payMarker();
+    Shell.showLobby();
+  });
+  $("lb-takemarker").addEventListener("click", function (e) {
+    e.stopPropagation();
+    Shell.takeMarker();
     Shell.showLobby();
   });
   $("ov-floor").addEventListener("click", function (e) {

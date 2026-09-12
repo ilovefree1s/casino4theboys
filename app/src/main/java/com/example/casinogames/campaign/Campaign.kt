@@ -14,6 +14,8 @@ const val CAMPAIGN_GOAL = 1_000_000.0
 /** What the house hands over on a marker, and what it costs to clear it. */
 const val MARKER_AMOUNT = 5_000.0
 const val MARKER_INTEREST = 0.5
+/** Under this the lobby offers a marker unprompted. */
+const val MARKER_OFFER_BELOW = 2_500.0
 
 /**
  * The most the house will let anyone owe. Credit without a floor made the
@@ -184,6 +186,14 @@ object Campaign {
     /** Whether the house will still sign one — the ceiling is on what is owed. */
     val canTakeMarker: Boolean
         get() = debt + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING
+
+    /**
+     * Whether the pit is offering one unasked: the purse has dropped under
+     * [MARKER_OFFER_BELOW] and the house still has credit to give. Broke
+     * forces the question; this just puts the pen on the table early.
+     */
+    val canOfferMarker: Boolean
+        get() = bankroll < MARKER_OFFER_BELOW && canTakeMarker
 
     fun takeMarker() {
         if (!canTakeMarker) return
