@@ -7860,7 +7860,9 @@
 
     function enter() {
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
-      bets = {}; defs = {}; cens = {}; chipHist = []; lastBets = {}; lastDefs = {}; lastCens = {};
+      // The last bet survives leaving the table: a signed marker walks the
+      // player out to the menu, and REBET must still work on the way back.
+      bets = {}; defs = {}; cens = {}; chipHist = [];
       phase = "betting"; pocket = null; lastWin = 0; staked = 0;
       selectedChip = clampChip(selectedChip, bankroll);
       note(""); msg("");

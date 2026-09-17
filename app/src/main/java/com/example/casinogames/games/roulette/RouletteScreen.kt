@@ -146,7 +146,12 @@ fun RouletteScreen(
                         )
                         .background(ZeroGreen.copy(alpha = 0.55f), zeroShape)
                 )
-                val anchors = remember { mutableStateOf(mapOf<String, Anchor>()) }
+                // The book lives in the view model and is never pruned: a spot's
+                // id always means the same mark, and REBET can bring back chips
+                // long after the felt was swept — or the screen was left, as a
+                // signed marker does. Kept here it was lost, and the rebet chips
+                // went down invisible.
+                val anchors = vm.anchors
                 Felt(vm, k, anchors)
                 Outside(vm, k, anchors)
                 // The winning pocket wears a big gold star until the felt is
@@ -381,7 +386,7 @@ private fun Felt(
                     vm.addChip(hit.first, hit.second)
                     if (vm.bets.containsKey(hit.first)) {
                         anchors.value =
-                            anchors.value.filterKeys { it in vm.bets } + (hit.first to hit.third)
+                            anchors.value + (hit.first to hit.third)
                     }
                 }
             },
@@ -575,10 +580,8 @@ private fun Modifier.chipDrag(
         if (hit.first == id) return@awaitEachGesture
         vm.moveChip(id, hit.first, hit.second, lifted)
         val third = hit.third
-        anchors.value = if (third != null && vm.bets.containsKey(hit.first)) {
-            anchors.value.filterKeys { it in vm.bets } + (hit.first to third)
-        } else {
-            anchors.value.filterKeys { it in vm.bets }
+        if (third != null && vm.bets.containsKey(hit.first)) {
+            anchors.value = anchors.value + (hit.first to third)
         }
     }
 }
@@ -782,7 +785,8 @@ private fun Message(vm: RouletteViewModel, k: Float) {
     }
 }
 
-private data class Anchor(val x: Float, val y: Float)
+/** Where a grid chip sits, in grid cells. Public so the view model can keep the book. */
+data class Anchor(val x: Float, val y: Float)
 
 /**
  * Turns a press into (spot id, bet, chip anchor). Distances are measured to

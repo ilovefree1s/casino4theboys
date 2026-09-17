@@ -44,6 +44,12 @@ class RouletteViewModel(app: Application) : AndroidViewModel(app) {
     val bets = mutableStateMapOf<String, Int>()
     private val defs = mutableMapOf<String, RouletteEngine.Bet>()
     private val chipHistory = mutableListOf<Pair<String, Int>>()
+
+    /**
+     * Where each grid chip sits, by spot id. Never pruned: an id always means
+     * the same mark, so REBET can lay chips back down whenever it is pressed.
+     */
+    val anchors = mutableStateOf(mapOf<String, Anchor>())
     private var lastBets: Map<String, Int> = emptyMap()
     private var lastDefs: Map<String, RouletteEngine.Bet> = emptyMap()
 
