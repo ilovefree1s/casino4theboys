@@ -452,8 +452,9 @@ class Blazing777ViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         collect(totalReturn.toDouble())
-        val staked = playerHands.sumOf { it.stake } + triluxStake
-        val net = totalReturn - staked
+        // The verdict speaks for the hands: a push beside a lost side bet is
+        // a push, whatever the money nets out to.
+        val net = out.take(playerHands.size).sumOf { it.net }
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
             jackpot != null -> "🔥 BLAZING 7♦ JACKPOT — \$500,000!"

@@ -56,6 +56,7 @@ import com.example.casinogames.ui.common.CasinoChip
 import com.example.casinogames.ui.common.OutlinedText
 import com.example.casinogames.ui.common.PlacedBetChip
 import com.example.casinogames.ui.common.PlayingCardView
+import com.example.casinogames.ui.common.handSpacing
 import com.example.casinogames.ui.common.CardWidth
 import com.example.casinogames.ui.common.chipsFor
 import com.example.casinogames.campaign.FreePlay
@@ -412,7 +413,9 @@ private fun PlayerHandColumn(vm: Blazing777ViewModel, i: Int, hand: BjHand) {
         }
         Spacer(Modifier.height(8.dp))
         Box(contentAlignment = Alignment.Center) {
-            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+            // A long hand fans: past what fits, the cards overlap so a split
+            // hand of five stays on the glass with every index still showing.
+            Row(horizontalArrangement = Arrangement.spacedBy(handSpacing(hand.cards.size, single))) {
                 hand.cards.forEach { card -> PlayingCardView(card, faceUp = true) }
             }
             if (vm.phase == BjPhase.RESULT) {

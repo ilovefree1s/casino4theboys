@@ -476,7 +476,9 @@ class FreeBetViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         collect(totalReturn.toDouble())
-        val net = totalReturn - playerHands.sumOf { it.stake } - potStake
+        // The verdict speaks for the hands: two pushes beside a lost side bet
+        // are a push, whatever the money nets out to.
+        val net = out.take(playerHands.size).sumOf { it.net }
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
             push22 -> "Dealer 22 — all hands push"

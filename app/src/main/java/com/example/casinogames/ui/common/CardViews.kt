@@ -165,3 +165,16 @@ private fun CardBack(modifier: Modifier = Modifier, scale: Float = 1f) {
         contentScale = ContentScale.Crop,
     )
 }
+
+/**
+ * The gap between the cards of a blackjack hand. Up to what fits it is the
+ * usual 5dp; past that the cards fan — overlapping just enough to keep the
+ * hand inside its share of the screen, half of it when the hand is one of a
+ * split pair — and never so far that a card's corner index is covered.
+ */
+fun handSpacing(cards: Int, single: Boolean): androidx.compose.ui.unit.Dp {
+    if (cards <= 1) return 5.dp
+    val room = if (single) 330.dp else 160.dp
+    val fit = (room - CardWidth) / (cards - 1) - CardWidth
+    return fit.coerceIn(-(CardWidth - 18.dp), 5.dp)
+}

@@ -292,6 +292,11 @@
   .bj-hands { display: flex; flex-wrap: wrap; gap: 12px 18px; justify-content: center; margin-top: 8px; }
   .bj-hand { text-align: center; transition: opacity 200ms; }
   .bj-hand.dim { opacity: .35; }
+  /* A long split hand fans: past three cards they overlap, so the pair of
+     hands stays side by side on the glass with every corner index showing. */
+  .bj-hands:has(.bj-hand + .bj-hand) .cards:has(.card:nth-child(4)) .card + .card { margin-left: -17px; }
+  .bj-hands:has(.bj-hand + .bj-hand) .cards:has(.card:nth-child(5)) .card + .card { margin-left: -27px; }
+  .bj-hands:has(.bj-hand + .bj-hand) .cards:has(.card:nth-child(6)) .card + .card { margin-left: -34px; }
   .bj-hand-title {
     display: flex; justify-content: center; align-items: center; gap: 7px;
     margin-bottom: 8px; min-height: 24px;
@@ -4444,9 +4449,10 @@
       }
       bankroll += totalReturn;
       syncWallet();
-      var staked = potStake + triluxStake;
-      hands.forEach(function (h) { staked += h.stake; });
-      var net = totalReturn - staked;
+      // The verdict speaks for the hands: two pushes beside a lost side bet
+      // are a push, whatever the money nets out to.
+      var net = 0;
+      results.slice(0, hands.length).forEach(function (r) { net += r.net; });
       phase = "result";
       var msg =
         Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
