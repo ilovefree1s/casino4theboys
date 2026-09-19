@@ -30,6 +30,28 @@ enum class TripsPay(val label: String, val multiplier: Int) {
     THREE_KIND("Three of a Kind", 4),
 }
 
+/**
+ * The Bad Beat side bet, the ladder the user brought in: it pays off whichever
+ * hand *lost* the showdown, when that hand was trips or better — the point
+ * being that a big hand went down. A push pays nothing, since nothing was
+ * beaten. A folded hand counts as the player's loss: the cards were dealt and
+ * the dealer's are turned over, so a straight thrown away still lost.
+ */
+enum class BadBeatPay(val label: String, val multiplier: Int) {
+    ROYAL_FLUSH("Royal Flush", 10_000),
+    STRAIGHT_FLUSH("Straight Flush", 10_000),
+    FOUR_KIND("Four of a Kind", 500),
+    FULL_HOUSE("Full House", 50),
+    FLUSH("Flush", 35),
+    STRAIGHT("Straight", 25),
+    THREE_KIND("Three of a Kind", 9),
+}
+
+/** What the Bad Beat found, and on whose hand. */
+data class BadBeatHit(val rung: BadBeatPay, val onDealer: Boolean) {
+    val label: String get() = if (onDealer) "Dealer ${rung.label}" else rung.label
+}
+
 enum class HoldemOutcome { WIN, LOSE, PUSH, FOLD }
 
 /** Everything settle() decided, itemised the way the table reports it. */
@@ -44,8 +66,10 @@ data class HoldemSettlement(
     val tripsReturn: Double,
     val blindWin: BlindPay?,
     val tripsWin: TripsPay?,
+    val badBeatReturn: Double = 0.0,
+    val badBeatWin: BadBeatHit? = null,
 ) {
-    val totalReturn: Double get() = anteReturn + blindReturn + playReturn + tripsReturn
+    val totalReturn: Double get() = anteReturn + blindReturn + playReturn + tripsReturn + badBeatReturn
 }
 
 object UltimateHoldemRules {
@@ -82,12 +106,52 @@ object UltimateHoldemRules {
         else -> null
     }
 
+    fun badBeatPay(hand: HandValue): BadBeatPay? = when (hand.category) {
+        HandCategory.ROYAL_FLUSH -> BadBeatPay.ROYAL_FLUSH
+        HandCategory.STRAIGHT_FLUSH -> BadBeatPay.STRAIGHT_FLUSH
+        HandCategory.FOUR_KIND -> BadBeatPay.FOUR_KIND
+        HandCategory.FULL_HOUSE -> BadBeatPay.FULL_HOUSE
+        HandCategory.FLUSH -> BadBeatPay.FLUSH
+        HandCategory.STRAIGHT -> BadBeatPay.STRAIGHT
+        HandCategory.THREE_KIND -> BadBeatPay.THREE_KIND
+        else -> null
+    }
+
+    /** The losing side's hand, if it was big enough to be a bad beat. */
+    fun badBeat(playerHand: HandValue, dealerHand: HandValue, folded: Boolean): BadBeatHit? {
+        val cmp = playerHand.compareTo(dealerHand)
+        val onDealer = when {
+            folded -> false
+            cmp == 0 -> return null
+            else -> cmp > 0
+        }
+        return badBeatPay(if (onDealer) dealerHand else playerHand)?.let { BadBeatHit(it, onDealer) }
+    }
+
     /**
      * Settles one hand. [play] is 0 when the player folded. Returns are gross —
      * stake plus winnings — so a losing bet returns nothing and a push returns
      * exactly what was put up.
      */
     fun settle(
+        playerHole: List<Card>,
+        dealerHole: List<Card>,
+        board: List<Card>,
+        ante: Double,
+        blind: Double,
+        play: Double,
+        trips: Double,
+        folded: Boolean,
+        badBeat: Double = 0.0,
+    ): HoldemSettlement {
+        val s = settleHand(playerHole, dealerHole, board, ante, blind, play, trips, folded)
+        // The Bad Beat reads the hand that lost, whichever side that was.
+        val hit = if (badBeat > 0) badBeat(s.playerHand, s.dealerHand, folded) else null
+        return if (hit == null) s
+        else s.copy(badBeatReturn = badBeat * (hit.rung.multiplier + 1), badBeatWin = hit)
+    }
+
+    private fun settleHand(
         playerHole: List<Card>,
         dealerHole: List<Card>,
         board: List<Card>,

@@ -707,6 +707,11 @@
   }
   .uth-btn:active { transform: scale(.98); }
 
+  /* With a ladder each side of the two diamonds the gutters are narrow. */
+  .uth-sides { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .uth-sides .uth-pays .row { font-size: 8px; line-height: 10px; }
+  #screen-holdem .uth-sides .uth-spot .cap { line-height: 1.15; }
+
   /* ========== DJ WILD ==========
      The Ultimate layout in the felt's own colours, taken off dj4theboys.png
      rather than picked by eye: the neon ring for the bets that ride on the
@@ -3249,8 +3254,27 @@
       return 0;
     }
     function qualifies(hand) { return hand.cat >= 1; }   // a pair or better opens
+    /* The Bad Beat, the ladder the user brought in: [category, pays]. It pays
+       off whichever hand LOST the showdown when that hand was trips or
+       better. A push pays nothing; a folded hand counts as the player's loss. */
+    var BAD_BEAT = [[9,10000],[8,10000],[7,500],[6,50],[5,35],[4,25],[3,9]];
+    function badBeat(p, d, folded) {
+      var c = cmp(p, d);
+      if (!folded && c === 0) return null;
+      var onDealer = !folded && c > 0;
+      var pays = payFor(BAD_BEAT, (onDealer ? d : p).cat);
+      return pays > 0 ? { pays: pays, onDealer: onDealer, label: (onDealer ? "Dealer " : "") + CAT[(onDealer ? d : p).cat] } : null;
+    }
     /** Gross returns — stake plus winnings — so a push returns the stake. */
-    function settle(playerHole, dealerHole, board, ante, blind, play, trips, folded) {
+    function settle(playerHole, dealerHole, board, ante, blind, play, trips, folded, badBeatBet) {
+      var s = settleHand(playerHole, dealerHole, board, ante, blind, play, trips, folded);
+      // The Bad Beat reads the hand that lost, whichever side that was.
+      var hit = badBeatBet > 0 ? badBeat(s.player, s.dealer, folded) : null;
+      s.badBeat = hit ? badBeatBet * (hit.pays + 1) : 0;
+      s.badBeatWin = hit;
+      return s;
+    }
+    function settleHand(playerHole, dealerHole, board, ante, blind, play, trips, folded) {
       var p = best(playerHole.concat(board));
       var d = best(dealerHole.concat(board));
       var q = qualifies(d);
@@ -3278,7 +3302,8 @@
                ante: 0, blind: 0, play: 0, trips: tripsReturn, blindPay: 0, tripsPay: tPay };
     }
     return { val: val, score5: score5, best: best, cmp: cmp, settle: settle,
-             CAT: CAT, BLIND: BLIND, TRIPS: TRIPS, qualifies: qualifies };
+             CAT: CAT, BLIND: BLIND, TRIPS: TRIPS, BAD_BEAT: BAD_BEAT, badBeat: badBeat,
+             qualifies: qualifies };
   })();
   window.UTH = UTH;   // exposed so the rules can be exercised directly
   function buildShoe(decks) {
@@ -5327,9 +5352,9 @@
     var shoe = buildShoe(DECKS);
     var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     /** Pending bets while betting; the Blind always matches the Ante. */
-    var ante = 0, trips = 0, chipHist = [], lastAnte = 0, lastTrips = 0;
+    var ante = 0, trips = 0, badBeat = 0, chipHist = [], lastAnte = 0, lastTrips = 0, lastBadBeat = 0;
     /** Locked-in stakes once the hand is dealt. */
-    var anteStake = 0, blindStake = 0, tripsStake = 0, playStake = 0;
+    var anteStake = 0, blindStake = 0, tripsStake = 0, badBeatStake = 0, playStake = 0;
     // betting | dealing | preflop | flop | river | showdown | result
     var phase = "betting";
     var player = [], dealer = [], board = [];
@@ -5347,8 +5372,8 @@
       Shell.demoteIfBroke();
     }
     function atRisk() {
-      return phase === "betting" ? ante * 2 + trips
-        : anteStake + blindStake + tripsStake + playStake;
+      return phase === "betting" ? ante * 2 + trips + badBeat
+        : anteStake + blindStake + tripsStake + badBeatStake + playStake;
     }
     /** The decision point the player is facing, if any. */
     function street() {
@@ -5449,8 +5474,13 @@
       var betting = phase === "betting";
       var host = $("uth-spots");
       host.innerHTML =
-        '<div class="uth-row"><div></div>' +
-          '<div class="mid">' +
+        // Each side bet stands under its own ladder — Bad Beat left, Trips right.
+        '<div class="uth-row uth-sides">' +
+          '<div style="padding:0 6px 12px 0">' + paysHtml("BAD BEAT", UTH.BAD_BEAT.slice(1).map(function (r) {
+            return [UTH.CAT[r[0]], fmt(r[1]) + "-to-1"];
+          })) + "</div>" +
+          '<div class="mid" style="gap:14px">' +
+            spotHtml("uth-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake, betting) +
             spotHtml("uth-trips", "dia", "TRIPS", betting ? trips : tripsStake, betting) +
           "</div>" +
           '<div style="padding:0 0 12px 6px">' + paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +
@@ -5470,6 +5500,7 @@
         "</div>";
       if (betting) {
         $("uth-trips").addEventListener("click", function () { place("trips"); });
+        $("uth-badbeat").addEventListener("click", function () { place("badbeat"); });
         $("uth-ante").addEventListener("click", function () { place("ante"); });
       }
     }
@@ -5541,31 +5572,38 @@
     /** The ante costs double, because the blind rides alongside it. */
     function place(spot) {
       if (phase !== "betting") return;
-      var room = Math.floor(bankroll - (ante * 2 + trips));
+      var room = Math.floor(bankroll - (ante * 2 + trips + badBeat));
       // Half the remaining room on the ante, so ante and blind can both be covered.
       var affordable = spot === "ante"
         ? Math.min(selectedChip, Math.floor(room / 2))
         : Math.min(selectedChip, room);
       if (affordable <= 0) { setMessage("Not enough for the ante and blind"); return; }
       var side = spot === "trips", lim = Shell.limits();
-      var amount = allow(lim, affordable, side ? trips : ante, side);
-      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
-      if (spot === "ante") ante += amount; else trips += amount;
+      // The Bad Beat rides its own, far lower cap: at 10,000 to 1 the ordinary
+      // side limit would let one hand pay off the whole campaign.
+      var amount = spot === "badbeat" ? allowBadBeat(lim, affordable, badBeat)
+        : allow(lim, affordable, side ? trips : ante, side);
+      if (amount <= 0) { setMessage(spot === "badbeat" ? badBeatRefusal(lim) : refusal(lim, side)); return; }
+      if (spot === "ante") ante += amount;
+      else if (spot === "trips") trips += amount;
+      else badBeat += amount;
       chipHist.push({ spot: spot, v: amount });
       setMessage(amount < selectedChip ? "All in!"
-        : spot === "trips" ? "Trips riding" : "Ante and blind posted");
+        : spot === "trips" ? "Trips riding"
+        : spot === "badbeat" ? "Bad Beat riding" : "Ante and blind posted");
       renderTop(); renderSpots();
     }
     function undoChip() {
       if (phase !== "betting" || !chipHist.length) return;
       var last = chipHist.pop();
       if (last.spot === "ante") ante = Math.max(0, ante - last.v);
-      else trips = Math.max(0, trips - last.v);
+      else if (last.spot === "trips") trips = Math.max(0, trips - last.v);
+      else badBeat = Math.max(0, badBeat - last.v);
       renderTop(); renderSpots();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      ante = 0; trips = 0; chipHist = [];
+      ante = 0; trips = 0; badBeat = 0; chipHist = [];
       setMessage("Place your ante");
       renderTop(); renderSpots();
     }
@@ -5574,19 +5612,19 @@
     function deal() {
       if (phase !== "betting") return;
       if (ante <= 0) {
-        setMessage(trips > 0 ? "Trips rides with an ante" : "Place an ante first");
+        setMessage(trips + badBeat > 0 ? "Side bets ride with an ante" : "Place an ante first");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
-      bankroll -= ante * 2 + trips;
+      bankroll -= ante * 2 + trips + badBeat;
       syncWallet();
-      lastAnte = ante; lastTrips = trips;
-      anteStake = ante; blindStake = ante; tripsStake = trips; playStake = 0;
+      lastAnte = ante; lastTrips = trips; lastBadBeat = badBeat;
+      anteStake = ante; blindStake = ante; tripsStake = trips; badBeatStake = badBeat; playStake = 0;
       chipHist = [];
       player = []; dealer = []; board = [];
       boardUp = 0; dealerUp = false; folded = false;
       results = []; settlement = null; winners = [];
-      ante = 0; trips = 0;
+      ante = 0; trips = 0; badBeat = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -5665,7 +5703,7 @@
     }
     function settle() {
       var s = UTH.settle(player, dealer, board,
-        anteStake, blindStake, playStake, tripsStake, folded);
+        anteStake, blindStake, playStake, tripsStake, folded, badBeatStake);
       settlement = s;
       // A tie can still use a card from each hand — A-2 against A-3 both play
       // their ace — so light whatever either side actually used.
@@ -5686,10 +5724,17 @@
         });
       }
 
-      var totalReturn = s.ante + s.blind + s.play + s.trips;
+      if (badBeatStake > 0) {
+        results.push({
+          label: s.badBeatWin ? "Bad Beat · " + s.badBeatWin.label : "Bad Beat",
+          net: s.badBeat - badBeatStake
+        });
+      }
+
+      var totalReturn = s.ante + s.blind + s.play + s.trips + s.badBeat;
       bankroll += totalReturn;
       syncWallet();
-      var staked = anteStake + blindStake + playStake + tripsStake;
+      var staked = anteStake + blindStake + playStake + tripsStake + badBeatStake;
       var net = totalReturn - staked;
       phase = "result";
       var msg =
@@ -5699,7 +5744,8 @@
         s.outcome === "win"
           ? (s.qualified ? "You win — " + s.player.label : "You win — dealer didn't qualify")
           : "Dealer wins — " + s.dealer.label;
-      if (net > 0 && s.outcome === "fold") msg = "Folded — trips still pays";
+      if (net > 0 && s.outcome === "fold") msg = "Folded — the side bets still pay";
+      if (s.badBeatWin) msg = s.badBeatWin.label + " — bad beat pays " + fmt(s.badBeatWin.pays) + " to 1";
       setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
       renderAll();
       // The victory overlay lands on the winning hand itself; going bust waits
@@ -5713,16 +5759,16 @@
       phase = "betting";
       player = []; dealer = []; board = [];
       chipHist = [];
-      ante = 0; trips = 0;
-      anteStake = 0; blindStake = 0; tripsStake = 0; playStake = 0;
+      ante = 0; trips = 0; badBeat = 0;
+      anteStake = 0; blindStake = 0; tripsStake = 0; badBeatStake = 0; playStake = 0;
       boardUp = 0; dealerUp = false; folded = false;
       results = []; settlement = null; winners = [];
     }
     function nextHand(repeat) {
       if (phase !== "result") return;
       reset();
-      if (repeat && lastAnte * 2 + lastTrips <= bankroll) {
-        ante = lastAnte; trips = lastTrips;
+      if (repeat && lastAnte * 2 + lastTrips + lastBadBeat <= bankroll) {
+        ante = lastAnte; trips = lastTrips; badBeat = lastBadBeat;
       } else if (repeat && lastAnte * 2 <= bankroll) {
         ante = lastAnte; trips = 0;
       }

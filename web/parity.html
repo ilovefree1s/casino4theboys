@@ -50,7 +50,7 @@
           line: line,
           player: cards(c[0]), dealer: cards(c[1]), board: cards(c[2]),
           ante: +stakes[0], blind: +stakes[1], play: +stakes[2], trips: +stakes[3],
-          folded: stakes[4] === "fold",
+          folded: stakes[4] === "fold", badBeat: +(stakes[5] || 0), badBeatReturn: +(want[6] || 0),
           outcome: want[0], qualified: want[1] === "q",
           anteReturn: +want[2], blindReturn: +want[3],
           playReturn: +want[4], tripsReturn: +want[5],
@@ -60,7 +60,7 @@
   }
 
   function check(UTH, c) {
-    var s = UTH.settle(c.player, c.dealer, c.board, c.ante, c.blind, c.play, c.trips, c.folded);
+    var s = UTH.settle(c.player, c.dealer, c.board, c.ante, c.blind, c.play, c.trips, c.folded, c.badBeat);
     var bad = [];
     function eq(what, got, want) {
       if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
@@ -71,6 +71,7 @@
     eq("blind", s.blind, c.blindReturn);
     eq("play", s.play, c.playReturn);
     eq("trips", s.trips, c.tripsReturn);
+    eq("bad beat", s.badBeat, c.badBeatReturn);
     eq("player hand", s.player.label, c.playerHand);
     eq("dealer hand", s.dealer.label, c.dealerHand);
     return bad;

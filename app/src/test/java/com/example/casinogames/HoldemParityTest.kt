@@ -63,6 +63,7 @@ class HoldemParityTest {
                 play = stakes[2].toDouble(),
                 trips = stakes[3].toDouble(),
                 folded = stakes[4] == "fold",
+                badBeat = stakes.getOrNull(5)?.toDouble() ?: 0.0,
             )
 
             val outcome = when (expected[0]) {
@@ -78,6 +79,7 @@ class HoldemParityTest {
             assertEquals("blind · $line", expected[3].toDouble(), s.blindReturn, 0.001)
             assertEquals("play · $line", expected[4].toDouble(), s.playReturn, 0.001)
             assertEquals("trips · $line", expected[5].toDouble(), s.tripsReturn, 0.001)
+            assertEquals("bad beat · $line", expected.getOrNull(6)?.toDouble() ?: 0.0, s.badBeatReturn, 0.001)
             assertEquals("player hand · $line", cols[5], s.playerHand.category.label)
             assertEquals("dealer hand · $line", cols[6], s.dealerHand.category.label)
         }

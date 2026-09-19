@@ -388,10 +388,20 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
         // The Trips pays sit beside the diamond, resting on the Ante row below.
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val gutter = (maxWidth - (spot * 2 + gap)) / 2
+            // Each side bet stands under its own ladder — Bad Beat left,
+            // Trips right — over the Ante and Blind they ride with.
             Row(
                 Modifier.align(Alignment.BottomCenter).offset(x = shift),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(gap),
             ) {
+                DiamondSpot(
+                    label = "BAD\nBEAT",
+                    color = NeonPink,
+                    amount = if (betting) vm.badBeat else vm.badBeatStake,
+                    size = spot,
+                    onClick = { vm.addBadBeat() }.takeIf { betting },
+                )
                 DiamondSpot(
                     label = "TRIPS",
                     color = NeonPink,
@@ -400,6 +410,15 @@ private fun BetSpots(vm: UltimateHoldemViewModel) {
                     onClick = { vm.addTrips() }.takeIf { betting },
                 )
             }
+            FeltPayTable(
+                title = "BAD BEAT",
+                color = NeonPink,
+                rows = BadBeatPay.entries.drop(1).map {
+                    it.label to "${"%,d".format(it.multiplier)}-to-1"
+                },
+                width = gutter - 6.dp,
+                modifier = Modifier.align(Alignment.BottomStart).padding(bottom = 12.dp),
+            )
             FeltPayTable(
                 title = "TRIPS",
                 color = NeonPink,
@@ -601,6 +620,8 @@ private fun SpotContents(
             fontSize = 10.sp,
             fontWeight = FontWeight.Black,
             letterSpacing = 0.08.em,
+            lineHeight = 11.sp,
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center,
         )
     }
 }
@@ -720,11 +741,18 @@ private fun PayTables(onDismiss: () -> Unit) {
                 "TRIPS", NeonPink,
                 TripsPay.entries.map { it.label to "${it.multiplier} to 1" },
             )
+            Spacer(Modifier.height(12.dp))
+            PayList(
+                "BAD BEAT", NeonPink,
+                BadBeatPay.entries.drop(1).map { it.label to "${"%,d".format(it.multiplier)} to 1" },
+            )
             Spacer(Modifier.height(14.dp))
             Text(
                 "Ante and Blind are posted together. Raise 4x or 3x before the flop, " +
                     "2x after it, or 1x on the river. The dealer needs a pair to open — " +
-                    "without one, the Ante pushes. Trips is settled on your own five cards.",
+                    "without one, the Ante pushes. Trips is settled on your own five cards. " +
+                    "The Bad Beat pays whichever hand lost the showdown, yours or the dealer's, " +
+                    "when it was trips or better; a push pays nothing.",
                 fontSize = 10.sp,
                 color = P.OffWhite.copy(alpha = 0.6f),
             )

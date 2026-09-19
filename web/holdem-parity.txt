@@ -11,6 +11,10 @@
 #
 # Returns are gross — stake plus winnings — so a push returns exactly the stake.
 # "q"/"nq" is whether the dealer opened; "fold" in the stakes column is a fold.
+#
+# A sixth stake is the Bad Beat, and then a seventh return answers it. It pays
+# the hand that LOST when that hand was trips or better; a push pays nothing,
+# and a folded hand counts as the player's loss. Lines without it bet nothing.
 
 # ---- the dealer's pair to open ----
 Ks Qd | 3h 8c | Kh 9d Jc 4s 2h | 10 10 40 0 -    | win  nq 10 10 80 0    | Pair            | High Card
@@ -40,3 +44,12 @@ Ad 2h | Ac 3s | As Kd Qc Jh 9s | 10 10 20 0 -    | push q  10 10 20 0    | Pair 
 
 # ---- trips rides on the player's own five ----
 As Kd | 2h 3c | 9s 7d 4h Jc 6s | 10 10 20 10 -   | win  nq 10 10 40 0    | High Card       | High Card
+
+# ---- the bad beat: paid on whichever hand lost, trips or better ----
+4d 4h | 2c 7s | Ks Kh Kd 4c 9s | 10 10 40 0 - 10  | win  q  20 60 80 0 100     | Full House      | Three of a Kind   # dealer trips go down: 9 to 1
+2c 7s | 4d 4h | Ks Kh Kd 4c 9s | 10 10 10 0 - 10  | lose q  0 0 0 0 100       | Three of a Kind | Full House        # the player's trips go down
+9h 9d | Ac Ad | 9s Ah As 2c 3d | 10 10 40 0 - 10  | lose q  0 0 0 0 510       | Full House      | Four of a Kind    # a full house beaten: 50 to 1
+5h 6h | Kd Kc | 7h 8h 9h Ks Kh | 10 10 40 0 - 10  | win  q  20 510 80 0 5010  | Straight Flush  | Four of a Kind    # dealer quads go down: 500 to 1
+Ts 9s | Qd Jd | 8c 7h 6d Kc 2s | 10 10 0 0 fold 10 | fold nq 0 0 0 0 260      | Straight        | High Card         # a folded straight still lost
+As Kd | Ah Kc | Qs Jd Tc 4h 2s | 10 10 40 0 - 10  | push q  10 10 40 0 0      | Straight        | Straight          # a push beats nobody
+Ks Qd | 3h 8c | Kh 9d Jc 4s 2h | 10 10 40 0 - 10  | win  nq 10 10 80 0 0      | Pair            | High Card         # nothing big went down

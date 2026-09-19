@@ -26,7 +26,7 @@ enum class UthPhase { BETTING, DEALING, PRE_FLOP, FLOP, RIVER, SHOWDOWN, RESULT 
 data class UthResult(val label: String, val net: Double)
 
 /** Which spot a chip landed on, so Undo can lift it off again. */
-private enum class Spot { ANTE, TRIPS }
+private enum class Spot { ANTE, TRIPS, BAD_BEAT }
 
 /**
  * Ultimate Texas Hold'em. The Ante and Blind are posted together, the Play bet
@@ -37,6 +37,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     private val shoe = Shoe(decks = DECKS)
     private var lastAnte = 0
     private var lastTrips = 0
+    private var lastBadBeat = 0
     private val chipHistory = mutableListOf<Pair<Spot, Int>>()
 
     /** Play testing has its own purse; the campaign shares one with every table. */
@@ -60,6 +61,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         private set
     var trips by mutableIntStateOf(0)
         private set
+    var badBeat by mutableIntStateOf(0)
+        private set
 
     /** Locked-in stakes once the hand is dealt. */
     var anteStake by mutableIntStateOf(0)
@@ -67,6 +70,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     var blindStake by mutableIntStateOf(0)
         private set
     var tripsStake by mutableIntStateOf(0)
+        private set
+    var badBeatStake by mutableIntStateOf(0)
         private set
     var playStake by mutableIntStateOf(0)
         private set
@@ -97,8 +102,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         private set
 
     val totalAtRisk: Int
-        get() = if (phase == UthPhase.BETTING) ante * 2 + trips
-        else anteStake + blindStake + tripsStake + playStake
+        get() = if (phase == UthPhase.BETTING) ante * 2 + trips + badBeat
+        else anteStake + blindStake + tripsStake + badBeatStake + playStake
 
     /** The decision point the player is facing, if any. */
     val street: Street?
@@ -160,8 +165,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         dealerCards.clear()
         board.clear()
         chipHistory.clear()
-        ante = 0; trips = 0
-        anteStake = 0; blindStake = 0; tripsStake = 0; playStake = 0
+        ante = 0; trips = 0; badBeat = 0
+        anteStake = 0; blindStake = 0; tripsStake = 0; badBeatStake = 0; playStake = 0
         boardRevealed = 0
         dealerRevealed = false
         folded = false
@@ -194,38 +199,46 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     /** The ante costs double, because the blind rides alongside it. */
     private fun place(spot: Spot) {
         if (phase != UthPhase.BETTING) return
-        val committed = ante * 2 + trips
+        val committed = ante * 2 + trips + badBeat
         val room = (bankroll - committed).toInt()
         val affordable = when (spot) {
             // Half the remaining room, so ante and blind can both be covered.
             Spot.ANTE -> minOf(selectedChip, room / 2)
-            Spot.TRIPS -> minOf(selectedChip, room)
+            Spot.TRIPS, Spot.BAD_BEAT -> minOf(selectedChip, room)
         }
         if (affordable <= 0) {
             message = "Not enough for the ante and blind"
             return
         }
         // The ante is the table bet; trips is the side bet beside it.
+        // The Bad Beat rides its own, far lower cap: at 10,000 to 1 the ordinary
+        // side limit would let one hand pay off the whole campaign.
         val side = spot == Spot.TRIPS
-        val amount = limits.allow(affordable, if (side) trips else ante, side)
+        val amount = when (spot) {
+            Spot.BAD_BEAT -> limits.allowBadBeat(affordable, badBeat)
+            else -> limits.allow(affordable, if (side) trips else ante, side)
+        }
         if (amount <= 0) {
-            message = limits.refusal(side)
+            message = if (spot == Spot.BAD_BEAT) limits.badBeatRefusal() else limits.refusal(side)
             return
         }
         when (spot) {
             Spot.ANTE -> ante += amount
             Spot.TRIPS -> trips += amount
+            Spot.BAD_BEAT -> badBeat += amount
         }
         chipHistory.add(spot to amount)
         message = when {
             amount < selectedChip -> "All in!"
             spot == Spot.TRIPS -> "Trips riding"
+            spot == Spot.BAD_BEAT -> "Bad Beat riding"
             else -> "Ante and blind posted"
         }
     }
 
     fun addAnte() = place(Spot.ANTE)
     fun addTrips() = place(Spot.TRIPS)
+    fun addBadBeat() = place(Spot.BAD_BEAT)
 
     fun undoChip() {
         if (phase != UthPhase.BETTING) return
@@ -233,12 +246,13 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         when (last.first) {
             Spot.ANTE -> ante = (ante - last.second).coerceAtLeast(0)
             Spot.TRIPS -> trips = (trips - last.second).coerceAtLeast(0)
+            Spot.BAD_BEAT -> badBeat = (badBeat - last.second).coerceAtLeast(0)
         }
     }
 
     fun clearBet() {
         if (phase != UthPhase.BETTING) return
-        ante = 0; trips = 0
+        ante = 0; trips = 0; badBeat = 0
         chipHistory.clear()
         message = "Place your ante"
     }
@@ -248,14 +262,14 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     fun deal() {
         if (phase != UthPhase.BETTING) return
         if (ante <= 0) {
-            message = if (trips > 0) "Trips rides with an ante" else "Place an ante first"
+            message = if (trips > 0 || badBeat > 0) "Side bets ride with an ante" else "Place an ante first"
             return
         }
         shoe.reshuffleIfBelow(RESHUFFLE_AT)
-        val posted = ante * 2 + trips
+        val posted = ante * 2 + trips + badBeat
         spend(posted.toDouble())
-        lastAnte = ante; lastTrips = trips
-        anteStake = ante; blindStake = ante; tripsStake = trips
+        lastAnte = ante; lastTrips = trips; lastBadBeat = badBeat
+        anteStake = ante; blindStake = ante; tripsStake = trips; badBeatStake = badBeat
         playStake = 0
         chipHistory.clear()
         playerCards.clear()
@@ -267,7 +281,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
         results = emptyList()
         settlement = null
         winningCards = emptySet()
-        ante = 0; trips = 0
+        ante = 0; trips = 0; badBeat = 0
         phase = UthPhase.DEALING
         message = "Dealing…"
 
@@ -357,6 +371,7 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             play = playStake.toDouble(),
             trips = tripsStake.toDouble(),
             folded = folded,
+            badBeat = badBeatStake.toDouble(),
         )
         settlement = s
         // Only a decided hand has a winner worth pointing at.
@@ -389,8 +404,17 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
             )
         }
 
+        if (badBeatStake > 0) {
+            rows.add(
+                UthResult(
+                    s.badBeatWin?.let { "Bad Beat · ${it.label}" } ?: "Bad Beat",
+                    s.badBeatReturn - badBeatStake,
+                )
+            )
+        }
+
         collect(s.totalReturn.toDouble())
-        val staked = anteStake + blindStake + playStake + tripsStake
+        val staked = anteStake + blindStake + playStake + tripsStake + badBeatStake
         val net = s.totalReturn - staked
         message = when {
             campaign && bankroll >= goal -> "🏆 GOAL REACHED!"
@@ -401,7 +425,8 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
                 else "You win — ${s.playerHand.category.label}"
             else -> "Dealer wins — ${s.dealerHand.category.label}"
         }
-        if (net > 0 && s.outcome == HoldemOutcome.FOLD) message = "Folded — trips still pays"
+        if (net > 0 && s.outcome == HoldemOutcome.FOLD) message = "Folded — the side bets still pay"
+        s.badBeatWin?.let { message = "${it.label} — bad beat pays ${"%,d".format(it.rung.multiplier)} to 1" }
         results = rows
         phase = UthPhase.RESULT
     }
@@ -409,10 +434,10 @@ class UltimateHoldemViewModel(app: Application) : AndroidViewModel(app) {
     fun nextHand(repeatBet: Boolean) {
         if (phase != UthPhase.RESULT) return
         resetTable()
-        if (repeatBet && lastAnte * 2 + lastTrips <= bankroll) {
-            ante = lastAnte; trips = lastTrips
+        if (repeatBet && lastAnte * 2 + lastTrips + lastBadBeat <= bankroll) {
+            ante = lastAnte; trips = lastTrips; badBeat = lastBadBeat
         } else if (repeatBet && lastAnte * 2 <= bankroll) {
-            ante = lastAnte; trips = 0
+            ante = lastAnte; trips = 0; badBeat = 0
         }
         message = "Place your ante"
     }
