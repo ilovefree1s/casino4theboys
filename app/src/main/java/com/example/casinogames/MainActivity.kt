@@ -21,6 +21,7 @@ import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
 import com.example.casinogames.games.destroyer.DestroyerScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
+import com.example.casinogames.games.miniuth.MiniUthScreen
 import com.example.casinogames.games.djwild.DjWildScreen
 import com.example.casinogames.games.poker.PokerMenuScreen
 import com.example.casinogames.games.poker.PokerVariant
@@ -105,6 +106,15 @@ class MainActivity : ComponentActivity() {
                         val back = "$mode:${GameId.POKER.name}"
                         BackHandler { screen = back }
                         ShootoutScreen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == PokerVariant.MINI_UTH.name -> {
+                        val back = "$mode:${GameId.POKER.name}"
+                        BackHandler { screen = back }
+                        MiniUthScreen(
                             onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },

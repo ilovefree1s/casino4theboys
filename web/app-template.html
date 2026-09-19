@@ -824,6 +824,66 @@
     #screen-shootout .so-board .card, #screen-shootout .so-board .slot { width: 42px; height: 63px; }
   }
 
+  /* Mini UTH's live menu card: red off the real felt's lettering, sized off
+     the page width as the painted cards are. */
+  .pk-mini {
+    position: absolute; left: 6.48%; width: 87.03%; top: 84.26%; height: 14.89%;
+    padding: 0; border-radius: 20px; background: #12040A; cursor: pointer;
+    border: 2px solid #FF5A5A;
+    box-shadow: 0 0 14px rgba(255,90,90,.35), inset 0 0 30px rgba(255,90,90,.12);
+    display: flex; align-items: center; color: #F5F1E8; line-height: 1.1; text-align: left;
+  }
+  .pk-mini:active { transform: scale(.985); }
+  .pk-mini .pip { font-size: clamp(30px, 11vw, 46px); color: rgba(255,90,90,.6); margin: 0 12px 0 18px; flex: none; }
+  .pk-mini .txt { flex: 1; min-width: 0; }
+  .pk-mini .nm {
+    font-family: var(--display); font-style: italic; font-size: clamp(18px, 6.4vw, 27px);
+    color: #FF5A5A; letter-spacing: .01em; white-space: nowrap;
+  }
+  .pk-mini .ln { font-size: clamp(7px, 2.4vw, 10px); letter-spacing: .04em; margin-top: 4px; white-space: nowrap; }
+  .pk-mini .play {
+    width: clamp(46px, 15vw, 62px); height: clamp(46px, 15vw, 62px); border-radius: 50%;
+    border: 2px solid #FF5A5A; display: grid; place-items: center;
+    font-size: clamp(12px, 3.9vw, 16px); letter-spacing: .04em; margin-right: 16px; flex: none;
+  }
+
+  /* ========== MINI UTH ==========
+     The real felt is navy with red and gold lettering; the table takes its
+     colours from that, and the shared background is swung navy to match. */
+  #screen-miniuth { position: relative; background: #04060F; --uth-green: #FF5A5A; }
+  .mu-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .5; pointer-events: none;
+    filter: grayscale(1) sepia(1) hue-rotate(185deg) saturate(3) brightness(.7);
+  }
+  #screen-miniuth .uth-money .val { color: #FFD24D; }
+  #screen-miniuth .uth-money .val.risk { color: var(--bone); }
+  #screen-miniuth .uth-label.gold .nm { color: #FFD24D; }
+  .mu-drop { height: 4vh; max-height: 32px; }
+  .mu-one .card, .mu-one .slot, .mu-board .card, .mu-board .slot { width: 57px; height: 86px; }
+  .mu-one .card .mid, .mu-board .card .mid { font-size: 22px; }
+  .mu-board { gap: 5px; }
+  /* The river stands a little apart from the two-card flop. */
+  .mu-board > :nth-child(3) { margin-left: 11px; }
+  #screen-miniuth .uth-spot .cap { color: rgba(255,90,90,.75); line-height: 1.15; }
+  #screen-miniuth .mu-side .uth-spot .cap { color: rgba(255,210,77,.75); }
+  #screen-miniuth .uth-eq { color: rgba(255,90,90,.85); }
+  .mu-side .mid { gap: 14px; }
+  .mu-side .uth-pays .hd .ttl, .mu-side .uth-pays .row .val { color: #FFD24D; }
+  .mu-side .uth-pays .hd .bar { background: #FFD24D; }
+  #screen-miniuth .uth-row { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  #screen-miniuth .uth-pays .hd .ttl { font-size: 10px; white-space: nowrap; }
+  #screen-miniuth .uth-pays .row { font-size: 8px; line-height: 10px; }
+  #screen-miniuth .dj-pill.w { border-color: #FFD24D; }
+  #screen-miniuth .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
+  #screen-miniuth .uth-message.side { color: #FFD24D; }
+  #screen-miniuth .uth-btn[disabled] { opacity: .4; }
+  @media (max-height: 860px) {
+    .mu-drop { height: 0; }
+    .mu-one .card, .mu-one .slot, .mu-board .card, .mu-board .slot { width: 48px; height: 72px; }
+    .mu-one .card .mid, .mu-board .card .mid { font-size: 18px; }
+  }
+
   /* ========== DESTROYER ==========
      The felt's colours are taken off pink4theboys.png itself: the hot magenta
      ring and its pale glow. Hits stay battleship red, the money stays brass. */
@@ -1382,13 +1442,24 @@
          target. The art paints the menu button itself, so only its press is
          caught — no second button above it. -->
     <div class="bjm-page">
-      <button class="bjm-band" id="pk-back" style="left:3.19%;right:auto;width:9.56%;top:2.38%;height:5.1%;border-radius:50%" aria-label="Back to lobby"></button>
+      <button class="bjm-band" id="pk-back" style="left:3.19%;right:auto;width:9.56%;top:2.00%;height:4.29%;border-radius:50%" aria-label="Back to lobby"></button>
       <!-- The lobby page's own header with the three poker cards composited
-           where the lobby's cards sit; bands measured off the 941x1766 art. -->
+           where the lobby's cards sit; bands measured off the 941x2096 art (grown 330px for a fourth card). -->
       <img src="__POKER_PAGE__" alt="Poker variants">
-      <button class="bjm-band" id="pk-uth" style="top:42.47%;height:16.08%" aria-label="Ultimate Texas Hold'em — play"></button>
-      <button class="bjm-band" id="pk-djwild" style="top:61.38%;height:18.86%" aria-label="DJ Wild — play"></button>
-      <button class="bjm-band" id="pk-shootout" style="top:81.20%;height:17.67%" aria-label="Texas Shootout — play"></button>
+      <button class="bjm-band" id="pk-uth" style="top:35.78%;height:13.55%" aria-label="Ultimate Texas Hold'em — play"></button>
+      <button class="bjm-band" id="pk-djwild" style="top:51.72%;height:15.89%" aria-label="DJ Wild — play"></button>
+      <button class="bjm-band" id="pk-shootout" style="top:68.42%;height:14.89%" aria-label="Texas Shootout — play"></button>
+      <!-- Mini UTH came after the sheet was painted: a live card in the slot
+           the grown canvas leaves, the painted cards' edges and height. -->
+      <button class="pk-mini" id="pk-mini" aria-label="Mini Ultimate Texas Hold'em — play">
+        <span class="pip">&#9829;&#65038;</span>
+        <span class="txt">
+          <div class="nm">MINI UTH</div>
+          <div class="ln">ONE CARD · THREE-CARD HANDS</div>
+          <div class="ln">3X &nbsp;•&nbsp; 2X &nbsp;•&nbsp; 1X</div>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
     </div>
   </div>
 </div>
@@ -1607,6 +1678,48 @@
   <div class="uth-rebuy" id="so-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="so-buyin">BUY BACK IN</button>
+  </div>
+</div>
+
+<!-- ================= MINI UTH ================= -->
+<div class="screen" id="screen-miniuth">
+  <img class="mu-bg" src="__BG__" alt="">
+  <div class="uth-table dj-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="backlink" id="mu-back">‹ POKER</button>
+        <div class="uth-money">
+          <span class="lbl">BANKROLL</span><span class="val" id="mu-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="mu-risk">0</span>
+        </div>
+      </div>
+      <div class="mu-drop"></div>
+      <div class="uth-label" id="mu-dealer-label"><span class="nm">DEALER</span></div>
+      <div class="cards mu-one" id="mu-dealer" style="margin-top:4px"></div>
+      <div style="height:8px"></div>
+      <div class="uth-rule"></div>
+      <div style="height:8px"></div>
+      <div class="uth-label"><span class="nm">FLOP &nbsp;·&nbsp; RIVER</span></div>
+      <div class="cards mu-board" id="mu-board" style="margin-top:4px"></div>
+      <div style="height:8px"></div>
+      <div class="uth-rule"></div>
+      <div style="height:8px"></div>
+      <div class="uth-label gold" id="mu-hand-label"><span class="nm">YOUR CARD</span></div>
+      <div class="cards mu-one" id="mu-hole" style="margin-top:4px"></div>
+      <div class="uth-message" id="mu-message">Place your ante</div>
+      <div class="dj-pills" id="mu-results"></div>
+    </div>
+    <div class="dj-bottom">
+      <div class="uth-spots" id="mu-spots"></div>
+      <div id="mu-rack"></div>
+      <div class="uth-actions" id="mu-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="mu-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="mu-buyin">BUY BACK IN</button>
   </div>
 </div>
 
@@ -3013,6 +3126,8 @@
   $("pk-djwild").addEventListener("click", function () { DjWild.enter(); Shell.show("djwild"); });
   $("pk-shootout").addEventListener("click", function () { Shootout.enter(); Shell.show("shootout"); });
   $("so-back").addEventListener("click", function () { Shell.show("poker"); });
+  $("pk-mini").addEventListener("click", function () { MiniUth.enter(); Shell.show("miniuth"); });
+  $("mu-back").addEventListener("click", function () { Shell.show("poker"); });
   $("uth-back").addEventListener("click", function () { Shell.show("poker"); });
   $("dj-back").addEventListener("click", function () { Shell.show("poker"); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
@@ -3621,6 +3736,91 @@
     };
   })();
   window.SO = SO;   // exposed so the rules can be exercised directly
+
+  /* ============================================================
+     Mini Ultimate Texas Hold'em engine — mirrors MiniHand.kt and
+     MiniUthRules.kt so both builds settle a hand the same way. One hole
+     card each, a two-card flop and a river; every hand must use its own
+     card, so a hand is that card plus the best two on the board.
+     ============================================================ */
+  var MU = (function () {
+    /* Three-card order, ascending: a straight beats a flush, trips beat both. */
+    var CAT = ["High Card", "Pair", "Flush", "Straight", "Three of a Kind",
+               "Straight Flush", "Mini Royal"];
+    /** Scores exactly three cards: {cat, tie[]}. */
+    function score3(hand) {
+      var v = hand.map(function (c) { return UTH.val(c.rank); })
+                  .sort(function (a, b) { return b - a; });
+      var flush = hand[0].suit === hand[1].suit && hand[1].suit === hand[2].suit;
+      var distinct = v[0] !== v[1] && v[1] !== v[2];
+      // Ace plays high over Q-K and low under 2-3; the wheel is three-high.
+      var sh = !distinct ? 0 : v[0] - v[2] === 2 ? v[0]
+        : (v[0] === 14 && v[1] === 3 && v[2] === 2) ? 3 : 0;
+      if (flush && sh === 14) return { cat: 6, tie: [14] };
+      if (flush && sh > 0) return { cat: 5, tie: [sh] };
+      if (v[0] === v[2]) return { cat: 4, tie: [v[0]] };
+      if (sh > 0) return { cat: 3, tie: [sh] };
+      if (flush) return { cat: 2, tie: v };
+      if (v[0] === v[1]) return { cat: 1, tie: [v[0], v[2]] };
+      if (v[1] === v[2]) return { cat: 1, tie: [v[1], v[0]] };
+      return { cat: 0, tie: v };
+    }
+    function cmp(a, b) {
+      if (a.cat !== b.cat) return a.cat - b.cat;
+      for (var i = 0; i < a.tie.length; i++) {
+        var x = a.tie[i], y = b.tie[i] || 0;
+        if (x !== y) return x - y;
+      }
+      return 0;
+    }
+    /** The hole card plus the best two of the community cards (two or three out). */
+    function best(hole, community) {
+      var bestHand = null;
+      for (var i = 0; i < community.length; i++)
+        for (var j = i + 1; j < community.length; j++) {
+          var three = [hole, community[i], community[j]];
+          var s = score3(three);
+          if (!bestHand || cmp(s, bestHand) > 0) { s.cards = three; bestHand = s; }
+        }
+      return bestHand;
+    }
+    /* The ladders, off the felt: [category, pays]. */
+    var BLIND = [[6, 40], [5, 8], [4, 5], [3, 1]];
+    var FLUSH_PLUS = [[6, 200], [5, 40], [4, 10], [3, 2], [2, 1]];
+    var BONUS = [[6, 50], [5, 40], [4, 30], [3, 6], [2, 3], [1, 1]];
+    var PLAY = { preflop: 3, flop: 2, river: 1 };
+    function rung(table, cat) {
+      for (var i = 0; i < table.length; i++) if (table[i][0] === cat) return i;
+      return -1;
+    }
+    /**
+     * Gross returns — stake plus winnings. The Blind pays only on a winning
+     * hand, and pushes under a straight; a tie pushes the hand's three bets.
+     * The side bets ride the player's own final hand, fold or no fold. The
+     * dealer always plays: the felt shots showed no qualifying hand.
+     */
+    function settle(playerHole, dealerHole, community, ante, blind, play, flushPlus, bonus, folded) {
+      var p = best(playerHole, community), d = best(dealerHole, community);
+      var fp = flushPlus > 0 ? rung(FLUSH_PLUS, p.cat) : -1;
+      var bn = bonus > 0 ? rung(BONUS, p.cat) : -1;
+      var c = cmp(p, d);
+      var outcome = folded ? "fold" : c > 0 ? "win" : c < 0 ? "lose" : "push";
+      var bl = outcome === "win" ? rung(BLIND, p.cat) : -1;
+      var win = outcome === "win", push = outcome === "push";
+      return {
+        player: p, dealer: d, outcome: outcome,
+        ante: win ? ante * 2 : push ? ante : 0,
+        blind: win ? (bl >= 0 ? blind * (BLIND[bl][1] + 1) : blind) : push ? blind : 0,
+        play: win ? play * 2 : push ? play : 0,
+        flushPlus: fp >= 0 ? flushPlus * (FLUSH_PLUS[fp][1] + 1) : 0,
+        bonus: bn >= 0 ? bonus * (BONUS[bn][1] + 1) : 0,
+        blindWin: bl, flushPlusWin: fp, bonusWin: bn
+      };
+    }
+    return { score3: score3, best: best, cmp: cmp, settle: settle, CAT: CAT,
+             BLIND: BLIND, FLUSH_PLUS: FLUSH_PLUS, BONUS: BONUS, PLAY: PLAY };
+  })();
+  window.MU = MU;   // exposed so the rules can be exercised directly
 
   /* ============================================================
      Destroyer engine — mirrors DestroyerRules.kt so both builds pay a
@@ -6418,6 +6618,407 @@
     $("so-buyin").addEventListener("click", function () {
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       openBuyIn(function (v) { bankroll = v; setMessage("Place your poker bet"); renderAll(); });
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     MINI UTH
+     ============================================================ */
+  var MiniUth = (function () {
+    var RED = "#FF5A5A", GOLD = "#FFD24D", DIM = "rgba(255,90,90,.6)",
+        FAINT = "rgba(255,90,90,.4)", LOSS = "#FF4D4D", BRASS = "#D9B23A";
+    var shoe = [];
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
+    /** Pending bets while betting; the Blind always matches the Ante. */
+    var ante = 0, flushPlus = 0, bonus = 0;
+    var lastAnte = 0, lastFlushPlus = 0, lastBonus = 0;
+    /** Locked-in stakes once the hand is dealt. */
+    var anteStake = 0, blindStake = 0, playStake = 0, flushPlusStake = 0, bonusStake = 0;
+    // betting | dealing | preflop | flop | river | showdown | result
+    var phase = "betting";
+    var player = null, dealer = null, community = [], dealerUp = false, folded = false;
+    var settlement = null, results = [], timers = [];
+
+    function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
+    function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function draw() { return shoe.pop(); }
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
+    function atRisk() {
+      return phase === "betting" ? ante * 2 + flushPlus + bonus
+        : anteStake + blindStake + playStake + flushPlusStake + bonusStake;
+    }
+    function playCost() { return MU.PLAY[phase] ? anteStake * MU.PLAY[phase] : 0; }
+    function handNow() { return player && community.length >= 2 ? MU.best(player, community) : null; }
+
+    // ---------- render ----------
+    function setMessage(text, tone) {
+      var m = $("mu-message");
+      m.textContent = text;
+      m.className = "uth-message" + (tone ? " " + tone : "");
+    }
+    function renderTop() {
+      $("mu-bankroll").textContent = fmt(bankroll);
+      $("mu-risk").textContent = fmt(atRisk());
+    }
+    function renderLabel(id, text, badge) {
+      $(id).innerHTML = '<span class="nm">' + text + "</span>" +
+        (badge ? '<span class="badge">' + badge + "</span>" : "");
+    }
+    function slot(host) {
+      var s = document.createElement("div");
+      s.className = "slot";
+      host.appendChild(s);
+    }
+    function renderCards() {
+      var d = $("mu-dealer"), b = $("mu-board"), h = $("mu-hole");
+      d.innerHTML = ""; b.innerHTML = ""; h.innerHTML = "";
+      if (dealer) d.appendChild(cardEl(dealer, dealerUp)); else slot(d);
+      for (var i = 0; i < 3; i++) {
+        if (community[i]) b.appendChild(cardEl(community[i], true)); else slot(b);
+      }
+      if (player) h.appendChild(cardEl(player, true)); else slot(h);
+      renderLabel("mu-dealer-label", "DEALER",
+        dealerUp && settlement ? MU.CAT[settlement.dealer.cat] : null);
+      var now = handNow();
+      renderLabel("mu-hand-label", "YOUR CARD", now ? MU.CAT[now.cat] : null);
+    }
+    function renderResults() {
+      var host = $("mu-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net)
+          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        host.insertAdjacentHTML("beforeend",
+          '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
+          '</span><span class="amt">' + txt + "</span></div>");
+      });
+    }
+    function paysHtml(title, rows) {
+      var html = '<div class="uth-pays"><div class="hd"><span class="bar"></span>' +
+        '<span class="ttl">' + title + '</span><span class="bar"></span></div>';
+      rows.forEach(function (r) {
+        html += '<div class="row"><span class="nm">' + r[0] + "</span>" +
+          '<span class="dots"></span><span class="val">' + r[1] + "</span></div>";
+      });
+      return html + "</div>";
+    }
+    function odds(table) {
+      return table.map(function (row) { return [MU.CAT[row[0]], row[1] + "-to-1"]; });
+    }
+    function spotHtml(id, shape, label, amount, live, color) {
+      return '<button class="uth-spot" id="' + id + '"' + (live ? "" : " disabled") + '>' +
+        '<span class="' + shape + '" style="border-color:' +
+          (amount > 0 ? color : FAINT) + '"></span>' +
+        (amount > 0
+          ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
+          : '<span class="cap">' + label + "</span>") +
+        "</button>";
+    }
+    /** The side bets ride either side of the middle with their ladders in the
+        gutters, the ante and blind on the centre line, the play bet under
+        them with the blind's ladder beside it. */
+    function renderSpots() {
+      var betting = phase === "betting";
+      $("mu-spots").innerHTML =
+        '<div class="uth-row mu-side">' +
+          '<div style="padding:0 6px 4px 0">' + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +
+          '<div class="mid">' +
+            spotHtml("mu-flushplus", "dia", "FLUSH<br>PLUS",
+              betting ? flushPlus : flushPlusStake, betting, GOLD) +
+            spotHtml("mu-bonus", "dia", "3 CARD",
+              betting ? bonus : bonusStake, betting, GOLD) +
+          "</div>" +
+          '<div style="padding:0 0 4px 6px">' + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +
+        "</div>" +
+        '<div class="uth-row"><div></div><div class="mid">' +
+          spotHtml("mu-ante", "ring", "ANTE", betting ? ante : anteStake, betting, RED) +
+          '<span class="uth-eq">=</span>' +
+          // The blind always matches the ante, so it takes no chips itself.
+          spotHtml("mu-blind", "ring", "BLIND", betting ? ante : blindStake, false, RED) +
+        '</div><div></div></div>' +
+        '<div class="uth-row top">' +
+          '<div style="padding-right:6px">' + paysHtml("PLAY",
+            [["Before the flop", "3x"], ["After the flop", "2x"], ["On the river", "1x"]]) + "</div>" +
+          '<div class="mid">' + spotHtml("mu-play", "ring", "PLAY", playStake, false, RED) + "</div>" +
+          '<div style="padding-left:6px">' +
+            paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "push"]])) + "</div>" +
+        "</div>";
+      if (betting) {
+        $("mu-flushplus").addEventListener("click", function () { place("flushplus"); });
+        $("mu-bonus").addEventListener("click", function () { place("bonus"); });
+        $("mu-ante").addEventListener("click", function () { place("ante"); });
+      }
+    }
+    function renderRack() {
+      var host = $("mu-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn, off) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.disabled = !!off;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("mu-actions");
+      a.innerHTML = "";
+      if (phase === "betting") {
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet));
+        a.appendChild(actionBtn("DEAL", GOLD, deal));
+      } else if (phase === "preflop" || phase === "flop") {
+        a.appendChild(actionBtn("CHECK", DIM, check));
+        a.appendChild(actionBtn(MU.PLAY[phase] + "X  " + fmt(playCost()), GOLD, raise,
+          bankroll < playCost()));
+      } else if (phase === "river") {
+        a.appendChild(actionBtn("FOLD", LOSS, fold));
+        // Short of the last raise: the pit lends at the felt rather than
+        // force a fold. Free play has no house to borrow from.
+        if (Shell.mode === "campaign" && bankroll < playCost() && Shell.canTakeMarker()) {
+          a.appendChild(actionBtn("MARKER +5,000", BRASS, function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — play on");
+            renderAll();
+          }));
+        } else {
+          a.appendChild(actionBtn("1X  " + fmt(playCost()), GOLD, raise, bankroll < playCost()));
+        }
+      } else if (phase === "result") {
+        a.appendChild(actionBtn("NEW BET", DIM, function () { nextHand(false); }));
+        a.appendChild(actionBtn("REBET", GOLD, function () { nextHand(true); }));
+      }
+    }
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && atRisk() === 0;
+      $("mu-rebuy").classList.toggle("on", broke);
+    }
+    function renderAll() {
+      renderTop(); renderCards(); renderResults();
+      renderSpots(); renderRack(); renderActions(); renderRebuy();
+    }
+
+    // ---------- betting ----------
+    /** The ante costs double, because the blind rides alongside it. */
+    function place(spot) {
+      if (phase !== "betting") return;
+      var room = Math.floor(bankroll - (ante * 2 + flushPlus + bonus));
+      var affordable = spot === "ante"
+        ? Math.min(selectedChip, Math.floor(room / 2))
+        : Math.min(selectedChip, room);
+      if (affordable <= 0) { setMessage("Not enough for the ante and blind"); return; }
+      var lim = Shell.limits(), side = spot !== "ante";
+      var on = spot === "ante" ? ante : spot === "flushplus" ? flushPlus : bonus;
+      var amount = allow(lim, affordable, on, side);
+      if (amount <= 0) { setMessage(refusal(lim, side)); return; }
+      if (spot === "ante") ante += amount;
+      else if (spot === "flushplus") flushPlus += amount;
+      else bonus += amount;
+      setMessage(
+        amount < affordable ? refusal(lim, side)
+          : amount < selectedChip ? "All in!"
+          : spot === "ante" ? "Ante and blind posted"
+          : spot === "flushplus" ? "Flush Plus riding" : "3 Card Bonus riding"
+      );
+      renderTop(); renderSpots();
+    }
+    function clearBet() {
+      if (phase !== "betting") return;
+      ante = 0; flushPlus = 0; bonus = 0;
+      setMessage("Place your ante");
+      renderTop(); renderSpots();
+    }
+
+    // ---------- deal ----------
+    function deal() {
+      if (phase !== "betting") return;
+      if (ante <= 0) {
+        setMessage(flushPlus + bonus > 0 ? "The side bets ride with an ante" : "Place an ante first");
+        return;
+      }
+      // One deck, shuffled fresh every hand.
+      shoe = buildShoe(1);
+      bankroll -= ante * 2 + flushPlus + bonus;
+      syncWallet();
+      lastAnte = ante; lastFlushPlus = flushPlus; lastBonus = bonus;
+      anteStake = ante; blindStake = ante;
+      flushPlusStake = flushPlus; bonusStake = bonus; playStake = 0;
+      clearCards();
+      ante = 0; flushPlus = 0; bonus = 0;
+      phase = "dealing";
+      setMessage("Dealing…");
+      renderAll();
+      t(220, function () { player = draw(); renderCards(); });
+      t(420, function () { dealer = draw(); renderCards(); });
+      t(720, function () {
+        phase = "preflop";
+        setMessage("Raise 3x, or check");
+        renderActions();
+      });
+    }
+
+    // ---------- decisions ----------
+    function raise() {
+      var cost = playCost();
+      if (!cost || bankroll < cost) return;
+      bankroll -= cost;
+      syncWallet();
+      playStake = cost;
+      // A raise ends the decisions: whatever is left of the board comes out.
+      phase = "dealing";
+      setMessage("Raised — the board comes out");
+      renderTop(); renderSpots(); renderActions();
+      var need = 3 - community.length;
+      for (var i = 0; i < need; i++) {
+        t(240 * (i + 1), function () { community.push(draw()); renderCards(); });
+      }
+      t(240 * need + 60, showdown);
+    }
+    function check() {
+      if (phase === "preflop") {
+        phase = "dealing";
+        setMessage("The flop");
+        renderActions();
+        t(240, function () { community.push(draw()); renderCards(); });
+        t(480, function () { community.push(draw()); renderCards(); });
+        t(740, function () {
+          phase = "flop";
+          setMessage(MU.CAT[handNow().cat] + " — raise 2x, or check");
+          renderActions();
+        });
+      } else if (phase === "flop") {
+        phase = "dealing";
+        setMessage("The river");
+        renderActions();
+        t(260, function () { community.push(draw()); renderCards(); });
+        t(520, function () {
+          phase = "river";
+          setMessage(MU.CAT[handNow().cat] + " — play 1x, or fold");
+          renderActions();
+        });
+      }
+    }
+    function fold() {
+      if (phase !== "river") return;
+      folded = true;
+      showdown();
+    }
+    function showdown() {
+      phase = "showdown";
+      setMessage(folded ? "Folded" : "Dealer turns over…");
+      renderTop(); renderSpots(); renderActions();
+      t(420, function () { dealerUp = true; renderCards(); });
+      t(1070, settle);
+    }
+    function settle() {
+      var s = MU.settle(player, dealer, community, anteStake, blindStake, playStake,
+                        flushPlusStake, bonusStake, folded);
+      settlement = s;
+      results = [];
+      if (!folded) {
+        results.push({ label: "Ante", net: s.ante - anteStake });
+        results.push({
+          label: s.blindWin >= 0 ? "Blind · " + MU.CAT[MU.BLIND[s.blindWin][0]] : "Blind",
+          net: s.blind - blindStake
+        });
+        if (playStake > 0) results.push({ label: "Play", net: s.play - playStake });
+      } else {
+        results.push({ label: "Folded", net: -(anteStake + blindStake) });
+      }
+      if (flushPlusStake > 0) {
+        results.push({
+          label: s.flushPlusWin >= 0 ? "Flush Plus · " + MU.CAT[MU.FLUSH_PLUS[s.flushPlusWin][0]] : "Flush Plus",
+          net: s.flushPlus - flushPlusStake
+        });
+      }
+      if (bonusStake > 0) {
+        results.push({
+          label: s.bonusWin >= 0 ? "3 Card · " + MU.CAT[MU.BONUS[s.bonusWin][0]] : "3 Card Bonus",
+          net: s.bonus - bonusStake
+        });
+      }
+      var totalReturn = s.ante + s.blind + s.play + s.flushPlus + s.bonus;
+      bankroll += totalReturn;
+      syncWallet();
+      var staked = anteStake + blindStake + playStake + flushPlusStake + bonusStake;
+      var net = totalReturn - staked;
+      phase = "result";
+      var msg =
+        Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
+        s.player.cat === 6 ? "MINI ROYAL!" :
+        folded ? "Folded — ante and blind down" :
+        s.outcome === "win" ? "You win with " + MU.CAT[s.player.cat] :
+        s.outcome === "push" ? "Push" :
+        net > 0 ? "Up " + fmt(net) + " on the side" :
+        "Dealer wins with " + MU.CAT[s.dealer.cat];
+      var sidePaid = s.flushPlusWin >= 0 || s.bonusWin >= 0;
+      setMessage(msg, s.outcome === "win" ? "win" : s.outcome === "push" ? "" : sidePaid ? "side" : "lose");
+      renderAll();
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
+    }
+
+    // ---------- table ----------
+    function clearCards() {
+      player = null; dealer = null; community = [];
+      dealerUp = false; folded = false;
+      settlement = null; results = [];
+    }
+    function reset() {
+      clearTimers();
+      phase = "betting";
+      clearCards();
+      ante = 0; flushPlus = 0; bonus = 0;
+      anteStake = 0; blindStake = 0; playStake = 0; flushPlusStake = 0; bonusStake = 0;
+    }
+    function nextHand(repeat) {
+      if (phase !== "result") return;
+      reset();
+      if (repeat && lastAnte * 2 + lastFlushPlus + lastBonus <= bankroll) {
+        ante = lastAnte; flushPlus = lastFlushPlus; bonus = lastBonus;
+      } else if (repeat && lastAnte * 2 <= bankroll) {
+        ante = lastAnte;
+      }
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      reset();
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
+      setMessage("Place your ante");
+      renderAll();
+      Shell.gate(refresh);
+    }
+    $("mu-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
+      openBuyIn(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
     return { enter: enter };
   })();

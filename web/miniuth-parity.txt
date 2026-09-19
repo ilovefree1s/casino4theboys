@@ -1,0 +1,34 @@
+# Mini Ultimate Texas Hold'em settlement cases, shared by both builds.
+#
+# The Compose engine (MiniUthRules.settle) and the web engine
+# (window.MU.settle) are two hand-written copies of the same maths. This
+# file is the referee: MiniUthParityTest.kt runs it against Kotlin,
+# web/mu-parity.html runs it against the JavaScript, and both must agree
+# with every line here.
+#
+# Cards are rank + suit: 2-9, T, J, Q, K, A and s h d c.
+#
+# player card | dealer card | board (flop flop river) |
+#   ante blind play flushplus bonus folded |
+#   outcome anteReturn blindReturn playReturn flushPlusReturn bonusReturn |
+#   player hand | dealer hand
+#
+# Returns are gross - stake plus winnings - so a push returns exactly the
+# stake. "fold" in the stakes column is a fold; "-" is a hand played on.
+# Every hand must use its own card: that card plus the best two on the board.
+
+Qh | 2c | Kh Ah 7s | 25 25 75 25 25 - | win 50 1025 150 5025 1275 | Mini Royal | High Card
+6d | Kc | 5d 7d Ks | 25 25 75 25 25 - | win 50 225 150 1025 1025 | Straight Flush | Pair
+9s | Ah | 9h 9d 4c | 25 25 75 25 25 - | win 50 150 150 275 775 | Three of a Kind | Pair
+4c | Kd | 5h 6s Jc | 25 25 75 25 25 - | win 50 50 150 75 175 | Straight | High Card
+2h | Jc | 9h Kh Js | 25 25 75 25 25 - | win 50 25 150 50 100 | Flush | Pair                 # a flush beats a pair; the blind pushes under a straight
+2h | Tc | 9h Kh Jd | 25 25 75 25 25 - | lose 0 0 0 50 100 | Flush | Straight                 # with three cards a straight beats a flush
+As | 7c | Ad 3h 9s | 25 25 75 25 25 - | win 50 25 150 0 50 | Pair | High Card
+Qs | Qd | 5h 8c 2d | 25 25 75 25 25 - | push 25 25 75 0 0 | High Card | High Card            # a tie pushes everything on the hand
+3c | Ah | 8d Jh Ks | 25 25 0 25 25 fold | fold 0 0 0 0 0 | High Card | High Card
+2c | Ah | 2d 9h Ks | 25 25 0 25 25 fold | fold 0 0 0 0 50 | Pair | High Card                  # a folded pair still pays the 3 Card Bonus
+Ac | Kd | 2h 3s 9d | 25 25 75 25 25 - | win 50 50 150 75 175 | Straight | High Card          # the wheel: ace plays low under 2-3
+Ac | 4d | 2h 3s Kh | 25 25 75 25 25 - | lose 0 0 0 75 175 | Straight | Straight             # ...and it is the lowest straight there is
+5c | 8d | Kh Ks Kd | 25 25 75 25 25 - | lose 0 0 0 0 50 | Pair | Pair                       # the board's trips belong to nobody: the hole card must play
+Kc | Qc | 4h 7s 9d | 25 25 25 0 0 - | win 50 25 50 0 0 | High Card | High Card              # checked down to the river, no side bets
+Kd | 9c | Qs Ah 9d | 25 25 75 25 25 - | win 50 50 150 75 175 | Straight | Pair              # Q-K-A unsuited is a straight, not a mini royal
