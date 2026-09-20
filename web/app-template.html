@@ -94,7 +94,7 @@
     display: none; margin: 2px 0 14px; font-family: var(--display); font-size: 13px;
     letter-spacing: .12em; color: var(--campaign-gold);
   }
-  #screen-lobby.campaign .lb-campaign { display: block; }
+  #screen-lobby.campaign .lb-campaign, #screen-crapsmenu.campaign .lb-campaign { display: block; }
   /* The room you are playing, and what its tables will take. */
   .lb-roomrow { display: none; gap: 6px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; justify-content: center; }
   #screen-lobby.campaign .lb-roomrow { display: flex; }
@@ -888,6 +888,186 @@
     .mu-one .card, .mu-one .slot, .mu-board .card, .mu-board .slot { width: 48px; height: 72px; }
     .mu-one .card .mid, .mu-board .card .mid { font-size: 18px; }
   }
+
+  /* ============ CRAPS VARIANTS PAGE ============ */
+  #screen-crapsmenu { position: relative; background: var(--night); }
+  .cm-col {
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
+    display: flex; flex-direction: column; align-items: center;
+  }
+  .cm-cards { width: 100%; display: flex; flex-direction: column; gap: 14px; margin-top: auto; margin-bottom: auto; }
+  /* Live cards in the manner of the painted ones: no art for craps yet. */
+  .cm-card {
+    position: relative; width: 100%; height: 112px; padding: 0; border-radius: 22px;
+    display: flex; align-items: center; color: #F5F1E8; line-height: 1.1; text-align: left;
+    cursor: pointer; overflow: hidden;
+  }
+  .cm-card:active { transform: scale(.985); }
+  .cm-card .pip { font-size: clamp(30px, 11vw, 46px); margin: 0 10px 0 16px; flex: none; opacity: .65; }
+  .cm-card .txt { flex: 1; min-width: 0; }
+  .cm-card .nm {
+    font-family: var(--display); font-style: italic; font-size: clamp(18px, 6.6vw, 28px);
+    letter-spacing: .01em; white-space: nowrap;
+  }
+  .cm-card .ln { font-size: clamp(7px, 2.4vw, 10px); letter-spacing: .04em; margin-top: 5px; white-space: nowrap; }
+  .cm-card .play {
+    width: clamp(46px, 15vw, 62px); height: clamp(46px, 15vw, 62px); border-radius: 50%;
+    display: grid; place-items: center; font-size: clamp(12px, 3.9vw, 16px);
+    letter-spacing: .04em; margin-right: 16px; flex: none;
+  }
+  .cm-card.jade { background: #07231B; border: 2px solid #1FA971;
+    box-shadow: 0 0 14px rgba(31,169,113,.35), inset 0 0 30px rgba(31,169,113,.12); }
+  .cm-card.jade .pip, .cm-card.jade .nm { color: #1FA971; }
+  .cm-card.jade .play { border: 2px solid #1FA971; }
+  .cm-card.pink { background: #16040C; border: 2px solid #FF40A0;
+    box-shadow: 0 0 14px rgba(255,64,160,.35), inset 0 0 30px rgba(255,64,160,.12); }
+  .cm-card.pink .pip, .cm-card.pink .nm { color: #FF40A0; }
+  .cm-card.pink .play { border: 2px solid #FF40A0; }
+
+  /* ========== CRAPLESS CRAPS ==========
+     A deep jade felt, nothing like hold'em's acid green, with bone lines and
+     a warm red on the line itself. */
+  #screen-craps { position: relative; background: #07231B; --uth-green: #E04B42; }
+  .cr-bg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: .16; pointer-events: none;
+  }
+  /* One column, with the throwing area taking whatever the felt does not
+     want: a taller tray is a better throw. */
+  .cr-table {
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 8px 12px calc(14px + env(safe-area-inset-bottom));
+  }
+  .cr-tray {
+    width: 100%; flex: 1; min-height: 130px; border-radius: 14px;
+    background: rgba(0,0,0,.3); border: 1.5px solid rgba(239,231,210,.3);
+    overflow: hidden; touch-action: none;
+  }
+  #cr-tray { --dt-line: rgba(239,231,210,.5); --dt-face: #F7F3EA; --dt-hold: rgba(232,193,105,.5); }
+  #cr-tray { position: relative; }
+  #cr-tray .dt-field { position: absolute; inset: 0; min-height: 0; }
+  #screen-craps::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background: linear-gradient(transparent 46%, rgba(7,35,27,.92) 82%);
+  }
+  .cr-table { position: relative; z-index: 1; }
+  .cr-headline {
+    display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    font-family: var(--display); font-size: 14px; letter-spacing: .1em; color: #EFE7D2;
+  }
+  .cr-headline .n { font-size: 26px; color: #E8C169; }
+  #screen-craps .uth-message { font-size: 12px; }
+  .cr-pills { width: 100%; display: flex; gap: 4px; overflow-x: auto; margin-top: 4px; min-height: 4px; }
+  .cr-pills::-webkit-scrollbar { display: none; }
+  .cr-pill {
+    display: flex; align-items: center; gap: 5px; padding: 2px 9px; flex: none;
+    border: 1px solid rgba(239,231,210,.22); border-radius: 999px;
+    background: rgba(6,26,20,.8); font-size: 9px; white-space: nowrap;
+  }
+  .cr-pill .nm { color: rgba(245,241,232,.9); }
+  .cr-pill .amt { font-family: var(--display); }
+  .cr-pill.w { border-color: #E8C169; }
+  .cr-pill.w .amt { color: #57E06A; }
+  .cr-pill.l .amt { color: #FF6A5E; }
+  .cr-pill.p .amt { color: rgba(245,241,232,.5); }
+
+  .cr-felt {
+    width: 100%; margin-top: 6px; padding: 6px; border-radius: 12px;
+    background: #0E4634; border: 2px solid rgba(239,231,210,.55);
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .cr-row { display: flex; gap: 4px; width: 100%; }
+  .cr-box {
+    position: relative; flex: 1; height: 58px; padding: 0; border-radius: 7px;
+    background: rgba(0,0,0,.2); border: 1px solid rgba(239,231,210,.45);
+    display: grid; place-items: center; cursor: pointer;
+  }
+  .cr-box.pt { background: rgba(224,75,66,.22); border: 2px solid #E04B42; }
+  .cr-box .num {
+    font-family: var(--display); font-size: 25px; color: rgba(239,231,210,.8); grid-area: 1/1;
+  }
+  .cr-box .num.under { opacity: .3; }
+  .cr-box .pl { grid-area: 1/1; }
+  .cr-box .pl.off { opacity: .4; }
+  .cr-box .offtag {
+    position: absolute; bottom: 1px; left: 0; right: 0; text-align: center;
+    font-family: var(--display); font-size: 8px; color: #FF6A5E;
+  }
+  .cr-box .come {
+    position: absolute; top: 1px; right: 1px; padding: 1px 3px; border-radius: 5px;
+    background: rgba(6,26,20,.85); border: 1px solid #E8C169;
+    font-family: var(--display); font-size: 8px; color: #E8C169; line-height: 1.15;
+  }
+  .cr-box .come b { display: block; color: #EFE7D2; font-size: 7px; }
+  .cr-box .puck {
+    position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%;
+    background: #EFE7D2; border: 1.5px solid #E04B42; color: #0A2019;
+    font-family: var(--display); font-size: 7px; display: grid; place-items: center;
+  }
+  .cr-band {
+    position: relative; width: 100%; height: 44px; padding: 0 8px 0 10px; border-radius: 7px;
+    display: flex; align-items: center; justify-content: space-between;
+    border: 1px solid; cursor: pointer; text-align: left;
+  }
+  .cr-band .t { display: flex; flex-direction: column; }
+  .cr-band .t b { font-family: var(--display); font-size: 13px; letter-spacing: .1em; }
+  .cr-band .t i { font-style: normal; font-size: 8px; color: rgba(245,241,232,.6); }
+  .cr-band.line { border-color: rgba(239,231,210,.7); background: rgba(239,231,210,.1); }
+  .cr-band.line .t b { color: #EFE7D2; }
+  .cr-band.gold { border-color: rgba(232,193,105,.7); background: rgba(232,193,105,.12); }
+  .cr-band.gold .t b { color: #E8C169; }
+  .cr-band.red { border-color: rgba(224,75,66,.7); background: rgba(224,75,66,.12); }
+  .cr-band.red .t b { color: #E04B42; }
+  .cr-band.dead { cursor: default; }
+  .cr-band.dead .t { opacity: .32; }
+  .cr-band.dead { border-color: rgba(239,231,210,.22) !important; background: rgba(0,0,0,.12) !important; }
+  .cr-chip { flex: none; position: relative; }
+  .cr-chip img { width: 106%; height: 106%; margin: -3%; display: block; }
+  .cr-chip .scrim {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(6,26,20,.64); border-radius: 50%; color: #57E06A; font-weight: 900;
+  }
+  .cr-small {
+    flex: 1; height: 28px; border-radius: 999px; background: none;
+    border: 1px solid rgba(239,231,210,.5); color: #EFE7D2;
+    font-family: var(--display); font-size: 10px; letter-spacing: .08em; cursor: pointer;
+  }
+  .cr-small.close { width: 100%; margin-top: 12px; height: 34px; }
+  #screen-craps .uth-actions { max-width: 100%; }
+  #screen-craps .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #E8C169, 0 5px 12px rgba(0,0,0,.5); }
+
+  /* The centre of the table, and the ladders, behind their own doors. */
+  .cr-drawer {
+    position: fixed; inset: 0; z-index: 60; display: none;
+    background: rgba(7,35,27,.95); padding: 20px;
+    align-items: center; justify-content: center;
+  }
+  .cr-drawer.on { display: flex; }
+  .cr-drawer .body {
+    width: 100%; max-width: 360px; max-height: 84dvh; overflow-y: auto;
+    background: rgba(11,52,40,.97); border: 1.5px solid rgba(239,231,210,.5);
+    border-radius: 14px; padding: 16px;
+  }
+  .cr-drawer h3 { font-family: var(--display); font-size: 14px; letter-spacing: .1em; color: #E04B42; }
+  .cr-drawer h4 {
+    font-family: var(--display); font-size: 12px; letter-spacing: .1em;
+    color: #E8C169; margin-top: 14px;
+  }
+  .cr-drawer p { font-size: 10px; color: rgba(245,241,232,.6); margin: 4px 0 6px; }
+  .cr-prop {
+    width: 100%; display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    padding: 7px 10px; border-radius: 7px; cursor: pointer; text-align: left;
+    background: rgba(0,0,0,.2); border: 1px solid rgba(239,231,210,.25); color: var(--bone);
+  }
+  .cr-prop.on { background: rgba(232,193,105,.12); border-color: #E8C169; }
+  .cr-prop span { flex: 1; font-size: 12px; font-weight: 700; }
+  .cr-prop b { font-family: var(--display); font-size: 11px; color: rgba(239,231,210,.75); }
+  .cr-prop b.amt { color: #E8C169; }
+  .cr-payrow { display: flex; font-size: 11px; color: var(--bone); }
+  .cr-payrow span { flex: 1; }
+  .cr-payrow b { font-family: var(--display); color: #E8C169; }
 
   /* ========== DESTROYER ==========
      The felt's colours are taken off pink4theboys.png itself: the hot magenta
@@ -1744,6 +1924,68 @@
       <button class="rl-btn spin" id="rl-spin">SPIN</button>
       <button class="rl-btn rebet" id="rl-rebet">REBET</button>
     </div>
+  </div>
+</div>
+
+<!-- ============ CRAPS VARIANTS PAGE ============ -->
+<div class="screen" id="screen-crapsmenu">
+  <img class="mm-bg" src="__BG__" alt="" style="opacity:.35">
+  <div class="cm-col">
+    <div class="bjm-top">
+      <button class="lb-menu" id="cm-back" aria-label="Back to lobby">←</button>
+    </div>
+    <img class="lb-logo" src="__LOBBY_LOGO__" alt="4 The Boys">
+    <div class="lb-campaign" id="cm-campaign-line">CAMPAIGN · 5,000 / 1,000,000</div>
+    <div class="cm-cards">
+      <button class="cm-card jade" id="cm-crapless" aria-label="Crapless craps — play">
+        <span class="pip">⚄</span>
+        <span class="txt">
+          <div class="nm">CRAPLESS</div>
+          <div class="ln">SEVEN WINS · NOTHING LOSES</div>
+          <div class="ln">TEN POINTS · FREE ODDS · PROPS</div>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="cm-card pink" id="cm-destroyer" aria-label="Destroyer — play">
+        <span class="pip">⚅</span>
+        <span class="txt">
+          <div class="nm">DESTROYER</div>
+          <div class="ln">BATTLESHIP DICE</div>
+          <div class="ln">CALL THE CELL · SINK THE FLEET</div>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= CRAPLESS CRAPS ================= -->
+<div class="screen" id="screen-craps">
+  <img class="cr-bg" src="__BG__" alt="">
+  <div class="cr-table">
+    <div class="uth-topbar">
+      <button class="backlink" id="cr-back">‹ CRAPS</button>
+      <div class="uth-money">
+        <span class="lbl">BANKROLL</span><span class="val" id="cr-bankroll">5,000</span>
+        <span class="gap"></span>
+        <span class="lbl">AT RISK</span><span class="val risk" id="cr-risk">0</span>
+      </div>
+    </div>
+    <!-- Destroyer's tray, which already throws and settles a pair. -->
+    <div class="cr-tray" id="cr-tray"></div>
+    <div class="cr-headline" id="cr-headline"></div>
+    <div class="uth-message" id="cr-message">Come out — seven wins, nothing loses</div>
+    <div class="cr-pills" id="cr-results"></div>
+    <div class="cr-felt" id="cr-felt"></div>
+    <div id="cr-rack" style="margin-top:6px"></div>
+    <div class="uth-actions" id="cr-actions"></div>
+  </div>
+  <div class="cr-drawer" id="cr-props"><div class="body" id="cr-props-body"></div></div>
+  <div class="cr-drawer" id="cr-pays"><div class="body" id="cr-pays-body"></div></div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="cr-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="cr-buyin">BUY BACK IN</button>
   </div>
 </div>
 
@@ -2982,6 +3224,14 @@
       window.scrollTo(0, 0);
     },
     showMenu: function () { this.show("menu"); },
+    /** The craps room: two cards, and the campaign line above them. */
+    showCrapsMenu: function () {
+      var scr = $("screen-crapsmenu");
+      scr.classList.toggle("campaign", this.mode === "campaign");
+      $("cm-campaign-line").textContent =
+        "CAMPAIGN · " + fmt(this.getBankroll()) + " / " + fmt(this.getGoal());
+      this.show("crapsmenu");
+    },
     showLobby: function (mode) {
       if (mode) this.mode = mode;
       var scr = $("screen-lobby");
@@ -3136,8 +3386,13 @@
   $("uth-back").addEventListener("click", function () { Shell.show("poker"); });
   $("dj-back").addEventListener("click", function () { Shell.show("poker"); });
   $("bjm-back").addEventListener("click", function () { Shell.showLobby(); });
-  $("lb-craps").addEventListener("click", function () { Destroyer.enter(); Shell.show("destroyer"); });
-  $("dz-back").addEventListener("click", function () { Shell.showLobby(); });
+  // Craps is a page of its own now, the way poker and blackjack already were.
+  $("lb-craps").addEventListener("click", function () { Shell.showCrapsMenu(); });
+  $("cm-back").addEventListener("click", function () { Shell.showLobby(); });
+  $("cm-crapless").addEventListener("click", function () { Shell.show("craps"); Craps.enter(); });
+  $("cm-destroyer").addEventListener("click", function () { Destroyer.enter(); Shell.show("destroyer"); });
+  $("cr-back").addEventListener("click", function () { Shell.showCrapsMenu(); });
+  $("dz-back").addEventListener("click", function () { Shell.showCrapsMenu(); });
   $("lb-roulette").addEventListener("click", function () { Roulette.enter(); Shell.show("roulette"); });
   $("rl-back").addEventListener("click", function () { Shell.showLobby(); });
   $("bjm-freebet").addEventListener("click", function () {
@@ -3846,6 +4101,216 @@
              BLIND: BLIND, FLUSH_PLUS: FLUSH_PLUS, BONUS: BONUS, PLAY: PLAY };
   })();
   window.MU = MU;   // exposed so the rules can be exercised directly
+
+  /* ============================================================
+     Crapless craps engine — mirrors CrapsRules.kt so both builds settle a
+     throw the same way. Seven wins the come out and nothing loses it: two,
+     three, eleven and twelve are points here, not craps and a natural.
+     ============================================================ */
+  var CR = (function () {
+    /** Every number that can be a point, which is every number but the seven. */
+    var POINTS = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
+    var HARD_WAYS = [4, 6, 8, 10];
+    /** The one-roll centre bets. Each pays and stays up for the next throw. */
+    var PROPS = [
+      { key: "any7", label: "Any 7", pays: 4, totals: [7] },
+      { key: "craps", label: "Any Craps", pays: 7, totals: [2, 3, 12] },
+      { key: "aces", label: "Aces", pays: 30, totals: [2] },
+      { key: "ace2", label: "Ace-Deuce", pays: 15, totals: [3] },
+      { key: "yo", label: "Yo — Eleven", pays: 15, totals: [11] },
+      { key: "box", label: "Boxcars", pays: 30, totals: [12] }
+    ];
+    /** Ways to roll a total with two dice — the whole of the odds maths. */
+    function ways(total) { return 6 - Math.abs(7 - total); }
+    /** True odds behind the line: free of edge, by construction. */
+    function oddsPay(p) {
+      if (p === 2 || p === 12) return [6, 1];
+      if (p === 3 || p === 11) return [3, 1];
+      if (p === 4 || p === 10) return [2, 1];
+      if (p === 5 || p === 9) return [3, 2];
+      return [6, 5];
+    }
+    /** What the house pays to place a number, edge and all. */
+    function placePay(n) {
+      if (n === 2 || n === 12) return [11, 2];
+      if (n === 3 || n === 11) return [11, 4];
+      if (n === 4 || n === 10) return [9, 5];
+      if (n === 5 || n === 9) return [7, 5];
+      return [7, 6];
+    }
+    function hardPay(n) { return (n === 4 || n === 10) ? 7 : 9; }
+    var FIELD_NUMBERS = [2, 3, 4, 9, 10, 11, 12];
+    /** Two pays double and twelve triple; the rest of the field pays even. */
+    function fieldPay(t) { return t === 2 ? 2 : t === 12 ? 3 : 1; }
+    function propByKey(k) {
+      for (var i = 0; i < PROPS.length; i++) if (PROPS[i].key === k) return PROPS[i];
+      return null;
+    }
+    function sum(o) { var t = 0, k; for (k in o) t += o[k]; return t; }
+
+    /** An empty felt, and a deep copy of one. */
+    function empty() {
+      return { pass: 0, passOdds: 0, comeFlat: 0, comePoints: {}, place: {}, field: 0, hard: {}, props: {} };
+    }
+    function clone(b) {
+      var out = { pass: b.pass, passOdds: b.passOdds, comeFlat: b.comeFlat,
+                  comePoints: {}, place: {}, field: b.field, hard: {}, props: {} };
+      var k;
+      for (k in b.comePoints) out.comePoints[k] = { flat: b.comePoints[k].flat, odds: b.comePoints[k].odds };
+      for (k in b.place) out.place[k] = b.place[k];
+      for (k in b.hard) out.hard[k] = b.hard[k];
+      for (k in b.props) out.props[k] = b.props[k];
+      return out;
+    }
+    function total(b) {
+      var t = b.pass + b.passOdds + b.comeFlat + b.field +
+        sum(b.place) + sum(b.hard) + sum(b.props), k;
+      for (k in b.comePoints) t += b.comePoints[k].flat + b.comePoints[k].odds;
+      return t;
+    }
+
+    /**
+     * Settles one throw against the felt.
+     *
+     * Bets that win a decision — the line and the come — are paid and taken
+     * down, stake and all. Bets that ride — place, field, hardways and the
+     * props — are paid their winnings and left standing, the way the dealer
+     * would. Place bets and hardways sleep through a come out; the come and
+     * its odds work every throw.
+     */
+    function resolve(bets, point, a, b) {
+      var t = a + b, hardRoll = a === b, comeOut = point == null;
+      var back = 0, lines = [], k;
+      var f = clone(bets);
+
+      // ---- the field, one throw and gone ----
+      if (f.field > 0) {
+        if (FIELD_NUMBERS.indexOf(t) >= 0) {
+          var mult = fieldPay(t);
+          back += f.field * mult;
+          lines.push({ label: "Field · " + t + " pays " + mult, net: f.field * mult });
+        } else {
+          lines.push({ label: "Field", net: -f.field });
+          f.field = 0;
+        }
+      }
+
+      // ---- the centre props, one throw each ----
+      for (var i = 0; i < PROPS.length; i++) {
+        var p = PROPS[i], stake = f.props[p.key];
+        if (!stake) continue;
+        if (p.totals.indexOf(t) >= 0) {
+          back += stake * p.pays;
+          lines.push({ label: p.label + " · " + p.pays + " to 1", net: stake * p.pays });
+        } else {
+          lines.push({ label: p.label, net: -stake });
+          delete f.props[p.key];
+        }
+      }
+
+      // ---- the hardways, asleep through a come out ----
+      if (!comeOut) {
+        if (t === 7) {
+          var lostHard = sum(f.hard);
+          if (lostHard > 0) lines.push({ label: "Hardways", net: -lostHard });
+          f.hard = {};
+        } else if (HARD_WAYS.indexOf(t) >= 0 && f.hard[t]) {
+          var hs = f.hard[t];
+          if (hardRoll) {
+            back += hs * hardPay(t);
+            lines.push({ label: "Hard " + t + " · " + hardPay(t) + " to 1", net: hs * hardPay(t) });
+          } else {
+            lines.push({ label: "Hard " + t, net: -hs });
+            delete f.hard[t];
+          }
+        }
+      }
+
+      // ---- come bets already on a number; these work every throw ----
+      if (t === 7) {
+        for (k in f.comePoints) {
+          lines.push({ label: "Come " + k, net: -(f.comePoints[k].flat + f.comePoints[k].odds) });
+        }
+        f.comePoints = {};
+      } else if (f.comePoints[t]) {
+        var cb = f.comePoints[t], co = oddsPay(t);
+        var cwon = cb.flat + cb.odds * co[0] / co[1];
+        back += cb.flat + cb.odds + cwon;
+        lines.push({ label: "Come " + t, net: cwon });
+        delete f.comePoints[t];
+      }
+
+      // ---- a come bet still waiting for its number ----
+      if (f.comeFlat > 0) {
+        if (t === 7) {
+          back += f.comeFlat * 2;
+          lines.push({ label: "Come", net: f.comeFlat });
+        } else {
+          var had = f.comePoints[t];
+          f.comePoints[t] = { flat: f.comeFlat + (had ? had.flat : 0), odds: had ? had.odds : 0 };
+          lines.push({ label: "Come travels to " + t, net: 0 });
+        }
+        f.comeFlat = 0;
+      }
+
+      // ---- place bets, asleep through a come out ----
+      if (!comeOut) {
+        if (t === 7) {
+          var lostPlace = sum(f.place);
+          if (lostPlace > 0) lines.push({ label: "Place bets", net: -lostPlace });
+          f.place = {};
+        } else if (f.place[t]) {
+          var pp = placePay(t), pwon = f.place[t] * pp[0] / pp[1];
+          back += pwon;
+          lines.push({ label: "Place " + t + " · " + pp[0] + " to " + pp[1], net: pwon });
+        }
+      }
+
+      // ---- the line ----
+      var newPoint = point == null ? null : point, pointMade = false, sevenOut = false;
+      if (comeOut) {
+        if (t === 7) {
+          if (f.pass > 0) {
+            back += f.pass * 2;
+            lines.push({ label: "Pass Line", net: f.pass });
+            f.pass = 0;
+          }
+        } else {
+          newPoint = t;
+        }
+      } else if (t === point) {
+        pointMade = true;
+        if (f.pass > 0) {
+          var po = oddsPay(point), pwin = f.pass + f.passOdds * po[0] / po[1];
+          back += f.pass + f.passOdds + pwin;
+          lines.push({ label: "Pass Line · point " + point, net: pwin });
+        }
+        f.pass = 0; f.passOdds = 0; newPoint = null;
+      } else if (t === 7) {
+        sevenOut = true;
+        if (f.pass + f.passOdds > 0) lines.push({ label: "Pass Line", net: -(f.pass + f.passOdds) });
+        f.pass = 0; f.passOdds = 0; newPoint = null;
+      }
+
+      var headline =
+        sevenOut ? "Seven out" :
+        pointMade ? "Point " + point + " made!" :
+        (comeOut && t === 7) ? "Winner seven!" :
+        comeOut ? "Point is " + t : String(t);
+
+      return { a: a, b: b, total: t, point: newPoint, pointMade: pointMade,
+               sevenOut: sevenOut, returns: back, lines: lines, bets: f, headline: headline };
+    }
+
+    /** The most odds the house will lay behind a flat bet: triple across here. */
+    var MAX_ODDS = 3;
+
+    return { POINTS: POINTS, HARD_WAYS: HARD_WAYS, PROPS: PROPS, FIELD_NUMBERS: FIELD_NUMBERS,
+             ways: ways, oddsPay: oddsPay, placePay: placePay, hardPay: hardPay, fieldPay: fieldPay,
+             propByKey: propByKey, empty: empty, clone: clone, total: total,
+             resolve: resolve, MAX_ODDS: MAX_ODDS };
+  })();
+  window.CR = CR;   // exposed so the rules can be exercised directly
 
   /* ============================================================
      Destroyer engine — mirrors DestroyerRules.kt so both builds pay a
@@ -7065,6 +7530,424 @@
     $("mu-buyin").addEventListener("click", function () {
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       openBuyIn(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
+    });
+    return { enter: enter };
+  })();
+
+  /* ============================================================
+     CRAPLESS CRAPS
+     ============================================================ */
+  var Craps = (function () {
+    var JADE = "#1FA971", GOLD = "#E8C169", LINE = "#EFE7D2",
+        RED = "#E04B42", DIM = "rgba(239,231,210,.6)", BRASS = "#D9B23A";
+    var tray = null;
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25;
+    var bets = CR.empty(), point = null;
+    // betting | rolling
+    var phase = "betting";
+    var lastRoll = null, results = [], headline = "", swept = null;
+    var message = "Come out — seven wins, nothing loses";
+
+    function syncWallet() {
+      if (Shell.mode !== "campaign") return;
+      Shell.setBankroll(bankroll);
+      Shell.demoteIfBroke();
+    }
+    function atRisk() { return CR.total(bets); }
+    function comeOut() { return point == null; }
+
+    // ---------- render ----------
+    function setMessage(text) { message = text; $("cr-message").textContent = text; }
+    function renderTop() {
+      $("cr-bankroll").textContent = fmt(bankroll);
+      $("cr-risk").textContent = fmt(atRisk());
+    }
+    function renderHead() {
+      var big = lastRoll ? '<span class="n">' + lastRoll.total + "</span>" : "";
+      $("cr-headline").innerHTML = big + "<span>" + (headline || "CRAPLESS CRAPS") + "</span>";
+      $("cr-message").textContent = message;
+    }
+    function renderResults() {
+      var host = $("cr-results");
+      host.innerHTML = "";
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "·";
+        host.insertAdjacentHTML("beforeend",
+          '<div class="cr-pill ' + cls + '"><span class="nm">' + r.label +
+          '</span><span class="amt">' + txt + "</span></div>");
+      });
+    }
+    function chipOn(amount, size) {
+      return amount > 0 ? '<div class="cr-chip" style="width:' + size + 'px;height:' + size + 'px">' +
+        chipHtml(amount, size) + "</div>" : "";
+    }
+    /**
+     * One end of the table, which is all a single player ever reaches. Ten
+     * point boxes in two rows of five, mirrored around the seven that is
+     * missing from them, then the come, the field and the line.
+     */
+    function renderFelt() {
+      var html = "";
+      [[2, 3, 4, 5, 6], [8, 9, 10, 11, 12]].forEach(function (row) {
+        html += '<div class="cr-row">';
+        row.forEach(function (n) {
+          var isPoint = point === n, placed = bets.place[n] || 0, come = bets.comePoints[n];
+          // Place bets sleep through a come out, the way the dealer turns them off.
+          var asleep = comeOut() && placed > 0;
+          html += '<button class="cr-box' + (isPoint ? " pt" : "") + '" data-place="' + n + '">' +
+            '<span class="num' + (placed > 0 ? " under" : "") + '">' + n + "</span>" +
+            (placed > 0 ? '<span class="pl' + (asleep ? " off" : "") + '">' + chipOn(placed, 34) + "</span>" : "") +
+            (asleep ? '<span class="offtag">OFF</span>' : "") +
+            (come ? '<span class="come" data-comeodds="' + n + '">C ' + come.flat +
+              (come.odds ? '<b>+' + come.odds + "</b>" : "") + "</span>" : "") +
+            (isPoint ? '<span class="puck">ON</span>' : "") +
+            "</button>";
+        });
+        html += "</div>";
+      });
+      function band(id, label, sub, amount, cls, live) {
+        return '<button class="cr-band ' + cls + (live ? "" : " dead") + '" id="' + id + '">' +
+          '<span class="t"><b>' + label + "</b><i>" + sub + "</i></span>" + chipOn(amount, 34) + "</button>";
+      }
+      html += band("cr-come", "COME", "seven wins · any number travels", bets.comeFlat, "line", !comeOut());
+      html += band("cr-field", "FIELD", "2 3 4 9 10 11 12 · two pays double, twelve triple", bets.field, "gold", true);
+      var od = point ? CR.oddsPay(point) : null;
+      html += '<div class="cr-row">' +
+        '<div style="flex:1.6">' +
+          band("cr-pass", "PASS LINE", comeOut() ? "seven wins · nothing loses" : "point " + point,
+               bets.pass, "red", comeOut()) + "</div>" +
+        '<div style="flex:1">' +
+          band("cr-odds", "ODDS", od ? od[0] + " to " + od[1] : "free odds",
+               bets.passOdds, "line", point != null && bets.pass > 0) + "</div>" +
+        "</div>";
+      html += '<div class="cr-row">' +
+        '<button class="cr-small" id="cr-propsbtn">PROPS  ▸</button>' +
+        '<button class="cr-small" id="cr-paysbtn">PAYS  ▸</button></div>';
+      var host = $("cr-felt");
+      host.innerHTML = html;
+      if (phase !== "betting") return;
+      [].forEach.call(host.querySelectorAll("[data-place]"), function (el) {
+        el.addEventListener("click", function () { addPlace(+el.getAttribute("data-place")); });
+      });
+      [].forEach.call(host.querySelectorAll("[data-comeodds]"), function (el) {
+        el.addEventListener("click", function (e) {
+          e.stopPropagation();
+          addComeOdds(+el.getAttribute("data-comeodds"));
+        });
+      });
+      $("cr-come").addEventListener("click", addCome);
+      $("cr-field").addEventListener("click", addField);
+      $("cr-pass").addEventListener("click", addPass);
+      $("cr-odds").addEventListener("click", addPassOdds);
+      $("cr-propsbtn").addEventListener("click", function () { openDrawer("cr-props"); });
+      $("cr-paysbtn").addEventListener("click", function () { openDrawer("cr-pays"); });
+    }
+    function renderRack() {
+      var host = $("cr-rack");
+      host.innerHTML = "";
+      if (phase !== "betting") return;
+      var rack = document.createElement("div");
+      rack.className = "uth-rack";
+      selectedChip = clampChip(selectedChip, bankroll);
+      chipsFor(bankroll, Shell.limits()).forEach(function (v) {
+        var cb = document.createElement("button");
+        cb.className = "chip-btn" + (selectedChip === v ? " sel" : "");
+        cb.innerHTML = '<img src="' + CHIP_IMG[v] + '" alt="' + v + '">';
+        cb.addEventListener("click", function () { selectedChip = v; renderRack(); });
+        rack.appendChild(cb);
+      });
+      host.appendChild(rack);
+    }
+    function actionBtn(text, color, fn, off) {
+      var b = document.createElement("button");
+      b.className = "uth-btn";
+      b.style.borderColor = color;
+      b.style.color = color;
+      b.textContent = text;
+      b.disabled = !!off;
+      b.addEventListener("click", fn);
+      return b;
+    }
+    function renderActions() {
+      var a = $("cr-actions");
+      a.innerHTML = "";
+      if (phase === "rolling") {
+        var s = document.createElement("span");
+        s.className = "dealing-label";
+        s.textContent = "IN THE AIR";
+        a.appendChild(s);
+        return;
+      }
+      if (swept) a.appendChild(actionBtn("SAME BET", GOLD, rebet));
+      else a.appendChild(actionBtn("TAKE DOWN", DIM, takeDown));
+      a.appendChild(actionBtn(comeOut() ? "COME OUT" : "ROLL", RED, throwDice,
+        comeOut() && bets.pass <= 0));
+    }
+    function renderRebuy() {
+      var broke = Shell.mode === "testing" && bankroll < 25 &&
+        phase === "betting" && atRisk() === 0;
+      $("cr-rebuy").classList.toggle("on", broke);
+    }
+    function renderAll() {
+      renderTop(); renderHead(); renderResults(); renderFelt(); renderRack();
+      renderActions(); renderRebuy();
+    }
+
+    // ---------- putting chips down ----------
+    /** What the purse and the table will actually take, of the chip in hand. */
+    function allowed(already, side) {
+      var affordable = Math.min(selectedChip, Math.floor(bankroll));
+      if (affordable <= 0) { setMessage("No bankroll left"); return 0; }
+      var lim = Shell.limits(), amount = allow(lim, affordable, already, side);
+      if (amount <= 0) setMessage(refusal(lim, side));
+      return amount;
+    }
+    function put(n) { bankroll -= n; syncWallet(); }
+
+    function addPass() {
+      if (phase !== "betting") return;
+      // The line is a contract: it can only be bet before a point exists.
+      if (!comeOut()) { setMessage("The line is closed once a point is out"); renderHead(); return; }
+      var a = allowed(bets.pass, false);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.pass += a;
+      setMessage("Pass line"); renderTop(); renderFelt(); renderActions();
+    }
+    function addPassOdds() {
+      if (phase !== "betting" || point == null || bets.pass <= 0) return;
+      var room = bets.pass * CR.MAX_ODDS - bets.passOdds;
+      if (room <= 0) { setMessage("Odds are capped at " + CR.MAX_ODDS + "x the line"); renderHead(); return; }
+      var a = Math.min(allowed(bets.passOdds, false), room);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.passOdds += a;
+      var o = CR.oddsPay(point);
+      setMessage("Odds on " + point + " pay " + o[0] + " to " + o[1]);
+      renderTop(); renderFelt();
+    }
+    function addCome() {
+      if (phase !== "betting" || comeOut()) return;
+      var a = allowed(bets.comeFlat, false);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.comeFlat += a;
+      setMessage("Come"); renderTop(); renderFelt();
+    }
+    function addPlace(n) {
+      if (phase !== "betting") return;
+      var a = allowed(bets.place[n] || 0, false);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.place[n] = (bets.place[n] || 0) + a;
+      var p = CR.placePay(n);
+      setMessage("Place " + n + " pays " + p[0] + " to " + p[1]);
+      renderTop(); renderFelt();
+    }
+    function addComeOdds(n) {
+      if (phase !== "betting") return;
+      var bet = bets.comePoints[n];
+      if (!bet) return;
+      var room = bet.flat * CR.MAX_ODDS - bet.odds;
+      if (room <= 0) { setMessage("Odds are capped at " + CR.MAX_ODDS + "x"); renderHead(); return; }
+      var a = Math.min(allowed(bet.odds, false), room);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bet.odds += a;
+      var o = CR.oddsPay(n);
+      setMessage("Come odds on " + n + " pay " + o[0] + " to " + o[1]);
+      renderTop(); renderFelt();
+    }
+    function addField() {
+      if (phase !== "betting") return;
+      var a = allowed(bets.field, true);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.field += a;
+      setMessage("Field — two pays double, twelve triple");
+      renderTop(); renderFelt();
+    }
+    function addHard(n) {
+      if (phase !== "betting") return;
+      var a = allowed(bets.hard[n] || 0, true);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.hard[n] = (bets.hard[n] || 0) + a;
+      setMessage("Hard " + n + " pays " + CR.hardPay(n) + " to 1");
+      renderTop(); renderDrawers();
+    }
+    function addProp(key) {
+      if (phase !== "betting") return;
+      var a = allowed(bets.props[key] || 0, true);
+      if (a <= 0) { renderHead(); return; }
+      put(a); bets.props[key] = (bets.props[key] || 0) + a;
+      var p = CR.propByKey(key);
+      setMessage(p.label + " pays " + p.pays + " to 1");
+      renderTop(); renderDrawers();
+    }
+
+    /**
+     * Takes down everything the house would let a player pick up. The flat
+     * line bet and a come bet already on its number are contracts and stay.
+     */
+    function takeDown() {
+      if (phase !== "betting") return;
+      var back = bets.passOdds + bets.comeFlat + bets.field, k;
+      for (k in bets.place) back += bets.place[k];
+      for (k in bets.hard) back += bets.hard[k];
+      for (k in bets.props) back += bets.props[k];
+      for (k in bets.comePoints) { back += bets.comePoints[k].odds; bets.comePoints[k].odds = 0; }
+      bets.passOdds = 0; bets.comeFlat = 0; bets.field = 0;
+      bets.place = {}; bets.hard = {}; bets.props = {};
+      // On the come out even the line can be picked up.
+      if (comeOut()) { back += bets.pass; bets.pass = 0; }
+      if (back <= 0) { setMessage("Nothing to take down"); renderHead(); return; }
+      bankroll += back; syncWallet();
+      setMessage("Taken down"); renderAll();
+    }
+
+    /** After a seven sweeps the felt, put the same chips back out. */
+    function rebet() {
+      if (phase !== "betting" || !swept) return;
+      var cost = CR.total(swept);
+      if (cost <= 0) return;
+      if (cost > bankroll) { setMessage("Not enough for that bet"); renderHead(); return; }
+      put(cost);
+      // A swept felt is a come out, so the numbers go back but the travelled
+      // come bets cannot: they died with the seven and have no number now.
+      bets.pass += swept.pass;
+      bets.place = swept.place; bets.field = swept.field;
+      bets.hard = swept.hard; bets.props = swept.props;
+      swept = null;
+      setMessage("Same bet"); renderAll();
+    }
+
+    // ---------- the throw ----------
+    function ensureTray() {
+      if (tray) return tray;
+      tray = DiceTray.create($("cr-tray"), {
+        count: 2, size: 46, volume: 0.7,
+        sound: { url: "__DICE_MP3__" },
+        onSettle: function (vals) { settleRoll(vals[0], vals[1]); }
+      });
+      var g = $("cr-tray").querySelector(".dt-line span");
+      if (g) g.textContent = "Flick from below the line";
+      return tray;
+    }
+    function throwDice() {
+      if (phase !== "betting") return;
+      if (comeOut() && bets.pass <= 0) { setMessage("The line must be covered to come out"); renderHead(); return; }
+      phase = "rolling";
+      renderActions(); renderFelt();
+      ensureTray().roll(0.45 + Math.random() * 0.35);
+    }
+    function settleRoll(a, b) {
+      if (phase !== "rolling") return;
+      var before = CR.clone(bets);
+      var r = CR.resolve(bets, point, a, b);
+      lastRoll = { a: a, b: b, total: a + b };
+      bets = r.bets; point = r.point; results = r.lines; headline = r.headline;
+      bankroll += r.returns; syncWallet();
+
+      if (r.sevenOut) {
+        before.passOdds = 0; before.comeFlat = 0; before.comePoints = {};
+        swept = before;
+      }
+      var msg;
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) msg = "🏆 GOAL REACHED!";
+      else if (r.sevenOut) msg = "Seven out — the felt is swept";
+      else if (r.pointMade) msg = "Winner! Come out again";
+      else if (comeOut()) msg = "Come out — seven wins, nothing loses";
+      else {
+        var o = CR.oddsPay(point);
+        msg = "Back the " + point + " with odds — " + o[0] + " to " + o[1] + ", and no edge at all";
+      }
+      message = msg;
+      phase = "betting";
+      renderAll();
+      if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
+    }
+
+    // ---------- the drawers ----------
+    function openDrawer(id) { $(id).classList.add("on"); renderDrawers(); }
+    function renderDrawers() {
+      var h = '<h4>HARDWAYS</h4><p>The pair before the easy way, and before a seven.</p>';
+      CR.HARD_WAYS.forEach(function (n) {
+        h += propRow("Hard " + n, CR.hardPay(n) + " to 1", bets.hard[n] || 0, 'data-hard="' + n + '"');
+      });
+      h += '<h4>ONE ROLL</h4><p>Settled on the very next throw, win or lose.</p>';
+      CR.PROPS.forEach(function (p) {
+        h += propRow(p.label, p.pays + " to 1", bets.props[p.key] || 0, 'data-prop="' + p.key + '"');
+      });
+      h += '<button class="cr-small close" data-close="cr-props">CLOSE</button>';
+      $("cr-props-body").innerHTML = h;
+      [].forEach.call($("cr-props-body").querySelectorAll("[data-hard]"), function (el) {
+        el.addEventListener("click", function () { addHard(+el.getAttribute("data-hard")); });
+      });
+      [].forEach.call($("cr-props-body").querySelectorAll("[data-prop]"), function (el) {
+        el.addEventListener("click", function () { addProp(el.getAttribute("data-prop")); });
+      });
+      wireCloses();
+    }
+    function propRow(label, pays, amount, attr) {
+      return '<button class="cr-prop' + (amount > 0 ? " on" : "") + '" ' + attr + ">" +
+        "<span>" + label + "</span>" +
+        (amount > 0 ? '<b class="amt">' + fmt(amount) + "</b>" : "") +
+        "<b>" + pays + "</b></button>";
+    }
+    function wireCloses() {
+      [].forEach.call(document.querySelectorAll("#screen-craps [data-close]"), function (el) {
+        el.onclick = function () { $(el.getAttribute("data-close")).classList.remove("on"); };
+      });
+    }
+    /** Every ladder on the table, written out once. */
+    function fillPays() {
+      function grouped(fn) {
+        var seen = [], out = [];
+        CR.POINTS.forEach(function (p) {
+          var v = fn(p).join(" to ");
+          var at = seen.indexOf(v);
+          if (at < 0) { seen.push(v); out.push({ nums: [p], v: v }); }
+          else out[at].nums.push(p);
+        });
+        return out.map(function (g) { return [g.nums.join(" or "), g.v]; });
+      }
+      function list(title, rows) {
+        var h = "<h4>" + title + "</h4>";
+        rows.forEach(function (r) { h += '<div class="cr-payrow"><span>' + r[0] + "</span><b>" + r[1] + "</b></div>"; });
+        return h;
+      }
+      var h = "<h3>CRAPLESS CRAPS</h3><p>Seven wins the come out and nothing loses it. Two, three, " +
+        "eleven and twelve are points here, not craps and a natural, so there is no don't pass and " +
+        "no don't come. That comfort is paid for on the line, which is why the free odds behind it " +
+        "matter more here than anywhere.</p>";
+      h += list("FREE ODDS", grouped(CR.oddsPay));
+      h += "<p>No edge at all, capped at " + CR.MAX_ODDS + "x the flat bet.</p>";
+      h += list("PLACE", grouped(CR.placePay));
+      h += "<p>Off on the come out, the way the dealer turns them down.</p>";
+      h += list("FIELD", [["Two", "2 to 1"], ["Twelve", "3 to 1"], ["3, 4, 9, 10 or 11", "1 to 1"]]);
+      h += list("HARDWAYS", CR.HARD_WAYS.map(function (n) { return ["Hard " + n, CR.hardPay(n) + " to 1"]; }));
+      h += list("ONE ROLL", CR.PROPS.map(function (p) { return [p.label, p.pays + " to 1"]; }));
+      h += '<button class="cr-small close" data-close="cr-pays">CLOSE</button>';
+      $("cr-pays-body").innerHTML = h;
+      wireCloses();
+    }
+
+    // ---------- table ----------
+    function refresh() {
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : bankroll;
+      renderAll();
+    }
+    function enter() {
+      bets = CR.empty(); point = null; phase = "betting";
+      lastRoll = null; results = []; headline = ""; swept = null;
+      bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
+      message = "Come out — seven wins, nothing loses";
+      renderAll();
+      fillPays();
+      // The tray measures its host, so the screen is shown before enter() runs
+      // and this is built straight away — a frame callback never fires on a
+      // page that is not painting.
+      ensureTray();
+      Shell.gate(refresh);
+    }
+    $("cr-buyin").addEventListener("click", function () {
+      if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
+      openBuyIn(function (v) { bankroll = v; setMessage("Come out roll"); renderAll(); });
     });
     return { enter: enter };
   })();

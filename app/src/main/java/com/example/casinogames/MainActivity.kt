@@ -19,6 +19,9 @@ import com.example.casinogames.games.blackjack.BlackjackMenuScreen
 import com.example.casinogames.games.blackjack.BlackjackVariant
 import com.example.casinogames.games.blackjack.DoubleDownScreen
 import com.example.casinogames.games.blackjack.FreeBetScreen
+import com.example.casinogames.games.craps.CrapsMenuScreen
+import com.example.casinogames.games.craps.CrapsScreen
+import com.example.casinogames.games.craps.CrapsVariant
 import com.example.casinogames.games.destroyer.DestroyerScreen
 import com.example.casinogames.games.holdem.UltimateHoldemScreen
 import com.example.casinogames.games.miniuth.MiniUthScreen
@@ -122,8 +125,26 @@ class MainActivity : ComponentActivity() {
                     }
                     place == GameId.CRAPS.name -> {
                         BackHandler { screen = lobby }
-                        DestroyerScreen(
+                        CrapsMenuScreen(
                             onBack = { screen = lobby },
+                            onPick = { screen = "$mode:${it.name}" },
+                            campaign = campaign,
+                        )
+                    }
+                    place == CrapsVariant.CRAPLESS.name -> {
+                        val back = "$mode:${GameId.CRAPS.name}"
+                        BackHandler { screen = back }
+                        CrapsScreen(
+                            onBack = { screen = back },
+                            campaign = campaign,
+                            onGameOverExit = { screen = "menu" },
+                        )
+                    }
+                    place == CrapsVariant.DESTROYER.name -> {
+                        val back = "$mode:${GameId.CRAPS.name}"
+                        BackHandler { screen = back }
+                        DestroyerScreen(
+                            onBack = { screen = back },
                             campaign = campaign,
                             onGameOverExit = { screen = "menu" },
                         )

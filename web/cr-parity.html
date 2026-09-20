@@ -1,0 +1,148 @@
+<!doctype html>
+<title>Crapless craps parity · web engine</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { background: #07231B; color: #F5F1E8; font: 13px "Segoe UI", system-ui, sans-serif; margin: 0; padding: 20px; }
+  h1 { font-size: 16px; letter-spacing: .1em; color: #1FA971; margin: 0 0 4px; }
+  .sub { color: rgba(245,241,232,.6); margin-bottom: 16px; }
+  #tally { font-size: 15px; font-weight: 700; margin-bottom: 14px; }
+  .ok { color: #E8C169; }
+  .bad { color: #FF6A5E; }
+  table { border-collapse: collapse; width: 100%; max-width: 1100px; }
+  th, td { text-align: left; padding: 4px 8px; border-bottom: 1px solid rgba(245,241,232,.12); vertical-align: top; }
+  th { color: rgba(245,241,232,.55); font-weight: 600; font-size: 11px; letter-spacing: .08em; }
+  td.hand { font-family: ui-monospace, Consolas, monospace; white-space: nowrap; }
+  .why { color: #FF9C8A; font-size: 12px; }
+  iframe { display: none; }
+</style>
+<h1>CRAPLESS CRAPS PARITY · WEB ENGINE</h1>
+<div class="sub">
+  Runs <code>craps-parity.txt</code> — the same fixture CrapsParityTest.kt runs against Compose —
+  through <code>window.CR</code> inside the shipped app.html.
+</div>
+<div id="tally">Loading…</div>
+<table id="rows"><thead><tr><th>Case</th><th>Result</th></tr></thead><tbody></tbody></table>
+<iframe id="app" src="app.html"></iframe>
+
+<script>
+(function () {
+  "use strict";
+  var PROP_KEYS = ["any7", "craps", "aces", "ace2", "yo", "box"];
+
+  function parseBets(CR, spec) {
+    var b = CR.empty();
+    if (spec === "-") return b;
+    spec.split(",").forEach(function (token) {
+      token = token.trim();
+      if (!token) return;
+      var at = token.indexOf("="), key = token.slice(0, at), value = token.slice(at + 1);
+      var n = parseInt(key.slice(1), 10);
+      if (key === "pass") b.pass = +value;
+      else if (key === "odds") b.passOdds = +value;
+      else if (key === "come") b.comeFlat = +value;
+      else if (key === "field") b.field = +value;
+      else if (key[0] === "c" && !isNaN(n)) {
+        var parts = value.split(":");
+        b.comePoints[n] = { flat: +parts[0], odds: +parts[1] };
+      } else if (key[0] === "p" && !isNaN(n)) b.place[n] = +value;
+      else if (key[0] === "h" && !isNaN(n)) b.hard[n] = +value;
+      else if (PROP_KEYS.indexOf(key) >= 0) b.props[key] = +value;
+      else throw new Error("unknown bet '" + token + "'");
+    });
+    return b;
+  }
+
+  /** The felt written back out in one fixed order, so two builds can be compared. */
+  function show(b) {
+    var out = [], k;
+    function nums(o) {
+      return Object.keys(o).map(Number).sort(function (x, y) { return x - y; });
+    }
+    if (b.pass > 0) out.push("pass=" + b.pass);
+    if (b.passOdds > 0) out.push("odds=" + b.passOdds);
+    if (b.comeFlat > 0) out.push("come=" + b.comeFlat);
+    nums(b.comePoints).forEach(function (n) {
+      out.push("c" + n + "=" + b.comePoints[n].flat + ":" + b.comePoints[n].odds);
+    });
+    nums(b.place).forEach(function (n) { out.push("p" + n + "=" + b.place[n]); });
+    if (b.field > 0) out.push("field=" + b.field);
+    nums(b.hard).forEach(function (n) { out.push("h" + n + "=" + b.hard[n]); });
+    PROP_KEYS.forEach(function (key) { if (b.props[key]) out.push(key + "=" + b.props[key]); });
+    return out.length ? out.join(",") : "-";
+  }
+
+  function parse(text) {
+    return text.split("\n")
+      .map(function (l) { return l.split("#")[0].trim(); })
+      .filter(function (l) { return l.length; })
+      .map(function (line) {
+        var c = line.split("|").map(function (x) { return x.trim(); });
+        var want = c[3].split(/\s+/);
+        var roll = c[2].split("+");
+        return {
+          line: line, point: c[0] === "-" ? null : +c[0], betSpec: c[1],
+          a: +roll[0], b: +roll[1],
+          newPoint: want[0], returns: +want[1], surviving: c[4]
+        };
+      });
+  }
+
+  function check(CR, c) {
+    var bad = [];
+    function eq(what, got, want) {
+      if (got !== want) bad.push(what + ": got " + got + ", fixture says " + want);
+    }
+    var r = CR.resolve(parseBets(CR, c.betSpec), c.point, c.a, c.b);
+    eq("point", r.point == null ? "-" : String(r.point), c.newPoint);
+    eq("returns", r.returns, c.returns);
+    eq("surviving", show(r.bets), c.surviving);
+    return bad;
+  }
+
+  function run(CR, cases) {
+    var body = document.querySelector("#rows tbody");
+    var failed = 0;
+    cases.forEach(function (c) {
+      var bad = check(CR, c);
+      if (bad.length) failed++;
+      var tr = document.createElement("tr");
+      tr.innerHTML =
+        '<td class="hand">' + c.line.split("|").slice(0, 3).join(" | ") + "</td>" +
+        '<td class="' + (bad.length ? "bad" : "ok") + '">' +
+        (bad.length ? '<span class="why">' + bad.join("<br>") + "</span>" : "match") +
+        "</td>";
+      body.appendChild(tr);
+    });
+    var tally = document.getElementById("tally");
+    tally.className = failed ? "bad" : "ok";
+    tally.textContent = failed
+      ? failed + " of " + cases.length + " cases disagree with the Compose engine"
+      : "All " + cases.length + " cases match the Compose engine";
+    window.PARITY = { total: cases.length, failed: failed };
+  }
+
+  function fail(msg) {
+    var tally = document.getElementById("tally");
+    tally.className = "bad";
+    tally.textContent = msg;
+    window.PARITY = { total: 0, failed: -1, error: msg };
+  }
+
+  var frame = document.getElementById("app");
+  var text = null, ready = false;
+  function start() {
+    if (!ready || text === null) return;
+    var CR = frame.contentWindow && frame.contentWindow.CR;
+    if (!CR) { fail("app.html did not expose window.CR — is the build current?"); return; }
+    run(CR, parse(text));
+  }
+  frame.addEventListener("load", function () { ready = true; start(); });
+  fetch("craps-parity.txt")
+    .then(function (r) {
+      if (!r.ok) throw new Error("craps-parity.txt: HTTP " + r.status);
+      return r.text();
+    })
+    .then(function (t) { text = t; start(); })
+    .catch(function (e) { fail(String(e)); });
+})();
+</script>

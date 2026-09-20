@@ -276,6 +276,8 @@ fun DiceTray(
     faceColor: Color = Color(0xFFF7F3FA),
     pipColor: Color = Color(0xFF140610),
     lineColor: Color = Color(0xB3FF40A0),
+    /** The near edge of the throwing area, named for whatever game holds the tray. */
+    guide: String = "EASY THROW BELOW HERE",
 ) {
     val density = LocalDensity.current.density
     val context = LocalContext.current
@@ -314,7 +316,7 @@ fun DiceTray(
     ) {
         if (!state.rolling) {
             Text(
-                "EASY THROW BELOW HERE",
+                guide,
                 color = lineColor.copy(alpha = 0.45f),
                 fontSize = 9.sp,
                 letterSpacing = 0.2.em,
