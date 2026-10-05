@@ -2436,9 +2436,12 @@
   .bacc-sheet > .bacc-top, .bacc-sheet > .message,
   .bacc-sheet > .bc-felt, .bacc-sheet > .bacc-bottom { position: relative; z-index: 1; }
   .bacc-top { position: relative; padding: 8px 12px 0; }
+  /* The line the table talks on. It wore a black pill, which read as a bar
+     laid across the cloth; the text already carries its own outline, so it
+     stands on the felt instead, and takes the size the bar was using. */
   .bacc-sheet .message {
-    position: relative; margin: 7px auto 0; width: calc(100% - 26px); max-width: 300px;
-    background: #060012; border-radius: 8px; padding: 5px 10px; text-align: center;
+    position: relative; margin: 8px auto 0; width: calc(100% - 26px); max-width: 320px;
+    text-align: center; font-size: 17px;
   }
   /* the betting layout: side bets, the pairs and the tie, then the two spots */
   .bc-felt {
