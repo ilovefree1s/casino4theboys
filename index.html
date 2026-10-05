@@ -5983,33 +5983,61 @@
     }
   }
   (function watchTheDeal() {
-    var seen = new WeakMap();
-    function cardsIn(host) {
-      var n = 0;
-      for (var i = 0; i < host.children.length; i++) {
-        if (host.children[i].classList && host.children[i].classList.contains("card")) n++;
+    /*
+     * Blackjack repaints a hand by throwing the row away and building a new
+     * one, so counting against the row element itself saw a brand new empty
+     * row every time and replayed the whole hand: two sounds for the second
+     * card, three for a hit, and so on. The count is kept against where a
+     * row sits on the screen instead - the same place, rebuilt, is the same
+     * row - so only cards that were not there a moment ago make a noise.
+     */
+    function spotOf(el, root) {
+      var parts = [];
+      while (el && el !== root && el.parentNode) {
+        var kin = el.parentNode.children, at = 0;
+        for (var i = 0; i < kin.length; i++) if (kin[i] === el) { at = i; break; }
+        parts.push(el.id || ((el.className || el.tagName) + "").split(" ")[0] + "#" + at);
+        el = el.parentNode;
       }
-      return n;
+      return parts.reverse().join("/");
+    }
+    function countCards(screen) {
+      var out = {}, cards = screen.querySelectorAll(".card");
+      for (var i = 0; i < cards.length; i++) {
+        var k = spotOf(cards[i].parentNode, screen);
+        out[k] = (out[k] || 0) + 1;
+      }
+      return out;
+    }
+    var snaps = {}, pending = false;
+    function sweep() {
+      pending = false;
+      var screen = document.querySelector(".screen.on");
+      if (!screen) return;
+      var now = countCards(screen), was = snaps[screen.id] || {}, dealt = 0;
+      Object.keys(now).forEach(function (k) {
+        var d = now[k] - (was[k] || 0);
+        if (d > 0) dealt += d;
+      });
+      snaps[screen.id] = now;
+      if (dealt > 0) playDraw(dealt);
     }
     new MutationObserver(function (recs) {
-      var hosts = [];
-      recs.forEach(function (r) {
-        var touched = false;
+      if (pending) return;
+      for (var i = 0; i < recs.length; i++) {
+        var r = recs[i], hit = false;
         [r.addedNodes, r.removedNodes].forEach(function (list) {
-          for (var i = 0; i < list.length; i++) {
-            var el = list[i];
-            if (el.nodeType === 1 && el.classList && el.classList.contains("card")) touched = true;
+          for (var j = 0; j < list.length; j++) {
+            var el = list[j];
+            if (el.nodeType !== 1) continue;
+            if ((el.classList && el.classList.contains("card")) ||
+                (el.querySelector && el.querySelector(".card"))) hit = true;
           }
         });
-        if (touched && hosts.indexOf(r.target) < 0) hosts.push(r.target);
-      });
-      hosts.forEach(function (host) {
-        var now = cardsIn(host);
-        var was = seen.has(host) ? seen.get(host) : 0;
-        seen.set(host, now);
-        // a table that is not the one on screen deals in silence
-        if (now > was && host.offsetParent) playDraw(now - was);
-      });
+        // setTimeout rather than a frame: a page that is not being drawn
+        // never runs its callback, and the flag would stay up for good
+        if (hit) { pending = true; setTimeout(sweep, 0); return; }
+      }
     }).observe(document.body, { childList: true, subtree: true });
   })();
 
@@ -12826,10 +12854,16 @@
         p.appendChild(pill);
       });
     }
-    function showBacks(which, n, cards) {
-      var host = $(which === "p" ? "cardsP" : "cardsB");
-      host.innerHTML = "";
-      for (var i = 0; i < n; i++) host.appendChild(cardEl(cards[i], false));
+    function clearHand(which) {
+      $(which === "p" ? "cardsP" : "cardsB").innerHTML = "";
+    }
+    /**
+     * One card, face down, onto a side. The four openers used to land in a
+     * single frame, which is not how a dealer pitches them and sounded like
+     * one noise rather than four.
+     */
+    function pitch(which, card) {
+      $(which === "p" ? "cardsP" : "cardsB").appendChild(cardEl(card, false));
     }
     function addThird(which, card) {
       var el = cardEl(card, false);
@@ -12899,13 +12933,19 @@
       setMessage("Dealing…");
       updateMoney(); renderActions();
       var h = hand;
-      showBacks("p", 2, h.player);
-      showBacks("b", 2, h.banker);
-      t(450, function () { flip("p", 0, handTotal(h.player.slice(0, 1))); });
-      t(970, function () { flip("b", 0, handTotal(h.banker.slice(0, 1))); });
-      t(1490, function () { flip("p", 1, handTotal(h.player.slice(0, 2))); });
-      t(2010, function () { flip("b", 1, handTotal(h.banker.slice(0, 2))); });
-      var when = 2010;
+      // Player, banker, player, banker - face down, one at a time, fast, the
+      // way the four openers actually come off the shoe. Then they are
+      // turned in the same order.
+      clearHand("p"); clearHand("b");
+      t(0, function () { pitch("p", h.player[0]); });
+      t(190, function () { pitch("b", h.banker[0]); });
+      t(380, function () { pitch("p", h.player[1]); });
+      t(570, function () { pitch("b", h.banker[1]); });
+      t(900, function () { flip("p", 0, handTotal(h.player.slice(0, 1))); });
+      t(1250, function () { flip("b", 0, handTotal(h.banker.slice(0, 1))); });
+      t(1600, function () { flip("p", 1, handTotal(h.player.slice(0, 2))); });
+      t(1950, function () { flip("b", 1, handTotal(h.banker.slice(0, 2))); });
+      var when = 1950;
       if (h.player.length === 3) {
         when += 650;
         t(when, function () { setMessage("Player draws…"); addThird("p", h.player[2]); });
