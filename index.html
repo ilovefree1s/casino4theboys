@@ -198,12 +198,15 @@
     position: absolute; left: 50%; top: 50%; width: 132%; max-width: none;
     margin-left: -66%; transform: translateY(-50%);
   }
-  /* The name sits straight under the picture rather than along the floor,
-     and keeps the dark band it always had: it is what cuts the picture off
-     from the count, so the tile reads as two halves rather than one wash. */
+  /* Everything under the picture stands on one dark block that runs to the
+     floor of the tile: it is what cuts the art off from the count, so the
+     tile reads as two halves rather than one wash of colour. */
+  .mm-game .foot {
+    flex: 1; width: 100%; background: rgba(4,3,8,.8);
+    display: flex; flex-direction: column; align-items: center;
+  }
   .mm-game b {
     display: block; width: 100%; text-align: center; padding: 5px 1px;
-    background: rgba(4,3,8,.8);
     /* five names across a phone: BLACKJACK is the one that decides the size,
        so it is set from the screen rather than pinned and clipped */
     font-family: var(--display); font-style: italic; font-size: clamp(6.5px, 2.02vw, 10px);
@@ -5841,8 +5844,8 @@
     b.style.setProperty("--g", g.c);
     b.setAttribute("aria-label", g.nm + ", free play");
     b.innerHTML = '<span class="art"><img src="' + g.art + '" alt=""></span>' +
-                  "<b>" + g.nm + "</b><em>" + g.sub + "</em>" +
-                  "<small>" + (g.sub === "1" ? "VARIANT" : "VARIANTS") + "</small>";
+                  '<span class="foot"><b>' + g.nm + "</b><em>" + g.sub + "</em>" +
+                  "<small>" + (g.sub === "1" ? "VARIANT" : "VARIANTS") + "</small></span>";
     b.addEventListener("click", function () { Shell.mode = "testing"; g.go(); });
     $("mm-games").appendChild(b);
   });
