@@ -2502,7 +2502,13 @@
   }
   #dz-tray.on { display: block; }
   #dz-tray .dt-field { position: absolute; inset: 44px 0 0; min-height: 0; }
-  #dz-tray .dt-line { display: none; }
+  /* The near edge, dotted, where the table says it: shake the dice below it,
+     and dragging them past it lets them fly. */
+  #dz-tray .dt-line {
+    display: block; top: 54%; bottom: auto; left: 5%; right: 5%;
+    border-top: 3px dotted rgba(255,64,160,.75);
+  }
+  #dz-tray .dt-line span { color: rgba(255,64,160,.8); }
   /* The letter die wears battleship red with white call letters; the
      number die calls a plain numeral instead of pips. */
   #dz-tray [data-die="0"] .dt-face { background: #C81428; }
@@ -12830,7 +12836,7 @@
         count: 2, size: 52, volume: 0.7,
         // The whole table is the field now, so the throw is longer and the
         // pair sits down by the chips between shots.
-        power: 1.5, homeX: 50, homeY: 80,
+        power: 1.5, homeX: 50, homeY: 80, lineY: 0.54,
         // These faces carry a letter and a numeral, which can land on their
         // head where pips cannot, so a settled die is stood back up.
         upright: true,
@@ -12839,6 +12845,9 @@
         // lettered from the bottom up — A is the near water.
         onSettle: function (vals) { impact(DZ.GRID - vals[0], vals[1] - 1); }
       });
+      // The near edge says what it is for.
+      var guide = $("dz-tray").querySelector(".dt-line span");
+      if (guide) guide.textContent = "shake below · cross to fire";
       // Die 0 speaks letters, battleship-style: its faces trade their pips
       // for A..F. Die 1 trades its pips for the numeral itself. The physics
       // neither knows nor cares.
