@@ -11373,12 +11373,15 @@
           "</button>";
       });
       main += "</div>";
-      // The price, printed under the box the way the glass prints it: FOR, not
-      // TO, so a nine reads 12 FOR 5 rather than 7:5.
+      // What the number pays when it hits, under its box. The glass prints a
+      // price (13 FOR 2), which reads as what the bet costs; this prints what
+      // it wins (11 TO 2) — and once a bet is down, the dollars that bet wins.
       main += '<div class="cr-places">';
       NUMS.forEach(function (n) {
-        var pp = CR.placePay(n);
-        main += "<span>PLACE<b>" + (pp[0] + pp[1]) + " FOR " + pp[1] + "</b></span>";
+        var pp = CR.placePay(n), placed = bets.place[n] || 0;
+        main += placed > 0
+          ? "<span>WINS<b>+" + fmt(wholeDollars(placed * pp[0] / pp[1])) + "</b></span>"
+          : "<span>PAYS<b>" + pp[0] + " TO " + pp[1] + "</b></span>";
       });
       main += "</div>";
 
