@@ -2906,20 +2906,6 @@
   }
   .ov.on { display: flex; }
   .ov .box { padding: 20px; }
-  /* Busting in free play: one button, one stack. There is nothing to pick
-     because nothing in free play is kept. */
-  .fp-box {
-    min-width: 250px; border: 1.5px solid rgba(185,140,255,.6); border-radius: 18px;
-    background: rgba(10,6,18,.97); padding: 22px 24px;
-  }
-  .fp-ttl { color: #B98CFF; font-size: 13px; font-weight: 900; letter-spacing: .2em; }
-  .fp-sub { color: rgba(255,255,255,.6); font-size: 10px; letter-spacing: .14em; margin-top: 10px; }
-  .fp-amt { color: #E8C169; font-size: 30px; font-weight: 900; margin: 4px 0 2px; }
-  .fp-seat {
-    margin-top: 18px; border: none; border-radius: 999px; background: #B98CFF;
-    color: #0A0612; font-size: 13px; font-weight: 900; letter-spacing: .1em;
-    padding: 11px 26px; cursor: pointer;
-  }
   .ov .big { font-family: var(--display); font-size: 40px; letter-spacing: .12em; }
   .ov .big.dead { color: #FF3B5C; }
   .ov .big.rich { color: var(--campaign-gold); font-size: 28px; }
@@ -3721,17 +3707,6 @@
 </div>
 
 <!-- ================= OVERLAYS ================= -->
-<!-- Free play's bust rescue. It lived inside the destroyer screen, and a
-     screen that is not showing hides everything in it however fixed it is -
-     so every BUY BACK IN in the app opened nothing at all. -->
-<div class="ov" id="fp-buyin">
-  <div class="box fp-box">
-    <div class="fp-ttl">PLAY TESTING</div>
-    <div class="fp-sub">BUY BACK IN</div>
-    <div class="fp-amt" id="fp-amount">$20,000</div>
-    <button class="fp-seat" id="fp-seat">TAKE A SEAT</button>
-  </div>
-</div>
 <div class="ov" id="ov-gameover">
   <div class="box">
     <div class="big dead">TAPPED OUT</div>
@@ -5609,24 +5584,15 @@
      picked again whenever a busted purse buys back. */
   var FREEPLAY = { buyIn: TESTING_BANKROLL };
   /*
-   * Free play used to ask you to pick a buy-in on a slider, and that
-   * sheet's TAKE A SEAT was never wired to anything - opening it left you
-   * stuck on it with the table behind. Nothing in free play is kept, so
-   * there was never anything to choose: every table starts on the same
-   * stack, and busting offers you another one of the same size.
+   * Free play used to ask you to pick a buy-in on a slider. Nothing in free
+   * play is kept, so there was never anything to choose, and once the stack
+   * was fixed the sheet was a question with one answer - BUY BACK IN hands
+   * it over and the table carries on where it left off.
    */
-  var fpThen = null;
   function freshStack(then) {
-    fpThen = then || null;
-    $("fp-amount").textContent = "$" + fmt(TESTING_BANKROLL);
-    $("fp-buyin").classList.add("on");
-  }
-  $("fp-seat").addEventListener("click", function () {
-    $("fp-buyin").classList.remove("on");
     FREEPLAY.buyIn = TESTING_BANKROLL;
-    var t = fpThen; fpThen = null;
-    if (t) t(TESTING_BANKROLL);
-  });
+    if (then) then(TESTING_BANKROLL);
+  }
   var store = (function () {
     var mem = {};
     function get(k, dflt) {
