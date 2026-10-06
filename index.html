@@ -98,7 +98,7 @@
   /* one screen, two tables: the felt wears b7 when it is Blazing */
   #screen-blackjack .wayout { --w: #2E7BFF; }
   #screen-blackjack:has(.bj-bg.b7) .wayout { --w: #C71414; }
-  #screen-doubledown .wayout { --w: #FF9C3A; }
+  #screen-doubledown .wayout { --w: #E4E4E4; }
   #screen-poker .wayout { --w: #57E06A; }
   #screen-holdem .wayout { --w: var(--uth-green); }
   #screen-djwild .wayout { --w: #2097F9; }
@@ -946,6 +946,15 @@
     --pt: 2.6px; border-radius: 14px; border: 1.5px solid rgba(255,63,216,.6);
     background: rgba(10,4,16,.95); text-shadow: none;
   }
+  /* The blackjack tables share this chart, so Double Down's copy is the
+     only one taken off the pink - it carries dd-sheet and nothing else. */
+  .dd-sheet.pt-chart { border-color: rgba(228,228,228,.45) !important; }
+  .dd-sheet .pt-row.on .v { color: #FFFFFF; }
+  .dd-sheet .pt-row.on .dots {
+    background-image: linear-gradient(to right, rgba(240,240,240,.9) 40%, transparent 0);
+  }
+  .dd-sheet .pt-foot .bar { background: rgba(228,228,228,.5); }
+  .dd-sheet .pt-foot .ttl { color: #E4E4E4; }
   .bj-spot { position: absolute; border-radius: 50%; padding: 0; }
   /* Every spot's art is an opaque plate with a circle painted on it; the app
      clips each one round, so the web must too. */
@@ -1132,13 +1141,16 @@
   /* The felt is drawn. It was a picture of a layout with the live parts pinned
      to marks measured off its pixels, which is why nothing on it could move,
      be renamed, or be read at another size. */
+  /* Double Down is the black-and-white one: its card on the variants page
+     is monochrome and the mark behind its felt is the plain black-and-white
+     drawing, so the felt itself is white on black rather than orange. */
   #screen-doubledown {
-    position: relative; --c: #FF9C3A;
+    position: relative; --c: #E4E4E4;
     background: linear-gradient(180deg, #0B0D14 0%, #11151F 55%, #090B11 100%);
   }
   #screen-doubledown::before {
     content: ""; position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 0%, rgba(255,156,58,.14), transparent 62%);
+    background: radial-gradient(ellipse at 50% 0%, rgba(232,232,232,.10), transparent 62%);
   }
   .dd-bg {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -1238,17 +1250,17 @@
   .dd-odds { width: 100%; padding: 0; background: none; border: 0; }
   .dd-betspot {
     width: 92px; height: 92px; position: relative; padding: 0; flex: none;
-    background: none; border: 3px solid #FFD24D; border-radius: 50%;
+    background: none; border: 3px solid #F2F2F2; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFE9B0;
-    box-shadow: 0 0 22px rgba(255,210,77,.5), inset 0 0 22px rgba(255,210,77,.16);
+    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFFFFF;
+    box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 22px rgba(242,242,242,.14);
   }
   .dd-pushring {
-    width: 54px; height: 54px; border: 2.5px solid #FF9C3A; border-radius: 50%;
-    position: relative; background: none; color: #FFC58A;
+    width: 54px; height: 54px; border: 2.5px solid #C9C9C9; border-radius: 50%;
+    position: relative; background: none; color: #E8E8E8;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--display); font-size: 9px; line-height: 1.05; text-align: center;
-    box-shadow: 0 0 18px rgba(255,156,58,.45);
+    box-shadow: 0 0 18px rgba(220,220,220,.38);
   }
   /* A pay list: the block fills its wing so every line keeps a leader, and the
      payouts all finish on one edge. */
@@ -1263,11 +1275,12 @@
     background-image: radial-gradient(circle, rgba(245,241,232,.5) 40%, transparent 42%);
     background-size: 4px 4px; background-repeat: repeat-x; background-position: 0 72%;
   }
-  .dd-paylist .row .v { margin-left: auto; color: #FFC58A; font-weight: 900; }
-  .dd-pair .dd-paylist .row .v { color: #9FD6FF; }
+  .dd-paylist .row .v { margin-left: auto; color: #EDEDED; font-weight: 900; }
+  /* the pair list still reads as a different list, one step down the grey */
+  .dd-pair .dd-paylist .row .v { color: #AFAFAF; }
   .dd-pushring .placed, .dd-pairspot .placed { width: 32px; height: 32px; }
   .dd-push .cap, .dd-pair .cap {
-    color: #E8C169; font-weight: 900; font-size: 10px;
+    color: #E4E4E4; font-weight: 900; font-size: 10px;
     letter-spacing: .12em; margin-top: 2px;
   }
   /* Pair Square: two squares, one laid over the other's corner. */
@@ -1282,15 +1295,15 @@
   }
   .dd-pairspot .sq {
     position: absolute; width: 42px; height: 42px; border-radius: 4px;
-    border: 2px solid rgba(107,200,255,.5);
+    border: 2px solid rgba(190,190,190,.5);
   }
   .dd-pairspot .sq.back { top: 0; left: 0; }
   .dd-pairspot .sq.front {
     bottom: 0; right: 0; background: rgba(5,5,5,.8);
-    border-color: #6BC8FF; box-shadow: 0 0 14px rgba(107,200,255,.45);
+    border-color: #EDEDED; box-shadow: 0 0 14px rgba(237,237,237,.4);
   }
-  .dd-pairspot.won .sq.back { border-color: #F2F2F2; }
-  .dd-pairspot.won .sq.front { border-color: #E8C169; }
+  .dd-pairspot.won .sq.back { border-color: #9A9A9A; }
+  .dd-pairspot.won .sq.front { border-color: #FFFFFF; }
   .dd-pairspot .placed {
     position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
   }
