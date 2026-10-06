@@ -2238,7 +2238,9 @@
   }
   .cr-small.wide { width: 100%; }
   .cr-band.dead { border-color: rgba(239,231,210,.22) !important; background: rgba(0,0,0,.12) !important; }
-  .cr-chip { flex: none; position: relative; }
+  /* Round, so the shadow the cells cast under it is round too — square, it
+     read as a dark tile behind the chip with the felt showing at its corners. */
+  .cr-chip { flex: none; position: relative; border-radius: 50%; }
   .cr-chip .scrim {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
     background: rgba(6,26,20,.64); border-radius: 50%; color: #57E06A; font-weight: 900;
