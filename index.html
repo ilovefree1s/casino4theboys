@@ -975,12 +975,12 @@
   /* Push 22 answers it across the table, its own ring rather than the
      4 The Boys coin: two side bets, two pictures. */
   .bj-spot-push22 {
-    right: 22px; top: 0; width: 74px; height: 74px;
+    right: 22px; top: 0; width: 60px; height: 60px;
     background: rgba(18,10,2,.4); border: 2px solid #FFA62E;
     display: grid; place-items: center;
   }
   .bj-spot-push22 .cap {
-    font-family: var(--display); font-size: 11px; line-height: 13px;
+    font-family: var(--display); font-size: 9px; line-height: 10px;
     color: #FFA62E; letter-spacing: .04em; text-align: center;
   }
   /* Push 22's ladder, answering the Pot of Gold across the table. */
@@ -1258,7 +1258,7 @@
     box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 18px rgba(242,242,242,.14);
   }
   .dd-pushring {
-    width: 54px; height: 54px; border: 2.5px solid #C9C9C9; border-radius: 50%;
+    width: 60px; height: 60px; border: 2.5px solid #C9C9C9; border-radius: 50%;
     position: relative; background: none; color: #E8E8E8;
     display: flex; align-items: center; justify-content: center;
     font-family: var(--display); font-size: 9px; line-height: 1.05; text-align: center;
@@ -1280,7 +1280,9 @@
   .dd-paylist .row .v { margin-left: auto; color: #EDEDED; font-weight: 900; }
   /* the pair list still reads as a different list, one step down the grey */
   .dd-pair .dd-paylist .row .v { color: #AFAFAF; }
-  .dd-pushring .placed, .dd-pairspot .placed { width: 32px; height: 32px; }
+  /* The side bets took a 32px chip while every other spot in the app took
+     a 50; there was never a reason for this table's chips to be smaller. */
+  .dd-pushring .placed, .dd-pairspot .placed { width: 50px; height: 50px; }
   .dd-push .cap, .dd-pair .cap {
     color: #E4E4E4; font-weight: 900; font-size: 10px;
     letter-spacing: .12em; margin-top: 2px;
