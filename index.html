@@ -2358,19 +2358,27 @@
     padding: 0;
   }
 
+  /* Out of chips, across the middle of the felt. Three tables used to put
+     a Buy back in among Hit and Stand instead, which is the one row you
+     are not looking at when you have just gone broke. */
   .uth-rebuy {
+    --rb: var(--uth-green);
     position: absolute; inset: 0; z-index: 30; display: none;
     flex-direction: column; align-items: center; justify-content: center;
     background: rgba(0,0,0,.8);
   }
   .uth-rebuy.on { display: flex; }
   .uth-rebuy .ttl {
-    font-family: var(--display); font-size: 20px; color: var(--uth-green);
+    font-family: var(--display); font-size: 20px; color: var(--rb);
   }
   .uth-rebuy .buy {
     margin-top: 14px; font-family: var(--display); font-size: 14px; color: var(--bone);
-    border: 1.5px solid var(--uth-green); border-radius: 999px; padding: 12px 24px;
+    border: 1.5px solid var(--rb); border-radius: 999px; padding: 12px 24px;
   }
+  #screen-baccarat .uth-rebuy { --rb: #E8C169; }
+  #screen-blackjack .uth-rebuy { --rb: #2E7BFF; }
+  #screen-blackjack:has(.bj-bg.b7) .uth-rebuy { --rb: #C71414; }
+  #screen-doubledown .uth-rebuy { --rb: #E4E4E4; }
 
   /* ================= BACCARAT ================= */
   #screen-baccarat { position: relative; background: var(--night); }
@@ -3173,6 +3181,11 @@
       </div>
     </div>
   </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="bj-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="bj-buyin">BUY BACK IN</button>
+  </div>
 </div>
 
 <!-- ========== DOUBLE DOWN MADNESS ========== -->
@@ -3220,6 +3233,11 @@
       <div class="pt-row"><span class="n">22</span><span class="dots"></span><span class="v">SAME COLOR · 50 TO 1</span></div>
       <div class="pt-row"><span class="n">22</span><span class="dots"></span><span class="v">ANY COMBO · 15 TO 1</span></div>
     </div></div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="dd-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="dd-buyin">BUY BACK IN</button>
   </div>
 </div>
 
@@ -3556,15 +3574,6 @@
     <div class="ttl">OUT OF CHIPS</div>
     <button class="buy" id="dz-buyin">BUY BACK IN</button>
   </div>
-  <!-- Play testing's front door and its bust rescue: pick the buy-in. -->
-  <div class="ov" id="fp-buyin">
-    <div class="box fp-box">
-      <div class="fp-ttl">PLAY TESTING</div>
-      <div class="fp-sub">BUY BACK IN</div>
-      <div class="fp-amt" id="fp-amount">$20,000</div>
-      <button class="fp-seat" id="fp-seat">TAKE A SEAT</button>
-    </div>
-  </div>
   <div class="ov" id="dz-paytable">
     <div class="box dz-paybox">
       <div class="big" style="color:#E8C169;font-size:18px;letter-spacing:.14em">DESTROYER PAYS</div>
@@ -3688,6 +3697,11 @@
       <div class="actions" id="actions"></div>
     </div>
   </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="bacc-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="bacc-buyin">BUY BACK IN</button>
+  </div>
 </div>
 
 <div class="road-drawer" id="roadDrawer">
@@ -3707,6 +3721,17 @@
 </div>
 
 <!-- ================= OVERLAYS ================= -->
+<!-- Free play's bust rescue. It lived inside the destroyer screen, and a
+     screen that is not showing hides everything in it however fixed it is -
+     so every BUY BACK IN in the app opened nothing at all. -->
+<div class="ov" id="fp-buyin">
+  <div class="box fp-box">
+    <div class="fp-ttl">PLAY TESTING</div>
+    <div class="fp-sub">BUY BACK IN</div>
+    <div class="fp-amt" id="fp-amount">$20,000</div>
+    <button class="fp-seat" id="fp-seat">TAKE A SEAT</button>
+  </div>
+</div>
 <div class="ov" id="ov-gameover">
   <div class="box">
     <div class="big dead">TAPPED OUT</div>
@@ -7931,22 +7956,22 @@
       b.addEventListener("click", fn);
       return b;
     }
+    /** Free play buys back in; the campaign gets the shell's bust overlay. */
+    function renderRebuy() {
+      $("bj-rebuy").classList.toggle("on",
+        Shell.mode === "testing" && bankroll < 25 && phase === "betting" && bet === 0);
+    }
+    $("bj-buyin").addEventListener("click", function () {
+      freshStack(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
+    });
     function renderActions() {
       var a = $("bj-actions");
       a.innerHTML = "";
+      renderRebuy();
       if (phase === "betting") {
         // No undo: CLEAR takes the whole bet back.
         a.appendChild(actBtn("Clear", false, clearBet));
         a.appendChild(actBtn("Deal", false, deal));
-        if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
-          var buy = document.createElement("button");
-          buy.className = "btn solid";
-          buy.textContent = "Buy back in";
-          buy.addEventListener("click", function () {
-            freshStack(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
-          });
-          a.appendChild(buy);
-        }
       } else if (phase === "player") {
         var h = hands[active];
         // Stand on the left, hit on the right -- the same way round on every
@@ -8625,22 +8650,22 @@
       b.addEventListener("click", fn);
       return b;
     }
+    /** Free play buys back in; the campaign gets the shell's bust overlay. */
+    function renderRebuy() {
+      $("dd-rebuy").classList.toggle("on",
+        Shell.mode === "testing" && bankroll < 25 && phase === "betting" && bet === 0);
+    }
+    $("dd-buyin").addEventListener("click", function () {
+      freshStack(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
+    });
     function renderActions() {
       var a = $("dd-actions");
       a.innerHTML = "";
+      renderRebuy();
       if (phase === "betting") {
         // No undo: CLEAR takes the whole bet back.
         a.appendChild(actBtn("Clear", clearBet));
         a.appendChild(actBtn("Deal", deal));
-        if (Shell.mode === "testing" && bankroll < 25 && bet === 0) {
-          var buy = document.createElement("button");
-          buy.className = "btn solid";
-          buy.textContent = "Buy back in";
-          buy.addEventListener("click", function () {
-            freshStack(function (v) { bankroll = v; renderAll(); setMessage("Place your bet"); });
-          });
-          a.appendChild(buy);
-        }
       } else if (phase === "player") {
         // Standing on a single card is never a play, so it waits for the second.
         if (hand && hand.cards.length >= 2) a.appendChild(actBtn("Stand", stand));
@@ -12754,9 +12779,21 @@
         rack.appendChild(b);
       });
     }
+    /** Free play buys back in; the campaign gets the shell's bust overlay. */
+    function renderRebuy() {
+      $("bacc-rebuy").classList.toggle("on",
+        Shell.mode === "testing" && bankroll < 25 && phase === "betting" && totalStaked() === 0);
+    }
+    $("bacc-buyin").addEventListener("click", function () {
+      freshStack(function (v) {
+        bankroll = v;
+        updateMoney(); renderActions(); renderRack(); renderRebuy(); setMessage("Place your bets");
+      });
+    });
     function renderActions() {
       var a = $("actions");
       a.innerHTML = "";
+      renderRebuy();
       function btn(label, solid, fn) {
         var b = document.createElement("button");
         b.className = "btn " + (solid ? "solid" : "ghost");
@@ -12779,14 +12816,6 @@
         // bet down. Quiet on the left, the go on the right.
         feltBtn("Clear", "#8A93A6", clearBets);
         feltBtn("Deal", "#E8C169", deal);
-        if (Shell.mode === "testing" && bankroll < 25 && totalStaked() === 0) {
-          btn("Buy back in", true, function () {
-            freshStack(function (v) {
-              bankroll = v;
-              updateMoney(); renderActions(); renderRack(); setMessage("Place your bets");
-            });
-          });
-        }
       } else if (phase === "result") {
         feltBtn("New bet", "#8A93A6", function () { nextHand(false); });
         feltBtn("Rebet", "#E8C169", function () { nextHand(true); });
