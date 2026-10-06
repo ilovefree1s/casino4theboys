@@ -1987,14 +1987,18 @@
   }
   .cr-lit b.on { background: #E8C169; border-color: #E8C169; color: #12140F; }
   .cr-row.bets { height: 78px; }
+  /* The lettering rides the top of the box and the chip lands under it, so a
+     bet never sits on the words. Side by side, the chip pushed the name over
+     and half covered it. */
   .cr-side-bet {
-    position: relative; min-width: 0; display: flex; align-items: center; gap: 3px;
-    padding: 0 3px; border-radius: 4px; background: var(--ink);
+    position: relative; min-width: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: flex-start; gap: 2px;
+    padding: 4px 3px 0; border-radius: 4px; background: var(--ink);
     border: 1px solid var(--edge); cursor: pointer;
   }
   .cr-side-bet.on { background: rgba(232,193,105,.16); border: 1.5px solid #E8C169; }
   .cr-side-bet .pl { flex: none; line-height: 0; }
-  .cr-side-bet .t { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+  .cr-side-bet .t { flex: none; width: 100%; min-width: 0; display: flex; flex-direction: column; align-items: center; }
   .cr-side-bet .t b { font-family: var(--display); font-size: 11px; color: #fff; white-space: nowrap; }
   .cr-side-bet .t i { font-style: normal; font-size: 7px; color: rgba(244,250,244,.55); white-space: nowrap; }
   .cr-side-bet .t s {
@@ -11283,8 +11287,8 @@
       function sideBet(key, id, title, set, pays, amt, flex) {
         return '<button class="cr-side-bet' + (amt > 0 ? " on" : "") + '" data-side="' + key + '" data-spot="side-' + key +
           '" style="flex:' + flex + '">' +
-          (amt > 0 ? '<span class="pl">' + chipOn(amt, 26) + "</span>" : "") +
-          '<span class="t"><b>' + title + "</b><i>" + set + "</i><s>" + pays + "</s></span></button>";
+          '<span class="t"><b>' + title + "</b><i>" + set + "</i><s>" + pays + "</s></span>" +
+          (amt > 0 ? '<span class="pl">' + chipOn(amt, 26) + "</span>" : "") + "</button>";
       }
       var side = '<div class="cr-side">';
       // The dealer's box: what you ask the table for rather than bet on it.
