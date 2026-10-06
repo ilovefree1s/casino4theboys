@@ -227,6 +227,7 @@
   /* ---- the campaign lane ----
      CAMPAIGN is the big word on this lane; the money under it is a figure,
      not the headline. */
+  .mm-lane.testing .mm-hdr .nm { font-size: 21px; }
   .mm-lane.campaign .mm-hdr .nm {
     font-size: clamp(34px, 5.2dvh, 46px); line-height: .95;
     text-shadow: 0 0 30px rgba(255,210,77,.45), 0 2px 0 rgba(5,3,10,.9);
@@ -269,7 +270,9 @@
   .mm-plaque .rungs b.off { background: rgba(245,241,232,.16); }
   .mm-plaque .nm { font-family: var(--display); font-style: italic; font-size: 12px; color: #FFE6AE; }
   .mm-plaque .lim { font-family: var(--mono); font-size: 7px; letter-spacing: .1em; color: rgba(245,241,232,.5); }
-  .mm-plaque .go { margin-left: auto; font-size: 9px; color: #FFE6AE; }
+  /* which room this is, of how many, at the right end of the plaque */
+  .mm-plaque .rm { margin-left: auto; font-family: var(--mono); font-size: 9.5px; letter-spacing: .1em; color: #FFE6AE; }
+  .mm-plaque .go { margin-left: 8px; font-size: 9px; color: #FFE6AE; }
   .mm-enter {
     margin-top: 16px; width: 100%; border-radius: 999px; padding: 17px 0;
     font-family: var(--display); font-size: 14px; letter-spacing: .22em; color: #06040A;
@@ -3103,12 +3106,13 @@
           <span class="rungs" id="mm-rungs"></span>
           <span class="nm" id="mm-room">THE BASEMENT</span>
           <span class="lim" id="mm-limits">$25 – $500</span>
+          <span class="rm" id="mm-roomno">1 / 5</span>
           <span class="go">▸</span>
         </button>
         <button class="mm-enter" id="mm-enter">CONTINUE</button>
       </div>
       <!-- every table in the app, one tap from the front page -->
-      <div class="mm-lane" style="--c:#9BE3FB">
+      <div class="mm-lane testing" style="--c:#9BE3FB">
         <i class="edge"></i>
         <div class="mm-hdr">
           <span class="nm">PLAY TESTING</span>
@@ -6132,12 +6136,12 @@
     $("mm-marker").textContent = owed > 0 ? "MARKER $" + fmt(owed) : "";
     $("mm-room").textContent = r.name.toUpperCase();
     $("mm-limits").textContent = roomSign(r);
+    $("mm-roomno").textContent = (Shell.roomIndex() + 1) + " / " + ROOMS.length;
     $("mm-big").textContent = "$" + fmt(bank);
     $("mm-meta").textContent = done ? "THE RUN IS DONE" : "CHASING $" + fmt(goal);
     $("mm-barfill").style.width = Math.max(1, Math.min(100, (bank / goal) * 100)) + "%";
     $("mm-nums").innerHTML = menuNums([
-      ["TO GO",  done ? "—" : "$" + fmt(goal - bank)],
-      ["ROOM",   (Shell.roomIndex() + 1) + " / " + ROOMS.length]
+      ["TO GO",  done ? "—" : "$" + fmt(goal - bank)]
     ]);
     var at = Shell.roomIndex(), rungs = "";
     for (var k = 0; k < ROOMS.length; k++) {
