@@ -227,7 +227,9 @@
   /* ---- the campaign lane ----
      CAMPAIGN is the big word on this lane; the money under it is a figure,
      not the headline. */
-  .mm-lane.testing .mm-hdr .nm { font-size: 21px; }
+  .mm-lane.testing .mm-hdr .nm, .mm-lane.shut .mm-hdr .nm { font-size: 21px; }
+  /* the goal, small after the slash: what the money is measured against */
+  .mm-money .goal { font-size: 14px; margin-left: 8px; color: rgba(255,210,77,.6); }
   .mm-lane.campaign .mm-hdr .nm {
     font-size: clamp(34px, 5.2dvh, 46px); line-height: .95;
     text-shadow: 0 0 30px rgba(255,210,77,.45), 0 2px 0 rgba(5,3,10,.9);
@@ -3098,7 +3100,7 @@
       <div class="mm-lane campaign" style="--c:#FFD24D">
         <i class="edge"></i>
         <div class="mm-hdr"><span class="nm">CAMPAIGN</span></div>
-        <div class="mm-money" id="mm-big">$5,000</div>
+        <div class="mm-money"><span id="mm-big">$5,000</span><span class="goal" id="mm-goal">/ $1,000,000</span></div>
         <div class="mm-chase"><span id="mm-meta">CHASING $1,000,000</span><span class="mm-marker" id="mm-marker"></span></div>
         <div class="mm-bar"><i id="mm-barfill"></i></div>
         <div class="mm-nums" id="mm-nums"></div>
@@ -6138,7 +6140,8 @@
     $("mm-limits").textContent = roomSign(r);
     $("mm-roomno").textContent = (Shell.roomIndex() + 1) + " / " + ROOMS.length;
     $("mm-big").textContent = "$" + fmt(bank);
-    $("mm-meta").textContent = done ? "THE RUN IS DONE" : "CHASING $" + fmt(goal);
+    $("mm-goal").textContent = "/ $" + fmt(goal);
+    $("mm-meta").textContent = done ? "THE RUN IS DONE" : "";
     $("mm-barfill").style.width = Math.max(1, Math.min(100, (bank / goal) * 100)) + "%";
     $("mm-nums").innerHTML = menuNums([
       ["TO GO",  done ? "—" : "$" + fmt(goal - bank)]
