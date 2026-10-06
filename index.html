@@ -3059,7 +3059,8 @@
   }
   .road-log { margin-top: 9px; }
   .road-log .hdr { font-size: 8px; letter-spacing: .25em; color: rgba(245,241,232,.6); margin-bottom: 4px; text-align: center; }
-  .log-row { display: flex; align-items: center; gap: 7px; padding: 1px 2px; width: 190px; margin: 0 auto; }
+  .log-row { display: flex; align-items: center; gap: 7px; padding: 1px 2px; width: 236px; margin: 0 auto; }
+  .log-row .sides { font-size: 8px; font-weight: 800; letter-spacing: .06em; color: var(--glow); }
   .log-row .num { width: 26px; font-size: 10px; color: rgba(245,241,232,.5); text-align: left; }
   .log-row .net { margin-left: auto; font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
   .log-row .net.win { color: var(--glow); }
@@ -13382,12 +13383,18 @@
     }
 
     function renderRoad() {
-      var n = { B: 0, P: 0, T: 0, bp: 0, pp: 0, nat: 0 };
+      var n = { B: 0, P: 0, T: 0, bp: 0, pp: 0, nat: 0, f7: 0, g8: 0, h9: 0, b7: 0, ca: 0 };
       history.forEach(function (rec) {
         n[rec.r]++;
         if (rec.bp) n.bp++;
         if (rec.pp) n.pp++;
         if (rec.nat) n.nat++;
+        var s = rec.sides || {};
+        if (s.fortune7) n.f7++;
+        if (s.golden8) n.g8++;
+        if (s.heavenly9) n.h9++;
+        if (s.blazing7s) n.b7++;
+        if (s.coverAll) n.ca++;
       });
       $("sbTallies").innerHTML = [
         ['<span class="pip B">庄</span>BANKER', n.B],
@@ -13396,6 +13403,11 @@
         ['<span class="pip hollow"></span>B PAIR', n.bp],
         ['<span class="pip hollow P"></span>P PAIR', n.pp],
         ["NATURAL", n.nat],
+        ["FORTUNE 7", n.f7],
+        ["GOLDEN 8", n.g8],
+        ["HEAVENLY 9", n.h9],
+        ["BLAZING 7s", n.b7],
+        ["COVER ALL", n.ca],
       ].map(function (row) {
         return '<div class="sb-tally">' + row[0] + '<span class="n">' + row[1] + "</span></div>";
       }).join("") +
@@ -13434,9 +13446,16 @@
         row.className = "log-row";
         var cls = rec.net > 0 ? "win" : rec.net < 0 ? "loss" : "even";
         var txt = rec.net > 0 ? "+" + fmt(rec.net) : rec.net < 0 ? "−" + fmt(-rec.net) : "even";
+        // the fortune events this hand hit, as short tags
+        var s = rec.sides || {}, tags = [];
+        if (s.fortune7) tags.push("F7");
+        if (s.golden8) tags.push("G8");
+        if (s.heavenly9) tags.push("H9");
+        if (s.blazing7s) tags.push("B7");
         row.innerHTML =
           '<span class="num">#' + (history.length - i) + "</span>" +
           '<span class="bead ' + rec.r + '">' + rec.r + "</span>" +
+          '<span class="sides">' + tags.join(" ") + "</span>" +
           '<span class="net ' + cls + '">' + txt + "</span>";
         rows.appendChild(row);
       });
@@ -13578,6 +13597,8 @@
           bp: h.banker[0].rank === h.banker[1].rank,
           pp: h.player[0].rank === h.player[1].rank,
           nat: !!h.natural,
+          // and the fortune events, marked the same way
+          sides: winningSpots(h),
         });
         var pT = handTotal(h.player), bT = handTotal(h.banker);
         var hi = Math.max(pT, bT), lo = Math.min(pT, bT);
