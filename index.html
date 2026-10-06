@@ -2103,12 +2103,16 @@
     background: var(--ink); border: 1px solid var(--edge);
   }
   .cr-field.on { background: rgba(232,193,105,.16); border-width: 1.5px; }
+  /* The two doubles fill the bar top to bottom, with the number big and
+     PAYS DOUBLE stacked under it in two lines. */
   .cr-field .dbl {
-    flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
-    border: 1.5px solid #E8C169; background: rgba(0,0,0,.35); line-height: 1.05; text-align: center;
+    flex: none; height: 100%; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center;
+    border: 1.5px solid #E8C169; background: rgba(0,0,0,.35); line-height: 1; text-align: center;
   }
-  .cr-field .dbl b { display: block; font-family: var(--display); font-size: 13px; color: #EFE7D2; }
-  .cr-field .dbl i { font-style: normal; font-size: 4.5px; letter-spacing: .04em; color: #E8C169; }
+  .cr-field .dbl b { display: block; font-family: var(--display); font-size: 20px; color: #EFE7D2; }
+  .cr-field .dbl i {
+    display: block; font-style: normal; font-size: 5.5px; line-height: 1.15; letter-spacing: .04em; color: #E8C169;
+  }
   .cr-field .mid { flex: 1; text-align: center; }
   .cr-field .mid .ns {
     display: block; font-family: var(--display); font-size: 12px;
@@ -11426,10 +11430,10 @@
         band("cr-come", "COME", "seven wins &middot; any number travels", bets.comeFlat, "come", !comeOut(), true) +
         "</div>" +
         '<button class="cr-field' + (bets.field > 0 ? " on" : "") + '" id="cr-field" data-spot="field">' +
-          '<span class="dbl"><b>2</b><i>PAYS DOUBLE</i></span>' +
+          '<span class="dbl"><b>2</b><i>PAYS<br>DOUBLE</i></span>' +
           '<span class="mid"><span class="ns">3 &middot; 4 &middot; 9 &middot; 10 &middot; 11</span>' +
             '<span class="w">FIELD</span></span>' +
-          '<span class="dbl"><b>12</b><i>PAYS DOUBLE</i></span>' +
+          '<span class="dbl"><b>12</b><i>PAYS<br>DOUBLE</i></span>' +
           chipOn(bets.field, 30) + "</button>" +
         '<div class="cr-row pair">' +
           '<div style="flex:1.7">' +
