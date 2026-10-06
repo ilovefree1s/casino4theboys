@@ -237,9 +237,14 @@
     text-shadow: 0 0 36px rgba(255,210,77,.6), 0 2px 0 rgba(5,3,10,.9);
   }
   .mm-chase {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
     font-family: var(--mono); font-size: 7.5px; letter-spacing: .2em;
     color: rgba(245,241,232,.5); margin-top: 8px;
   }
+  /* What is owed, in the marker's own red, down on the chase line just
+     above the bar rather than up beside the big word. */
+  .mm-marker { color: #FF3B5C; }
+  .mm-marker:empty { display: none; }
   .mm-bar { height: 3px; border-radius: 99px; margin-top: 11px;
             background: rgba(255,210,77,.14); overflow: hidden; }
   .mm-bar i { display: block; height: 100%; border-radius: 99px;
@@ -3087,7 +3092,7 @@
         <i class="edge"></i>
         <div class="mm-hdr"><span class="nm">CAMPAIGN</span><span class="tag" id="mm-kind">YOUR RUN</span></div>
         <div class="mm-money" id="mm-big">$5,000</div>
-        <div class="mm-chase" id="mm-meta">CHASING $1,000,000</div>
+        <div class="mm-chase"><span id="mm-meta">CHASING $1,000,000</span><span class="mm-marker" id="mm-marker"></span></div>
         <div class="mm-bar"><i id="mm-barfill"></i></div>
         <div class="mm-nums" id="mm-nums"></div>
         <button class="mm-plaque" id="mm-plaque" type="button">
@@ -6120,7 +6125,8 @@
   function paintMenu() {
     var bank = Shell.getBankroll(), goal = Shell.getGoal();
     var r = Shell.getRoom(), owed = Shell.getDebt(), done = bank >= goal;
-    $("mm-kind").textContent = owed > 0 ? "MARKER $" + fmt(owed) : "YOUR RUN";
+    $("mm-kind").textContent = "YOUR RUN";
+    $("mm-marker").textContent = owed > 0 ? "MARKER $" + fmt(owed) : "";
     $("mm-room").textContent = r.name.toUpperCase();
     $("mm-limits").textContent = roomSign(r);
     $("mm-big").textContent = "$" + fmt(bank);
