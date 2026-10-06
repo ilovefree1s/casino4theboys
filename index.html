@@ -71,44 +71,58 @@
      They are one control now, in the lane grammar the front page speaks, and
      each says where it lands rather than only that it leaves. */
   .wayout {
-    --w: #B98CFF;
     display: inline-flex; align-items: center; gap: 9px; flex: none;
     height: 34px; padding: 0 15px 0 11px; border-radius: 10px;
     background: linear-gradient(104deg,
-      color-mix(in srgb, var(--w) 17%, transparent), rgba(6,5,11,.9));
-    border: 1px solid color-mix(in srgb, var(--w) 45%, transparent);
+      color-mix(in srgb, var(--w, #B98CFF) 17%, transparent), rgba(6,5,11,.9));
+    border: 1px solid color-mix(in srgb, var(--w, #B98CFF) 45%, transparent);
     position: relative; overflow: hidden; transition: transform .14s ease;
   }
   .wayout::before {
     content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 2px;
-    background: var(--w); box-shadow: 0 0 10px var(--w);
+    background: var(--w, #B98CFF); box-shadow: 0 0 10px var(--w, #B98CFF);
   }
-  .wayout i { font-style: normal; font-size: 13px; line-height: 1; color: var(--w); }
+  .wayout i { font-style: normal; font-size: 13px; line-height: 1; color: var(--w, #B98CFF); }
   .wayout b {
     font-family: var(--display); font-style: italic; font-size: 12px; line-height: 1;
-    color: color-mix(in srgb, var(--w) 55%, #FFFFFF);
+    color: color-mix(in srgb, var(--w, #B98CFF) 55%, #FFFFFF);
   }
   .wayout:active { transform: scale(.96); }
+  /* The money, in the plate the way out wears, on the other side of the bar.
+     Its lit edge runs down the right because that is the side it sits on,
+     and it reads the same --w, so the pair always match their table. */
+  .purse {
+    position: relative; overflow: hidden; flex: none;
+    display: inline-flex; align-items: center; height: 34px;
+    padding: 0 14px; border-radius: 10px;
+    background: linear-gradient(256deg,
+      color-mix(in srgb, var(--w, #B98CFF) 17%, transparent), rgba(6,5,11,.9));
+    border: 1px solid color-mix(in srgb, var(--w, #B98CFF) 45%, transparent);
+  }
+  .purse::after {
+    content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 2px;
+    background: var(--w, #B98CFF); box-shadow: 0 0 10px var(--w, #B98CFF);
+  }
   /* Each way out takes the colour of the table it is leaving, so the button
      belongs to the felt it sits on rather than to a house palette. The
      screens that are not a game take the bone everything else is set in. */
-  #screen-lobby .wayout, #screen-settings .wayout { --w: #F5F1E8; }
-  #screen-baccarat .wayout { --w: #E8C169; }
-  #screen-bjmenu .wayout { --w: #FF4D4D; }
+  #screen-lobby, #screen-settings { --w: #F5F1E8; }
+  #screen-baccarat { --w: #E8C169; }
+  #screen-bjmenu { --w: #FF4D4D; }
   /* one screen, two tables: the felt wears b7 when it is Blazing */
-  #screen-blackjack .wayout { --w: #2E7BFF; }
-  #screen-blackjack:has(.bj-bg.b7) .wayout { --w: #C71414; }
-  #screen-doubledown .wayout { --w: #E4E4E4; }
-  #screen-poker .wayout { --w: #57E06A; }
-  #screen-holdem .wayout { --w: var(--uth-green); }
-  #screen-djwild .wayout { --w: #2097F9; }
-  #screen-shootout .wayout { --w: #FFB13D; }
-  #screen-miniuth .wayout { --w: #FF5A5A; }
-  #screen-iluvsuits .wayout { --w: #B57BFF; }
-  #screen-roulette .wayout { --w: #B98CFF; }
-  #screen-crapsmenu .wayout { --w: #9BE3FB; }
-  #screen-craps .wayout { --w: #E8C169; }
-  #screen-destroyer .wayout { --w: #FF40A0; }
+  #screen-blackjack { --w: #2E7BFF; }
+  #screen-blackjack:has(.bj-bg.b7) { --w: #C71414; }
+  #screen-doubledown { --w: #E4E4E4; }
+  #screen-poker { --w: #57E06A; }
+  #screen-holdem { --w: var(--uth-green); }
+  #screen-djwild { --w: #2097F9; }
+  #screen-shootout { --w: #FFB13D; }
+  #screen-miniuth { --w: #FF5A5A; }
+  #screen-iluvsuits { --w: #B57BFF; }
+  #screen-roulette { --w: #B98CFF; }
+  #screen-crapsmenu { --w: #9BE3FB; }
+  #screen-craps { --w: #E8C169; }
+  #screen-destroyer { --w: #FF40A0; }
   /* The craps rail is sixteen pixels tall and clips anything that claims
      more, so that one table gets the same control at rail height. */
   .wayout.tight { height: 16px; gap: 5px; border-radius: 6px; padding: 0 8px 0 6px; }
@@ -3140,7 +3154,7 @@
   <div class="bj-table">
     <div class="bj-topbar">
       <button class="wayout" id="bj-back" aria-label="Back to blackjack"><i>&#8249;</i><b>BLACKJACK</b></button>
-      <div class="bj-money">
+      <div class="bj-money purse">
         <span><span class="lbl">BANKROLL </span><span class="val" id="bj-bankroll">5,000</span></span>
         <span><span class="lbl">STAKED </span><span class="val staked" id="bj-staked">0</span></span>
       </div>
@@ -3190,7 +3204,7 @@
   <div class="dd-table">
     <div class="bj-topbar">
       <button class="wayout" id="dd-back" aria-label="Back to blackjack"><i>&#8249;</i><b>BLACKJACK</b></button>
-      <div class="bj-money">
+      <div class="bj-money purse">
         <span><span class="lbl">BANKROLL </span><span class="val" id="dd-bankroll">5,000</span></span>
         <span><span class="lbl">STAKED </span><span class="val staked" id="dd-staked">0</span></span>
       </div>
@@ -3241,7 +3255,7 @@
   <div class="uth-table">
     <div class="uth-topbar">
       <button class="wayout" id="uth-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
-      <div class="uth-money">
+      <div class="uth-money purse">
         <span class="lbl">BANKROLL</span><span class="val" id="uth-bankroll">5,000</span>
         <span class="gap"></span>
         <span class="lbl">AT RISK</span><span class="val risk" id="uth-risk">0</span>
@@ -3284,7 +3298,7 @@
     <div class="dj-top">
       <div class="uth-topbar">
         <button class="wayout" id="dj-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
-        <div class="uth-money">
+        <div class="uth-money purse">
           <span class="lbl">BANKROLL</span><span class="val" id="dj-bankroll">5,000</span>
           <span class="gap"></span>
           <span class="lbl">AT RISK</span><span class="val risk" id="dj-risk">0</span>
@@ -3323,7 +3337,7 @@
     <div class="dj-top">
       <div class="uth-topbar">
         <button class="wayout" id="so-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
-        <div class="uth-money">
+        <div class="uth-money purse">
           <span class="lbl">BANKROLL</span><span class="val" id="so-bankroll">5,000</span>
           <span class="gap"></span>
           <span class="lbl">AT RISK</span><span class="val risk" id="so-risk">0</span>
@@ -3366,7 +3380,7 @@
     <div class="dj-top">
       <div class="uth-topbar">
         <button class="wayout" id="mu-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
-        <div class="uth-money">
+        <div class="uth-money purse">
           <span class="lbl">BANKROLL</span><span class="val" id="mu-bankroll">5,000</span>
           <span class="gap"></span>
           <span class="lbl">AT RISK</span><span class="val risk" id="mu-risk">0</span>
@@ -3408,7 +3422,7 @@
     <div class="dj-top">
       <div class="uth-topbar">
         <button class="wayout" id="is-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
-        <div class="uth-money">
+        <div class="uth-money purse">
           <span class="lbl">BANKROLL</span><span class="val" id="is-bankroll">5,000</span>
           <span class="gap"></span>
           <span class="lbl">AT RISK</span><span class="val risk" id="is-risk">0</span>
@@ -3595,7 +3609,7 @@
     <div class="bacc-top">
       <div class="topbar">
         <button class="wayout" id="bacc-back" aria-label="Back to lobby"><i>&#8249;</i><b>LOBBY</b></button>
-        <div class="money">
+        <div class="money purse">
           <span><span class="lbl">BANKROLL </span><span class="val" id="bankroll">5,000</span></span>
           <span><span class="lbl">STAKED </span><span class="val staked" id="staked">0</span></span>
         </div>
