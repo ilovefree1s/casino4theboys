@@ -243,7 +243,11 @@
   }
   /* What is owed, in the marker's own red, down on the chase line just
      above the bar rather than up beside the big word. */
-  .mm-marker { color: #FF3B5C; }
+  .mm-marker {
+    font-size: 10px; letter-spacing: .14em; color: #FF3B5C;
+    padding: 4px 10px; border-radius: 999px;
+    background: rgba(26,4,9,.85); border: 1px solid rgba(255,59,92,.8);
+  }
   .mm-marker:empty { display: none; }
   .mm-bar { height: 3px; border-radius: 99px; margin-top: 11px;
             background: rgba(255,210,77,.14); overflow: hidden; }
@@ -6133,8 +6137,7 @@
     $("mm-barfill").style.width = Math.max(1, Math.min(100, (bank / goal) * 100)) + "%";
     $("mm-nums").innerHTML = menuNums([
       ["TO GO",  done ? "—" : "$" + fmt(goal - bank)],
-      ["ROOM",   (Shell.roomIndex() + 1) + " / " + ROOMS.length],
-      ["MARKER", owed > 0 ? "$" + fmt(owed) : "CLEAR"]
+      ["ROOM",   (Shell.roomIndex() + 1) + " / " + ROOMS.length]
     ]);
     var at = Shell.roomIndex(), rungs = "";
     for (var k = 0; k < ROOMS.length; k++) {
