@@ -183,7 +183,12 @@
     color: color-mix(in srgb, var(--campaign-gold) 55%, #FFF6DC);
     text-shadow: 0 0 22px rgba(255,210,77,.35), 0 2px 0 rgba(5,3,10,.9);
   }
-  .mm-rail { width: 100%; margin: auto 0; display: flex; flex-direction: column; gap: 11px; }
+  /* The slack splits a quarter above the rail and three quarters below, so
+     the lanes sit up where the thumb is rather than pinned to the bottom
+     edge. The two spacers are pseudo-elements ordered around the rail. */
+  .mm-col::before { content: ""; flex: 1 1 0; order: 1; }
+  .mm-col::after { content: ""; flex: 3 1 0; order: 3; }
+  .mm-rail { width: 100%; margin: 0; order: 2; display: flex; flex-direction: column; gap: 11px; }
   .mm-lane {
     width: 100%; border-radius: 14px; padding: 15px 16px; position: relative; overflow: hidden;
     background: linear-gradient(104deg,
