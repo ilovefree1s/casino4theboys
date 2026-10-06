@@ -3090,7 +3090,7 @@
       <!-- the run -->
       <div class="mm-lane campaign" style="--c:#FFD24D">
         <i class="edge"></i>
-        <div class="mm-hdr"><span class="nm">CAMPAIGN</span><span class="tag" id="mm-kind">YOUR RUN</span></div>
+        <div class="mm-hdr"><span class="nm">CAMPAIGN</span></div>
         <div class="mm-money" id="mm-big">$5,000</div>
         <div class="mm-chase"><span id="mm-meta">CHASING $1,000,000</span><span class="mm-marker" id="mm-marker"></span></div>
         <div class="mm-bar"><i id="mm-barfill"></i></div>
@@ -6125,7 +6125,6 @@
   function paintMenu() {
     var bank = Shell.getBankroll(), goal = Shell.getGoal();
     var r = Shell.getRoom(), owed = Shell.getDebt(), done = bank >= goal;
-    $("mm-kind").textContent = "YOUR RUN";
     $("mm-marker").textContent = owed > 0 ? "MARKER $" + fmt(owed) : "";
     $("mm-room").textContent = r.name.toUpperCase();
     $("mm-limits").textContent = roomSign(r);
