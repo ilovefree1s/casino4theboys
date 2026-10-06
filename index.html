@@ -2096,7 +2096,7 @@
 
   /* The field, with its two doubles in circles the way the glass draws them. */
   .cr-field {
-    position: relative; flex: none; height: 46px; display: flex; align-items: center;
+    position: relative; flex: none; height: 52px; display: flex; align-items: center;
     gap: 6px; padding: 0 6px; border-radius: 6px; cursor: pointer;
     background: var(--ink); border: 1px solid var(--edge);
   }
@@ -11393,8 +11393,13 @@
           '<span class="t"><b>' + label + "</b><i>" + sub + "</i></span>" + chipOn(amount, 30) + "</button>";
       }
       var od = point ? CR.oddsPay(point) : null;
+      // Bands, not blocks: the come takes the same 44 the app gives it, and
+      // the felt under the line stays open. Left to the column it grew to fill
+      // the whole lower half, and read as one big empty box over the glass.
       var block = '<div class="cr-block">' +
+        '<div style="height:44px;flex:none">' +
         band("cr-come", "COME", "seven wins &middot; any number travels", bets.comeFlat, "come", !comeOut(), true) +
+        "</div>" +
         '<button class="cr-field' + (bets.field > 0 ? " on" : "") + '" id="cr-field" data-spot="field">' +
           '<span class="dbl"><b>2</b><i>PAYS DOUBLE</i></span>' +
           '<span class="mid"><span class="ns">3 &middot; 4 &middot; 9 &middot; 10 &middot; 11</span>' +
