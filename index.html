@@ -894,7 +894,7 @@
   .bj-bottom { width: 100%; position: relative; margin-top: 10px; min-height: 0; }
   /* A band above the row for the side bet to stand in, so it is up and left
      of the main spot without landing on the chart. */
-  .bj-spots { position: relative; width: 100%; height: 146px; }
+  .bj-spots { position: relative; width: 100%; height: 178px; }
   .bj-paytable {
     position: absolute; left: 2px; bottom: 0;
     width: 104px; padding: 0;
@@ -960,25 +960,25 @@
      clips each one round, so the web must too. */
   .bj-spot img { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: 50%; }
   .bj-spot-bet {
-    left: 50%; bottom: 3px; transform: translateX(-50%); width: 60px; height: 60px;
+    left: 50%; bottom: 3px; transform: translateX(-50%); width: 92px; height: 92px;
     border: 3px solid #B98CFF; background: rgba(10,6,18,.35);
     display: grid; place-items: center;
-    font-family: var(--display); font-style: italic; font-size: 12px; color: #E3D2FF;
-    box-shadow: 0 0 22px rgba(139,48,217,.55), inset 0 0 18px rgba(139,48,217,.2);
+    font-family: var(--display); font-style: italic; font-size: 15px; color: #E3D2FF;
+    box-shadow: 0 0 22px rgba(139,48,217,.55), inset 0 0 22px rgba(139,48,217,.2);
   }
   /* The side bet rides up and left of the main spot rather than out on the
      rail: it is the bet you lay before the hand, so it sits where the eye
      already is instead of off in the corner by itself. */
-  .bj-spot-boys { left: 22px; top: 0; width: 60px; height: 60px; }
+  .bj-spot-boys { left: 22px; top: 0; width: 74px; height: 74px; }
   /* Push 22 answers it across the table, its own ring rather than the
      4 The Boys coin: two side bets, two pictures. */
   .bj-spot-push22 {
-    right: 22px; top: 0; width: 60px; height: 60px;
+    right: 22px; top: 0; width: 74px; height: 74px;
     background: rgba(18,10,2,.4); border: 2px solid #FFA62E;
     display: grid; place-items: center;
   }
   .bj-spot-push22 .cap {
-    font-family: var(--display); font-size: 9px; line-height: 10px;
+    font-family: var(--display); font-size: 11px; line-height: 13px;
     color: #FFA62E; letter-spacing: .04em; text-align: center;
   }
   /* Push 22's ladder, answering the Pot of Gold across the table. */
@@ -1008,9 +1008,9 @@
   }
   .bj-side { display: flex; flex-direction: column; align-items: center; flex: none; }
   .bj-side-ring {
-    position: relative; width: 54px; height: 54px; border-radius: 50%;
+    position: relative; width: 74px; height: 74px; border-radius: 50%;
     background: rgba(0,0,0,.4); border: 2px solid; padding: 0;
-    font-weight: 900; font-size: 9px; line-height: 10px; letter-spacing: .04em;
+    font-weight: 900; font-size: 11px; line-height: 12px; letter-spacing: .06em;
   }
   .bj-side.blaze .bj-side-ring { border-color: rgba(255,122,26,.85); color: #FF7A1A; }
   .bj-side.lux .bj-side-ring { border-color: rgba(255,63,216,.85); color: #FF3FD8; }
@@ -1018,14 +1018,12 @@
   .bj-side.blaze .pays { color: rgba(255,122,26,.75); }
   .bj-side.lux .pays { color: rgba(255,63,216,.75); }
   .bj-side .placed { width: 44px; height: 44px; }
-  /* Every spot is the chip plus a rim of felt: a hoop with a chip adrift in
-     the middle of it reads as an empty circle with something dropped in. */
   .bj-betring {
-    position: relative; width: 60px; height: 60px; border-radius: 50%; padding: 0; flex: none;
+    position: relative; width: 96px; height: 96px; border-radius: 50%; padding: 0; flex: none;
     border: 3px solid #C71414; background: rgba(16,6,6,.35);
     display: grid; place-items: center;
-    font-family: var(--display); font-style: italic; font-size: 12px; color: #FFC9C9;
-    box-shadow: 0 0 22px rgba(199,20,20,.55), inset 0 0 18px rgba(199,20,20,.2);
+    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFC9C9;
+    box-shadow: 0 0 22px rgba(199,20,20,.55), inset 0 0 22px rgba(199,20,20,.2);
   }
   /* TriLux, printed on the cloth rather than on a card laid over it. */
   .bj-paylist {
@@ -1084,7 +1082,7 @@
   /* The logo ring is where the TriLux chip goes; the placard is just its pay table. */
   .b7-luxspot { width: 118px; flex: none; display: flex; flex-direction: column; align-items: center; }
   .b7-luxring {
-    position: relative; width: 48px; height: 48px; border-radius: 50%;
+    position: relative; width: 63px; height: 63px; border-radius: 50%;
     border: 2px solid rgba(255,42,42,.9); padding: 3px;
   }
   /* Clipped round so the art's square backing never shows on the felt. */
@@ -1251,17 +1249,17 @@
   }
   .dd-odds { width: 100%; padding: 0; background: none; border: 0; }
   .dd-betspot {
-    width: 60px; height: 60px; position: relative; padding: 0; flex: none;
+    width: 92px; height: 92px; position: relative; padding: 0; flex: none;
     background: none; border: 3px solid #F2F2F2; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-style: italic; font-size: 12px; color: #FFFFFF;
-    box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 18px rgba(242,242,242,.14);
+    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFFFFF;
+    box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 22px rgba(242,242,242,.14);
   }
   .dd-pushring {
-    width: 42px; height: 42px; border: 2.5px solid #C9C9C9; border-radius: 50%;
+    width: 54px; height: 54px; border: 2.5px solid #C9C9C9; border-radius: 50%;
     position: relative; background: none; color: #E8E8E8;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-size: 7.5px; line-height: 1.05; text-align: center;
+    font-family: var(--display); font-size: 9px; line-height: 1.05; text-align: center;
     box-shadow: 0 0 18px rgba(220,220,220,.38);
   }
   /* A pay list: the block fills its wing so every line keeps a leader, and the
@@ -1388,7 +1386,7 @@
     font-size: 22px; color: rgba(144,255,61,.85);
   }
   .uth-spot {
-    position: relative; width: 48px; height: 48px; flex: none; padding: 0;
+    position: relative; width: 52px; height: 52px; flex: none; padding: 0;
     display: flex; align-items: center; justify-content: center;
   }
   .uth-spot[disabled] { cursor: default; }
@@ -2538,9 +2536,7 @@
   /* the betting layout: side bets, the pairs and the tie, then the two spots */
   .bc-felt {
     position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
-    /* The spots came down to the size of a chip, which left the cloth with a
-       hole under them; the rows take the slack between themselves instead. */
-    justify-content: space-between; gap: clamp(8px, 2.4vh, 24px); padding: 9px 12px 4px;
+    justify-content: flex-start; gap: clamp(8px, 2.4vh, 24px); padding: 9px 12px 0;
   }
   .bspot {
     position: relative; background: none; border: 0; padding: 0; cursor: pointer;
@@ -2607,10 +2603,10 @@
   .bc-rings { display: flex; justify-content: center; gap: 26px; margin-top: 2px; }
   .bc-ring { width: 98px; text-align: center; }
   .bacc-sheet .bet-circle {
-    position: relative; inset: auto; width: 62px; height: 62px; border-radius: 50%;
+    position: relative; inset: auto; width: 98px; height: 98px; border-radius: 50%;
     background: none; border: 3px solid var(--c); cursor: pointer; z-index: 1;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-size: 9px; letter-spacing: .02em;
+    font-family: var(--display); font-size: 13px; letter-spacing: .08em;
     color: color-mix(in srgb, var(--c) 72%, #FFFFFF);
     box-shadow: 0 0 24px color-mix(in srgb, var(--c) 55%, transparent),
                 inset 0 0 24px color-mix(in srgb, var(--c) 18%, transparent);
