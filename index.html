@@ -708,6 +708,19 @@
     text-shadow: 0 0 10px color-mix(in srgb, var(--c) 85%, transparent), 0 1px 2px rgba(0,0,0,.9);
   }
 
+  /* A newer build is up. A home-screen app holds on to the page it opened
+     with, and the site tells it to for ten minutes besides, so without this
+     a phone could keep playing last week's build with no way of knowing. */
+  .nb-bar {
+    position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+    z-index: 60; display: none; align-items: center; gap: 10px; padding: 9px 14px 9px 16px;
+    border-radius: 999px; background: rgba(5,3,9,.92); border: 1px solid rgba(255,210,77,.6);
+    box-shadow: 0 0 18px rgba(255,210,77,.35), 0 10px 26px -12px rgba(0,0,0,.9);
+    font-family: var(--display); font-size: 10px; letter-spacing: .14em; color: #FFD24D; white-space: nowrap;
+  }
+  .nb-bar.on { display: flex; }
+  .nb-bar b { padding: 5px 10px; border-radius: 999px; background: #FFD24D; color: #06040A; }
+
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
   .st-col {
@@ -5786,6 +5799,38 @@
       if (box) new ResizeObserver(fitCraps).observe(box);
     });
   }
+
+  /*
+   * Asks the site whether a newer build is up than the one this page came
+   * from — on opening, and every time the app comes back to the front — and
+   * offers it. The page's own Last-Modified is what the browser was handed
+   * when it loaded this copy; a HEAD past the cache says what is there now.
+   * Loading is a tap, not automatic, so a hand in progress is never torn up.
+   */
+  (function () {
+    if (!/^https?:/.test(location.protocol) || !window.fetch) return;
+    var bar = document.createElement("div");
+    bar.className = "nb-bar";
+    bar.innerHTML = "A NEW BUILD IS UP <b>LOAD IT</b>";
+    bar.addEventListener("click", function () {
+      bar.textContent = "LOADING…";
+      // Pull the fresh copy through the cache first, so the reload that
+      // follows is handed the new page rather than the old one again.
+      fetch(location.href, { cache: "reload" }).then(function () { location.reload(); },
+        function () { location.reload(); });
+    });
+    document.addEventListener("DOMContentLoaded", function () { document.body.appendChild(bar); });
+    var mine = Date.parse(document.lastModified);
+    function check() {
+      if (!mine || bar.classList.contains("on")) return;
+      fetch(location.href, { method: "HEAD", cache: "no-store" }).then(function (r) {
+        var theirs = Date.parse(r.headers.get("last-modified") || "");
+        if (theirs && theirs > mine + 1000) bar.classList.add("on");
+      }).catch(function () {});
+    }
+    check();
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) check(); });
+  })();
 
   var Shell = {
     mode: "testing", // "campaign" | "testing"
