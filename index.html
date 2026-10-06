@@ -959,12 +959,14 @@
   /* Every spot's art is an opaque plate with a circle painted on it; the app
      clips each one round, so the web must too. */
   .bj-spot img { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: 50%; }
+  /* The chip plus a rim of felt. Only the main bet: the side spots are
+     laid out by hand against art and charts that do not move with them. */
   .bj-spot-bet {
-    left: 50%; bottom: 3px; transform: translateX(-50%); width: 92px; height: 92px;
+    left: 50%; bottom: 3px; transform: translateX(-50%); width: 60px; height: 60px;
     border: 3px solid #B98CFF; background: rgba(10,6,18,.35);
     display: grid; place-items: center;
-    font-family: var(--display); font-style: italic; font-size: 15px; color: #E3D2FF;
-    box-shadow: 0 0 22px rgba(139,48,217,.55), inset 0 0 22px rgba(139,48,217,.2);
+    font-family: var(--display); font-style: italic; font-size: 12px; color: #E3D2FF;
+    box-shadow: 0 0 22px rgba(139,48,217,.55), inset 0 0 18px rgba(139,48,217,.2);
   }
   /* The side bet rides up and left of the main spot rather than out on the
      rail: it is the bet you lay before the hand, so it sits where the eye
@@ -1019,11 +1021,11 @@
   .bj-side.lux .pays { color: rgba(255,63,216,.75); }
   .bj-side .placed { width: 44px; height: 44px; }
   .bj-betring {
-    position: relative; width: 96px; height: 96px; border-radius: 50%; padding: 0; flex: none;
+    position: relative; width: 60px; height: 60px; border-radius: 50%; padding: 0; flex: none;
     border: 3px solid #C71414; background: rgba(16,6,6,.35);
     display: grid; place-items: center;
-    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFC9C9;
-    box-shadow: 0 0 22px rgba(199,20,20,.55), inset 0 0 22px rgba(199,20,20,.2);
+    font-family: var(--display); font-style: italic; font-size: 12px; color: #FFC9C9;
+    box-shadow: 0 0 22px rgba(199,20,20,.55), inset 0 0 18px rgba(199,20,20,.2);
   }
   /* TriLux, printed on the cloth rather than on a card laid over it. */
   .bj-paylist {
@@ -1249,11 +1251,11 @@
   }
   .dd-odds { width: 100%; padding: 0; background: none; border: 0; }
   .dd-betspot {
-    width: 92px; height: 92px; position: relative; padding: 0; flex: none;
+    width: 60px; height: 60px; position: relative; padding: 0; flex: none;
     background: none; border: 3px solid #F2F2F2; border-radius: 50%;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-style: italic; font-size: 15px; color: #FFFFFF;
-    box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 22px rgba(242,242,242,.14);
+    font-family: var(--display); font-style: italic; font-size: 12px; color: #FFFFFF;
+    box-shadow: 0 0 22px rgba(242,242,242,.42), inset 0 0 18px rgba(242,242,242,.14);
   }
   .dd-pushring {
     width: 54px; height: 54px; border: 2.5px solid #C9C9C9; border-radius: 50%;
@@ -2602,11 +2604,15 @@
   /* the two spots the game is actually about */
   .bc-rings { display: flex; justify-content: center; gap: 26px; margin-top: 2px; }
   .bc-ring { width: 98px; text-align: center; }
+  /* The chip sits on the circle, not halfway down the circle and its pay
+     line. It has to outrank .bspot .placed, which is declared later. */
+  .bacc-sheet .bc-ring .placed { top: 31px; }
   .bacc-sheet .bet-circle {
-    position: relative; inset: auto; width: 98px; height: 98px; border-radius: 50%;
+    position: relative; inset: auto; width: 62px; height: 62px; margin: 0 auto;
+    border-radius: 50%;
     background: none; border: 3px solid var(--c); cursor: pointer; z-index: 1;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--display); font-size: 13px; letter-spacing: .08em;
+    font-family: var(--display); font-size: 9px; letter-spacing: .02em;
     color: color-mix(in srgb, var(--c) 72%, #FFFFFF);
     box-shadow: 0 0 24px color-mix(in srgb, var(--c) 55%, transparent),
                 inset 0 0 24px color-mix(in srgb, var(--c) 18%, transparent);
