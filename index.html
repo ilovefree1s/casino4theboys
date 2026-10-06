@@ -5999,8 +5999,9 @@
     }
   }
   function playDraw(n) { playClip(drawAudio, n, 95); }
-  // a card coming over is a quieter thing than one hitting the cloth
-  function playTurn(n) { playClip(turnAudio, n, 110, 0.25); }
+  // a card coming over is a much quieter thing than one hitting the cloth:
+  // an eighth of the pitch, so it reads as a rustle under it
+  function playTurn(n) { playClip(turnAudio, n, 110, 0.125); }
   (function watchTheDeal() {
     /*
      * Blackjack repaints a hand by throwing the row away and building a new
@@ -12986,21 +12987,27 @@
       t(190, function () { pitch("b", h.banker[0]); });
       t(380, function () { pitch("p", h.player[1]); });
       t(570, function () { pitch("b", h.banker[1]); });
-      t(900, function () { flip("p", 0, handTotal(h.player.slice(0, 1))); });
-      t(1250, function () { flip("b", 0, handTotal(h.banker.slice(0, 1))); });
-      t(1600, function () { flip("p", 1, handTotal(h.player.slice(0, 2))); });
-      t(1950, function () { flip("b", 1, handTotal(h.banker.slice(0, 2))); });
-      var when = 1950;
+      // The fourth back lands at 570 and the card takes half a second to
+      // finish falling, so the squeeze waits for it: turning one over while
+      // the last one is still landing is two sounds on top of each other.
+      t(1100, function () { flip("p", 0, handTotal(h.player.slice(0, 1))); });
+      t(1450, function () { flip("b", 0, handTotal(h.banker.slice(0, 1))); });
+      t(1800, function () { flip("p", 1, handTotal(h.player.slice(0, 2))); });
+      t(2150, function () { flip("b", 1, handTotal(h.banker.slice(0, 2))); });
+      var when = 2150;
+      // A third card waits on its own fall the same way: 520 clears the half
+      // second the card takes to land, where 450 turned it while it was
+      // still going.
       if (h.player.length === 3) {
         when += 650;
         t(when, function () { setMessage("Player draws…"); addThird("p", h.player[2]); });
-        when += 450;
+        when += 520;
         t(when, function () { flip("p", 2, handTotal(h.player)); });
       }
       if (h.banker.length === 3) {
         when += 650;
         t(when, function () { setMessage("Banker draws…"); addThird("b", h.banker[2]); });
-        when += 450;
+        when += 520;
         t(when, function () { flip("b", 2, handTotal(h.banker)); });
       }
       t(when + 1000, function () {
