@@ -203,7 +203,7 @@
      for taps that buy nothing. */
   .mm-games { display: flex; gap: 7px; margin-top: 15px; }
   .mm-game {
-    flex: 1; min-width: 0; height: clamp(128px, 21dvh, 176px); border-radius: 11px; padding: 0;
+    flex: 1; min-width: 0; height: clamp(150px, 21dvh, 176px); border-radius: 11px; padding: 0;
     position: relative; overflow: hidden;
     display: flex; flex-direction: column; align-items: center;
     background: linear-gradient(168deg,
@@ -214,7 +214,9 @@
   .mm-game:active { transform: scale(.95); }
   /* the art is cut wider than the tile on purpose: these are five narrow
      slots on a phone, and a picture that fits inside one is unreadable */
-  .mm-game .art { position: relative; width: 100%; height: 104px; flex: none; overflow: hidden; }
+  /* The picture takes whatever the words leave, rather than claiming a
+     fixed slice and pushing them off the bottom of a shorter tile. */
+  .mm-game .art { position: relative; width: 100%; flex: 1 1 auto; min-height: 0; overflow: hidden; }
   .mm-game .art img {
     position: absolute; left: 50%; top: 50%; width: 132%; max-width: none;
     margin-left: -66%; transform: translateY(-50%);
@@ -238,7 +240,7 @@
      dark the picture leaves at the bottom */
   .mm-game em {
     font-family: var(--display); font-style: italic; font-size: 40px; line-height: 1;
-    color: var(--g); margin: auto 0 0;
+    color: var(--g); margin: 0;
     text-shadow: 0 0 20px color-mix(in srgb, var(--g) 55%, transparent),
                  0 2px 0 rgba(4,3,8,.9);
   }
