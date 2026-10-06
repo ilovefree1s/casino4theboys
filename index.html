@@ -2753,6 +2753,11 @@
     position: relative; flex: none; display: flex; flex-direction: column; align-items: center;
     gap: 4px; padding: 6px 0 calc(6px + env(safe-area-inset-bottom));
   }
+  /* The slack splits a quarter above the rack (the felt grows by one share)
+     and three quarters below it, so the chips and the buttons sit up under
+     the spots rather than pinned to the bottom edge with a band of empty
+     felt above them. */
+  .bacc-sheet::after { content: ""; position: relative; flex: 3 1 0; }
   /* The table's own buttons. Quiet on the left, the go on the right, both
      cut from the same pill so the pair reads as one control. */
   .ft-btn {
