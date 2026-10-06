@@ -2491,18 +2491,18 @@
   .dz-payrows > div b { color: #E8C169; }
   .dz-payrows .sp { height: 8px; }
   #dz-paytable .sub { font-size: 10px; line-height: 14px; color: rgba(245,241,232,.6); }
-  /* The bubble: the dice-tray runs here during a hand, in the felt's pinks.
-     Gravity pulls toward the top of the field, so a throw lands in clear view
-     between the board above and the hand below. */
+  /* The dice run over the whole table during a hand, the way craps throws
+     them: the field is the screen under the money row, gravity pulls toward
+     the top, and the pair comes home down by the chips. The felt under it
+     still takes its taps; only the dice answer a hand. */
   #dz-tray {
-    display: none; width: 100%; max-width: 340px; height: 300px; margin-top: 6px;
-    border-radius: 12px; background: rgba(20,6,16,.55);
-    border: 1.5px solid rgba(255,64,160,.35);
+    display: none;
     --dt-face: #F7F3FA; --dt-pip: #140610; --dt-size: 52px;
     --dt-hold: rgba(255,64,160,.5); --dt-line: rgba(255,64,160,.4);
   }
   #dz-tray.on { display: block; }
-  #dz-tray .dt-field { min-height: 0; }
+  #dz-tray .dt-field { position: absolute; inset: 44px 0 0; min-height: 0; }
+  #dz-tray .dt-line { display: none; }
   /* The letter die wears battleship red with white call letters; the
      number die calls a plain numeral instead of pips. */
   #dz-tray [data-die="0"] .dt-face { background: #C81428; }
@@ -3730,8 +3730,6 @@
       <div class="dz-owed" id="dz-owed"></div>
       <div class="uth-message" id="dz-message">Place your bet</div>
       <div class="dj-pills" id="dz-results"></div>
-      <!-- The dice themselves: FIRE throws them, or pick one up and flick it. -->
-      <div id="dz-tray"></div>
     </div>
     <div class="dz-bottom">
       <div class="dz-betrow">
@@ -3743,6 +3741,9 @@
       <div class="uth-actions" id="dz-actions"></div>
     </div>
   </div>
+  <!-- The dice, over the whole table the way craps throws them: FIRE throws
+       them, or pick one up and flick it. They come home down by the chips. -->
+  <div class="cr-tray" id="dz-tray"></div>
   <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
   <div class="uth-rebuy" id="dz-rebuy">
     <div class="ttl">OUT OF CHIPS</div>
@@ -12827,6 +12828,9 @@
       if (tray) return tray;
       tray = DiceTray.create($("dz-tray"), {
         count: 2, size: 52, volume: 0.7,
+        // The whole table is the field now, so the throw is longer and the
+        // pair sits down by the chips between shots.
+        power: 1.5, homeX: 50, homeY: 80,
         // These faces carry a letter and a numeral, which can land on their
         // head where pips cannot, so a settled die is stood back up.
         upright: true,
