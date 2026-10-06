@@ -1168,7 +1168,9 @@
     display: grid; grid-template-columns: 118px 1fr 118px; align-items: center; gap: 0;
     justify-items: center;
   }
-  .bj-sidespots.b7 .b7-trilux { justify-self: start; }
+  /* The two outer lanes: TriLux stacks its ring over its pay table in the
+     left one; the right one waits for the next side bet. */
+  .b7-lane { width: 118px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .b7-trilux { width: 118px; padding: 0; border-radius: 10px; position: relative; }
   .b7-trilux img { width: 100%; display: block; }
   /* The logo ring is where the TriLux chip goes; the placard is just its pay table. */
@@ -8098,12 +8100,17 @@
       // Blazing 7s rides free, so only the main bet and TriLux take chips.
       var row = document.createElement("div");
       row.className = "bj-sidespots b7";
+      // TriLux takes the left lane whole: its ring over its pay table. The
+      // right lane is kept for the next side bet.
       row.innerHTML =
-        '<button class="b7-trilux" id="bj-b7pays">' + triluxPaysHtml() + "</button>" +
+        '<div class="b7-lane">' +
+          '<div class="b7-luxspot"><button class="b7-luxring spot" id="bj-luxspot">' +
+          '<img src="' + BOYS_IMG + '" alt="TriLux side bet"><div class="placed"></div></button>' +
+          '<span class="cap">TRILUX</span></div>' +
+          '<button class="b7-trilux" id="bj-b7pays">' + triluxPaysHtml() + "</button>" +
+        '</div>' +
         '<button class="bj-betring spot" id="bj-betspot">BET<div class="placed"></div></button>' +
-        '<div class="b7-luxspot"><button class="b7-luxring spot" id="bj-luxspot">' +
-        '<img src="' + BOYS_IMG + '" alt="TriLux side bet"><div class="placed"></div></button>' +
-        '<span class="cap">TRILUX</span></div>';
+        '<div class="b7-lane" id="bj-nextlane"></div>';
       on(row, "#bj-b7pays", showSidePays);
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
