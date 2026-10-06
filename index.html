@@ -519,20 +519,28 @@
     text-shadow: 0 0 28px color-mix(in srgb, var(--st-a) 70%, transparent),
                  0 2px 0 rgba(5,3,10,.9);
   }
+  /* The small print is read, not decoration, so it is set large enough to
+     read: the list of tables, and the limits under it. */
   .st-meta {
-    font-family: var(--mono); font-size: 7px; letter-spacing: .18em; margin-top: 6px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .16em; margin-top: 8px;
     color: rgba(245,241,232,.62); text-align: center; padding: 0 10px;
   }
-  .st-nums { display: flex; justify-content: center; gap: 24px; margin-top: 8px; }
+  .st-nums { display: flex; justify-content: center; gap: 28px; margin-top: 10px; }
   .st-nums div { text-align: center; font-family: var(--mono); }
-  .st-nums .k { font-size: 6px; letter-spacing: .18em; color: rgba(245,241,232,.4); }
-  .st-nums .v { font-size: 14px; margin-top: 1px; color: var(--bone); }
-  .st-enter {
-    margin-top: 11px; font-family: var(--display); font-size: 11px; letter-spacing: .18em;
-    color: #06040A; background: var(--st-a); padding: 9px 24px; border-radius: 999px;
-    box-shadow: 0 0 26px color-mix(in srgb, var(--st-a) 75%, transparent);
+  .st-nums .k { font-size: 8.5px; letter-spacing: .18em; color: rgba(245,241,232,.5); }
+  .st-nums .v { font-size: 18px; margin-top: 2px; color: var(--bone); }
+  /* The way in: the lit ring every plate in the app wears, in the room's
+     colour, where the TAKE A SEAT pill used to be. */
+  .st-play {
+    margin-top: 14px; width: 60px; height: 60px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--display); font-size: 12px; color: #FFFFFF;
+    background: rgba(5,3,9,.5); border: 2.5px solid var(--st-a);
+    box-shadow: 0 0 20px color-mix(in srgb, var(--st-a) 75%, transparent),
+                inset 0 0 14px color-mix(in srgb, var(--st-a) 28%, transparent);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--st-a) 85%, transparent), 0 1px 2px rgba(0,0,0,.9);
   }
-  .st-enter:active { transform: scale(.97); }
+  .st-play:active { transform: scale(.95); }
   .st-fade { transition: opacity .22s ease, transform .22s ease; }
   #screen-lobby.turning .st-fade { opacity: 0; transform: scale(.97) translateY(6px); }
   /* The rest of the floor. A second tap on the room you are stood in goes in,
@@ -3112,7 +3120,7 @@
       <div class="st-big st-fade" id="st-big">BACCARAT</div>
       <div class="st-meta st-fade" id="st-meta">PUNTO BANCO · SIDE BETS · 8-DECK SHOE</div>
       <div class="st-nums st-fade" id="st-nums"></div>
-      <button class="st-enter st-fade" id="st-enter">TAKE A SEAT</button>
+      <button class="st-play st-fade" id="st-enter" aria-label="Play">PLAY</button>
       <div class="st-strip" id="st-strip"></div>
     </div>
   </div>
@@ -6315,7 +6323,6 @@
     $("st-hero").alt = r.name;
     $("st-big").textContent = r.name;
     $("st-meta").textContent = r.meta;
-    $("st-enter").textContent = "TAKE A SEAT";
     $("st-nums").innerHTML = menuNums([
       ["MIN", L.enforced ? "$" + fmt(L.min) : "ANY"],
       ["TABLES", String(r.tables)],
