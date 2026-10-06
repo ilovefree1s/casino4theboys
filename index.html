@@ -2087,8 +2087,6 @@
     font-family: var(--display); font-size: 5.5px; letter-spacing: .02em; color: rgba(239,231,210,.5);
   }
   .cr-places span b { display: block; font-size: 7px; color: #fff; }
-  .cr-box .num.word { font-size: 13px; }
-  .cr-box.taken .num.word { font-size: 11px; }
 
   .cr-act {
     flex: 1; min-height: 0; border-radius: 5px; display: grid; place-items: center;
@@ -11354,7 +11352,8 @@
         "<span>PASS LINE</span></button>";
 
       var NUMS = [2, 3, 4, 5, 6, 8, 9, 10, 11, 12];
-      var WORD = { 6: "SIX", 9: "NINE" };
+      // The machine spells out six and nine, since upside down across a table
+      // they are the same numeral. Nobody reads this one upside down.
       main += '<div class="cr-nums">';
       NUMS.forEach(function (n) {
         var isPoint = point === n, placed = bets.place[n] || 0, come = bets.comePoints[n];
@@ -11365,7 +11364,7 @@
         main += '<button class="cr-box' + (isPoint ? " pt" : "") + (placed > 0 ? " taken" : "") +
           '" data-place="' + n + '" data-spot="place-' + n + '">' +
           (placed > 0 ? '<span class="pl">' + chipOn(placed, 30) + "</span>" : "") +
-          '<span class="num' + (WORD[n] ? " word" : "") + '">' + (WORD[n] || n) + "</span>" +
+          '<span class="num">' + n + "</span>" +
           (asleep ? '<span class="offtag">OFF</span>' : called ? '<span class="offtag on">ON</span>' : "") +
           (come ? '<span class="come" data-comeodds="' + n + '">C ' + come.flat +
             (come.odds ? '<b>+' + come.odds + "</b>" : "") + "</span>" : "") +
@@ -11375,13 +11374,11 @@
       main += "</div>";
       // What the number pays when it hits, under its box. The glass prints a
       // price (13 FOR 2), which reads as what the bet costs; this prints what
-      // it wins (11 TO 2) — and once a bet is down, the dollars that bet wins.
+      // it wins (11 TO 2), and says the same thing whether a chip is on it or not.
       main += '<div class="cr-places">';
       NUMS.forEach(function (n) {
-        var pp = CR.placePay(n), placed = bets.place[n] || 0;
-        main += placed > 0
-          ? "<span>WINS<b>+" + fmt(wholeDollars(placed * pp[0] / pp[1])) + "</b></span>"
-          : "<span>PAYS<b>" + pp[0] + " TO " + pp[1] + "</b></span>";
+        var pp = CR.placePay(n);
+        main += "<span>PAYS<b>" + pp[0] + " TO " + pp[1] + "</b></span>";
       });
       main += "</div>";
 
