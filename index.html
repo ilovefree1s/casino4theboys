@@ -89,6 +89,26 @@
     color: color-mix(in srgb, var(--w) 55%, #FFFFFF);
   }
   .wayout:active { transform: scale(.96); }
+  /* Each way out takes the colour of the table it is leaving, so the button
+     belongs to the felt it sits on rather than to a house palette. The
+     screens that are not a game take the bone everything else is set in. */
+  #screen-lobby .wayout, #screen-settings .wayout { --w: #F5F1E8; }
+  #screen-baccarat .wayout { --w: #E8C169; }
+  #screen-bjmenu .wayout { --w: #FF4D4D; }
+  /* one screen, two tables: the felt wears b7 when it is Blazing */
+  #screen-blackjack .wayout { --w: #2E7BFF; }
+  #screen-blackjack:has(.bj-bg.b7) .wayout { --w: #C71414; }
+  #screen-doubledown .wayout { --w: #FF9C3A; }
+  #screen-poker .wayout { --w: #57E06A; }
+  #screen-holdem .wayout { --w: var(--uth-green); }
+  #screen-djwild .wayout { --w: #2097F9; }
+  #screen-shootout .wayout { --w: #FFB13D; }
+  #screen-miniuth .wayout { --w: #FF5A5A; }
+  #screen-iluvsuits .wayout { --w: #B57BFF; }
+  #screen-roulette .wayout { --w: #B98CFF; }
+  #screen-crapsmenu .wayout { --w: #9BE3FB; }
+  #screen-craps .wayout { --w: #E8C169; }
+  #screen-destroyer .wayout { --w: #FF40A0; }
   /* The craps rail is sixteen pixels tall and clips anything that claims
      more, so that one table gets the same control at rail height. */
   .wayout.tight { height: 16px; gap: 5px; border-radius: 6px; padding: 0 8px 0 6px; }
