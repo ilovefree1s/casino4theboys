@@ -11993,17 +11993,14 @@
         var at = i / steps, seg = Math.floor((fromDeg + delta * ease(at)) / segDeg);
         if (seg !== lastSeg) { lastSeg = seg; raw.push(at * ms / 1000); }
       }
-      if (raw.length < 2) return raw;
-      var MIN = 0.024, sw = raw.length;
-      for (var k = 1; k < raw.length; k++) { if (raw[k] - raw[k - 1] >= MIN) { sw = k; break; } }
-      var out = [], bound = raw[sw - 1] + MIN / 2;
-      for (var t = raw[0]; t < bound; t += MIN) out.push(t);
-      for (var r = sw; r < raw.length; r++) { if (!out.length || raw[r] - out[out.length - 1] >= MIN * 0.8) out.push(raw[r]); }
-      return out;
+      // every paddle gets its click at the moment it passes the clapper; a
+      // run too fast to hear as clicks is quietened rather than thinned, so
+      // the sound is one click a light all the way down
+      return raw;
     }
     function startWheelSound(clickTimes) {
       stopWheelSound(true);
-      var volume = SOUND.sfx * 0.9;
+      var volume = SOUND.sfx * 0.45;
       if (!wheelCtx || !wheelClick || !(volume > 0) || !clickTimes || !clickTimes.length) return;
       try {
         if (wheelCtx.state === "suspended") wheelCtx.resume();
@@ -12015,7 +12012,10 @@
           var s = wheelCtx.createBufferSource();
           s.buffer = wheelClick;
           s.playbackRate.value = 0.96 + Math.random() * 0.08;
-          s.connect(master);
+          // the closer the clicks, the quieter each one, so a blur stays a blur
+          var gap = i ? clickTimes[i] - clickTimes[i - 1] : 1, g = wheelCtx.createGain();
+          g.gain.value = Math.min(1, Math.max(0.12, gap / 0.024));
+          s.connect(g); g.connect(master);
           s.start(t0 + clickTimes[i]);
           srcs.push(s);
         }
