@@ -2631,6 +2631,20 @@
     border-right: calc(var(--sw) * 17 / 836) solid transparent;
     border-top: calc(var(--sw) * 22 / 836) solid #FFD24D;
   }
+  /* Double Ball splits the strip into two belts, one a ball each: the top
+     runs left under a gold marker, the bottom runs right under a silver
+     one, and both come to rest together. */
+  .rl-belt.second { display: none; }
+  #screen-roulette.doubleball .rl-belt { height: 3.72%; }
+  #screen-roulette.doubleball .rl-belt.second { display: block; top: 12.66%; }
+  #screen-roulette.doubleball .rl-strip .rl-cell { padding: calc(var(--sw) * 4 / 836) calc(var(--sw) * 3 / 836); }
+  #screen-roulette.doubleball .rl-strip .rl-cell > span { font-size: calc(var(--sw) * 30 / 836); }
+  #screen-roulette.doubleball .rl-marker .point { border-top-width: calc(var(--sw) * 11 / 836); border-left-width: calc(var(--sw) * 10 / 836); border-right-width: calc(var(--sw) * 10 / 836); }
+  .rl-belt.second .rl-marker .frame { border-color: #E6E6F0; }
+  .rl-belt.second .rl-marker .point {
+    top: auto; bottom: 0; border-top: none;
+    border-bottom: calc(var(--sw) * 11 / 836) solid #E6E6F0;
+  }
   .rl-felt { position: absolute; inset: 0; }
   .rl-felt .rl-tap { position: absolute; }
   .rl-felt .rl-chip {
@@ -3673,6 +3687,7 @@
       <div class="rl-money staked" id="rl-staked">STAKED  0</div>
       <div class="rl-sign" id="rl-sign"><span class="nm" id="rl-sign-nm"></span><span class="sub" id="rl-sign-sub"></span></div>
       <div class="rl-belt" id="rl-belt"><div class="rl-strip" id="rl-strip"></div><div class="fade"></div><div class="rl-marker"><div class="frame"></div><div class="point"></div></div></div>
+      <div class="rl-belt second" id="rl-belt2"><div class="rl-strip" id="rl-strip2"></div><div class="fade"></div><div class="rl-marker"><div class="frame"></div><div class="point"></div></div></div>
       <div class="rl-felt" id="rl-felt"></div>
       <div class="rl-msg" id="rl-msg"></div>
       <button class="rl-btn clear" id="rl-clear">CLEAR</button>
@@ -13919,10 +13934,10 @@
     var phase = "betting", pocket = null, lastWin = 0, reelStop = 0, staked = 0, raf = null, dragGuard = 0, renderRing = null;
     // Which table this is. The felt is the same; the wheel and the pays are not.
     var variant = "classic", strikes = {}, pocket2 = null;
+    // Double Ball's second belt, the one that runs the other way; its own count, read the same way.
+    var reelStop2 = 0;
     // Lightning: how long the struck numbers are shown before the ball goes.
     var STRIKE_MS = 1500;
-    // Double Ball: the second ball's run is a short one, on from the pocket the first found.
-    var SECOND_MS = 1900, SECOND_TURNS = 2;
     var SIGNS = {
       lightning: ["⚡ LIGHTNING", "STRUCK STRAIGHT UP PAYS 50X TO 500X", "#FFD24D"],
       doubleball: ["DOUBLE BALL", "EITHER BALL 17 TO 1 · BOTH 1300 TO 1", "#E6E6F0"]
@@ -14181,8 +14196,9 @@
       var u = 1 - t;
       return 3 * u * u * t * p1y + 3 * u * t * t * p2y + t * t * t;
     }
-    function layBelt(val) {
-      var strip = $("rl-strip");
+    function layBelts() { layBelt(reelStop); if (variant === "doubleball") layBelt(reelStop2, "rl-strip2"); }
+    function layBelt(val, stripId) {
+      var strip = $(stripId || "rl-strip");
       var base = Math.floor(val), frac = val - base;
       var cellPx = $("rl-sheet").clientWidth * A.BELT_CELL / A.W;
       var html = "";
@@ -14193,13 +14209,14 @@
       strip.innerHTML = html;
       strip.style.transform = "translateX(" + (-(6.5 + frac) * cellPx) + "px)";
     }
-    function animateBelt(from, to, ms) {
+    function animateBelt(from, to, ms, from2, to2) {
       if (raf) cancelAnimationFrame(raf);
       var start = performance.now();
       function frame(now) {
         var t = Math.min(1, (now - start) / ms);
         var e = cubicBezierY(0.82, 1, t);
         layBelt(from + (to - from) * e);
+        if (from2 != null) layBelt(from2 + (to2 - from2) * e, "rl-strip2");
         if (t < 1) raf = requestAnimationFrame(frame); else raf = null;
       }
       raf = requestAnimationFrame(frame);
@@ -14235,20 +14252,15 @@
         return;
       }
       if (variant === "doubleball") {
-        // The first ball runs the full spin and gets its star; the second
-        // takes a short run on from there.
+        // Two belts run at once, the top one left and the bottom one right,
+        // and both balls come down together.
         var first = spinWheel(), second = spinWheel();
-        runBelt(first, TURNS, SPIN_MS);
+        var stop1 = aim(reelStop, first, TURNS, false), stop2 = aim(reelStop2, second, TURNS, true);
+        animateBelt(reelStop, stop1, SPIN_MS, reelStop2, stop2);
+        reelStop = stop1; reelStop2 = stop2;
         setTimeout(function () {
-          pocket = first;
-          msg("First ball " + label(first) + " — second ball coming"); renderFelt(); setMessage();
-          setTimeout(function () {
-            runBelt(second, SECOND_TURNS, SECOND_MS);
-            setTimeout(function () {
-              pocket2 = second;
-              settle(label(first) + " & " + label(second), function (bet, stake) { return settleDoubleBall(bet, stake, first, second); });
-            }, SECOND_MS + 350);
-          }, 700);
+          pocket = first; pocket2 = second;
+          settle(label(first) + " & " + label(second), function (bet, stake) { return settleDoubleBall(bet, stake, first, second); });
         }, SPIN_MS + 350);
         return;
       }
@@ -14263,11 +14275,17 @@
     /** Wind the reel [turns] whole turns on and stop it where [result] sits,
      *  so the belt always travels forward and lands under the marker. */
     function runBelt(result, turns, ms) {
-      var slot = WHEEL.indexOf(result);
-      var stop = reelStop + turns * WHEEL.length;
-      stop += (((slot - (stop % WHEEL.length)) % WHEEL.length) + WHEEL.length) % WHEEL.length;
+      var stop = aim(reelStop, result, turns, false);
       animateBelt(reelStop, stop, ms);
       reelStop = stop;
+    }
+    /** Where a belt at [from] must stop to show [result] after [turns] whole
+     *  turns: on past it, or back the other way for the belt that runs right. */
+    function aim(from, result, turns, backwards) {
+      var n = WHEEL.length, slot = WHEEL.indexOf(result), stop;
+      function mod(a) { return ((a % n) + n) % n; }
+      if (!backwards) { stop = from + turns * n; return stop + mod(slot - mod(stop)); }
+      stop = from - turns * n; return stop - mod(mod(stop) - slot);
     }
     /** [pay] is the table's rule for one wager; [text] is what the message calls the result. */
     function settle(text, pay) {
@@ -14359,6 +14377,7 @@
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       variant = table || "classic";
       renderSign();
+      $("screen-roulette").classList.toggle("doubleball", variant === "doubleball");
       // The last bet survives leaving the table: a signed marker walks the
       // player out to the menu, and REBET must still work on the way back.
       bets = {}; defs = {}; cens = {}; chipHist = [];
@@ -14370,7 +14389,7 @@
       // The screen is shown right after enter(), so the sheet has no width
       // yet — size the belt and the --sw scale once it is on the glass.
       requestAnimationFrame(function () {
-        setSheetVar(); layBelt(reelStop); renderAll(); if (renderRing) renderRing();
+        setSheetVar(); layBelts(); renderAll(); if (renderRing) renderRing();
       });
       Shell.gate(refresh);
     }
@@ -14424,7 +14443,7 @@
     $("rl-spin").addEventListener("click", spin);
     $("rl-rebet").addEventListener("click", rebet);
     window.addEventListener("resize", function () {
-      if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelt(reelStop); }
+      if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelts(); }
     });
     return { enter: enter };
   })();
