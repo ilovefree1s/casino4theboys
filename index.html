@@ -2972,10 +2972,12 @@
   /* The old code-drawn baccarat circles are gone; their .bet-circle box
      shadow was bleeding an ink ring onto the painted rings. */
   .actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; min-height: 46px; }
+  /* The board slides out from the left, level with the middle of the felt;
+     its pull sits on the felt under PLAYER PAIR. */
   .road-drawer {
-    position: fixed; top: env(safe-area-inset-top, 0px); z-index: 20;
-    right: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
-    display: none; flex-direction: column; align-items: flex-end;
+    position: fixed; top: 50%; transform: translateY(-50%); z-index: 20;
+    left: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
+    display: none; flex-direction: column; align-items: flex-start;
   }
   #screen-baccarat.on .road-drawer { display: flex; }
   .road-panel {
@@ -3067,12 +3069,14 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
+  /* The pull stays above the board, so it can close it too. */
+  .road-tabrow { display: flex; margin-top: -3px; position: relative; z-index: 21; }
   .road-tab {
     background: rgba(14,10,11,.9); border: 1.5px solid var(--trim);
-    border-radius: 0 0 10px 10px; padding: 3px 20px 4px; color: var(--trim); font-size: 9px; line-height: 1;
+    border-radius: 10px; padding: 3px 16px 4px; color: var(--trim); font-size: 9px; line-height: 1;
   }
   .road-tab .arrow { display: inline-block; transition: transform 240ms; }
-  .road-drawer.open .road-tab .arrow { transform: rotate(180deg); }
+  .road-tab.open .arrow { transform: rotate(180deg); }
 
   /* ================= CAMPAIGN OVERLAYS ================= */
   .ov {
@@ -3862,6 +3866,8 @@
           <div class="placed"></div>
         </button>
       </div>
+      <!-- The scoreboard's pull, under PLAYER PAIR: it slides the board out from the left. -->
+      <div class="road-tabrow"><button class="road-tab" id="roadTab" aria-label="Toggle the scoreboard"><span class="arrow">▶</span></button></div>
       <div class="bc-rings">
         <div class="bspot bc-ring" id="spot-player" style="--c:#2F6FBF">
           <button class="bet-circle" aria-label="Bet on Player">PLAYER</button>
@@ -3900,7 +3906,6 @@
       <div id="roadLogRows"></div>
     </div>
   </div>
-  <button class="road-tab" id="roadTab" aria-label="Toggle bead road"><span class="arrow">▼</span></button>
 </div>
 </div>
 
@@ -13669,6 +13674,12 @@
     });
     $("roadTab").addEventListener("click", function () {
       $("roadDrawer").classList.toggle("open");
+      $("roadTab").classList.toggle("open", $("roadDrawer").classList.contains("open"));
+    });
+    // A tap on the board itself puts it away too.
+    $("roadDrawer").addEventListener("click", function () {
+      $("roadDrawer").classList.remove("open");
+      $("roadTab").classList.remove("open");
     });
     return { enter: enter };
   })();
