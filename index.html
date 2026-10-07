@@ -2972,10 +2972,11 @@
   /* The old code-drawn baccarat circles are gone; their .bet-circle box
      shadow was bleeding an ink ring onto the painted rings. */
   .actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; min-height: 46px; }
-  /* The board slides out from the right, level with the middle of the felt;
-     its pull sits on the right edge by the banker's cards. */
+  /* The board slides out from the right, hung just under the bankroll bar
+     (8px top padding and the 40px bar); its pull sits on the right edge by
+     the banker's cards. */
   .road-drawer {
-    position: fixed; top: 50%; transform: translateY(-50%); z-index: 20;
+    position: fixed; top: calc(env(safe-area-inset-top, 0px) + 52px); z-index: 20;
     right: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
     display: none; flex-direction: column; align-items: flex-end;
   }
@@ -3070,11 +3071,10 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
-  /* The pull is a tall slim tab hung off the right edge of the screen, its
-     top just under the bankroll bar; the top's 12px side padding is stepped
-     back over, and the 18px is the shoe line the hands row sits under. */
+  /* The pull is a tall slim tab hung off the right edge of the screen, level
+     with the banker's cards; the top's 12px side padding is stepped back over. */
   .road-tab {
-    position: absolute; right: -12px; top: -18px; z-index: 21;
+    position: absolute; right: -12px; top: 50%; transform: translateY(-50%); z-index: 21;
     background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); border-right: none;
     border-radius: 10px 0 0 10px; width: 22px; height: 64px; padding: 0;
     display: flex; align-items: center; justify-content: center;
