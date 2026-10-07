@@ -2982,7 +2982,7 @@
   #screen-baccarat.on .road-drawer { display: flex; }
   .road-panel {
     background: rgba(36,15,16,.96); border: 1.5px solid var(--trim); border-radius: 14px;
-    padding: 10px 12px; margin-bottom: 5px; display: none; text-align: center;
+    padding: 10px 12px; margin-bottom: 5px; display: none; text-align: center; position: relative;
   }
   .road-drawer.open .road-panel { display: block; }
   /* ---- the scoreboard ------------------------------------------------
@@ -3069,11 +3069,19 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
-  /* The pull stays above the board, so it can close it too. */
-  .road-tabrow { display: flex; margin-top: -3px; position: relative; z-index: 21; }
+  /* The pull is a tall slim tab hung off the left edge of the screen, under
+     PLAYER PAIR; the felt's 12px side padding is stepped back over. */
+  .road-tabrow { display: flex; margin: -3px 0 0 -12px; position: relative; z-index: 21; }
   .road-tab {
-    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim);
-    border-radius: 10px; padding: 3px 16px 4px; color: var(--trim); font-size: 9px; line-height: 1;
+    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); border-left: none;
+    border-radius: 0 10px 10px 0; width: 22px; height: 64px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--trim); font-size: 10px; line-height: 1;
+  }
+  .road-close {
+    position: absolute; top: 6px; right: 8px; width: 24px; height: 24px; border-radius: 50%;
+    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); color: var(--trim);
+    font-size: 12px; line-height: 1; padding: 0; display: flex; align-items: center; justify-content: center;
   }
   .road-tab .arrow { display: inline-block; transition: transform 240ms; }
   .road-tab.open .arrow { transform: rotate(180deg); }
@@ -3896,6 +3904,7 @@
 
 <div class="road-drawer" id="roadDrawer">
   <div class="road-panel">
+    <button class="road-close" id="roadClose" aria-label="Close the scoreboard">&#x2715;</button>
     <div class="sb-tallies" id="sbTallies"></div>
     <div class="sb-strip"><span class="sb-tag">珠盤路 · BEAD PLATE</span>
       <div class="sb-scroll" id="sbBeadBox"><div class="sb-grid" id="sbBead"></div></div></div>
@@ -13676,8 +13685,8 @@
       $("roadDrawer").classList.toggle("open");
       $("roadTab").classList.toggle("open", $("roadDrawer").classList.contains("open"));
     });
-    // A tap on the board itself puts it away too.
-    $("roadDrawer").addEventListener("click", function () {
+    // The board covers its own pull once it is out, so it has an X of its own.
+    $("roadClose").addEventListener("click", function () {
       $("roadDrawer").classList.remove("open");
       $("roadTab").classList.remove("open");
     });
