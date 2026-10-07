@@ -12126,11 +12126,12 @@
       var sx = CX + R * 0.01, bar = CY - R * 1.1125;
       var four = 'M ' + sx + ' ' + (CY - R * 1.225) + ' L ' + (CX - R * 0.0475) + ' ' + bar + ' L ' + (CX + R * 0.055) + ' ' + bar + ' M ' + sx + ' ' + (CY - R * 1.225) + ' L ' + sx + ' ' + bar;
       var fin = 'M ' + (sx - R * 0.007) + ' ' + bar + ' L ' + (sx + R * 0.007) + ' ' + bar + ' L ' + (sx + R * 0.0035) + ' ' + (CY - R * 0.9875) + ' Q ' + sx + ' ' + (CY - R * 0.97) + ' ' + (sx - R * 0.0035) + ' ' + (CY - R * 0.9875) + ' Z';
-      s += '<g id="wh-fin">';
+      // the 4 itself stays put; only the fin below the bar swings, hinged at the bar
       s += '<rect x="' + (CX - R * 0.025) + '" y="' + (CY - R * 1.25) + '" width="' + (R * 0.07) + '" height="' + (R * 0.035) + '" rx="' + (R * 0.01) + '" fill="#15151B" stroke="#2A2A32" stroke-width="' + (R * 0.003) + '"/>';
       s += '<path d="' + four + '" stroke="#FF2A3A" stroke-width="' + (R * 0.013) + '" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#whgg)" opacity=".95"/>';
-      s += '<path d="' + fin + '" fill="#FF2A3A" filter="url(#whgg)" opacity=".95"/>';
       s += '<path d="' + four + '" stroke="#FFD0D4" stroke-width="' + (R * 0.005) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+      s += '<g id="wh-fin">';
+      s += '<path d="' + fin + '" fill="#FF2A3A" filter="url(#whgg)" opacity=".95"/>';
       s += '<path d="M ' + sx + ' ' + bar + ' L ' + sx + ' ' + (CY - R * 0.9825) + '" stroke="#FFD0D4" stroke-width="' + (R * 0.0045) + '" stroke-linecap="round" fill="none"/>';
       s += '</g>';
       $("wh-wheel").innerHTML = s + '</svg>';
@@ -12151,7 +12152,7 @@
     function setFin() {
       var f = $("wh-fin"); if (!f) return;
       var dt = performance.now() - finAt, a = 16 * Math.exp(-Math.max(0, dt) / 60);
-      f.setAttribute("transform", a < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.232) + ")");
+      f.setAttribute("transform", a < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.1125) + ")");
     }
     function setRing(deg) { var g = $("wh-ring"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
     function showBonus(on) { $("wh-bonus").style.display = on ? "" : "none"; $("wh-glass").style.display = on ? "none" : ""; }
