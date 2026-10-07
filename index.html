@@ -3313,7 +3313,8 @@
   .wh-sheet .money { padding-right: 0; }
   .wh-sheet .money .val { color: #fff; }
   .wh-sub { font-family: var(--mono); font-size: 8px; letter-spacing: .18em; color: rgba(245,241,232,.55); margin: 2px 0 4px; text-align: center; white-space: nowrap; }
-  .wh-wheel { width: 100%; }
+  /* the wheel spans the whole phone, past the sheet's side padding */
+  .wh-wheel { width: calc(100% + 24px); margin: 0 -12px; }
   .wh-wheel svg { width: 100%; display: block; }
   .wh-msg { height: 24px; display: flex; align-items: center; justify-content: center; font-family: var(--display); font-style: italic; font-size: 13px; color: var(--bone); text-shadow: 0 1px 0 #000, 0 0 6px #000; white-space: nowrap; }
   .wh-row { width: 100%; display: flex; gap: 6px; margin-top: 6px; }
@@ -11954,7 +11955,7 @@
     }
 
     // ---- the drawing, the concept page's, as one SVG with a rotor and a ring that turn ----
-    var CX = 220, CY = 236, R = 198;
+    var CX = 220, CY = 274, R = 208;
     function P(a, r) { return (CX + Math.cos(a) * r).toFixed(1) + " " + (CY + Math.sin(a) * r).toFixed(1); }
     function defs() {
       var s = '<defs>' +
@@ -11986,13 +11987,13 @@
       return s + '</g>';
     }
     function build() {
-      var s = '<svg viewBox="0 0 440 460" xmlns="http://www.w3.org/2000/svg">' + defs();
-      s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R * 1.08) + '" fill="#141418" stroke="#2A2A30" stroke-width="' + (R * 0.01) + '"/>';
+      var s = '<svg viewBox="0 0 440 494" xmlns="http://www.w3.org/2000/svg">' + defs();
+      s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R * 1.035) + '" fill="#141418" stroke="#2A2A30" stroke-width="' + (R * 0.008) + '"/>';
       s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="#050507"/>';
       s += '<g id="wh-rotor">';
       for (var i = 0; i < N; i++) {
         var a = (-90 + i * STEP) * Math.PI / 180;
-        s += '<circle cx="' + (CX + Math.cos(a) * R * 1.04).toFixed(1) + '" cy="' + (CY + Math.sin(a) * R * 1.04).toFixed(1) + '" r="' + (R * 0.018) + '" fill="' + (i % 2 ? "#FFF3C2" : "#FFD98A") + '" filter="url(#whg)"/>';
+        s += '<circle cx="' + (CX + Math.cos(a) * R * 1.005).toFixed(1) + '" cy="' + (CY + Math.sin(a) * R * 1.005).toFixed(1) + '" r="' + (R * 0.009) + '" fill="' + (i % 2 ? "#FFF3C2" : "#FFD98A") + '" filter="url(#whg)"/>';
       }
       for (i = 0; i < N; i++) s += paddle(i * STEP, STOPS[i]);
       s += '</g>';
