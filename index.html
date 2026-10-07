@@ -12064,10 +12064,11 @@
         s += '<path d="M ' + (CX - dw * 0.5) + ' ' + dy + ' L ' + (CX + dw * 0.5) + ' ' + dy + ' M ' + CX + ' ' + (dy - dw) + ' L ' + CX + ' ' + (dy + dw) + '" stroke="' + (k === "d" ? "#9B9BA8" : "#FF8AA8") + '" stroke-width="' + (R * 0.004) + '"/>';
         s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + (dy + dw * 1.6) + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.036) + '" textLength="' + (R * 0.15) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">DIAMOND</text>';
       } else if (k === "t") {
-        // two short lines side by side down the wide end of the blade, since it narrows to a point
-        var ty = CY - outer + w * 1.25, tf = R * 0.034, tl = R * 0.12;
-        s += '<text transform="translate(' + (CX - R * 0.006) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + tf + '" textLength="' + tl + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">BOYS</text>';
-        s += '<text transform="translate(' + (CX + R * 0.03) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + tf + '" textLength="' + tl + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">4 THE</text>';
+        // one line down the middle of the blade, from the rounded end in: the blade is
+        // 0.049R wide there and still 0.025R wide where the word ends, and the capitals
+        // stand 0.026R, so it sits inside the gold the whole way
+        var ty = CY - outer + w * 1.25;
+        s += '<text transform="translate(' + (CX - R * 0.013) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.036) + '" textLength="' + (R * 0.24) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">4 THE BOYS</text>';
       } else {
         s += '<circle cx="' + CX + '" cy="' + (CY - outer + w) + '" r="' + (w * 0.88) + '" fill="#fff" stroke="#000" stroke-width="' + (R * 0.004) + '"/>';
         s += '<text x="' + CX + '" y="' + (CY - outer + w + w * 0.38) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="' + (w * 1.05) + '" fill="#111">' + S.label.replace("X", "") + '</text>';
