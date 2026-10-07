@@ -3186,7 +3186,10 @@
   .dt-spot.big .nm { font-size: 20px; }
   .dt-spot .pr { font-family: var(--mono); font-size: 7px; letter-spacing: .14em; color: rgba(245,241,232,.62); white-space: nowrap; }
   .dt-spot.big .pr { font-size: 8.5px; }
-  .dt-spot .placed { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; }
+  /* The shared .placed hides itself and sits dead centre; here it shows when
+     a chip is down, takes the tap that lifts it, and sits where this felt wants it. */
+  .dt-spot .placed { position: absolute; left: auto; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: none; }
+  .dt-spot .placed.on { display: block; pointer-events: auto; }
   .dt-spot.big .placed { right: auto; top: auto; bottom: 3px; left: 50%; transform: translateX(-50%); width: 38px; height: 38px; }
   .dt-spot .placed .scrim {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -3826,7 +3829,7 @@
           <span><span class="lbl">STAKED </span><span class="val staked" id="dt-staked">0</span></span>
         </div>
       </div>
-      <div class="shoe-line" id="dt-sub">DRAGON TIGER · ONE CARD EACH · HIGH CARD WINS · <span id="dt-shoe">416</span> IN SHOE</div>
+      <div class="shoe-line" id="dt-sub">DRAGON TIGER · HIGH CARD WINS · <span id="dt-shoe">416</span> IN SHOE</div>
     </div>
     <div class="dt-felt">
       <div class="dt-sides">
@@ -13374,7 +13377,9 @@
       document.querySelectorAll("#screen-dragontiger .dt-spot").forEach(function (b) {
         var bet = b.getAttribute("data-bet"), amt = bets[bet] || 0;
         b.classList.toggle("won", !!winners[bet]);
-        b.querySelector(".placed").innerHTML = amt > 0 ? chipHtml(amt, b.classList.contains("big") ? 38 : 30) : "";
+        var placed = b.querySelector(".placed");
+        placed.innerHTML = amt > 0 ? chipHtml(amt, b.classList.contains("big") ? 38 : 30) : "";
+        placed.classList.toggle("on", amt > 0);
       });
     }
     function renderMessage() {
