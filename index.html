@@ -3070,10 +3070,11 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
-  /* The pull is a tall slim tab hung off the right edge of the screen, level
-     with the banker's cards; the top's 12px side padding is stepped back over. */
+  /* The pull is a tall slim tab hung off the right edge of the screen, its
+     top just under the bankroll bar; the top's 12px side padding is stepped
+     back over, and the 18px is the shoe line the hands row sits under. */
   .road-tab {
-    position: absolute; right: -12px; top: 50%; transform: translateY(-50%); z-index: 21;
+    position: absolute; right: -12px; top: -18px; z-index: 21;
     background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); border-right: none;
     border-radius: 10px 0 0 10px; width: 22px; height: 64px; padding: 0;
     display: flex; align-items: center; justify-content: center;
