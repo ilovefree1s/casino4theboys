@@ -2982,7 +2982,8 @@
   #screen-baccarat.on .road-drawer { display: flex; }
   .road-panel {
     background: rgba(36,15,16,.96); border: 1.5px solid var(--trim); border-radius: 14px;
-    padding: 10px 12px; margin-bottom: 5px; display: none; text-align: center; position: relative;
+    /* a band at the top for the X, so it sits above the tallies rather than on the TIE count */
+    padding: 34px 12px 10px; margin-bottom: 5px; display: none; text-align: center; position: relative;
   }
   .road-drawer.open .road-panel { display: block; }
   /* ---- the scoreboard ------------------------------------------------
