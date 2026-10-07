@@ -12000,7 +12000,7 @@
     }
     function startWheelSound(clickTimes) {
       stopWheelSound(true);
-      var volume = SOUND.sfx * 0.45;
+      var volume = SOUND.sfx * 0.22;
       if (!wheelCtx || !wheelClick || !(volume > 0) || !clickTimes || !clickTimes.length) return;
       try {
         if (wheelCtx.state === "suspended") wheelCtx.resume();
