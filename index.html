@@ -13369,7 +13369,9 @@
       [["dragon", dragon], ["tiger", tiger]].forEach(function (p) {
         var who = p[0], card = p[1], slot = $("dt-slot-" + who);
         slot.innerHTML = "";
-        if (card) { var el = cardEl(card, true); slot.appendChild(el); requestAnimationFrame(function () { el.classList.add("up"); }); }
+        // Dealt face up, so it arrives wearing up and makes only the pitch of
+        // the deal; setting up again after it landed rang the turn as well.
+        if (card) slot.appendChild(cardEl(card, true));
         else slot.innerHTML = '<div class="empty"></div>';
         $("dt-val-" + who).textContent = card ? card.rank + " · " + value(card) : "";
         var won = result === who;
