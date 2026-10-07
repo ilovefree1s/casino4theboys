@@ -3302,11 +3302,13 @@
      The wheel the user's casino has: fifty-four paddles tapering in to a lit
      centre, the clapper on top; the fourth table in the roulette room.
      web/concepts-wheel-4.html is the board. */
+  /* The house mark under the felt, run green for this room, under a dark scrim. */
   #screen-wheel { --w: #FFD24D; --trim: #FFD24D; position: relative; background: #06060A; }
+  #wh-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: .55; filter: hue-rotate(240deg) saturate(1.2); }
   .wh-sheet {
     position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
-    background: linear-gradient(180deg, #0A0A10 0%, #10101A 50%, #06060A 100%);
+    background: radial-gradient(ellipse at 50% 46%, rgba(8,10,8,.88) 0%, rgba(8,10,8,.55) 44%, rgba(8,10,8,.1) 74%);
   }
   .wh-sheet .money { padding-right: 0; }
   .wh-sheet .money .val { color: #fff; }
@@ -4035,6 +4037,8 @@
 
 <!-- ================= THE MONEY WHEEL ================= -->
 <div class="screen" id="screen-wheel">
+  <!-- The blackjack table's mark, copied over at start rather than baked again. -->
+  <img class="bj-bg" id="wh-bg" alt="">
   <div class="wh-sheet">
     <div class="topbar">
       <button class="wayout" id="wh-back" aria-label="Back to the roulette room"><i>&#8249;</i><b>ROULETTE</b></button>
@@ -12276,6 +12280,7 @@
       b.addEventListener("click", function () { addChip(k); });
       b.querySelector(".wh-chip").addEventListener("click", function (e) { e.stopPropagation(); });
     });
+    $("wh-bg").src = document.querySelector("#screen-blackjack .bj-bg").src;
     $("wh-buyin").addEventListener("click", function () {
       if (busy() || bankroll >= 25) return;
       if (phase === "result") nextSpin(false);
