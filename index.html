@@ -3189,7 +3189,13 @@
   /* The shared .placed hides itself and sits dead centre; here it shows when
      a chip is down, takes the tap that lifts it, and sits where this felt wants it. */
   .dt-spot .placed { position: absolute; left: auto; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: none; }
-  .dt-spot .placed.on { display: block; pointer-events: auto; }
+  .dt-spot .placed.on { display: block; pointer-events: auto; touch-action: none; cursor: grab; }
+  /* the lifted chips ride a ghost pinned to the glass, over everything */
+  .dt-ghost { position: fixed; z-index: 60; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 6px 14px rgba(0,0,0,.6); }
+  .dt-ghost .scrim {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(14,10,11,.64); border-radius: 50%; color: #57E06A; font-weight: 900;
+  }
   .dt-spot.big .placed { right: auto; top: auto; bottom: 3px; left: 50%; transform: translateX(-50%); width: 38px; height: 38px; }
   .dt-spot .placed .scrim {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -13380,6 +13386,7 @@
         var placed = b.querySelector(".placed");
         placed.innerHTML = amt > 0 ? chipHtml(amt, b.classList.contains("big") ? 38 : 30) : "";
         placed.classList.toggle("on", amt > 0);
+        armDrag(placed, bet);
       });
     }
     function renderMessage() {
@@ -13451,14 +13458,71 @@
       noteText = ""; msgText = amount < selectedChip ? "All in!" : LABEL[bet];
       renderMoney(); renderSpots(); renderMessage(); renderRebuy();
     }
-    /** A tap on a chip already down takes the selected chip's worth back off it. */
-    function takeChip(bet) {
+    /** Slides [amount] of a stack to another spot, limits permitting. A drop
+     *  on a spot already at its cap leaves that bet be: the lifted chips come
+     *  off the felt instead, and the money never left the purse. */
+    function moveChip(from, to, amount) {
+      if (phase !== "betting" || from === to) return;
+      var taking = Math.min(amount, bets[from] || 0);
+      if (taking <= 0) return;
+      var lim = Shell.limits();
+      var allowed = allow(lim, taking, bets[to] || 0, SIDE[to]);
+      var left = (bets[from] || 0) - taking;
+      if (left > 0) bets[from] = left; else delete bets[from];
+      if (allowed < taking) { noteText = LABEL[to] + " is full — bet taken down"; }
+      else { bets[to] = (bets[to] || 0) + taking; noteText = ""; msgText = LABEL[to]; }
+      renderMoney(); renderSpots(); renderMessage(); renderRebuy();
+    }
+    /** Dropped on the rack: that much of the bet comes down. */
+    function removeChip(bet, amount) {
       if (phase !== "betting") return;
       var have = bets[bet] || 0; if (!have) return;
-      var taking = Math.min(selectedChip, have);
+      var taking = Math.min(amount, have);
       if (have - taking > 0) bets[bet] = have - taking; else delete bets[bet];
       noteText = ""; msgText = have - taking > 0 ? fmt(taking) + " taken down" : "Bet taken down";
       renderMoney(); renderSpots(); renderMessage(); renderRebuy();
+    }
+    /** The chip on a spot: a tap stacks another, a drag lifts the selected
+     *  chip's worth onto another spot or down to the rack. Move and up ride
+     *  on window, not the chip: pointer capture is unreliable in some
+     *  webviews, and the window always hears the whole gesture. */
+    function armDrag(el, bet) {
+      el.onpointerdown = function (e) {
+        if (phase !== "betting") return;
+        e.preventDefault(); e.stopPropagation();
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null;
+        var lift = Math.min(selectedChip, bets[bet] || 0);
+        var r = el.getBoundingClientRect();
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 8) {
+            moved = true;
+            ghost = document.createElement("div");
+            ghost.className = "dt-ghost";
+            ghost.style.left = r.left + "px"; ghost.style.top = r.top + "px";
+            ghost.style.width = r.width + "px"; ghost.style.height = r.height + "px";
+            ghost.innerHTML = chipHtml(lift, r.width);
+            document.body.appendChild(ghost);
+            var rest = (bets[bet] || 0) - lift;
+            el.innerHTML = rest > 0 ? chipHtml(rest, r.width) : "";
+          }
+          if (ghost) ghost.style.transform = "translate(" + dx + "px," + dy + "px)";
+        }
+        function up(ev) {
+          window.removeEventListener("pointermove", mv);
+          window.removeEventListener("pointerup", up);
+          if (!moved) { addChip(bet); return; }
+          if (ghost) ghost.remove();
+          var t = document.elementFromPoint(ev.clientX, ev.clientY);
+          var spot = t && t.closest ? t.closest(".dt-spot") : null;
+          var onRack = t && t.closest && t.closest(".rack, .dt-bottom, .actions");
+          if (spot && spot.getAttribute("data-bet") !== bet) moveChip(bet, spot.getAttribute("data-bet"), lift);
+          else if (onRack) removeChip(bet, lift);
+          else renderSpots();
+        }
+        window.addEventListener("pointermove", mv);
+        window.addEventListener("pointerup", up);
+      };
     }
     function clearBets() {
       if (phase === "result") { nextHand(false); return; }
@@ -13542,10 +13606,9 @@
     document.querySelectorAll("#screen-dragontiger .dt-spot").forEach(function (b) {
       var bet = b.getAttribute("data-bet");
       b.addEventListener("click", function () { addChip(bet); });
-      // the chip on the spot takes back; stopping the click keeps the spot from adding again
-      b.querySelector(".placed").addEventListener("click", function (e) {
-        if (phase === "betting" && (bets[bet] || 0) > 0) { e.stopPropagation(); takeChip(bet); }
-      });
+      // the chip answers its own press (see armDrag); the click that trails
+      // it must not reach the spot and add again
+      b.querySelector(".placed").addEventListener("click", function (e) { e.stopPropagation(); });
     });
     $("bm-bg").src = document.querySelector("#screen-crapsmenu .mm-bg").src;
     $("dt-bg").src = document.querySelector("#screen-baccarat .bacc-bg").src;
