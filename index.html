@@ -2895,7 +2895,7 @@
   .money .val { font-family: var(--display); font-size: 14px; color: var(--glow); }
   .money .val.staked { color: var(--bone); }
   .shoe-line { font-size: 9.5px; letter-spacing: .3em; color: rgba(245,241,232,.55); margin: 2px 0 8px; text-align: center; }
-  .hands { display: flex; gap: 10px; width: 100%; align-items: flex-start; }
+  .hands { display: flex; gap: 10px; width: 100%; align-items: flex-start; position: relative; }
   .hand { flex: 1; text-align: center; min-width: 0; }
   .hand-title { display: flex; justify-content: center; align-items: center; gap: 8px; }
   .hand-name { font-family: var(--display); font-size: 21px; letter-spacing: .06em; transition: opacity 200ms; }
@@ -2972,12 +2972,12 @@
   /* The old code-drawn baccarat circles are gone; their .bet-circle box
      shadow was bleeding an ink ring onto the painted rings. */
   .actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; min-height: 46px; }
-  /* The board slides out from the left, level with the middle of the felt;
-     its pull sits on the felt under PLAYER PAIR. */
+  /* The board slides out from the right, level with the middle of the felt;
+     its pull sits on the right edge by the banker's cards. */
   .road-drawer {
     position: fixed; top: 50%; transform: translateY(-50%); z-index: 20;
-    left: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
-    display: none; flex-direction: column; align-items: flex-start;
+    right: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
+    display: none; flex-direction: column; align-items: flex-end;
   }
   #screen-baccarat.on .road-drawer { display: flex; }
   .road-panel {
@@ -3070,12 +3070,12 @@
   .log-row .net.win { color: var(--glow); }
   .log-row .net.loss { color: #FF9C8A; }
   .log-row .net.even { color: rgba(245,241,232,.6); }
-  /* The pull is a tall slim tab hung off the left edge of the screen, under
-     PLAYER PAIR; the felt's 12px side padding is stepped back over. */
-  .road-tabrow { display: flex; margin: -3px 0 0 -12px; position: relative; z-index: 21; }
+  /* The pull is a tall slim tab hung off the right edge of the screen, level
+     with the banker's cards; the top's 12px side padding is stepped back over. */
   .road-tab {
-    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); border-left: none;
-    border-radius: 0 10px 10px 0; width: 22px; height: 64px; padding: 0;
+    position: absolute; right: -12px; top: 50%; transform: translateY(-50%); z-index: 21;
+    background: rgba(14,10,11,.9); border: 1.5px solid var(--trim); border-right: none;
+    border-radius: 10px 0 0 10px; width: 22px; height: 64px; padding: 0;
     display: flex; align-items: center; justify-content: center;
     color: var(--trim); font-size: 10px; line-height: 1;
   }
@@ -3805,6 +3805,8 @@
       </div>
       <div class="shoe-line" id="bacc-sub">PUNTO BANCO · 8 DECKS · <span id="shoeCount">416</span> CARDS IN SHOE</div>
       <div class="hands">
+        <!-- The scoreboard's pull, on the right edge of the screen by the banker's cards: it slides the board out from the right. -->
+        <button class="road-tab" id="roadTab" aria-label="Toggle the scoreboard"><span class="arrow">&#x25C0;</span></button>
         <div class="hand player" id="handP">
           <div class="hand-title">
             <span class="hand-name player outline">PLAYER</span>
@@ -3875,8 +3877,6 @@
           <div class="placed"></div>
         </button>
       </div>
-      <!-- The scoreboard's pull, under PLAYER PAIR: it slides the board out from the left. -->
-      <div class="road-tabrow"><button class="road-tab" id="roadTab" aria-label="Toggle the scoreboard"><span class="arrow">▶</span></button></div>
       <div class="bc-rings">
         <div class="bspot bc-ring" id="spot-player" style="--c:#2F6FBF">
           <button class="bet-circle" aria-label="Bet on Player">PLAYER</button>
