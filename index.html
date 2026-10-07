@@ -12062,10 +12062,12 @@
         var dy = CY - outer + w * 2.2, dw = w * 0.75, edge = k === "d" ? "#9B9BA8" : "#FFC0D0";
         s += '<path d="M ' + CX + ' ' + (dy - dw) + ' L ' + (CX + dw) + ' ' + dy + ' L ' + CX + ' ' + (dy + dw) + ' L ' + (CX - dw) + ' ' + dy + ' Z" fill="#fff" stroke="' + edge + '" stroke-width="' + (R * 0.005) + '"/>';
         s += '<path d="M ' + (CX - dw * 0.5) + ' ' + dy + ' L ' + (CX + dw * 0.5) + ' ' + dy + ' M ' + CX + ' ' + (dy - dw) + ' L ' + CX + ' ' + (dy + dw) + '" stroke="' + (k === "d" ? "#9B9BA8" : "#FF8AA8") + '" stroke-width="' + (R * 0.004) + '"/>';
-        s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + (dy + dw * 1.6) + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.038) + '" textLength="' + (R * 0.2) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">DIAMOND</text>';
+        s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + (dy + dw * 1.6) + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.036) + '" textLength="' + (R * 0.15) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">DIAMOND</text>';
       } else if (k === "t") {
-        // squeezed to the blade: it narrows to a point, so the word is kept short and set tight
-        s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + (CY - outer + w * 1.6) + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.04) + '" textLength="' + (R * 0.27) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">4 THE BOYS</text>';
+        // two short lines side by side down the wide end of the blade, since it narrows to a point
+        var ty = CY - outer + w * 1.25, tf = R * 0.034, tl = R * 0.12;
+        s += '<text transform="translate(' + (CX - R * 0.006) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + tf + '" textLength="' + tl + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">BOYS</text>';
+        s += '<text transform="translate(' + (CX + R * 0.03) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + tf + '" textLength="' + tl + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">4 THE</text>';
       } else {
         s += '<circle cx="' + CX + '" cy="' + (CY - outer + w) + '" r="' + (w * 0.88) + '" fill="#fff" stroke="#000" stroke-width="' + (R * 0.004) + '"/>';
         s += '<text x="' + CX + '" y="' + (CY - outer + w + w * 0.38) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="' + (w * 1.05) + '" fill="#111">' + S.label.replace("X", "") + '</text>';
