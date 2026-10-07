@@ -11942,7 +11942,7 @@
     var STOPS = ("r g r b r g r s r g r b r g r w r g r b r g r s g d t r g r b r g r s r g r b r g r w r g r b r g b s g e t").split(" ");
     var N = STOPS.length, STEP = 360 / N;
     var BONUS = [50, 75, 100, 50, 150, 75, 100, 50, 200, 75, 100, 500], BSTEP = 360 / BONUS.length;
-    var SPIN_MS = 4200, BONUS_MS = 2600, TURNS = 5, BONUS_TURNS = 3;
+    var SPIN_MS = 7000, BONUS_MS = 3600, TURNS = 7, BONUS_TURNS = 4;
     /** Gross return: stake plus winnings on a hit; a bet on the gold pays the ring's multiplier. */
     function settleBet(bet, stake, stop, bonusIndex) {
       if (bet !== stop) return 0;
@@ -12028,7 +12028,9 @@
       if (raf) cancelAnimationFrame(raf);
       var start = performance.now();
       function frame(now) {
-        var t = Math.min(1, (now - start) / ms), e = cubicBezierY(0.82, 1, t);
+        // away hard and then a long crawl onto the stop: a quartic die-out,
+        // so the last paddles tick past the clapper one at a time
+        var t = Math.min(1, (now - start) / ms), e = 1 - Math.pow(1 - t, 4);
         set(from + (to - from) * e);
         if (t < 1) raf = requestAnimationFrame(frame); else { raf = null; if (done) done(); }
       }
