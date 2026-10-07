@@ -3695,6 +3695,12 @@
       <button class="rl-btn rebet" id="rl-rebet">REBET</button>
     </div>
   </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. The
+       other tables had this; roulette never did, so a broke purse sat there. -->
+  <div class="uth-rebuy" id="rl-rebuy" style="--rb:#B98CFF">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="rl-buyin">BUY BACK IN</button>
+  </div>
 </div>
 
 <!-- ============ ROULETTE VARIANTS PAGE ============ -->
@@ -14107,7 +14113,14 @@
         host.appendChild(chip);
       });
     }
-    function renderAll() { renderMoney(); renderFelt(); renderButtons(); setMessage(); }
+    /** A finished round still has its chips showing, but they are spent and
+     *  settled, so a broke purse is offered the stack then as well as on a
+     *  bare felt. */
+    function renderRebuy() {
+      var settled = phase === "result" || (phase === "betting" && totalStaked() === 0);
+      $("rl-rebuy").classList.toggle("on", Shell.mode === "testing" && bankroll < 25 && settled);
+    }
+    function renderAll() { renderMoney(); renderFelt(); renderButtons(); setMessage(); renderRebuy(); }
 
     function addChip(route) {
       if (phase === "spinning") return;
@@ -14439,6 +14452,11 @@
       };
       $("rl-sheet").appendChild(rack);
     })();
+    $("rl-buyin").addEventListener("click", function () {
+      if (phase === "spinning" || bankroll >= 25) return;
+      if (phase === "result") nextSpin();
+      freshStack(function (v) { bankroll = v; note(""); msg(""); renderAll(); });
+    });
     $("rl-clear").addEventListener("click", clearBets);
     $("rl-spin").addEventListener("click", spin);
     $("rl-rebet").addEventListener("click", rebet);
