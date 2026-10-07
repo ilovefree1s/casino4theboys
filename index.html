@@ -3327,6 +3327,7 @@
   .wh-spot .tag { width: 100%; height: 26px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: linear-gradient(180deg, var(--c), var(--lo)); color: var(--ink); font-family: var(--display); font-style: italic; font-size: 15px; white-space: nowrap; }
   .wh-spot .tag.long { font-size: 11px; }
   .wh-spot .tag.gold { font-size: 9px; }
+  .wh-spot .tag .gem { width: 15px; height: 15px; margin-left: 4px; }
   .wh-spot .pr { font-family: var(--mono); font-size: 6px; letter-spacing: .1em; color: rgba(245,241,232,.62); white-space: nowrap; }
   .wh-chip { position: absolute; right: 0; bottom: 0; width: 24px; height: 24px; border-radius: 50%; overflow: hidden; display: none; box-shadow: 0 3px 8px rgba(0,0,0,.55); }
   .wh-chip.on { display: block; pointer-events: auto; touch-action: none; cursor: grab; }
@@ -11988,9 +11989,10 @@
     function crossings(fromDeg, toDeg, segments, ms) {
       var segDeg = 360 / segments, delta = toDeg - fromDeg, raw = [];
       var steps = Math.max(1, Math.round(ms / 2));
-      var lastSeg = Math.floor(fromDeg / segDeg);
+      // a boundary is half a segment off a paddle's own angle: the pegs, where the lights are
+      var lastSeg = Math.floor(fromDeg / segDeg + 0.5);
       for (var i = 1; i <= steps; i++) {
-        var at = i / steps, seg = Math.floor((fromDeg + delta * ease(at)) / segDeg);
+        var at = i / steps, seg = Math.floor((fromDeg + delta * ease(at)) / segDeg + 0.5);
         if (seg !== lastSeg) { lastSeg = seg; raw.push(at * ms / 1000); }
       }
       // every paddle gets its click at the moment it passes the clapper; a
@@ -12053,16 +12055,25 @@
       Object.keys(SYM).forEach(function (k) { s += '<linearGradient id="whp' + k + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + SYM[k].c + '"/><stop offset="1" stop-color="' + SYM[k].lo + '"/></linearGradient>'; });
       return s + '</defs>';
     }
+    /** The diamond as the classic cut outline: a flat table, a girdle, a point, and the facet lines. */
+    function gemSvg(cx, cy, hw, ink) {
+      var t = hw * 0.58, top = cy - hw * 1.05, g = cy - hw * 0.37, pt = cy + hw * 1.05, f = hw * 0.34;
+      var o = 'M ' + (cx - t) + ' ' + top + ' L ' + (cx + t) + ' ' + top + ' L ' + (cx + hw) + ' ' + g + ' L ' + cx + ' ' + pt + ' L ' + (cx - hw) + ' ' + g + ' Z';
+      var inner = 'M ' + (cx - hw) + ' ' + g + ' L ' + (cx + hw) + ' ' + g + ' M ' + (cx - t) + ' ' + top + ' L ' + (cx - f) + ' ' + g + ' L ' + cx + ' ' + top + ' L ' + (cx + f) + ' ' + g + ' L ' + (cx + t) + ' ' + top + ' M ' + (cx - f) + ' ' + g + ' L ' + cx + ' ' + pt + ' M ' + (cx + f) + ' ' + g + ' L ' + cx + ' ' + pt;
+      return '<path d="' + o + '" fill="' + ink + '" fill-opacity=".14" stroke="' + ink + '" stroke-width="' + (hw * 0.15).toFixed(2) + '" stroke-linejoin="round"/>' +
+        '<path d="' + inner + '" fill="none" stroke="' + ink + '" stroke-width="' + (hw * 0.1).toFixed(2) + '" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>';
+    }
+    function gemTag() { return '<svg class="gem" viewBox="0 0 20 20" aria-hidden="true">' + gemSvg(10, 10, 9, "#fff") + '</svg>'; }
     function paddle(deg, k) {
       var S = SYM[k], w = R * 0.052, inner = R * 0.42, outer = R * 0.95;
       var s = '<g transform="rotate(' + deg.toFixed(2) + ' ' + CX + ' ' + CY + ')">';
       s += '<path d="M ' + CX + ' ' + (CY - inner) + ' L ' + (CX + w) + ' ' + (CY - outer + w) + ' A ' + w + ' ' + w + ' 0 0 0 ' + (CX - w) + ' ' + (CY - outer + w) + ' Z" fill="url(#whp' + k + ')" stroke="#000" stroke-width="' + (R * 0.006) + '"/>';
       s += '<path d="M ' + CX + ' ' + (CY - inner - R * 0.02) + ' L ' + CX + ' ' + (CY - outer + w * 1.4) + '" stroke="#fff" stroke-width="' + (R * 0.012) + '" opacity=".35" stroke-linecap="round"/>';
       if (k === "d" || k === "e") {
-        var dy = CY - outer + w * 2.2, dw = w * 0.75, edge = k === "d" ? "#9B9BA8" : "#FFC0D0";
-        s += '<path d="M ' + CX + ' ' + (dy - dw) + ' L ' + (CX + dw) + ' ' + dy + ' L ' + CX + ' ' + (dy + dw) + ' L ' + (CX - dw) + ' ' + dy + ' Z" fill="#fff" stroke="' + edge + '" stroke-width="' + (R * 0.005) + '"/>';
-        s += '<path d="M ' + (CX - dw * 0.5) + ' ' + dy + ' L ' + (CX + dw * 0.5) + ' ' + dy + ' M ' + CX + ' ' + (dy - dw) + ' L ' + CX + ' ' + (dy + dw) + '" stroke="' + (k === "d" ? "#9B9BA8" : "#FF8AA8") + '" stroke-width="' + (R * 0.004) + '"/>';
-        s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + (dy + dw * 1.6) + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.036) + '" textLength="' + (R * 0.15) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">DIAMOND</text>';
+        // the diamond as a big cut outline filling the blade's end, and the word under it
+        var ty = CY - outer + w * 2.55;
+        s += gemSvg(CX, CY - outer + w * 1.21, w * 0.943, "#fff");
+        s += '<text transform="translate(' + (CX + R * 0.01) + ' ' + ty + ') rotate(90)" text-anchor="start" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.036) + '" textLength="' + (R * 0.15) + '" lengthAdjust="spacingAndGlyphs" fill="' + S.ink + '" opacity=".95">DIAMOND</text>';
       } else if (k === "t") {
         // one line down the middle of the blade, from the rounded end in: the blade is
         // 0.049R wide there and still 0.025R wide where the word ends, and the capitals
@@ -12080,8 +12091,9 @@
       s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + (R * 1.035) + '" fill="#141418" stroke="#2A2A30" stroke-width="' + (R * 0.008) + '"/>';
       s += '<circle cx="' + CX + '" cy="' + CY + '" r="' + R + '" fill="#050507"/>';
       s += '<g id="wh-rotor">';
+      // the lights sit between the numbers, one over each gap, which is where the fin clicks
       for (var i = 0; i < N; i++) {
-        var a = (-90 + i * STEP) * Math.PI / 180;
+        var a = (-90 + (i + 0.5) * STEP) * Math.PI / 180;
         s += '<circle cx="' + (CX + Math.cos(a) * R * 1.005).toFixed(1) + '" cy="' + (CY + Math.sin(a) * R * 1.005).toFixed(1) + '" r="' + (R * 0.009) + '" fill="' + (i % 2 ? "#FFF3C2" : "#FFD98A") + '" filter="url(#whg)"/>';
       }
       for (i = 0; i < N; i++) s += paddle(i * STEP, STOPS[i]);
@@ -12108,12 +12120,39 @@
       s += '<text x="' + CX + '" y="' + (CY - R * 0.01) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.055) + '" fill="' + GOLD + '" filter="url(#whg)">BONUS</text>';
       s += '<text x="' + CX + '" y="' + (CY + R * 0.05) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-style="italic" font-size="' + (R * 0.045) + '" fill="' + GOLD + '">SPIN</text>';
       s += '<path d="M ' + (CX - R * 0.03) + ' ' + (CY - ro - R * 0.05) + ' L ' + (CX + R * 0.03) + ' ' + (CY - ro - R * 0.05) + ' L ' + CX + ' ' + (CY - ro + R * 0.05) + ' Z" fill="url(#whau)" filter="url(#whg)"/></g>';
-      // the clapper
-      s += '<rect x="' + (CX - R * 0.02) + '" y="' + (CY - R * 1.3) + '" width="' + (R * 0.04) + '" height="' + (R * 0.16) + '" rx="' + (R * 0.02) + '" fill="#C9CBD3"/>';
-      s += '<path d="M ' + (CX - R * 0.06) + ' ' + (CY - R * 1.18) + ' L ' + (CX + R * 0.06) + ' ' + (CY - R * 1.18) + ' L ' + (CX + R * 0.012) + ' ' + (CY - R * 0.9) + ' L ' + (CX - R * 0.012) + ' ' + (CY - R * 0.9) + ' Z" fill="#E0252E" stroke="#5A0A10" stroke-width="' + (R * 0.006) + '" filter="url(#whgg)"/>';
+      // the flipper: a red neon 4 on a dark glass block, its stem running on
+      // down past the bar into the fin that rides the pegs. It rocks forward
+      // on each peg and springs back (setFin).
+      var sx = CX + R * 0.01, bar = CY - R * 1.1125;
+      var four = 'M ' + sx + ' ' + (CY - R * 1.225) + ' L ' + (CX - R * 0.0475) + ' ' + bar + ' L ' + (CX + R * 0.055) + ' ' + bar + ' M ' + sx + ' ' + (CY - R * 1.225) + ' L ' + sx + ' ' + bar;
+      var fin = 'M ' + (sx - R * 0.007) + ' ' + bar + ' L ' + (sx + R * 0.007) + ' ' + bar + ' L ' + (sx + R * 0.0035) + ' ' + (CY - R * 0.9875) + ' Q ' + sx + ' ' + (CY - R * 0.97) + ' ' + (sx - R * 0.0035) + ' ' + (CY - R * 0.9875) + ' Z';
+      s += '<g id="wh-fin">';
+      s += '<rect x="' + (CX - R * 0.025) + '" y="' + (CY - R * 1.25) + '" width="' + (R * 0.07) + '" height="' + (R * 0.035) + '" rx="' + (R * 0.01) + '" fill="#15151B" stroke="#2A2A32" stroke-width="' + (R * 0.003) + '"/>';
+      s += '<path d="' + four + '" stroke="#FF2A3A" stroke-width="' + (R * 0.013) + '" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#whgg)" opacity=".95"/>';
+      s += '<path d="' + fin + '" fill="#FF2A3A" filter="url(#whgg)" opacity=".95"/>';
+      s += '<path d="' + four + '" stroke="#FFD0D4" stroke-width="' + (R * 0.005) + '" stroke-linecap="round" stroke-linejoin="round" fill="none"/>';
+      s += '<path d="M ' + sx + ' ' + bar + ' L ' + sx + ' ' + (CY - R * 0.9825) + '" stroke="#FFD0D4" stroke-width="' + (R * 0.0045) + '" stroke-linecap="round" fill="none"/>';
+      s += '</g>';
       $("wh-wheel").innerHTML = s + '</svg>';
     }
-    function setTurn(deg) { var g = $("wh-rotor"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
+    var finSeg = null, finAt = -1e9;
+    function setTurn(deg) {
+      var g = $("wh-rotor"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")");
+      // a peg (the gap between two paddles, where the light is) passing the fin
+      var k = Math.floor(-deg / STEP + 0.5);
+      if (finSeg !== null && k !== finSeg) finAt = performance.now();
+      finSeg = k;
+    }
+    /** The fin, knocked forward by a peg and springing back: full over at the
+     *  peg (the push is quicker than a frame), then a 60ms die-out. At speed the
+     *  pegs come faster than that and hold it over; as the wheel slows it starts
+     *  to drop back between them. Read off the clock, not the frame stamp, which
+     *  is older than the kick. */
+    function setFin() {
+      var f = $("wh-fin"); if (!f) return;
+      var dt = performance.now() - finAt, a = 16 * Math.exp(-Math.max(0, dt) / 60);
+      f.setAttribute("transform", a < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.232) + ")");
+    }
     function setRing(deg) { var g = $("wh-ring"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
     function showBonus(on) { $("wh-bonus").style.display = on ? "" : "none"; $("wh-glass").style.display = on ? "none" : ""; }
     function cubicBezierY(p1y, p2y, t) { var u = 1 - t; return 3 * u * u * t * p1y + 3 * u * t * t * p2y + t * t * t; }
@@ -12126,7 +12165,8 @@
         // so the last paddles tick past the clapper one at a time
         var t = Math.min(1, (now - start) / ms), e = ease(t);
         set(from + (to - from) * e);
-        if (t < 1) raf = requestAnimationFrame(frame); else { raf = null; if (done) done(); }
+        setFin();
+        if (t < 1) raf = requestAnimationFrame(frame); else { raf = null; finAt = -1e9; setFin(); if (done) done(); }
       }
       raf = requestAnimationFrame(frame);
     }
@@ -12364,7 +12404,7 @@
     // the felt: two rows of four
     function spotHtml(k) {
       var S = SYM[k], cls = k === "t" ? " gold" : (S.label.length > 3 ? " long" : "");
-      return '<button class="wh-spot" data-bet="' + k + '" style="--c:' + S.c + ';--lo:' + S.lo + ';--ink:' + S.ink + '"><span class="tag' + cls + '">' + S.label + '</span><span class="pr">' + (k === "t" ? "BONUS · 50X TO 500X" : "PAYS " + S.pays + " TO 1") + '</span><span class="wh-chip"></span></button>';
+      return '<button class="wh-spot" data-bet="' + k + '" style="--c:' + S.c + ';--lo:' + S.lo + ';--ink:' + S.ink + '"><span class="tag' + cls + '">' + S.label.replace("◆", gemTag()) + '</span><span class="pr">' + (k === "t" ? "BONUS · 50X TO 500X" : "PAYS " + S.pays + " TO 1") + '</span><span class="wh-chip"></span></button>';
     }
     $("wh-row1").innerHTML = ["r", "g", "b", "s"].map(spotHtml).join("");
     $("wh-row2").innerHTML = ["w", "d", "e", "t"].map(spotHtml).join("");
