@@ -12144,15 +12144,20 @@
       if (finSeg !== null && k !== finSeg) finAt = performance.now();
       finSeg = k;
     }
-    /** The fin, knocked forward by a peg and springing back: full over at the
-     *  peg (the push is quicker than a frame), then a 60ms die-out. At speed the
-     *  pegs come faster than that and hold it over; as the wheel slows it starts
-     *  to drop back between them. Read off the clock, not the frame stamp, which
-     *  is older than the kick. */
+    /** The fin, knocked by a peg and springing back. The wheel runs clockwise,
+     *  so at the top the pegs come from the left and knock the tip to the
+     *  RIGHT: full over at the peg (the push is quicker than a frame), then it
+     *  swings back through straight, overshoots a little to the left, and
+     *  settles, a damped swing with a 70ms die-out and a 180ms period. At
+     *  speed the pegs come faster than that and hold it over right; as the
+     *  wheel slows it starts to swing between them. A hanging tip goes right
+     *  for a NEGATIVE turn about a hinge above it. Read off the clock, not the
+     *  frame stamp, which is older than the kick. */
     function setFin() {
       var f = $("wh-fin"); if (!f) return;
-      var dt = performance.now() - finAt, a = 16 * Math.exp(-Math.max(0, dt) / 60);
-      f.setAttribute("transform", a < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.1125) + ")");
+      var dt = Math.max(0, performance.now() - finAt);
+      var a = dt > 240 ? 0 : -16 * Math.exp(-dt / 70) * Math.cos(2 * Math.PI * dt / 180);
+      f.setAttribute("transform", Math.abs(a) < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.1125) + ")");
     }
     function setRing(deg) { var g = $("wh-ring"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
     function showBonus(on) { $("wh-bonus").style.display = on ? "" : "none"; $("wh-glass").style.display = on ? "none" : ""; }
