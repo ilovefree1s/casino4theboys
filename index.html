@@ -11978,6 +11978,22 @@
       if (ms <= DROP_MS) return 1 - Math.pow(1 - ms / HEAD_MS, 4);
       return 1 - TAIL * Math.pow((SPIN_MS - ms) / TAIL_MS, TAIL_POW);
     }
+    /** The catch on the last peg. Coming onto it the fin bends against it and
+     *  the wheel all but stops, creeping at a twentieth of its pace for half
+     *  a second, then the fin slips off, that is the last click, and the wheel
+     *  settles the rest of the way. The run is the curve above with that half
+     *  second let into it just before the last crossing. */
+    var STICK_MS = 500, STICK_CREEP = 0.06, RUN_MS = SPIN_MS + STICK_MS * (1 - STICK_CREEP);
+    function wheelRun(delta, within) {
+      // when the curve crosses the last peg: within a step short of the rest
+      var ms1 = SPIN_MS - TAIL_MS * Math.pow(within * STEP / delta / TAIL, 1 / TAIL_POW);
+      var s0 = ms1 - STICK_MS * STICK_CREEP;
+      return { ms: RUN_MS, stickAt: s0, curve: function (t) {
+        var real = t * RUN_MS;
+        var c = real < s0 ? real : real < s0 + STICK_MS ? s0 + (real - s0) * STICK_CREEP : real - STICK_MS * (1 - STICK_CREEP);
+        return easeWheel(Math.min(1, c / SPIN_MS));
+      } };
+    }
     function extractWheelClick(buf) {
       var sr = buf.sampleRate, d = buf.getChannelData(0), peakAt = 0, peak = 0;
       for (var i = 0; i < d.length; i++) { var v = Math.abs(d[i]); if (v > peak) { peak = v; peakAt = i; } }
@@ -12209,21 +12225,26 @@
       var f = $("wh-fin"); if (!f) return;
       var dt = Math.max(0, performance.now() - finAt);
       var a = dt > 240 ? 0 : -16 * Math.exp(-dt / 70) * Math.cos(2 * Math.PI * dt / 180);
+      // caught on the last peg: bent against it, more and more, until it slips
+      a += -14 * finBend * finBend * (3 - 2 * finBend);
       f.setAttribute("transform", Math.abs(a) < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.1125) + ")");
     }
     function setRing(deg) { var g = $("wh-ring"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
     function showBonus(on) { $("wh-bonus").style.display = on ? "" : "none"; $("wh-glass").style.display = on ? "none" : ""; }
     function cubicBezierY(p1y, p2y, t) { var u = 1 - t; return 3 * u * u * t * p1y + 3 * u * t * t * p2y + t * t * t; }
-    var raf = null;
+    var raf = null, spinRun = null, finBend = 0;
     function animate(from, to, ms, set, done) {
       if (raf) cancelAnimationFrame(raf);
       var start = performance.now();
       function frame(now) {
-        // away hard and then a long crawl onto the stop: a quartic die-out,
-        // so the last paddles tick past the clapper one at a time
-        var t = Math.min(1, (now - start) / ms), e = (set === setTurn ? easeWheel : ease)(t);
+        // the wheel on its own run (wheelRun), the ring on a quartic die-out
+        var t = Math.min(1, (now - start) / ms), e = (set === setTurn ? spinRun.curve : ease)(t);
         set(from + (to - from) * e);
-        if (set === setTurn) setLift(liftFor(t));
+        if (set === setTurn) {
+          setLift(liftFor((now - start) / SPIN_MS));
+          var sp = (now - start - spinRun.stickAt) / STICK_MS;
+          finBend = sp > 0 && sp < 1 ? sp : 0;
+        }
         setFin();
         if (t < 1) raf = requestAnimationFrame(frame); else { raf = null; finAt = -1e9; setFin(); if (set === setTurn) setTimeout(raiseFlipper, 600); if (done) done(); }
       }
@@ -12411,10 +12432,12 @@
       renderAll();
       // The wheel settles just past the last peg, in the first part of the stop,
       // the way a real one does, so that last click comes at the very end of the crawl.
-      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, 0.1 + Math.random() * 0.3);
+      var within = 0.1 + Math.random() * 0.3;
+      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, within);
+      spinRun = wheelRun(target - turn, within);
       // only the pegs the fin is down for are heard: it is halfway down half a LIFT_MS before FIN_MS
-      startWheelSound(crossings(turn, target, N, SPIN_MS, easeWheel).filter(function (at) { return at >= (FIN_MS - LIFT_MS / 2) / 1000; }));
-      animate(turn, target, SPIN_MS, setTurn, function () {
+      startWheelSound(crossings(turn, target, N, spinRun.ms, spinRun.curve).filter(function (at) { return at >= (FIN_MS - LIFT_MS / 2) / 1000; }));
+      animate(turn, target, spinRun.ms, setTurn, function () {
         turn = target;
         setTimeout(function () {
           stop = STOPS[i];
