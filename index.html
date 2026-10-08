@@ -11978,16 +11978,18 @@
       if (ms <= DROP_MS) return 1 - Math.pow(1 - ms / HEAD_MS, 4);
       return 1 - TAIL * Math.pow((SPIN_MS - ms) / TAIL_MS, TAIL_POW);
     }
-    /** The catch on the last peg. Coming onto it the fin bends against it and
-     *  the wheel all but stops, creeping at a twentieth of its pace for half
-     *  a second, then the fin slips off, that is the last click, and the wheel
-     *  settles the rest of the way. The run is the curve above with that half
-     *  second let into it just before the last crossing. */
-    var STICK_MS = 500, STICK_CREEP = 0.06, RUN_MS = SPIN_MS + STICK_MS * (1 - STICK_CREEP);
+    /** The catch on the last peg. A peg pushes the fin as it comes: over its
+     *  last two degrees into the fin the fin bends with it, more the closer it
+     *  gets (setTurn), and at the crossing it slips off, the click. On the last
+     *  peg the wheel is slowed through those two degrees, the 300ms the curve
+     *  would take them in stretched to 900, so it is seen to be stuck on the
+     *  peg, still turning, the fin bending, before it drops. The run is the
+     *  curve above with that let into it. */
+    var CONTACT_DEG = 2, STICK_LEAD_MS = 300, STICK_MS = 900, STICK_CREEP = STICK_LEAD_MS / STICK_MS, RUN_MS = SPIN_MS + STICK_MS - STICK_LEAD_MS;
     function wheelRun(delta, within) {
       // when the curve crosses the last peg: within a step short of the rest
       var ms1 = SPIN_MS - TAIL_MS * Math.pow(within * STEP / delta / TAIL, 1 / TAIL_POW);
-      var s0 = ms1 - STICK_MS * STICK_CREEP;
+      var s0 = ms1 - STICK_LEAD_MS;
       return { ms: RUN_MS, stickAt: s0, curve: function (t) {
         var real = t * RUN_MS;
         var c = real < s0 ? real : real < s0 + STICK_MS ? s0 + (real - s0) * STICK_CREEP : real - STICK_MS * (1 - STICK_CREEP);
@@ -12208,9 +12210,12 @@
     function setTurn(deg) {
       var g = $("wh-rotor"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")");
       // a peg (the gap between two paddles, where the light is) passing the fin, once it is down
-      var k = Math.floor(-deg / STEP + 0.5);
+      var u = -deg / STEP + 0.5, k = Math.floor(u);
       if (finSeg !== null && k !== finSeg && liftNow < 0.5) finAt = performance.now();
       finSeg = k;
+      // and the one coming: over its last CONTACT_DEG it is pushing the fin over
+      var toGo = (u - k) * STEP;
+      finBend = liftNow < 0.5 && toGo < CONTACT_DEG ? 1 - toGo / CONTACT_DEG : 0;
     }
     /** The fin, knocked by a peg and springing back. The wheel runs clockwise,
      *  so at the top the pegs come from the left and knock the tip to the
@@ -12225,8 +12230,8 @@
       var f = $("wh-fin"); if (!f) return;
       var dt = Math.max(0, performance.now() - finAt);
       var a = dt > 240 ? 0 : -16 * Math.exp(-dt / 70) * Math.cos(2 * Math.PI * dt / 180);
-      // caught on the last peg: bent against it, more and more, until it slips
-      a += -14 * finBend * finBend * (3 - 2 * finBend);
+      // pushed over by the peg coming into it, until it slips
+      a += -14 * finBend;
       f.setAttribute("transform", Math.abs(a) < 0.05 ? "" : "rotate(" + a.toFixed(2) + " " + (CX + R * 0.01) + " " + (CY - R * 1.1125) + ")");
     }
     function setRing(deg) { var g = $("wh-ring"); if (g) g.setAttribute("transform", "rotate(" + deg.toFixed(2) + " " + CX + " " + CY + ")"); }
@@ -12240,11 +12245,7 @@
         // the wheel on its own run (wheelRun), the ring on a quartic die-out
         var t = Math.min(1, (now - start) / ms), e = (set === setTurn ? spinRun.curve : ease)(t);
         set(from + (to - from) * e);
-        if (set === setTurn) {
-          setLift(liftFor((now - start) / SPIN_MS));
-          var sp = (now - start - spinRun.stickAt) / STICK_MS;
-          finBend = sp > 0 && sp < 1 ? sp : 0;
-        }
+        if (set === setTurn) setLift(liftFor((now - start) / SPIN_MS));
         setFin();
         if (t < 1) raf = requestAnimationFrame(frame); else { raf = null; finAt = -1e9; setFin(); if (set === setTurn) setTimeout(raiseFlipper, 600); if (done) done(); }
       }
@@ -12461,6 +12462,8 @@
         if (back > 0) winners[k] = true;
         totalReturn += back;
       });
+      // the house takes the losers' chips off the felt; the winners' stay, paid
+      Object.keys(bets).forEach(function (k) { if (!winners[k]) delete bets[k]; });
       bankroll += totalReturn; syncWallet();
       lastReturn = totalReturn;
       history.push(stop); if (history.length > 24) history.shift();
