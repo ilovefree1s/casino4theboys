@@ -11978,13 +11978,11 @@
       if (ms <= DROP_MS) return 1 - Math.pow(1 - ms / HEAD_MS, 4);
       return 1 - TAIL * Math.pow((SPIN_MS - ms) / TAIL_MS, TAIL_POW);
     }
-    /** The catch on the last peg. A peg pushes the fin as it comes: over its
-     *  last two degrees into the fin the fin bends with it, more the closer it
-     *  gets (setTurn), and at the crossing it slips off, the click. On the last
-     *  peg the wheel is slowed through those two degrees, the 300ms the curve
-     *  would take them in stretched to 900, so it is seen to be stuck on the
-     *  peg, still turning, the fin bending, before it drops. The run is the
-     *  curve above with that let into it. */
+    /** A peg pushes the fin as it comes: from the light's edge meeting the
+     *  fin's edge until the light has cleared the fin's line, the fin bends
+     *  with it (setTurn), and then it slips off, the click. That is read off
+     *  the wheel's own position, so the wheel is not slowed for it: a hold on
+     *  the last peg was tried and looked sluggish. */
     /** The peg is the light on the rim, at 1.005R, and the fin crosses that
      *  ring 0.1075R below its hinge. The fin hangs FIN_OFF_DEG clockwise of top
      *  dead centre (its stem is 0.01R right of centre). The light's edge meets
@@ -11995,14 +11993,17 @@
      *  slips off and snaps back behind it. Every crossing, click, bend and
      *  rest is measured from the fin. */
     var FIN_OFF_DEG = 0.59, TOUCH_DEG = 0.77, CONTACT_DEG = 1.7, KICK_OFF_DEG = FIN_OFF_DEG - TOUCH_DEG + CONTACT_DEG, BEND_DEG = 16;
-    var STICK_LEAD_MS = 300, STICK_MS = 900, STICK_CREEP = STICK_LEAD_MS / STICK_MS, RUN_MS = SPIN_MS + STICK_MS - STICK_LEAD_MS;
+    /** The last tick at half pace: from the last peg touching the fin to it
+     *  slipping off, the wheel runs at LAST_TICK_PACE of the curve's speed, a
+     *  quarter of a second or so stretched to half. No hold: it keeps moving. */
+    var LAST_TICK_PACE = 0.5;
     function wheelRun(delta, within) {
-      // when the curve crosses the last peg: within a step short of the rest
-      var ms1 = SPIN_MS - TAIL_MS * Math.pow((within * STEP - (CONTACT_DEG - TOUCH_DEG)) / delta / TAIL, 1 / TAIL_POW);
-      var s0 = ms1 - STICK_LEAD_MS;
-      return { ms: RUN_MS, stickAt: s0, curve: function (t) {
-        var real = t * RUN_MS;
-        var c = real < s0 ? real : real < s0 + STICK_MS ? s0 + (real - s0) * STICK_CREEP : real - STICK_MS * (1 - STICK_CREEP);
+      function at(left) { return SPIN_MS - TAIL_MS * Math.pow(left / delta / TAIL, 1 / TAIL_POW); }
+      var touch = at(within * STEP + TOUCH_DEG), slip = at(within * STEP - (CONTACT_DEG - TOUCH_DEG));
+      var lead = slip - touch, stretch = lead / LAST_TICK_PACE, run = SPIN_MS + stretch - lead;
+      return { ms: run, curve: function (t) {
+        var real = t * run;
+        var c = real < touch ? real : real < touch + stretch ? touch + (real - touch) * LAST_TICK_PACE : real - (stretch - lead);
         return easeWheel(Math.min(1, c / SPIN_MS));
       } };
     }
