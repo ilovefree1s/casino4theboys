@@ -11948,7 +11948,7 @@
     var STOPS = ("r g r b r g r s r g r b r g r w r g r b r g r s g d t r g r b r g r s r g r b r g r w r g r b r g b s g e t").split(" ");
     var N = STOPS.length, STEP = 360 / N;
     var BONUS = [50, 75, 100, 50, 150, 75, 100, 50, 200, 75, 100, 500], BSTEP = 360 / BONUS.length;
-    var SPIN_MS = 7000, BONUS_MS = 3600, TURNS = 7, BONUS_TURNS = 4;
+    var SPIN_MS = 8000, BONUS_MS = 3600, TURNS = 7, BONUS_TURNS = 4;
     /* The wheel's own noise, from Chain Reaction: one click is cut out of its
        wheel recording — the loudest transient, from a couple of milliseconds
        before its onset, 45ms long, edges feathered — and for a spin the same
@@ -12153,7 +12153,8 @@
      *  of halfway: 54 pegs a turn at full speed is a rattle nobody wants for
      *  seven seconds, and by halfway the pegs are 35ms apart, a clicking. */
     var liftNow = 1, raising = null;
-    function liftFor(t) { var u = (t - 0.45) / 0.1; return u <= 0 ? 1 : u >= 1 ? 0 : 1 - u * u * (3 - 2 * u); }
+    // down between 0.39 and 0.49 of the run, so the four seconds after it come down are the slow ones
+    function liftFor(t) { var u = (t - 0.39) / 0.1; return u <= 0 ? 1 : u >= 1 ? 0 : 1 - u * u * (3 - 2 * u); }
     function setLift(v) {
       liftNow = v;
       var g = $("wh-flip"); if (g) g.setAttribute("transform", "translate(0 " + (-R * LIFT * v).toFixed(2) + ")");
@@ -12390,8 +12391,8 @@
       phase = "spinning"; noteText = ""; msgText = "No more bets";
       renderAll();
       var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS);
-      // only the pegs the fin is down for are heard: it is halfway down at halfway
-      startWheelSound(crossings(turn, target, N, SPIN_MS).filter(function (at) { return at >= SPIN_MS * 0.5 / 1000; }));
+      // only the pegs the fin is down for are heard: it is halfway down at 0.44 of the run
+      startWheelSound(crossings(turn, target, N, SPIN_MS).filter(function (at) { return at >= SPIN_MS * 0.44 / 1000; }));
       animate(turn, target, SPIN_MS, setTurn, function () {
         turn = target;
         setTimeout(function () {
