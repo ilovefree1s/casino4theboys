@@ -11985,16 +11985,20 @@
      *  would take them in stretched to 900, so it is seen to be stuck on the
      *  peg, still turning, the fin bending, before it drops. The run is the
      *  curve above with that let into it. */
-    /** Where the fin hangs, in degrees clockwise of top dead centre (its stem is
-     *  0.01R right of centre, its tip at 0.97R), and how far past that line a
-     *  peg pushes it before it slips: the tip, 0.1425R below the hinge, moves
-     *  1.5 degrees of rim for a 10.5 degree bend, so the tip stays on the peg.
-     *  Every crossing, click, bend and rest is measured from the fin. */
-    var FIN_OFF_DEG = 0.59, CONTACT_DEG = 1.5, KICK_OFF_DEG = FIN_OFF_DEG + CONTACT_DEG, BEND_DEG = 10.5;
+    /** The peg is the light on the rim, at 1.005R, and the fin crosses that
+     *  ring 0.1075R below its hinge. The fin hangs FIN_OFF_DEG clockwise of top
+     *  dead centre (its stem is 0.01R right of centre). The light's edge meets
+     *  the fin's edge TOUCH_DEG before the light's centre reaches the fin's
+     *  line (a 0.009R light and a 0.0045R half-blade, at that radius), pushes
+     *  the fin over for CONTACT_DEG of rim, which is BEND_DEG of bend at that
+     *  lever, and then the light has cleared the fin's resting line, the fin
+     *  slips off and snaps back behind it. Every crossing, click, bend and
+     *  rest is measured from the fin. */
+    var FIN_OFF_DEG = 0.59, TOUCH_DEG = 0.77, CONTACT_DEG = 1.7, KICK_OFF_DEG = FIN_OFF_DEG - TOUCH_DEG + CONTACT_DEG, BEND_DEG = 16;
     var STICK_LEAD_MS = 300, STICK_MS = 900, STICK_CREEP = STICK_LEAD_MS / STICK_MS, RUN_MS = SPIN_MS + STICK_MS - STICK_LEAD_MS;
     function wheelRun(delta, within) {
       // when the curve crosses the last peg: within a step short of the rest
-      var ms1 = SPIN_MS - TAIL_MS * Math.pow((within * STEP - CONTACT_DEG) / delta / TAIL, 1 / TAIL_POW);
+      var ms1 = SPIN_MS - TAIL_MS * Math.pow((within * STEP - (CONTACT_DEG - TOUCH_DEG)) / delta / TAIL, 1 / TAIL_POW);
       var s0 = ms1 - STICK_LEAD_MS;
       return { ms: RUN_MS, stickAt: s0, curve: function (t) {
         var real = t * RUN_MS;
@@ -12439,7 +12443,7 @@
       renderAll();
       // The wheel settles just past the last peg, in the first part of the stop,
       // the way a real one does, so that last click comes at the very end of the crawl.
-      var within = 0.3 + Math.random() * 0.2;  // past the slip, which is CONTACT_DEG in, and short of the middle
+      var within = 0.35 + Math.random() * 0.15;  // clear of the peg it slipped off, and short of the middle
       var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, within);
       spinRun = wheelRun(target - turn, within);
       // only the pegs the fin is down for are heard: it is halfway down half a LIFT_MS before FIN_MS
