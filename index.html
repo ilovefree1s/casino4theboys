@@ -12337,8 +12337,8 @@
       }
       if (phase === "betting") { feltBtn("Clear", "#8A93A6", clearBets); feltBtn("Spin", GOLD, spin, totalStaked() <= 0); }
       // after a spin the losers' chips are gone: SAME BET puts the whole last bet back
-      // on the felt to look at, SPIN AGAIN puts it back and spins; a new bet is a tap on a spot
-      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", function () { nextSpin(true); }); feltBtn("Spin again", GOLD, spin); }
+      // on the felt, and only then is there anything to spin; a new bet is a tap on a spot
+      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", function () { nextSpin(true); }); feltBtn("Spin again", GOLD, function () {}, true); }
       else { feltBtn("Clear", "#8A93A6", function () {}, true); feltBtn("Spin", GOLD, function () {}, true); }
     }
     function renderStrip() {
@@ -12450,7 +12450,8 @@
     // ---- the spin ----
     function spin() {
       if (busy()) return;
-      if (phase === "result") nextSpin(true);
+      // after a spin there is nothing to spin on until SAME BET puts the bet back, or a spot is tapped
+      if (phase === "result") return;
       if (totalStaked() <= 0) { noteText = "Place a bet first"; renderMessage(); return; }
       var staked = totalStaked();
       bankroll -= staked; syncWallet();
