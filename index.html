@@ -11961,15 +11961,16 @@
     var wheelCtx = null, wheelClick = null, wheelNode = null, wheelGain = null;
     function ease(t) { return 1 - Math.pow(1 - t, 4); }
     /** The wheel's run, in two parts that meet at the flipper coming down,
-     *  3.85s in. After it: constant deceleration, the way friction slows a real
-     *  wheel, so the pegs keep ticking past, each a little later than the last,
-     *  for the whole 4.15s, 37 a second at the drop down to the last one a
-     *  third of a second before the stop; nothing dies out early and creeps.
-     *  Before it: a quartic that leaves the drop at that same speed. The
-     *  algebra puts the drop at 78% of the way round, 588 degrees to go. */
-    var DROP_MS = 3850, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2;
-    var HEAD_MS = DROP_MS + (4 / TAIL_POW) * (SPIN_MS - DROP_MS);
-    var HEAD = 1 - Math.pow(1 - DROP_MS / HEAD_MS, 4), TAIL = 1 - HEAD;
+     *  1.85s in. After it, six seconds of slowing: the pegs tick past each a
+     *  little later than the last, 84 a second at the drop, 20 in the sixth
+     *  second, 9 in the seventh, and 2 in the last, the final one passing
+     *  0.6s before the stop (a power-2.6 die-out: constant deceleration would
+     *  end too sharp for that). Before it, a quartic that leaves the drop at
+     *  that same speed; the algebra puts the drop at 51% of the way round,
+     *  1322 degrees to go. */
+    var DROP_MS = 1850, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2.6;
+    var HEAD_Q = 4 * (1 - DROP_T) / (TAIL_POW * DROP_T + 4 * (1 - DROP_T)), HEAD_MS = DROP_MS / (1 - HEAD_Q);
+    var TAIL = Math.pow(HEAD_Q, 4), HEAD = 1 - TAIL;
     function easeWheel(t) {
       if (t <= DROP_T) return 1 - Math.pow(1 - t * SPIN_MS / HEAD_MS, 4);
       var s = (t - DROP_T) / (1 - DROP_T);
@@ -12168,8 +12169,8 @@
      *  of halfway: 54 pegs a turn at full speed is a rattle nobody wants for
      *  seven seconds, and by halfway the pegs are 35ms apart, a clicking. */
     var liftNow = 1, raising = null;
-    // down between 0.39 and 0.49 of the run, so the four seconds after it come down are the slow ones
-    function liftFor(t) { var u = (t - 0.39) / 0.1; return u <= 0 ? 1 : u >= 1 ? 0 : 1 - u * u * (3 - 2 * u); }
+    // down over the tenth of the run before the drop, DROP_T, so the six seconds after it are the slow ones
+    function liftFor(t) { var u = (t - (DROP_T - 0.1)) / 0.1; return u <= 0 ? 1 : u >= 1 ? 0 : 1 - u * u * (3 - 2 * u); }
     function setLift(v) {
       liftNow = v;
       var g = $("wh-flip"); if (g) g.setAttribute("transform", "translate(0 " + (-R * LIFT * v).toFixed(2) + ")");
@@ -12406,8 +12407,8 @@
       phase = "spinning"; noteText = ""; msgText = "No more bets";
       renderAll();
       var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS);
-      // only the pegs the fin is down for are heard: it is halfway down at 0.44 of the run
-      startWheelSound(crossings(turn, target, N, SPIN_MS, easeWheel).filter(function (at) { return at >= SPIN_MS * 0.44 / 1000; }));
+      // only the pegs the fin is down for are heard: it is halfway down a twentieth of the run before the drop
+      startWheelSound(crossings(turn, target, N, SPIN_MS, easeWheel).filter(function (at) { return at >= (DROP_T - 0.05) * SPIN_MS / 1000; }));
       animate(turn, target, SPIN_MS, setTurn, function () {
         turn = target;
         setTimeout(function () {
