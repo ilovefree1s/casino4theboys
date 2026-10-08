@@ -12336,7 +12336,9 @@
         b.disabled = !!off; b.addEventListener("click", fn); a.appendChild(b);
       }
       if (phase === "betting") { feltBtn("Clear", "#8A93A6", clearBets); feltBtn("Spin", GOLD, spin, totalStaked() <= 0); }
-      else if (phase === "result") { feltBtn("New bet", "#8A93A6", function () { nextSpin(false); }); feltBtn("Spin again", GOLD, spin); }
+      // after a spin the losers' chips are gone: SAME BET puts the whole last bet back
+      // on the felt to look at, SPIN AGAIN puts it back and spins; a new bet is a tap on a spot
+      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", function () { nextSpin(true); }); feltBtn("Spin again", GOLD, spin); }
       else { feltBtn("Clear", "#8A93A6", function () {}, true); feltBtn("Spin", GOLD, function () {}, true); }
     }
     function renderStrip() {
@@ -12440,7 +12442,7 @@
         keys.forEach(function (k) { sum += lastBets[k]; });
         if (!keys.length) {}
         else if (sum > bankroll) noteText = "Not enough for that bet";
-        else { keys.forEach(function (k) { bets[k] = lastBets[k]; }); msgText = "Bets repeated"; }
+        else { keys.forEach(function (k) { bets[k] = lastBets[k]; }); msgText = "Same bet — spin when ready"; }
       }
       renderAll();
     }
