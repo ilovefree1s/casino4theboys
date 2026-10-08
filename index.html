@@ -11993,18 +11993,31 @@
      *  slips off and snaps back behind it. Every crossing, click, bend and
      *  rest is measured from the fin. */
     var FIN_OFF_DEG = 0.59, TOUCH_DEG = 0.77, CONTACT_DEG = 1.7, KICK_OFF_DEG = FIN_OFF_DEG - TOUCH_DEG + CONTACT_DEG, BEND_DEG = 16;
-    /** The last tick at half pace: from the last peg touching the fin to it
-     *  slipping off, the wheel runs at LAST_TICK_PACE of the curve's speed, a
-     *  quarter of a second or so stretched to half. No hold: it keeps moving. */
-    var LAST_TICK_PACE = 0.5;
+    /** The last tick at half pace, blended in. Over the second before the
+     *  last peg touches the fin the wheel's pace eases from the curve's to
+     *  half of it, holds at half from touch to slip, and eases back over a
+     *  third of a second after; the curve is run on that slower clock. No
+     *  hold: it keeps moving the whole time. */
+    var LAST_TICK_PACE = 0.5, BLEND_IN_MS = 1000, BLEND_OUT_MS = 300;
     function wheelRun(delta, within) {
       function at(left) { return SPIN_MS - TAIL_MS * Math.pow(left / delta / TAIL, 1 / TAIL_POW); }
       var touch = at(within * STEP + TOUCH_DEG), slip = at(within * STEP - (CONTACT_DEG - TOUCH_DEG));
-      var lead = slip - touch, stretch = lead / LAST_TICK_PACE, run = SPIN_MS + stretch - lead;
+      function pace(c) {
+        if (c < touch - BLEND_IN_MS) return 1;
+        if (c < touch) return 1 - (1 - LAST_TICK_PACE) * (c - (touch - BLEND_IN_MS)) / BLEND_IN_MS;
+        if (c < slip) return LAST_TICK_PACE;
+        if (c < slip + BLEND_OUT_MS) return LAST_TICK_PACE + (1 - LAST_TICK_PACE) * (c - slip) / BLEND_OUT_MS;
+        return 1;
+      }
+      // the real time at each ms of curve time: the curve runs slower where the pace is lower
+      var realAt = new Float64Array(SPIN_MS + 1);
+      for (var c = 1; c <= SPIN_MS; c++) realAt[c] = realAt[c - 1] + 1 / pace(c - 0.5);
+      var run = realAt[SPIN_MS];
       return { ms: run, curve: function (t) {
-        var real = t * run;
-        var c = real < touch ? real : real < touch + stretch ? touch + (real - touch) * LAST_TICK_PACE : real - (stretch - lead);
-        return easeWheel(Math.min(1, c / SPIN_MS));
+        var real = t * run, lo = 0, hi = SPIN_MS;
+        while (hi - lo > 1) { var mid = (lo + hi) >> 1; if (realAt[mid] <= real) lo = mid; else hi = mid; }
+        var cm = lo + (real - realAt[lo]) / (realAt[hi] - realAt[lo]);
+        return easeWheel(Math.min(1, cm / SPIN_MS));
       } };
     }
     function extractWheelClick(buf) {
