@@ -7523,11 +7523,15 @@
       for (var i = 0; i < BONUS.length; i++) if (BONUS[i][0] === cat) return i;
       return -1;
     }
-    /* The Bad Beat, DJ Wild's ladder brought over: it pays off whichever hand
-       LOST the showdown, when that hand was trips or better. The shoe-only
-       hands slot in by rank. [category, pays]. */
-    var BAD_BEAT = [[12, 10000], [11, 10000], [10, 5000], [9, 5000], [8, 1000],
-                    [7, 500], [6, 400], [5, 300], [4, 100], [3, 9]];
+    /* The Bad Beat: it pays off whichever hand LOST the showdown, when that
+       hand was trips or better. The shoe-only hands slot in by rank.
+       [category, pays]. Priced from a million dealt hands (the app's
+       ShootoutBadBeatSim): a losing full house comes once in 38 hands here,
+       so DJ Wild's ladder returned eighteen times the bet; the house table
+       is about 12 / 8 / 5 / 1 from the full house down, and the user bumped
+       it to 25 / 15 / 10 / 3 on purpose, a gift that returns about 157%. */
+    var BAD_BEAT = [[12, 10000], [11, 10000], [10, 2500], [9, 2000], [8, 1000],
+                    [7, 150], [6, 25], [5, 15], [4, 10], [3, 3]];
     function badBeatRung(cat) {
       for (var i = 0; i < BAD_BEAT.length; i++) if (BAD_BEAT[i][0] === cat) return i;
       return -1;
