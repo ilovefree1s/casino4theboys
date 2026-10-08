@@ -11948,7 +11948,7 @@
     var STOPS = ("r g r b r g r s r g r b r g r w r g r b r g r s g d t r g r b r g r s r g r b r g r w r g r b r g b s g e t").split(" ");
     var N = STOPS.length, STEP = 360 / N;
     var BONUS = [50, 75, 100, 50, 150, 75, 100, 50, 200, 75, 100, 500], BSTEP = 360 / BONUS.length;
-    var SPIN_MS = 8000, BONUS_MS = 3600, TURNS = 7, BONUS_TURNS = 4;
+    var SPIN_MS = 12000, BONUS_MS = 3600, TURNS = 7, BONUS_TURNS = 4;
     /* The wheel's own noise, from Chain Reaction: one click is cut out of its
        wheel recording — the loudest transient, from a couple of milliseconds
        before its onset, 45ms long, edges feathered — and for a spin the same
@@ -11961,14 +11961,14 @@
     var wheelCtx = null, wheelClick = null, wheelNode = null, wheelGain = null;
     function ease(t) { return 1 - Math.pow(1 - t, 4); }
     /** The wheel's run, in two parts that meet at the flipper coming down,
-     *  1.85s in. After it, six seconds of slowing: the pegs tick past each a
-     *  little later than the last, 84 a second at the drop, 20 in the sixth
-     *  second, 9 in the seventh, and 2 in the last, the final one passing
-     *  0.6s before the stop (a power-2.6 die-out: constant deceleration would
-     *  end too sharp for that). Before it, a quartic that leaves the drop at
-     *  that same speed; the algebra puts the drop at 51% of the way round,
-     *  1322 degrees to go. */
-    var DROP_MS = 1850, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2.6;
+     *  4s in. After it, eight seconds of slowing: the pegs tick past each a
+     *  little later than the last, 43 a second at the drop, 17 in the eighth
+     *  second, 11 in the ninth, 7, 3, and the last one passes a second before
+     *  the stop, the wheel creeping its last four degrees (a power-2.6
+     *  die-out: constant deceleration would end too sharp for that). Before
+     *  it, a quartic that leaves the drop at that same speed; the algebra puts
+     *  the drop at 68% of the way round, 876 degrees to go. */
+    var DROP_MS = 4000, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2.6;
     var HEAD_Q = 4 * (1 - DROP_T) / (TAIL_POW * DROP_T + 4 * (1 - DROP_T)), HEAD_MS = DROP_MS / (1 - HEAD_Q);
     var TAIL = Math.pow(HEAD_Q, 4), HEAD = 1 - TAIL;
     function easeWheel(t) {
@@ -12169,7 +12169,7 @@
      *  of halfway: 54 pegs a turn at full speed is a rattle nobody wants for
      *  seven seconds, and by halfway the pegs are 35ms apart, a clicking. */
     var liftNow = 1, raising = null;
-    // down over the tenth of the run before the drop, DROP_T, so the six seconds after it are the slow ones
+    // down over the tenth of the run before the drop, DROP_T, so the eight seconds after it are the slow ones
     function liftFor(t) { var u = (t - (DROP_T - 0.1)) / 0.1; return u <= 0 ? 1 : u >= 1 ? 0 : 1 - u * u * (3 - 2 * u); }
     function setLift(v) {
       liftNow = v;
