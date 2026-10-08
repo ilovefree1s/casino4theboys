@@ -11961,14 +11961,14 @@
     var wheelCtx = null, wheelClick = null, wheelNode = null, wheelGain = null;
     function ease(t) { return 1 - Math.pow(1 - t, 4); }
     /** The wheel's run: a one-second head, then eleven seconds of one smooth
-     *  die-out to the stop at constant deceleration, the way a real wheel
-     *  slows on its friction, with no join anywhere
-     *  for the eye to catch. The pegs go past 31 a second at the handover,
-     *  then 28, 25, 22, 20, 17, 14, 12, 9, 7, 4, and the last one passes
-     *  0.6s before the stop. The head is a quartic that hands over at the
+     *  die-out to the stop, a power-2.5 curve, a touch gentler at the end
+     *  than a wheel on plain friction, with no join anywhere
+     *  for the eye to catch. The pegs go past 36 a second at the handover,
+     *  then 31, 27, 23, 19, 16, 12, 9, 6, 4, 2, the last one a second or
+     *  so before the stop, as the wheel crawls onto its number. The head is a quartic that hands over at the
      *  die-out's own speed; the algebra puts the handover at 18% of the way
      *  round. The flipper itself lands later, at FIN_MS. */
-    var DROP_MS = 1000, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2, TAIL_MS = SPIN_MS - DROP_MS;
+    var DROP_MS = 1000, DROP_T = DROP_MS / SPIN_MS, TAIL_POW = 2.5, TAIL_MS = SPIN_MS - DROP_MS;
     /** When the flipper lands on the pegs, and how long it takes coming down: the clicking starts here. */
     var FIN_MS = 6000, FIN_T = FIN_MS / SPIN_MS, LIFT_MS = 800, LIFT_T = LIFT_MS / SPIN_MS;
     var HEAD_Q = 4 * TAIL_MS / (TAIL_POW * DROP_MS + 4 * TAIL_MS), HEAD_MS = DROP_MS / (1 - HEAD_Q);
@@ -12230,8 +12230,9 @@
       raf = requestAnimationFrame(frame);
     }
     /** Wind on [turns] whole turns and stop with stop [i] under the clapper, always forward. */
-    function aim(from, i, step, turns) {
-      var want = -i * step, delta = (want - from) % 360; if (delta < 0) delta += 360;
+    /** [within] is where across the stop it comes to rest: 0 the leading peg, 0.5 the middle. */
+    function aim(from, i, step, turns, within) {
+      var want = -i * step + ((within === undefined ? 0.5 : within) - 0.5) * step, delta = (want - from) % 360; if (delta < 0) delta += 360;
       return from + turns * 360 + delta;
     }
 
@@ -12408,7 +12409,9 @@
       lastBets = {}; Object.keys(bets).forEach(function (k) { lastBets[k] = bets[k]; });
       phase = "spinning"; noteText = ""; msgText = "No more bets";
       renderAll();
-      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS);
+      // The wheel settles just past the last peg, in the first part of the stop,
+      // the way a real one does, so that last click comes at the very end of the crawl.
+      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, 0.1 + Math.random() * 0.3);
       // only the pegs the fin is down for are heard: it is halfway down half a LIFT_MS before FIN_MS
       startWheelSound(crossings(turn, target, N, SPIN_MS, easeWheel).filter(function (at) { return at >= (FIN_MS - LIFT_MS / 2) / 1000; }));
       animate(turn, target, SPIN_MS, setTurn, function () {
