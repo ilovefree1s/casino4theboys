@@ -11993,12 +11993,13 @@
      *  slips off and snaps back behind it. Every crossing, click, bend and
      *  rest is measured from the fin. */
     var FIN_OFF_DEG = 0.59, TOUCH_DEG = 0.77, CONTACT_DEG = 1.7, KICK_OFF_DEG = FIN_OFF_DEG - TOUCH_DEG + CONTACT_DEG, BEND_DEG = 16;
-    /** The last tick at half pace, blended in. Over the second before the
-     *  last peg touches the fin the wheel's pace eases from the curve's to
-     *  half of it, holds at half from touch to slip, and eases back over a
-     *  third of a second after; the curve is run on that slower clock. No
-     *  hold: it keeps moving the whole time. */
-    var LAST_TICK_PACE = 0.5, BLEND_IN_MS = 1000, BLEND_OUT_MS = 300;
+    /** The last tick at half pace, blended in. Over the three seconds before
+     *  the last peg touches the fin the wheel's pace eases from the curve's to
+     *  half of it, holds at half through the touch and the slip, and from the
+     *  slip eases on down to a third at the stop, so the last coast goes out
+     *  over two seconds or more, never picking up; the curve is run on that
+     *  slower clock. No hold: it keeps moving the whole time. */
+    var LAST_TICK_PACE = 0.5, END_PACE = 0.3, BLEND_IN_MS = 3000;
     function wheelRun(delta, within) {
       function at(left) { return SPIN_MS - TAIL_MS * Math.pow(left / delta / TAIL, 1 / TAIL_POW); }
       var touch = at(within * STEP + TOUCH_DEG), slip = at(within * STEP - (CONTACT_DEG - TOUCH_DEG));
@@ -12006,8 +12007,7 @@
         if (c < touch - BLEND_IN_MS) return 1;
         if (c < touch) return 1 - (1 - LAST_TICK_PACE) * (c - (touch - BLEND_IN_MS)) / BLEND_IN_MS;
         if (c < slip) return LAST_TICK_PACE;
-        if (c < slip + BLEND_OUT_MS) return LAST_TICK_PACE + (1 - LAST_TICK_PACE) * (c - slip) / BLEND_OUT_MS;
-        return 1;
+        return LAST_TICK_PACE - (LAST_TICK_PACE - END_PACE) * (c - slip) / (SPIN_MS - slip);
       }
       // the real time at each ms of curve time: the curve runs slower where the pace is lower
       var realAt = new Float64Array(SPIN_MS + 1);
