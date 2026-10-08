@@ -1602,6 +1602,8 @@
      background art is washed into the table's own colour, the way the
      hold'em table swings it green. */
   #screen-shootout { position: relative; background: #0A0602; --uth-green: #FFB13D; }
+  /* Super Buster's ring lights white with a hard 20 to bust */
+  .b7-luxring.b7-buster.armed { border-color: #fff; box-shadow: 0 0 12px rgba(255, 59, 59, .9), 0 0 0 1px #fff; }
   .so-bg {
     position: absolute; inset: 0; width: 100%; height: 100%;
     object-fit: cover; opacity: .42; pointer-events: none;
@@ -8294,8 +8296,9 @@
     // "freebet" = free doubles/splits + 4 The Boys; "blazing" = classic 3:2 with side bets.
     var variant = "freebet";
     var triluxBet = 0, triluxStake = 0, lastTrilux = 0;
-    // Super Buster, staked on a dealt hard 20 and decided by the one card taken on it.
-    var superBusterBet = 0, superBusterWin = null;
+    // Super Buster: posted before the deal like TriLux, armed by a hard 20 of
+    // any number of cards, decided by the one card taken on it.
+    var superBusterBet = 0, superBusterStake = 0, lastSuperBuster = 0, superBusterWin = null;
     var blazingWin = null, triluxWin = null;
     var push22SideBet = 0, push22SideStake = 0, lastPush22Side = 0, push22SideWin = null;
 
@@ -8356,45 +8359,37 @@
     var RANK_ORDER = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
     // Rides free, so only the jackpot pays: all three face-up cards the 7 of diamonds.
     var BLAZING_JACKPOT = 500000;
-    /* Super Buster: dealt a hard 20, stake a side bet and take one card on
-       purpose. An ace makes 21 and pays 25 to 1; a ten makes 30 — the hand
-       busts, but the bet pays 10 to 1. Anything else busts the hand and
-       loses the bet. Hard 20 only: a soft 20 cannot make 30. Priced as a
-       gift, on purpose — this is not a real casino. */
-    var SUPER_BUSTER_PAYS = [["MAKE 21", "25"], ["BUST TO 30", "10"]];
+    /* Super Buster, the house's own: posted before the deal, beside TriLux. It
+       arms the moment the hand sits on a hard 20 — dealt, or drawn to, any
+       number of cards — and the player takes one card on purpose: an ace
+       makes 21 and pays 60 to 1; a ten makes 30, the hand busts, and the bet
+       pays 25 to 1. Anything else busts the hand and loses the bet, as does
+       a hand that never reaches a hard 20, or stands on one. Hard only: a
+       soft 20 cannot make 30. Priced as a gift, on purpose: a hand gets to a
+       hard 20 one time in seven, and at these pays the bet returns about
+       160% on its own — this is not a real casino. */
+    var SUPER_BUSTER_PAYS = [["MAKE 21", "60"], ["BUST TO 30", "25"]];
+    /** A hard 20, however many cards: the hand Super Buster arms on. */
     function superBusterEligible(cards) {
-      return cards.length === 2 && bjValue(cards[0].rank) === 10 && bjValue(cards[1].rank) === 10;
+      return cards.length >= 2 && total(cards) === 20 && !isSoft(cards);
     }
+    /** The hard 20 plus the one card drawn on it. */
     function superBusterOf(cards) {
-      if (cards.length !== 3 || !superBusterEligible(cards.slice(0, 2))) return null;
-      if (cards[2].rank === "A") return { label: "21", pays: 25 };
-      if (bjValue(cards[2].rank) === 10) return { label: "30", pays: 10 };
+      if (cards.length < 3 || !superBusterEligible(cards.slice(0, -1))) return null;
+      var last = cards[cards.length - 1];
+      if (last.rank === "A") return { label: "21", pays: 60 };
+      if (bjValue(last.rank) === 10) return { label: "30", pays: 25 };
       return null;
     }
-    function canSuperBuster() {
+    /** Super Buster is live: a stake rides, and the one hand sits on a hard 20 with nothing done to it since. */
+    function superBusterArmed() {
       var h = hands[active];
       return variant === "blazing" && phase === "player" && !!h && !h.done &&
-        hands.length === 1 && superBusterEligible(h.cards);
-    }
-    /** Stakes Super Buster, capped at the main bet and at what is in the purse. */
-    function addSuperBusterChip() {
-      if (!canSuperBuster()) return;
-      var h = hands[active], room = h.stake - superBusterBet;
-      var amount = Math.min(selectedChip, Math.floor(bankroll), room);
-      if (amount <= 0) { setMessage(room <= 0 ? "Super Buster is capped at your bet" : "No bankroll left"); return; }
-      bankroll -= amount; superBusterBet += amount; syncWallet();
-      setMessage("Super Buster — bust it, or take it back");
-      renderAll();
-    }
-    function takeBackSuperBuster() {
-      if (superBusterBet <= 0 || phase !== "player") return;
-      bankroll += superBusterBet; superBusterBet = 0; syncWallet();
-      setMessage("Your move");
-      renderAll();
+        hands.length === 1 && superBusterStake > 0 && superBusterEligible(h.cards);
     }
     /** The one card, on purpose. The hand is done either way: 21 stands, the rest is a bust. */
     function bustIt() {
-      if (superBusterBet <= 0 || !canSuperBuster()) return;
+      if (!superBusterArmed()) return;
       var h = hands[active];
       h.cards.push(draw());
       superBusterWin = superBusterOf(h.cards);
@@ -8441,8 +8436,8 @@
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
     function totalAtRisk() {
-      if (phase === "betting") return bet + potBet + triluxBet + push22SideBet;
-      var s = potStake + triluxStake + push22SideStake;
+      if (phase === "betting") return bet + potBet + triluxBet + push22SideBet + superBusterBet;
+      var s = potStake + triluxStake + push22SideStake + superBusterStake;
       hands.forEach(function (h) { s += h.stake; });
       return s;
     }
@@ -8713,14 +8708,15 @@
         '<button class="bj-betring spot" id="bj-betspot">BET<div class="placed"></div></button>' +
         '<div class="b7-lane">' +
           '<div class="b7-luxspot"><button class="b7-luxring spot b7-buster' +
-          (canSuperBuster() || superBusterBet > 0 ? "" : " dim") + '" id="bj-busterspot">' +
+          (phase === "betting" || superBusterArmed() || superBusterStake > 0 ? "" : " dim") +
+          (superBusterArmed() ? " armed" : "") + '" id="bj-busterspot">' +
           '<span class="bw">SUPER<br>BUSTER</span><div class="placed"></div></button></div>' +
           '<button class="b7-trilux" id="bj-busterpays">' + superBusterPaysHtml() + "</button>" +
         '</div>';
       on(row, "#bj-b7pays", showSidePays);
       on(row, "#bj-busterpays", showSidePays);
-      on(row, "#bj-busterspot", addSuperBusterChip);
-      fillPlaced(row, "#bj-busterspot", superBusterBet, 38);
+      on(row, "#bj-busterspot", function () { addChip("superbuster"); });
+      fillPlaced(row, "#bj-busterspot", phase === "betting" ? superBusterBet : superBusterStake, 38);
       on(row, "#bj-betspot", function () { addChip("main"); });
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
@@ -8777,8 +8773,9 @@
         // No undo: CLEAR takes the whole bet back.
         a.appendChild(actBtn("Clear", false, clearBet));
         a.appendChild(actBtn("Deal", false, deal));
-      } else if (phase === "player" && variant === "blazing" && superBusterBet > 0) {
-        a.appendChild(actBtn("Take back", false, takeBackSuperBuster));
+      } else if (phase === "player" && superBusterArmed()) {
+        // on a hard 20 with Super Buster riding: bust it, or stand and let the bet go
+        a.appendChild(actBtn("Stand", false, stand));
         a.appendChild(actBtn("Bust it", false, bustIt));
       } else if (phase === "player") {
         var h = hands[active];
@@ -8826,13 +8823,14 @@
 
     // ---------- betting ----------
     function chipAmount() {
-      var avail = Math.floor(bankroll - bet - potBet - triluxBet);
+      var avail = Math.floor(bankroll - bet - potBet - triluxBet - superBusterBet);
       return Math.min(selectedChip, avail);
     }
     var SPOT_SHOUT = {
       main: "Place your bet",
       pot: "4 The Boys riding",
       trilux: "TriLux riding",
+      superbuster: "Super Buster riding",
       push22: "Push 22 riding"
     };
     function addChip(spot) {
@@ -8841,12 +8839,13 @@
       if (affordable <= 0) { setMessage("No bankroll left"); return; }
       var side = spot !== "main";
       var on = spot === "pot" ? potBet : spot === "trilux" ? triluxBet
-        : spot === "push22" ? push22SideBet : bet;
+        : spot === "superbuster" ? superBusterBet : spot === "push22" ? push22SideBet : bet;
       var lim = Shell.limits();
       var amount = allow(lim, affordable, on, side);
       if (amount <= 0) { setMessage(refusal(lim, side)); return; }
       if (spot === "pot") potBet += amount;
       else if (spot === "trilux") triluxBet += amount;
+      else if (spot === "superbuster") superBusterBet += amount;
       else if (spot === "push22") push22SideBet += amount;
       else bet += amount;
       chipHist.push({ spot: spot, v: amount });
@@ -8858,13 +8857,14 @@
       var last = chipHist.pop();
       if (last.spot === "pot") potBet = Math.max(0, potBet - last.v);
       else if (last.spot === "trilux") triluxBet = Math.max(0, triluxBet - last.v);
+      else if (last.spot === "superbuster") superBusterBet = Math.max(0, superBusterBet - last.v);
       else if (last.spot === "push22") push22SideBet = Math.max(0, push22SideBet - last.v);
       else bet = Math.max(0, bet - last.v);
       renderTop(); renderBottom();
     }
     function clearBet() {
       if (phase !== "betting") return;
-      bet = 0; potBet = 0; triluxBet = 0; push22SideBet = 0; chipHist = [];
+      bet = 0; potBet = 0; triluxBet = 0; push22SideBet = 0; superBusterBet = 0; chipHist = [];
       setMessage("Place your bet");
       renderTop(); renderBottom();
     }
@@ -8873,20 +8873,21 @@
     function deal() {
       if (phase !== "betting") return;
       if (bet <= 0) {
-        setMessage(potBet + triluxBet + push22SideBet > 0
+        setMessage(potBet + triluxBet + push22SideBet + superBusterBet > 0
           ? "Side bets ride with a main bet" : "Place a bet first");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
-      bankroll -= bet + potBet + triluxBet + push22SideBet;
+      bankroll -= bet + potBet + triluxBet + push22SideBet + superBusterBet;
       syncWallet();
-      lastBet = bet; lastPotBet = potBet; lastTrilux = triluxBet; lastPush22Side = push22SideBet;
+      lastBet = bet; lastPotBet = potBet; lastTrilux = triluxBet; lastPush22Side = push22SideBet; lastSuperBuster = superBusterBet;
       potStake = potBet; triluxStake = triluxBet; push22SideStake = push22SideBet;
+      superBusterStake = superBusterBet; superBusterWin = null;
       blazingWin = null; triluxWin = null; push22SideWin = null;
       chipHist = []; freeCoins = 0;
       hands = [{ cards: [], stake: bet, betUnit: bet, doubled: false, isFree: false, freeDoubled: false, done: false }];
       dealer = []; holeUp = false; active = 0; results = [];
-      bet = 0; potBet = 0; triluxBet = 0; push22SideBet = 0;
+      bet = 0; potBet = 0; triluxBet = 0; push22SideBet = 0; superBusterBet = 0;
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
@@ -9111,12 +9112,12 @@
           net: tRet - triluxStake
         });
       }
-      if (superBusterBet > 0) {
-        var sbRet = superBusterWin ? superBusterBet * (superBusterWin.pays + 1) : 0;
+      if (superBusterStake > 0) {
+        var sbRet = superBusterWin ? superBusterStake * (superBusterWin.pays + 1) : 0;
         totalReturn += sbRet;
         results.push({
           label: superBusterWin ? "Super Buster · " + superBusterWin.label : "Super Buster",
-          net: sbRet - superBusterBet
+          net: sbRet - superBusterStake
         });
       }
       bankroll += totalReturn;
@@ -9129,7 +9130,7 @@
       var msg =
         Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!" :
         blazingWin ? "🔥 BLAZING 7♦ JACKPOT — $500,000!" :
-        superBusterWin && superBusterBet > 0 ? "SUPER BUSTER " + superBusterWin.label + " — pays " + superBusterWin.pays + " to 1!" :
+        superBusterWin && superBusterStake > 0 ? "SUPER BUSTER " + superBusterWin.label + " — pays " + superBusterWin.pays + " to 1!" :
         push22 ? "Dealer 22 — all hands push" :
         dealerBj ? (net >= 0 ? "Dealer blackjack — push" : "Dealer blackjack") :
         net > 0 ? "You win" : net < 0 ? "Dealer wins" : "Push";
@@ -9142,10 +9143,10 @@
       hands = []; dealer = []; holeUp = false; active = 0;
       results = []; potStake = 0; freeCoins = 0; chipHist = [];
       triluxStake = 0; blazingWin = null; triluxWin = null;
-      superBusterBet = 0; superBusterWin = null;
-      var all = lastBet + lastPotBet + lastTrilux + lastPush22Side;
+      superBusterBet = 0; superBusterStake = 0; superBusterWin = null;
+      var all = lastBet + lastPotBet + lastTrilux + lastPush22Side + lastSuperBuster;
       if (repeat && all <= bankroll) {
-        bet = lastBet; potBet = lastPotBet; triluxBet = lastTrilux; push22SideBet = lastPush22Side;
+        bet = lastBet; potBet = lastPotBet; triluxBet = lastTrilux; push22SideBet = lastPush22Side; superBusterBet = lastSuperBuster;
       } else if (repeat && lastBet <= bankroll) {
         bet = lastBet; potBet = 0; triluxBet = 0;
       } else {
@@ -9162,7 +9163,7 @@
       bet = 0; potBet = 0; potStake = 0; freeCoins = 0; chipHist = [];
       triluxBet = 0; triluxStake = 0;
       blazingWin = null; triluxWin = null;
-      superBusterBet = 0; superBusterWin = null;
+      superBusterBet = 0; superBusterStake = 0; superBusterWin = null;
       hands = []; dealer = []; holeUp = false; active = 0; results = [];
       phase = "betting";
       setMessage("Place your bet");
