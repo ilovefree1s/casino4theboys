@@ -1645,7 +1645,13 @@
      into them rather than shove the right one off the glass. */
   .so-pays { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
   .so-cluster { flex-direction: column; gap: 6px; }
-  .so-sides { display: flex; gap: 8px; }
+  /* each side bet over its own ladder; the poker bet floats between them, level with the ladders' top */
+  .so-pays { align-items: stretch; }
+  .so-col { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px; }
+  .so-pays .so-cluster { justify-content: flex-end; }
+  .so-col .uth-pays { align-self: stretch; }
+  .so-lift { height: 60px; }
+  #screen-shootout .uth-spot .placed { cursor: grab; touch-action: none; }
   .so-pays .uth-pays .hd .ttl, .so-pays .uth-pays .row .val { color: #FFE0A3; }
   .so-pays .uth-pays .hd .bar { background: #FFE0A3; }
   #screen-shootout .dj-pill.w { border-color: #FFE0A3; }
@@ -10804,29 +10810,98 @@
           : '<span class="cap">' + label + "</span>") +
         "</button>";
     }
-    /** Each side bet stands under its own ladder — Bad Beat left, Bonus
-        right — with the poker bet between them. */
+    /** Each side bet sits over its own ladder — Bad Beat left, Bonus right —
+        and the poker bet floats between them, level with the ladders' top.
+        Chips drag between the three spots, and down to the rack to come off. */
+    var SPOT_OF = { "so-poker": "poker", "so-badbeat": "badbeat", "so-bonus": "bonus" };
+    var suppressClick = false;
     function renderSpots() {
       var betting = phase === "betting", n = handCount();
       $("so-spots").innerHTML =
         '<div class="uth-row so-pays">' +
-          '<div style="padding:0 6px 2px 0">' + paysHtml("BAD BEAT", odds(SO.BAD_BEAT)) + "</div>" +
-          // The poker bet rides above the two side bets, which sit tight
-          // together under it.
+          '<div class="so-col" style="padding:0 6px 2px 0">' +
+            spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
+            paysHtml("BAD BEAT", odds(SO.BAD_BEAT)) +
+          "</div>" +
           '<div class="mid so-cluster">' +
             spotHtml("so-poker", "ring", "BET", betting ? poker : pokerStake * n, betting, AMBER) +
-            '<div class="so-sides">' +
-              spotHtml("so-badbeat", "dia", "BAD<br>BEAT", betting ? badBeat : badBeatStake * n, betting, BRASS, " brass") +
-              spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
-            "</div>" +
+            '<div class="so-lift"></div>' +
           "</div>" +
-          '<div style="padding:0 0 2px 6px">' + paysHtml("BONUS", odds(SO.BONUS)) + "</div>" +
+          '<div class="so-col" style="padding:0 0 2px 6px">' +
+            spotHtml("so-bonus", "dia", "BONUS", betting ? bonus : bonusStake * n, betting, BRASS, " brass") +
+            paysHtml("BONUS", odds(SO.BONUS)) +
+          "</div>" +
         "</div>";
       if (betting) {
-        $("so-badbeat").addEventListener("click", function () { place("badbeat"); });
-        $("so-poker").addEventListener("click", function () { place("poker"); });
-        $("so-bonus").addEventListener("click", function () { place("bonus"); });
+        Object.keys(SPOT_OF).forEach(function (id) {
+          var s = SPOT_OF[id], el = $(id);
+          el.addEventListener("click", function () { if (suppressClick) { suppressClick = false; return; } place(s); });
+          var chip = el.querySelector(".placed");
+          if (chip) armDrag(chip, s);
+        });
       }
+    }
+    function amt(s) { return s === "poker" ? poker : s === "bonus" ? bonus : badBeat; }
+    function setAmt(s, v) { if (s === "poker") poker = v; else if (s === "bonus") bonus = v; else badBeat = v; }
+    /** A chip dragged from one spot to another; if the other cannot take it all, it comes down instead. */
+    function moveChip(from, to, amount) {
+      if (phase !== "betting" || from === to) return;
+      var taking = Math.min(amount, amt(from)); if (taking <= 0) return;
+      var lim = Shell.limits();
+      var allowed = to === "poker" ? allow(lim, taking, poker, false) : to === "bonus" ? allow(lim, taking, bonus, true) : allowBadBeat(lim, taking, badBeat);
+      setAmt(from, amt(from) - taking); chipHist = [];
+      if (allowed < taking) setMessage((to === "poker" ? "Poker" : to === "bonus" ? "Bonus" : "Bad Beat") + " is full — chip taken down");
+      else { setAmt(to, amt(to) + taking); setMessage(to === "bonus" ? "Bonus riding" : to === "badbeat" ? "Bad Beat riding" : "Poker bet posted"); }
+      renderTop(); renderSpots();
+    }
+    /** A chip dragged off the felt and back to the rack. */
+    function removeChip(s, amount) {
+      if (phase !== "betting") return;
+      var have = amt(s); if (!have) return;
+      var taking = Math.min(amount, have);
+      setAmt(s, have - taking); chipHist = [];
+      setMessage(have - taking > 0 ? fmt(taking) + " taken down" : "Chip taken down");
+      renderTop(); renderSpots();
+    }
+    /** The chip on a spot: a tap is the spot's click, a drag lifts the selected chip's worth and a ghost rides it. */
+    function armDrag(el, s) {
+      el.onpointerdown = function (e) {
+        if (phase !== "betting") return;
+        e.preventDefault(); e.stopPropagation();
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null;
+        var lift = Math.min(selectedChip, amt(s));
+        var r = el.getBoundingClientRect();
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 8) {
+            moved = true;
+            ghost = document.createElement("div");
+            ghost.className = "dt-ghost";
+            ghost.style.left = r.left + "px"; ghost.style.top = r.top + "px";
+            ghost.style.width = r.width + "px"; ghost.style.height = r.height + "px";
+            ghost.innerHTML = chipHtml(lift, r.width);
+            document.body.appendChild(ghost);
+            var rest = amt(s) - lift;
+            el.innerHTML = rest > 0 ? chipHtml(rest, r.width) : "";
+          }
+          if (ghost) ghost.style.transform = "translate(" + dx + "px," + dy + "px)";
+        }
+        function up(ev) {
+          window.removeEventListener("pointermove", mv);
+          window.removeEventListener("pointerup", up);
+          if (!moved) return;  // a tap: the spot's own click places a chip
+          suppressClick = true;
+          if (ghost) ghost.remove();
+          var t = document.elementFromPoint(ev.clientX, ev.clientY);
+          var spot = t && t.closest ? t.closest(".uth-spot") : null;
+          var onRack = t && t.closest && t.closest("#so-rack, #so-actions");
+          if (spot && SPOT_OF[spot.id] && SPOT_OF[spot.id] !== s) moveChip(s, SPOT_OF[spot.id], lift);
+          else if (onRack) removeChip(s, lift);
+          else renderSpots();
+        }
+        window.addEventListener("pointermove", mv);
+        window.addEventListener("pointerup", up);
+      };
     }
     function renderRack() {
       var host = $("so-rack");
