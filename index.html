@@ -1672,10 +1672,10 @@
   #screen-plinko .wayout { --c: #F2EEE6; }
   .pk-sub { font-family: var(--mono); font-size: 8px; letter-spacing: .18em; color: rgba(245,241,232,.55); margin: 2px 0 6px; text-align: center; white-space: nowrap; }
   /* LOW · MEDIUM · HIGH */
-  .pk-risk { display: flex; gap: 8px; }
+  .pk-risk { display: flex; gap: 6px; width: 100%; }
   .pk-pill {
-    width: 92px; height: 26px; border-radius: 999px; background: #0A0812; border: 1.3px solid #3A3648; color: #8A93A6; padding: 0;
-    font-family: var(--display); font-style: italic; font-size: 11px; cursor: pointer;
+    flex: 1; min-width: 0; height: 26px; border-radius: 999px; background: #0A0812; border: 1.3px solid #3A3648; color: #8A93A6; padding: 0;
+    font-family: var(--display); font-style: italic; font-size: 10.5px; white-space: nowrap; cursor: pointer;
   }
   .pk-pill.on { background: #2A1A08; border-color: #FFD24D; color: #FFD24D; box-shadow: 0 0 8px rgba(255,210,77,.5); }
   .pk-pill:disabled { cursor: default; }
@@ -4222,8 +4222,8 @@
         <span class="art"><svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="ompkbg" cx=".5" cy=".35" r=".8"><stop offset="0" stop-color="#1A1030"/><stop offset="1" stop-color="#040308"/></radialGradient><radialGradient id="ompkpg" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#C8C4BC"/><stop offset="1" stop-color="#5A5650"/></radialGradient><radialGradient id="ompkbl" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".45" stop-color="#FFD24D"/><stop offset="1" stop-color="#8A5A08"/></radialGradient></defs><rect width="102" height="78" fill="url(#ompkbg)"/><circle cx="40" cy="8" r="1.6" fill="url(#ompkpg)"/><circle cx="51" cy="8" r="3.2" fill="#FFD24D" opacity=".4"/><circle cx="51" cy="8" r="2" fill="#FFD24D"/><circle cx="62" cy="8" r="1.6" fill="url(#ompkpg)"/><circle cx="34.5" cy="17.5" r="1.6" fill="url(#ompkpg)"/><circle cx="45.5" cy="17.5" r="1.6" fill="url(#ompkpg)"/><circle cx="56.5" cy="17.5" r="3.2" fill="#FFD24D" opacity=".4"/><circle cx="56.5" cy="17.5" r="2" fill="#FFD24D"/><circle cx="67.5" cy="17.5" r="1.6" fill="url(#ompkpg)"/><circle cx="29" cy="27" r="1.6" fill="url(#ompkpg)"/><circle cx="40" cy="27" r="1.6" fill="url(#ompkpg)"/><circle cx="51" cy="27" r="1.6" fill="url(#ompkpg)"/><circle cx="62" cy="27" r="3.2" fill="#FFD24D" opacity=".4"/><circle cx="62" cy="27" r="2" fill="#FFD24D"/><circle cx="73" cy="27" r="1.6" fill="url(#ompkpg)"/><circle cx="23.5" cy="36.5" r="1.6" fill="url(#ompkpg)"/><circle cx="34.5" cy="36.5" r="1.6" fill="url(#ompkpg)"/><circle cx="45.5" cy="36.5" r="1.6" fill="url(#ompkpg)"/><circle cx="56.5" cy="36.5" r="3.2" fill="#FFD24D" opacity=".4"/><circle cx="56.5" cy="36.5" r="2" fill="#FFD24D"/><circle cx="67.5" cy="36.5" r="1.6" fill="url(#ompkpg)"/><circle cx="78.5" cy="36.5" r="1.6" fill="url(#ompkpg)"/><circle cx="18" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="29" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="40" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="51" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="62" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="73" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="84" cy="46" r="1.6" fill="url(#ompkpg)"/><circle cx="12.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="23.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="34.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="45.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="56.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="67.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="78.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="89.5" cy="55.5" r="1.6" fill="url(#ompkpg)"/><circle cx="62" cy="41.25" r="5.5" fill="#FFD24D" opacity=".4"/><circle cx="62" cy="41.25" r="3.6" fill="url(#ompkbl)"/><rect x="1.75" y="63" width="10.5" height="11" rx="2.5" fill="#e8362b"/><rect x="12.75" y="63" width="10.5" height="11" rx="2.5" fill="#f47434"/><rect x="23.75" y="63" width="10.5" height="11" rx="2.5" fill="#ffb13d"/><rect x="34.75" y="63" width="10.5" height="11" rx="2.5" fill="#9d8f97"/><rect x="45.75" y="63" width="10.5" height="11" rx="2.5" fill="#3a6df0"/><rect x="56.75" y="63" width="10.5" height="11" rx="2.5" fill="#9d8f97"/><rect x="67.75" y="63" width="10.5" height="11" rx="2.5" fill="#ffb13d"/><rect x="78.75" y="63" width="10.5" height="11" rx="2.5" fill="#f47434"/><rect x="89.75" y="63" width="10.5" height="11" rx="2.5" fill="#e8362b"/></svg></span>
         <span class="txt">
           <span class="nm">PLINKO</span>
-          <span class="l1">12 ROWS · PICK YOUR RISK</span>
-          <span class="l2">THE CORNERS PAY UP TO 170X</span>
+          <span class="l1">13 ROWS · FOUR RISKS · 4TB BONUS</span>
+          <span class="l2">THE CORNERS PAY UP TO 260X</span>
         </span>
         <span class="play">PLAY</span>
       </button>
@@ -4270,7 +4270,7 @@
         <span><span class="lbl">STAKED </span><span class="val staked" id="pk-staked">0</span></span>
       </div>
     </div>
-    <div class="pk-sub">PLINKO · 12 ROWS · PICK YOUR RISK</div>
+    <div class="pk-sub">PLINKO · 13 ROWS · PICK YOUR RISK</div>
     <div class="pk-risk" id="pk-risk"></div>
     <div class="pk-board" id="pk-board"></div>
     <div class="pk-msg" id="pk-msg">Pick a risk, place a bet</div>
@@ -13073,28 +13073,61 @@
   })();
 
   var Plinko = (function () {
-    var GOLD = "#FFD24D", INK = "#0A0812", ROWS = 12, ROW_MS = 120, LAND_MS = 260, W = 351, PITCH = 24, ROWH = 25, TOP = 30;
-    /* The three boards, as multipliers on the bet: the usual online ones, about
-       99% back on every level. The same tables as the app's PlinkoEngine. */
+    var GOLD = "#FFD24D", INK = "#0A0812", ROWS = 13, W = 351, PITCH = 23, ROWH = 24, TOP = 30, BINY = TOP + ROWS * ROWH + 6;
+    /* The ball's clock: a fall from the slot onto the first peg, a hop peg to
+       peg, into the bin, two bounces. The same numbers as the app's PlinkoMotion. */
+    var FALL_MS = 145, HOP_MS = 165, B1_MS = 155, B2_MS = 90, SETTLE_MS = 150, RAIN_MS = 1300;
+    var LAND_AT = FALL_MS + ROWS * HOP_MS, REST_AT = LAND_AT + B1_MS + B2_MS;
+    /* The four boards, as multipliers on the bet: Rainbet's tables, about 99%
+       back on every level. The same tables as the app's PlinkoEngine. BOYS is
+       Rainbet's RAIN, renamed 4 THE BOYS: its gold bins (3 and 10) pay nothing
+       themselves but draw a multiplier, 2x to 100x, and drop a free ball with
+       it riding. */
     var MULT = {
-      LOW: [10, 3, 1.6, 1.4, 1.1, 1, 0.5, 1, 1.1, 1.4, 1.6, 3, 10],
-      MEDIUM: [33, 11, 4, 2, 1.1, 0.6, 0.3, 0.6, 1.1, 2, 4, 11, 33],
-      HIGH: [170, 24, 8.1, 2, 0.7, 0.2, 0.2, 0.2, 0.7, 2, 8.1, 24, 170]
+      LOW: [8.1, 4, 3, 1.9, 1.2, 0.9, 0.7, 0.7, 0.9, 1.2, 1.9, 3, 4, 8.1],
+      MEDIUM: [43, 13, 6, 3, 1.3, 0.7, 0.4, 0.4, 0.7, 1.3, 3, 6, 13, 43],
+      HIGH: [260, 37, 11, 4, 1, 0.2, 0.2, 0.2, 0.2, 1, 4, 11, 37, 260],
+      BOYS: [175, 25, 4, 2, 1, 0.3, 0.2, 0.2, 0.3, 1, 2, 4, 25, 175]
     };
-    var LEVELS = ["LOW", "MEDIUM", "HIGH"];
+    var LEVELS = ["LOW", "MEDIUM", "HIGH", "BOYS"], TITLES = { LOW: "LOW", MEDIUM: "MEDIUM", HIGH: "HIGH", BOYS: "4TB" }, RAIN_BINS = [3, 10];
+    var RAIN_MULTS = [[2, 394], [3, 200], [5, 150], [10, 120], [25, 80], [50, 38], [100, 18]];
+    function isRainBin(l, k) { return l === "BOYS" && RAIN_BINS.indexOf(k) >= 0; }
+    function rainMult() { var r = Math.floor(Math.random() * 1000); for (var i = 0; i < RAIN_MULTS.length; i++) { if (r < RAIN_MULTS[i][1]) return RAIN_MULTS[i][0]; r -= RAIN_MULTS[i][1]; } return 2; }
     function label(m) { return m + "x"; }
     function mix(a, b, u) { var ca = parseInt(a.slice(1), 16), cb = parseInt(b.slice(1), 16); var r = Math.round((ca >> 16) * (1 - u) + (cb >> 16) * u), g = Math.round(((ca >> 8) & 255) * (1 - u) + ((cb >> 8) & 255) * u), bl = Math.round((ca & 255) * (1 - u) + (cb & 255) * u); return "#" + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1); }
-    /** A bin's colour by how far it sits from the middle: cool there, hot at the corners. */
-    function binColour(k) { var t = Math.abs(k - 6) / 6; return t < 0.5 ? mix("#3A6DF0", "#FFB13D", t * 2) : mix("#FFB13D", "#E8362B", (t - 0.5) * 2); }
-    /** Where the ball is after p rows: between the pegs, half a pitch off. */
-    function ballAt(path, p) {
-      var whole = Math.min(ROWS, Math.floor(p)), k = 0, j;
-      for (j = 0; j < whole; j++) k += path[j];
-      if (whole < ROWS) k += (p - whole) * path[whole];
-      return { x: W / 2 + (k - p / 2) * PITCH, y: TOP + p * ROWH - ROWH / 2 };
+    /** A bin's colour: yellow in the middle, orange, red at the corners; 4 THE BOYS grey to violet, its gold bins apart. */
+    function binColour(l, k) {
+      if (isRainBin(l, k)) return "#F2B51C";
+      var t = Math.abs(k - 6.5) / 6.5;
+      if (l === "BOYS") return mix("#8A8FA8", "#6E8CFF", t);
+      return t < 0.5 ? mix("#FFE234", "#FF8C1A", t * 2) : mix("#FF8C1A", "#E8362B", (t - 0.5) * 2);
+    }
+    function binX(k) { return W / 2 + (k - 6.5) * PITCH; }
+    /** Where the ball sits on top of the peg it strikes in row j: after j turns at offset kk, the peg kk+1. */
+    function onPeg(path, j) { var kk = 0; for (var i = 0; i < j; i++) kk += path[i]; var n = j + 3; return { x: W / 2 + (kk + 1 - (n - 1) / 2) * PITCH, y: TOP + j * ROWH - 9.4 }; }
+    /**
+     * Where the ball is t ms into its drop: a straight fall onto the first peg,
+     * then a hop peg to peg, each a little gravity arc that pops up off the peg
+     * and lands on the next, then into the bin and two bounces.
+     */
+    function ballAt(path, t) {
+      var first = onPeg(path, 0);
+      if (t < FALL_MS) { var u0 = t / FALL_MS; return { x: W / 2, y: 12 + (first.y - 12) * u0 * u0 }; }
+      var t2 = t - FALL_MS, j = Math.floor(t2 / HOP_MS), bin = path.reduce(function (a, b) { return a + b; }, 0);
+      var rest = { x: binX(bin), y: BINY + 14 };
+      if (j < ROWS) {
+        var u = (t2 - j * HOP_MS) / HOP_MS, a = onPeg(path, j), b = j < ROWS - 1 ? onPeg(path, j + 1) : rest;
+        var kk = 0; for (var i = 0; i < j; i++) kk += path[i];
+        var wob = ((j * 7 + kk) % 5) / 4, h = ROWH * (0.42 + 0.22 * wob);
+        return { x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u - 4 * h * u * (1 - u) };
+      }
+      var tb = t2 - ROWS * HOP_MS, lift = 0;
+      if (tb < B1_MS) { var v = tb / B1_MS; lift = 4 * 10 * v * (1 - v); }
+      else if (tb < B1_MS + B2_MS) { var v2 = (tb - B1_MS) / B2_MS; lift = 4 * 3.5 * v2 * (1 - v2); }
+      return { x: rest.x, y: rest.y - lift };
     }
 
-    var bankroll = FREEPLAY.buyIn, selectedChip = 25, risk = "MEDIUM", bet = 0, stake = 0;
+    var bankroll = FREEPLAY.buyIn, selectedChip = 25, risk = "MEDIUM", bet = 0, stake = 0, rain = 0;
     var phase = "betting", path = [], landed = null, history = [], lastMult = 0, msgText = "Pick a risk, place a bet", noteText = "";
     var timers = [], raf = 0, built = false, suppressClick = false;
     function totalStaked() { return phase === "betting" ? bet : stake; }
@@ -13105,24 +13138,24 @@
 
     function build() {
       var rk = $("pk-risk");
-      rk.innerHTML = LEVELS.map(function (l) { return '<button class="pk-pill" data-risk="' + l + '">' + l + "</button>"; }).join("");
+      rk.innerHTML = LEVELS.map(function (l) { return '<button class="pk-pill" data-risk="' + l + '">' + TITLES[l] + "</button>"; }).join("");
       rk.querySelectorAll(".pk-pill").forEach(function (b) { b.addEventListener("click", function () { pickRisk(b.getAttribute("data-risk")); }); });
-      // the board: the slot, the pegs, the bins, the trail and the ball
-      var s = '<svg viewBox="0 0 ' + W + ' 352" xmlns="http://www.w3.org/2000/svg"><defs>' +
+      // the board: the slot, the pegs, the bins, the ball
+      var s = '<svg viewBox="0 0 ' + W + ' 376" xmlns="http://www.w3.org/2000/svg"><defs>' +
         '<radialGradient id="pk-peg" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#C8C4BC"/><stop offset="1" stop-color="#5A5650"/></radialGradient>' +
         '<radialGradient id="pk-gold" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#FFF3B0"/><stop offset=".45" stop-color="#FFD24D"/><stop offset="1" stop-color="#8A5A08"/></radialGradient>' +
         '<filter id="pk-glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
         "</defs>";
       s += '<path d="M' + (W / 2 - 12) + ',2 h24 l-6,10 h-12 z" fill="#2A2438" stroke="#55506A" stroke-width="1"/>';
-      for (var r = 0; r < ROWS; r++) { var n = r + 3; for (var i = 0; i < n; i++) s += '<circle class="pk-peg" id="pk-peg-' + r + '-' + i + '" cx="' + (W / 2 + (i - (n - 1) / 2) * PITCH) + '" cy="' + (TOP + r * ROWH) + '" r="3.4" fill="url(#pk-peg)"/>'; }
-      var by = TOP + ROWS * ROWH - 6, bw = PITCH - 3;
-      for (var k = 0; k < 13; k++) {
-        var x = W / 2 + (k - 6) * PITCH - bw / 2;
-        s += '<g id="pk-bin-' + k + '"><rect x="' + x + '" y="' + by + '" width="' + bw + '" height="26" rx="5" fill="' + binColour(k) + '" stroke="rgba(0,0,0,.4)" stroke-width="1"/>' +
-          '<text x="' + (x + bw / 2) + '" y="' + (by + 17) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="8.5" fill="' + INK + '"></text></g>';
+      for (var r = 0; r < ROWS; r++) { var n = r + 3; for (var i = 0; i < n; i++) s += '<circle cx="' + (W / 2 + (i - (n - 1) / 2) * PITCH) + '" cy="' + (TOP + r * ROWH) + '" r="3.4" fill="url(#pk-peg)"/>'; }
+      var bw = PITCH - 3;
+      for (var k = 0; k < 14; k++) {
+        var x = binX(k) - bw / 2;
+        s += '<g id="pk-bin-' + k + '"><rect x="' + x + '" y="' + BINY + '" width="' + bw + '" height="26" rx="5" fill="' + binColour(risk, k) + '" stroke="rgba(0,0,0,.4)" stroke-width="1"/>' +
+          '<text class="a" x="' + (x + bw / 2) + '" y="' + (BINY + 17) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="8" fill="' + INK + '"></text>' +
+          '<text class="b" x="' + (x + bw / 2) + '" y="' + (BINY + 22) + '" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="5.5" fill="' + INK + '"></text></g>';
       }
-      s += '<path id="pk-trail" d="" fill="none" stroke="' + GOLD + '" stroke-width="1.4" stroke-dasharray="2 3" opacity=".7"/>';
-      s += '<g id="pk-ball" style="display:none"><circle id="pk-ball-halo" r="11" fill="' + GOLD + '" opacity=".4"/><circle id="pk-ball-core" r="7" fill="url(#pk-gold)"/></g></svg>';
+      s += '<g id="pk-ball" style="display:none"><circle r="11" fill="' + GOLD + '" opacity=".4"/><circle r="7" fill="url(#pk-gold)"/></g></svg>';
       $("pk-board").innerHTML = s;
       $("pk-spot").addEventListener("click", function () { if (suppressClick) { suppressClick = false; return; } addChip(); });
       $("pk-buyin").addEventListener("click", function () {
@@ -13136,42 +13169,29 @@
     function renderRisk() { $("pk-risk").querySelectorAll(".pk-pill").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-risk") === risk); b.disabled = busy(); }); }
     function renderBins() {
       var m = MULT[risk];
-      for (var k = 0; k < 13; k++) {
-        var g = $("pk-bin-" + k), rect = g.querySelector("rect"), tx = g.querySelector("text"), win = landed === k, lb = m[k] >= 100 ? String(m[k]) : label(m[k]);
-        tx.textContent = lb; tx.setAttribute("font-size", lb.length > 4 ? "6.5" : "8.5");
+      for (var k = 0; k < 14; k++) {
+        var g = $("pk-bin-" + k), rect = g.querySelector("rect"), ta = g.querySelector("text.a"), tb = g.querySelector("text.b"), win = landed === k, gold = isRainBin(risk, k), lb = String(m[k]);
+        rect.setAttribute("fill", binColour(risk, k));
+        if (gold) { ta.textContent = lb; ta.setAttribute("y", BINY + 11); ta.setAttribute("font-size", "8"); tb.textContent = "4TB"; }
+        else { ta.textContent = lb; ta.setAttribute("y", BINY + 17); ta.setAttribute("font-size", lb.length > 3 ? "6.5" : "8"); tb.textContent = ""; }
         rect.setAttribute("stroke", win ? "#fff" : "rgba(0,0,0,.4)"); rect.setAttribute("stroke-width", win ? "2" : "1");
         if (win) rect.setAttribute("filter", "url(#pk-glow)"); else rect.removeAttribute("filter");
       }
     }
-    /** The pegs the ball glanced, lit: after j turns at offset kk, the peg kk+1 of row j. */
-    function renderPegs(rowsLit) {
-      var lit = {}, kk = 0, j;
-      for (j = 0; j < Math.min(rowsLit, ROWS); j++) { lit[j + "-" + (kk + 1)] = true; kk += path[j]; }
-      for (var r = 0; r < ROWS; r++) for (var i = 0; i < r + 3; i++) {
-        var p = $("pk-peg-" + r + "-" + i), on = !!lit[r + "-" + i];
-        p.setAttribute("fill", on ? GOLD : "url(#pk-peg)"); p.setAttribute("r", on ? "4.2" : "3.4");
-        if (on) p.setAttribute("filter", "url(#pk-glow)"); else p.removeAttribute("filter");
-      }
-    }
-    function renderTrail(toRow) {
-      var d = "";
-      for (var q = 0; q <= toRow; q++) { var o = ballAt(path, q); d += (q ? "L" : "M") + o.x.toFixed(1) + "," + o.y.toFixed(1); }
-      $("pk-trail").setAttribute("d", d);
-    }
-    function placeBall(x, y, on) { var b = $("pk-ball"); b.style.display = on ? "" : "none"; if (on) b.setAttribute("transform", "translate(" + x.toFixed(1) + " " + y.toFixed(1) + ")"); }
+    function placeBall(o, on) { var b = $("pk-ball"); b.style.display = on ? "" : "none"; if (on) b.setAttribute("transform", "translate(" + o.x.toFixed(1) + " " + o.y.toFixed(1) + ")"); }
     function renderBoard() {
       renderBins();
-      if (landed != null) { renderPegs(ROWS); renderTrail(ROWS); placeBall(W / 2 + (landed - 6) * PITCH, TOP + ROWS * ROWH - 6 + 13, true); }
-      else if (!busy()) { renderPegs(0); $("pk-trail").setAttribute("d", ""); placeBall(0, 0, false); }
+      if (landed != null) placeBall(ballAt(path, REST_AT), true);
+      else if (!busy()) placeBall({ x: 0, y: 0 }, false);
     }
     function renderMessage() {
       var m = $("pk-msg"), betting = phase === "betting";
       m.textContent = betting ? (noteText || msgText) : msgText;
-      m.style.color = betting && noteText ? GOLD : betting && landed != null && lastMult > 1 ? GOLD : betting && landed != null && lastMult < 1 ? "#FF6A5A" : "var(--bone)";
+      m.style.color = betting && noteText ? GOLD : betting && landed != null && lastMult > 1 ? GOLD : betting && landed != null && lastMult < 1 ? "#FF6A5A" : !betting && rain > 0 ? "#F2B51C" : "var(--bone)";
     }
     function renderLast() {
       $("pk-last").innerHTML = '<span class="lbl' + (history.length ? "" : " none") + '">LAST</span>' +
-        history.map(function (h) { return '<i style="background:' + binColour(h[0]) + '">' + label(h[1]) + "</i>"; }).join("");
+        history.map(function (h) { return '<i style="background:' + (h[2] ? "#F2B51C" : binColour(risk, h[0])) + '">' + label(h[1]) + "</i>"; }).join("");
     }
     function renderSpot() {
       var sp = $("pk-spot"), amt = totalStaked(), pl = sp.querySelector(".placed");
@@ -13217,7 +13237,8 @@
     // ---- the level and the bet ----
     function pickRisk(l) {
       if (busy()) return;
-      risk = l; landed = null; noteText = ""; msgText = l.charAt(0) + l.slice(1).toLowerCase() + " risk";
+      risk = l; landed = null; noteText = "";
+      msgText = l === "BOYS" ? "4TB — a gold bin drops a free ball, 2x to 100x" : l.charAt(0) + l.slice(1).toLowerCase() + " risk";
       renderAll();
     }
     function addChip() {
@@ -13274,36 +13295,52 @@
       if (phase !== "betting") return;
       if (bet <= 0) { noteText = "Place a bet first"; renderMessage(); return; }
       bankroll -= bet; syncWallet();
-      stake = bet; bet = 0; landed = null; noteText = "";
+      stake = bet; bet = 0; rain = 0; noteText = "";
+      launchBall();
+    }
+    /** A ball down the board, the bet's or a free one: the clock runs here, the drawing follows it. */
+    function launchBall() {
+      landed = null;
       path = []; for (var i = 0; i < ROWS; i++) path.push(Math.random() < 0.5 ? 0 : 1);
-      phase = "dropping"; msgText = "Dropping…";
+      phase = "dropping"; msgText = rain > 0 ? "Free ball — " + rain + "x rides on it" : "Dropping…";
       renderAll();
-      // the ball falls a row every ROW_MS, a quiet tick off each peg it glances
-      var t0 = performance.now(), rowsTicked = 0;
+      // a quiet tick off each peg, loud into the bin, two softer bounces
+      var t0 = performance.now(), ticked = 0;
       function frame(now) {
-        var p = Math.min(ROWS, (now - t0) / ROW_MS), whole = Math.floor(p);
-        while (rowsTicked < whole) { rowsTicked++; Wheel.tick(0.5); }
-        renderPegs(whole); renderTrail(whole);
-        var o = ballAt(path, p); placeBall(o.x, o.y, true);
-        if (p < ROWS) raf = requestAnimationFrame(frame); else raf = 0;
+        var el = Math.min(REST_AT, now - t0);
+        while (ticked < ROWS && el >= FALL_MS + ticked * HOP_MS) { ticked++; Wheel.tick(0.45); }
+        if (ticked === ROWS && el >= LAND_AT) { ticked++; Wheel.tick(1); }
+        if (ticked === ROWS + 1 && el >= LAND_AT + B1_MS) { ticked++; Wheel.tick(0.3); }
+        placeBall(ballAt(path, el), true);
+        if (el < REST_AT) raf = requestAnimationFrame(frame); else raf = 0;
       }
       raf = requestAnimationFrame(frame);
-      t(ROW_MS * ROWS + LAND_MS, settle);
+      t(REST_AT + SETTLE_MS, settle);
     }
     function settle() {
-      var bin = path.reduce(function (a, b) { return a + b; }, 0), m = MULT[risk][bin], ret = Math.round(stake * m * 100) / 100;
+      var bin = path.reduce(function (a, b) { return a + b; }, 0);
+      landed = bin;
+      // a gold bin on the bet's own ball: draw the multiplier, then a free ball with it riding
+      if (rain === 0 && isRainBin(risk, bin)) {
+        rain = rainMult(); msgText = "4TB! " + rain + "X ON A FREE BALL";
+        Wheel.tick(1); renderAll();
+        t(RAIN_MS, launchBall);
+        return;
+      }
+      var rained = rain > 0, base = MULT[risk][bin], m = base * (rained ? rain : 1), ret = Math.round(stake * m * 100) / 100;
       bankroll += ret; syncWallet();
-      landed = bin; lastMult = m;
-      history.push([bin, m]); while (history.length > 7) history.shift();
+      lastMult = m;
+      history.push([bin, m, rained]); while (history.length > 7) history.shift();
       if (m >= 1) Wheel.tick(1);
-      var net = ret - stake;
+      var net = ret - stake, bl = label(base).toUpperCase();
       msgText = Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!"
-        : m > 1 ? label(m).toUpperCase() + " — +" + fmt(net)
+        : rained ? bl + " × " + rain + "X — " + (net >= 0 ? "+" + fmt(net) : "−" + fmt(-net))
+        : m > 1 ? bl + " — +" + fmt(net)
         : m === 1 ? "1X — the bet back"
-        : label(m).toUpperCase() + " — −" + fmt(-net);
+        : bl + " — −" + fmt(-net);
       // the bet stays on the spot for the next drop, if it can still be covered
       if (stake <= bankroll) bet = stake; else { bet = 0; noteText = "Not enough for that bet"; }
-      stake = 0; phase = "betting";
+      stake = 0; rain = 0; phase = "betting";
       renderAll();
     }
 
@@ -13311,7 +13348,7 @@
       if (!built) { build(); built = true; }
       clearTimers();
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
-      bet = 0; stake = 0; landed = null; path = []; history = []; lastMult = 0; phase = "betting";
+      bet = 0; stake = 0; rain = 0; landed = null; path = []; history = []; lastMult = 0; phase = "betting";
       selectedChip = clampChip(selectedChip, bankroll);
       noteText = ""; msgText = "Pick a risk, place a bet";
       Wheel.prime();
