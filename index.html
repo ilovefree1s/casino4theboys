@@ -13497,7 +13497,7 @@
   })();
 
   var Mines = (function () {
-    var GOLD = "#FFD24D", GEM = "#2EE6A6", MINE = "#FF4A3D", SIDES = [5, 6, 7, 8], MIN = 1, CUT = 0.99;
+    var GOLD = "#FFD24D", GEM = "#2EE6A6", MINE = "#FF4A3D", SIDES = [5, 6, 7, 8], MIN = 1, CUT = 0.99, LOOK_MS = 3000;
     function choose(n, k) { var r = 1; for (var i = 1; i <= k; i++) r = r * (n - k + i) / i; return r; }
     /** What k safe tiles pay on a board of n tiles with m mines: fair odds with a 1% cut, to the cent. The same as the app's MinesEngine. */
     function mult(n, m, k) { if (k <= 0) return 1; if (k > n - m) return 0; return Math.floor(CUT * choose(n, k) / choose(n - m, k) * 100) / 100; }
@@ -13615,9 +13615,14 @@
       if (playing()) { var g = gems(); feltBtn("Clear", "#8A93A6", function () {}, true); feltBtn(g > 0 ? "Cash out " + fmt(stake * mult(tiles(), mines, g)) : "Cash out", GOLD, cashOut, g <= 0, true); }
       else { feltBtn("Clear", "#8A93A6", clearBet, bet <= 0); feltBtn("Start", GOLD, start, bet <= 0); }
     }
+    var rebuyTimer = 0;
+    /** After a mine the board shows a while before the buy-back sheet covers it: the player wants to see where the mines were. */
     function renderRebuy() {
-      var settled = !playing() && bet === 0;
-      $("mn-rebuy").classList.toggle("on", Shell.mode === "testing" && bankroll < 25 && settled);
+      var settled = !playing() && bet === 0, broke = Shell.mode === "testing" && bankroll < 25 && settled, el = $("mn-rebuy");
+      clearTimeout(rebuyTimer);
+      if (!broke) { el.classList.remove("on"); return; }
+      if (phase === "result" && !cashed && !el.classList.contains("on")) rebuyTimer = setTimeout(function () { el.classList.add("on"); }, LOOK_MS);
+      else el.classList.add("on");
     }
     function renderAll() { renderMoney(); renderPick(); renderBoard(); renderClimb(); renderMessage(); renderSpot(); renderRack(); renderActions(); renderRebuy(); }
     function refresh() { if (Shell.mode === "campaign") bankroll = Shell.getBankroll(); renderAll(); }
