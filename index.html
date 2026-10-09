@@ -13076,7 +13076,7 @@
     var GOLD = "#FFD24D", INK = "#0A0812", ROWS = 13, W = 351, PITCH = 23, ROWH = 24, TOP = 30, BINY = TOP + ROWS * ROWH + 6;
     /* The ball's clock: a fall from the slot onto the first peg, a hop peg to
        peg, into the bin, two bounces. The same numbers as the app's PlinkoMotion. */
-    var FALL_MS = 160, HOP_MS = 182, B1_MS = 170, B2_MS = 100, SETTLE_MS = 150, REST_SHOW_MS = 600, RAIN_MS = 1300;
+    var FALL_MS = 160, HOP_MS = 182, B1_MS = 170, B2_MS = 100, SETTLE_MS = 150, REST_SHOW_MS = 600;
     var LAND_AT = FALL_MS + ROWS * HOP_MS, REST_AT = LAND_AT + B1_MS + B2_MS;
     /* The four boards, as multipliers on the bet: Rainbet's tables, about 99%
        back on every level. The same tables as the app's PlinkoEngine. BOYS is
@@ -13175,7 +13175,7 @@
       for (var k = 0; k < 14; k++) {
         var g = $("pk-bin-" + k), rect = g.querySelector("rect"), ta = g.querySelector("text.a"), tb = g.querySelector("text.b"), win = !!lit[k], gold = isRainBin(risk, k), lb = String(m[k]);
         rect.setAttribute("fill", binColour(risk, k));
-        if (gold) { ta.textContent = lb; ta.setAttribute("y", BINY + 11); ta.setAttribute("font-size", "8"); tb.textContent = "4TB"; }
+        if (gold) { ta.textContent = "4TB"; ta.setAttribute("y", BINY + 17); ta.setAttribute("font-size", "7"); tb.textContent = ""; }
         else { ta.textContent = lb; ta.setAttribute("y", BINY + 17); ta.setAttribute("font-size", lb.length > 3 ? "6.5" : "8"); tb.textContent = ""; }
         rect.setAttribute("stroke", win ? "#fff" : "rgba(0,0,0,.4)"); rect.setAttribute("stroke-width", win ? "2" : "1");
         if (win) rect.setAttribute("filter", "url(#pk-glow)"); else rect.removeAttribute("filter");
@@ -13334,7 +13334,8 @@
       if (ball.rain === 0 && isRainBin(ball.risk, bin)) {
         var m0 = rainMult(); lastPaid = false; msgText = "4TB! " + m0 + "X ON A FREE BALL";
         Wheel.tick(1); renderAll();
-        t(RAIN_MS, function () { launchBall(ball.stake, m0); });
+        // and the free ball goes at once
+        launchBall(ball.stake, m0);
         return;
       }
       var rained = ball.rain > 0, base = MULT[ball.risk][bin], m = base * (rained ? ball.rain : 1), ret = Math.round(ball.stake * m * 100) / 100;
