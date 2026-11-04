@@ -23,6 +23,20 @@ sub('<link rel="manifest" href="manifest.webmanifest">',
     '<link rel="icon" type="image/png" href="favicon.png">\n'
     '<meta name="theme-color" content="#000000">')
 
+# ---- the install tags belong in <head>: the page came from an artifact,
+# whose wrapper left them in <body>, and Chrome will not install from there ----
+import re as _re
+head_tags = []
+for pat in [r'<title>[^<]*</title>\n', r'<meta name="(?:viewport|apple-mobile-web-app-[a-z-]+|mobile-web-app-capable|theme-color)"[^>]*>\n',
+            r'<link rel="(?:apple-touch-icon|manifest|icon)"[^>]*>\n']:
+    for m in _re.findall(pat, h[:20000]):
+        head_tags.append(m)
+        h = h.replace(m, "", 1)
+h = h.replace('<meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover">', "", 1)
+sub("</head><body>", "".join(head_tags) +
+    "<script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) "
+    "navigator.serviceWorker.register('sw.js').catch(function () {});</script>\n</head><body>")
+
 # ---- styles, before the menu markup ----
 sub("</style>\n\n<!-- ================= MENU ================= -->",
     (here / "tourney.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
