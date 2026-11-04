@@ -87,7 +87,7 @@
       if (inflight) { again = true; return; }
       inflight = true;
       var w = readWallet(), wk = TT.week;
-      rpc("tt_sync", {
+      rpc("c4tb_sync", {
         p_name: myName(), p_token: token(), p_week: wk,
         p_cash: w.cash, p_owed: w.owed, p_markers: w.markers, p_out: w.out
       }, keepalive).then(function (j) {
@@ -136,7 +136,7 @@
     }
     function refreshLane() {
       if (!ready) return laneSay("NOT SET UP YET", "SOON", false);
-      return rpc("tt_board", {}).then(function (b) {
+      return rpc("c4tb_board", {}).then(function (b) {
         board = b; frame = b;
         paintLane();
         if (store.getStr("ftt.showboard", "")) { store.setStr("ftt.showboard", ""); showBoard(); }
@@ -174,7 +174,7 @@
           return;
         }
         $("tt-join-go").disabled = true;
-        rpc("tt_join", { p_name: n, p_token: token() }).then(function (j) {
+        rpc("c4tb_join", { p_name: n, p_token: token() }).then(function (j) {
           $("tt-join-go").disabled = false;
           if (!j.ok) {
             $("tt-join-err").textContent = j.error === "taken"
@@ -215,7 +215,7 @@
         Shell.showLobby();
         if (local) push();
       };
-      rpc("tt_state", { p_name: myName(), p_token: token() }).then(go, function () {
+      rpc("c4tb_state", { p_name: myName(), p_token: token() }).then(go, function () {
         laneSay("CAN'T REACH THE TOURNAMENT", "RETRY", true);
       });
     }
