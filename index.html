@@ -3644,6 +3644,26 @@
   /* the tournament's line in the lobby, in its own colour */
   #screen-lobby.tourney .lb-campaign .k { color: #FF9A66; }
   #screen-lobby.tourney .lb-campaign .bar { display: none; }
+  /* the rules, up once a week the first time the tournament is opened */
+  /* above the fullscreen tip, which would otherwise sit on the button */
+  #tt-rules { align-items: center; overflow-y: auto; z-index: 10001; background: rgba(5,4,8,.985); }
+  .tt-rwrap { width: min(400px, 92vw); max-height: 100%; overflow-y: auto; text-align: left;
+              padding: calc(env(safe-area-inset-top, 0px) + 18px) 4px calc(env(safe-area-inset-bottom, 0px) + 18px); }
+  .tt-rtop { font-size: 44px; text-align: center; line-height: 1; }
+  .tt-rhead { margin-top: 8px; text-align: center; font-family: var(--display); font-style: italic;
+              font-size: 28px; color: #FF9A66; text-shadow: 0 0 26px rgba(255,122,61,.45); }
+  .tt-rsub { margin-top: 6px; text-align: center; font-family: var(--mono); font-size: 8.5px;
+             letter-spacing: .16em; color: rgba(245,241,232,.6); }
+  .tt-rlist { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: r; display: flex; flex-direction: column; gap: 9px; }
+  .tt-rlist li { counter-increment: r; position: relative; padding: 11px 12px 11px 42px; border-radius: 11px;
+                 background: #120D12; border: 1px solid rgba(255,122,61,.25);
+                 font-size: 13px; line-height: 1.4; color: rgba(245,241,232,.82); }
+  .tt-rlist li::before { content: counter(r); position: absolute; left: 13px; top: 10px;
+                         font-family: var(--display); font-size: 16px; color: #FF7A3D; }
+  .tt-rlist b { color: var(--bone); }
+  #tt-rules .gold-btn { background: #FF7A3D; margin-top: 20px; }
+  .tt-ruleslink { display: block; margin: 14px auto 0; font-family: var(--mono); font-size: 9px;
+                  letter-spacing: .2em; color: rgba(255,154,102,.85); text-decoration: underline; }
 </style>
 
 <!-- ================= MENU ================= -->
@@ -4854,6 +4874,7 @@
       <button type="button" data-t="week" class="on">THE WEEK</button>
     </div>
     <div id="tt-rows"></div>
+    <button type="button" class="tt-ruleslink" id="tt-ruleslink">THE RULES</button>
   </div>
 </div>
 <div class="ov" id="tt-crown">
@@ -4863,6 +4884,22 @@
     <div class="big" id="tt-crown-name"></div>
     <div class="n" id="tt-crown-net"></div>
     <button class="gold-btn" id="tt-crown-ok">SEE THE BOARD</button>
+  </div>
+</div>
+<div class="ov" id="tt-rules">
+  <div class="tt-rwrap">
+    <div class="tt-rtop">🏆</div>
+    <div class="tt-rhead" id="tt-rules-head">THE TOURNAMENT</div>
+    <div class="tt-rsub" id="tt-rules-sub">SUNDAY 12:00 AM – SATURDAY 11:59 PM · EASTERN</div>
+    <ol class="tt-rlist">
+      <li><b>Most money wins.</b> Whoever has the most at midnight Saturday is the champion. Your score is your cash minus whatever you still owe on markers.</li>
+      <li><b>Everyone starts with $5,000.</b> Same tables, rooms and limits as Campaign. Buy in to move up a floor.</li>
+      <li><b>Markers:</b> the house gives you $5,000, and you owe $7,500 back. You get <b>3 a week</b>. Go broke after your 3rd and <b>you're out</b> for the rest of the week.</li>
+      <li><b>The board:</b> TODAY shows each day's winnings and resets every night at midnight. THE WEEK shows the running totals. Every day gets a daily winner.</li>
+      <li><b>One phone.</b> Your name is locked to this phone. Play on the same one all week, and don't clear the browser's data, or you lose your spot.</li>
+      <li><b>Next week</b> starts fresh at $5,000 the moment this one ends, and last week's champion gets their name in lights.</li>
+    </ol>
+    <button class="gold-btn" id="tt-rules-ok">LET'S GO</button>
   </div>
 </div>
 <div class="ov" id="tt-over">
@@ -7376,6 +7413,9 @@
                        me ? "YOU'RE IN · " + me.toUpperCase() : "JOIN", !me);
       }
       $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
+      // the first time the app is opened in a new week, the rules come up
+      var seenRules = "ftt.rules." + b.week;
+      if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
       var row = null, rank = 0;
       b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) { row = r; rank = i + 1; } });
       if (!me) return laneSay(b.rows.length + " PLAYING · ENDS IN " + left(b.ends_at), "JOIN", true);
@@ -7383,6 +7423,17 @@
       if (!row) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
       laneSay("#" + rank + " OF " + b.rows.length + " · " + money(row.net) + " · TODAY " + signed(row.today), "PLAY", true);
     }
+
+    // ---- the rules ----
+    function showRules(b) {
+      b = b || board;
+      $("tt-rules-head").textContent = b && b.status === "live"
+        ? "WEEK " + b.week_no + " · IT'S ON" : "THE TOURNAMENT";
+      $("tt-rules").classList.add("on");
+      $("tt-rules").scrollTop = 0;
+    }
+    $("tt-rules-ok").addEventListener("click", function () { $("tt-rules").classList.remove("on"); });
+    $("tt-ruleslink").addEventListener("click", function () { showRules(); });
 
     // ---- joining ----
     function askName(then) {

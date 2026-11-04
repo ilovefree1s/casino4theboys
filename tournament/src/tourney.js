@@ -157,6 +157,9 @@
                        me ? "YOU'RE IN · " + me.toUpperCase() : "JOIN", !me);
       }
       $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
+      // the first time the app is opened in a new week, the rules come up
+      var seenRules = "ftt.rules." + b.week;
+      if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
       var row = null, rank = 0;
       b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) { row = r; rank = i + 1; } });
       if (!me) return laneSay(b.rows.length + " PLAYING · ENDS IN " + left(b.ends_at), "JOIN", true);
@@ -164,6 +167,17 @@
       if (!row) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
       laneSay("#" + rank + " OF " + b.rows.length + " · " + money(row.net) + " · TODAY " + signed(row.today), "PLAY", true);
     }
+
+    // ---- the rules ----
+    function showRules(b) {
+      b = b || board;
+      $("tt-rules-head").textContent = b && b.status === "live"
+        ? "WEEK " + b.week_no + " · IT'S ON" : "THE TOURNAMENT";
+      $("tt-rules").classList.add("on");
+      $("tt-rules").scrollTop = 0;
+    }
+    $("tt-rules-ok").addEventListener("click", function () { $("tt-rules").classList.remove("on"); });
+    $("tt-ruleslink").addEventListener("click", function () { showRules(); });
 
     // ---- joining ----
     function askName(then) {

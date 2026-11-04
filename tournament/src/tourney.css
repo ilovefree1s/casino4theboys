@@ -94,3 +94,23 @@
   /* the tournament's line in the lobby, in its own colour */
   #screen-lobby.tourney .lb-campaign .k { color: #FF9A66; }
   #screen-lobby.tourney .lb-campaign .bar { display: none; }
+  /* the rules, up once a week the first time the tournament is opened */
+  /* above the fullscreen tip, which would otherwise sit on the button */
+  #tt-rules { align-items: center; overflow-y: auto; z-index: 10001; background: rgba(5,4,8,.985); }
+  .tt-rwrap { width: min(400px, 92vw); max-height: 100%; overflow-y: auto; text-align: left;
+              padding: calc(env(safe-area-inset-top, 0px) + 18px) 4px calc(env(safe-area-inset-bottom, 0px) + 18px); }
+  .tt-rtop { font-size: 44px; text-align: center; line-height: 1; }
+  .tt-rhead { margin-top: 8px; text-align: center; font-family: var(--display); font-style: italic;
+              font-size: 28px; color: #FF9A66; text-shadow: 0 0 26px rgba(255,122,61,.45); }
+  .tt-rsub { margin-top: 6px; text-align: center; font-family: var(--mono); font-size: 8.5px;
+             letter-spacing: .16em; color: rgba(245,241,232,.6); }
+  .tt-rlist { margin: 18px 0 0; padding: 0; list-style: none; counter-reset: r; display: flex; flex-direction: column; gap: 9px; }
+  .tt-rlist li { counter-increment: r; position: relative; padding: 11px 12px 11px 42px; border-radius: 11px;
+                 background: #120D12; border: 1px solid rgba(255,122,61,.25);
+                 font-size: 13px; line-height: 1.4; color: rgba(245,241,232,.82); }
+  .tt-rlist li::before { content: counter(r); position: absolute; left: 13px; top: 10px;
+                         font-family: var(--display); font-size: 16px; color: #FF7A3D; }
+  .tt-rlist b { color: var(--bone); }
+  #tt-rules .gold-btn { background: #FF7A3D; margin-top: 20px; }
+  .tt-ruleslink { display: block; margin: 14px auto 0; font-family: var(--mono); font-size: 9px;
+                  letter-spacing: .2em; color: rgba(255,154,102,.85); text-decoration: underline; }
