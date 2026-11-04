@@ -1,0 +1,96 @@
+
+  /* ================= THE TOURNAMENT ================= */
+  .mm-lane.tourney { padding: 13px 16px; }
+  .mm-lane.tourney .mm-hdr .nm { font-size: 21px; }
+  #tt-tag {
+    border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); border-radius: 999px;
+    padding: 4px 9px; color: color-mix(in srgb, var(--c) 65%, #F5F1E8);
+  }
+  .tt-line {
+    margin-top: 9px; font-family: var(--mono); font-size: 9px; letter-spacing: .14em;
+    color: rgba(245,241,232,.78);
+  }
+  .tt-btns { display: flex; gap: 8px; margin-top: 11px; }
+  .tt-btns button {
+    border-radius: 999px; padding: 12px 0; font-family: var(--display);
+    font-size: 12px; letter-spacing: .2em;
+  }
+  #tt-play { flex: 2; color: #120604; background: var(--c); box-shadow: 0 0 24px color-mix(in srgb, var(--c) 55%, transparent); }
+  #tt-play:disabled { background: rgba(255,255,255,.1); color: rgba(245,241,232,.55); box-shadow: none; }
+  #tt-boardbtn { flex: 1; color: color-mix(in srgb, var(--c) 70%, #FFF); border: 1px solid color-mix(in srgb, var(--c) 60%, transparent); }
+  .tt-btns button:active { transform: scale(.985); }
+
+  /* the join sheet */
+  #tt-join .box { width: min(340px, 88vw); }
+  #tt-join .big { font-size: 26px; color: #FF7A3D; }
+  #tt-name {
+    display: block; width: 100%; margin-top: 22px; padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6);
+    color: var(--bone); font: 700 18px var(--display); letter-spacing: .06em; text-align: center;
+    text-transform: uppercase; outline: none;
+  }
+  #tt-join-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
+  #tt-join .gold-btn { margin-top: 12px; background: #FF7A3D; }
+  #tt-join .gold-btn:disabled { opacity: .5; }
+
+  /* the board */
+  #tt-board { align-items: stretch; justify-content: center; text-align: left; }
+  .tt-wrap {
+    width: 100%; max-width: 480px; display: flex; flex-direction: column;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
+    overflow-y: auto;
+  }
+  .tt-wrap .wayout { --w: #FF7A3D; align-self: flex-start; }
+  .tt-wrap .wayout b { font-family: var(--mono); font-size: 9px; letter-spacing: .2em; color: var(--bone); }
+  #tt-bhead { margin-top: 18px; font-family: var(--display); font-style: italic; font-size: 26px; color: #FF9A66;
+              text-shadow: 0 0 26px rgba(255,122,61,.45); }
+  #tt-bsub { margin-top: 6px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em; color: rgba(245,241,232,.6); }
+  .tt-champ {
+    display: flex; align-items: center; gap: 10px; margin-top: 14px; padding: 10px 12px; border-radius: 12px;
+    border: 1px solid rgba(255,210,77,.6); background: rgba(40,28,4,.7);
+    font-family: var(--mono); font-size: 9px; letter-spacing: .14em; color: rgba(255,230,174,.8);
+  }
+  .tt-champ[hidden] { display: none; }
+  .tt-champ b { font-family: var(--display); font-style: italic; font-size: 14px; letter-spacing: .04em; color: var(--campaign-gold); }
+  .tt-champ .n { margin-left: auto; color: var(--campaign-gold); }
+  .tt-wins { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .tt-wins:empty { display: none; }
+  .tt-win {
+    display: inline-flex; gap: 6px; align-items: center; padding: 5px 9px; border-radius: 999px;
+    border: 1px solid rgba(87,224,106,.45); background: rgba(6,24,10,.7);
+    font-family: var(--mono); font-size: 8px; letter-spacing: .1em; color: rgba(245,241,232,.8);
+  }
+  .tt-win b { color: #57E06A; }
+  #tt-tabs { display: flex; gap: 6px; margin-top: 16px; }
+  #tt-tabs button {
+    flex: 1; padding: 10px 0; border-radius: 10px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em;
+    color: rgba(245,241,232,.6); border: 1px solid rgba(255,255,255,.14);
+  }
+  #tt-tabs button.on { color: #120604; background: #FF7A3D; border-color: #FF7A3D; }
+  #tt-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+  .tt-row {
+    display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 11px;
+    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+  }
+  .tt-row.me { border-color: rgba(255,122,61,.75); background: rgba(255,122,61,.09); }
+  .tt-row.out { opacity: .5; }
+  .tt-row .rk { width: 22px; font-family: var(--display); font-size: 15px; color: rgba(245,241,232,.45); text-align: center; }
+  .tt-row:first-child .rk { color: var(--campaign-gold); }
+  .tt-row .who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .tt-row .who b { font-family: var(--display); font-size: 13px; letter-spacing: .04em; color: var(--bone);
+                   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tt-row .who small { font-family: var(--mono); font-size: 7.5px; letter-spacing: .12em; color: #FF6B80; }
+  .tt-row .val { font-family: var(--display); font-size: 14px; color: var(--bone); }
+  .tt-row.up .val { color: #57E06A; }
+  .tt-row.down .val { color: #FF3B5C; }
+  .tt-empty { padding: 26px 0; text-align: center; font-size: 13px; color: rgba(245,241,232,.5); }
+
+  /* the crown, once, the first time the board opens after a week is won */
+  #tt-crown .big { color: var(--campaign-gold); font-size: 30px; margin-top: 6px; }
+  #tt-crown .wk { font-family: var(--mono); font-size: 10px; letter-spacing: .24em; color: rgba(255,230,174,.7); }
+  #tt-crown .n { margin-top: 8px; font-family: var(--display); font-size: 20px; color: var(--bone); }
+  #tt-over .big { color: #FF7A3D; font-size: 28px; }
+  #tt-over .gold-btn { background: #FF7A3D; }
+  /* the tournament's line in the lobby, in its own colour */
+  #screen-lobby.tourney .lb-campaign .k { color: #FF9A66; }
+  #screen-lobby.tourney .lb-campaign .bar { display: none; }

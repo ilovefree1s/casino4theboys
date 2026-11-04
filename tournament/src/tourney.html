@@ -1,0 +1,41 @@
+<div class="ov" id="tt-join">
+  <div class="box">
+    <div class="big">JOIN THE TOURNAMENT</div>
+    <div class="sub">Pick the name the boys will see on the board. It stays locked to this phone.</div>
+    <input id="tt-name" maxlength="16" autocomplete="nickname" autocapitalize="characters" spellcheck="false" placeholder="YOUR NAME">
+    <div id="tt-join-err"></div>
+    <button class="gold-btn" id="tt-join-go">THAT'S ME</button>
+    <button class="ghost-btn" id="tt-join-x">NOT NOW</button>
+  </div>
+</div>
+<div class="ov" id="tt-board">
+  <div class="tt-wrap">
+    <button class="wayout" id="tt-board-x" aria-label="Close the board"><i>&#8249;</i><b>CLOSE</b></button>
+    <div id="tt-bhead">THE BOARD</div>
+    <div id="tt-bsub"></div>
+    <div class="tt-champ" id="tt-champ" hidden>🏆 LAST WEEK <b id="tt-champ-name"></b><span class="n" id="tt-champ-net"></span></div>
+    <div class="tt-wins" id="tt-wins"></div>
+    <div id="tt-tabs">
+      <button type="button" data-t="today">TODAY</button>
+      <button type="button" data-t="week" class="on">THE WEEK</button>
+    </div>
+    <div id="tt-rows"></div>
+  </div>
+</div>
+<div class="ov" id="tt-crown">
+  <div class="box">
+    <div class="trophy">🏆</div>
+    <div class="wk" id="tt-crown-wk">CHAMPION</div>
+    <div class="big" id="tt-crown-name"></div>
+    <div class="n" id="tt-crown-net"></div>
+    <button class="gold-btn" id="tt-crown-ok">SEE THE BOARD</button>
+  </div>
+</div>
+<div class="ov" id="tt-over">
+  <div class="box">
+    <div class="trophy">⏰</div>
+    <div class="big">THE WEEK IS OVER</div>
+    <div class="sub">Midnight Saturday. The board is final and a new week starts at $5,000.</div>
+    <button class="gold-btn" id="tt-over-go">SEE WHO WON</button>
+  </div>
+</div>
