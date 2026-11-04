@@ -58,6 +58,7 @@ sub('getBankroll: function () { return wholeDollars(store.get("ftb.bankroll", CA
 sub('setBankroll: function (v) { store.set("ftb.bankroll", wholeDollars(v)); },',
     'setBankroll: function (v) {\n'
     '      if (TT.on && TT.closed) return;\n'
+    '      if (TT.on) TT.track(wholeDollars(v) - this.getBankroll());\n'
     '      store.set(wkey("bankroll"), wholeDollars(v));\n'
     '      if (TT.on) TT.changed();\n'
     '    },')
@@ -83,9 +84,13 @@ sub('store.setStr("ftb.room", ROOMS[0].key);', 'store.setStr(wkey("room"), ROOMS
 sub("    canTakeMarker: function () {\n",
     "    canTakeMarker: function () {\n"
     "      if (TT.on) return !TT.closed && !TT.isOut() && TT.markers() < TT.max();\n")
+sub("      if (!this.canTakeMarker()) return;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n",
+    "      if (!this.canTakeMarker()) return;\n      TT.quiet = true;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n      TT.quiet = false;\n")
 sub("      this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));\n    },",
     "      this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));\n"
     "      if (TT.on) TT.signMarker();\n    },")
+sub("      if (!this.canPayMarker()) return;\n      this.setBankroll(this.getBankroll() - this.getDebt());\n",
+    "      if (!this.canPayMarker()) return;\n      TT.quiet = true;\n      this.setBankroll(this.getBankroll() - this.getDebt());\n      TT.quiet = false;\n")
 sub("    restartCampaign: function () {\n",
     "    restartCampaign: function () {\n      if (TT.on) return;\n")
 

@@ -106,6 +106,7 @@
           if (j.out) store.setStr(k("out"), "1");
           if (!again) store.setStr(k("dirty"), "");
         }
+        if (j.ok) pushStats();
         if (again) { again = false; push(); }
       }, function () {
         inflight = false;
@@ -166,6 +167,41 @@
       if (row && row.out) return laneSay("OUT FOR THE WEEK · FINISHED #" + rank, "OUT", false);
       if (!row) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
       laneSay("#" + rank + " OF " + b.rows.length + " · " + money(row.net) + " · TODAY " + signed(row.today), "PLAY", true);
+    }
+
+    // ---- game stats: every move of the purse, put down to the table it happened at ----
+    var GAMES = {
+      "bm-punto": "Punto Banco", "bm-dragontiger": "Dragon Tiger",
+      "bjm-freebet": "Free Bet Blackjack", "bjm-blazing": "Blazing 777", "bjm-doubledown": "Double Down Madness",
+      "pk-uth": "Ultimate Texas Hold'em", "pk-djwild": "DJ Wild", "pk-shootout": "Shootout",
+      "pk-mini": "Mini UTH", "pk-suits": "I Luv Suits",
+      "rlm-classic": "Double Zero Roulette", "rlm-lightning": "Lightning Roulette", "rlm-doubleball": "Double Ball Roulette",
+      "cm-crapless": "Crapless Craps", "cm-destroyer": "Destroyer",
+      "om-keno": "Keno", "om-wheel": "Money Wheel", "om-sicbo": "Sic Bo", "om-plinko": "Plinko", "om-mines": "Mines"
+    };
+    var statsDirty = false;
+    // capture, so the game is named before its own click handler deals the first hand
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest("button[id]");
+      if (b && GAMES[b.id]) TT.game = GAMES[b.id];
+    }, true);
+    function readStats() {
+      try { return JSON.parse(store.getStr(k("stats"), "{}")) || {}; } catch (e) { return {}; }
+    }
+    /** The purse moved by [delta] at the table you are at. Markers do not count. */
+    TT.track = function (delta) {
+      if (!TT.on || TT.quiet || !TT.game || !delta || !TT.week) return;
+      var s = readStats(), g = s[TT.game] || (s[TT.game] = { net: 0, best: 0 });
+      g.net += delta;
+      if (delta > g.best) g.best = delta;
+      store.setStr(k("stats"), JSON.stringify(s));
+      statsDirty = true;
+    };
+    function pushStats() {
+      if (!statsDirty || !TT.week) return;
+      statsDirty = false;
+      rpc("c4tb_save_stats", { p_name: myName(), p_token: token(), p_week: TT.week, p_stats: readStats() })
+        .catch(function () { statsDirty = true; });
     }
 
     // ---- the rules ----
@@ -297,6 +333,7 @@
         wins.appendChild(c);
       });
 
+      if (tab === "stats") return paintStats(b);
       var rows = b.rows.slice();
       if (tab === "today") rows.sort(function (a, c) { return c.today - a.today || c.net - a.net || a.name.localeCompare(c.name); });
       rows.forEach(function (r, i) {
@@ -311,6 +348,82 @@
         list.appendChild(el);
       });
       if (!rows.length) list.appendChild(empty("Nobody has played yet this week."));
+    }
+    /*
+     * The stats tab. Last week's, everyone's, once it is final: each game with
+     * what the boys made or lost on it in all and who did best and worst there,
+     * then each player's best and worst game. Under that, your own games this week.
+     */
+    var statsCache = {};
+    function getStats(week) {
+      return rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: week })
+        .then(function (j) { statsCache[week] = j; return j; });
+    }
+    function lastWeekOf(b) {
+      var d = new Date(b.week + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 7);
+      return d.toISOString().slice(0, 10);
+    }
+    function paintStats(b) {
+      var list = $("tt-rows"), me = (myName() || "").toLowerCase();
+      list.innerHTML = "";
+      var prev = b.week_no > 1 ? lastWeekOf(b) : null;
+      var want = [b.week].concat(prev ? [prev] : []);
+      var have = want.every(function (w) { return statsCache[w]; });
+      if (!have) {
+        list.appendChild(empty("Loading stats…"));
+        Promise.all(want.map(getStats)).then(function () { if (tab === "stats") paintStats(b); },
+          function () { list.innerHTML = ""; list.appendChild(empty("Can't reach the stats right now.")); });
+        return;
+      }
+      if (prev) {
+        var fin = statsCache[prev].rows;
+        list.appendChild(heading("WEEK " + (b.week_no - 1) + " · FINAL STATS"));
+        if (!fin.length) list.appendChild(empty("No stats were kept that week."));
+        else {
+          var byGame = {}, byName = {};
+          fin.forEach(function (r) {
+            (byGame[r.game] = byGame[r.game] || []).push(r);
+            (byName[r.name] = byName[r.name] || []).push(r);
+          });
+          Object.keys(byGame).map(function (g) {
+            var rs = byGame[g], tot = rs.reduce(function (s, r) { return s + r.net; }, 0);
+            rs.sort(function (a, c) { return c.net - a.net; });
+            return { g: g, rs: rs, tot: tot };
+          }).sort(function (a, c) { return Math.abs(c.tot) - Math.abs(a.tot); }).forEach(function (x) {
+            var top = x.rs[0], low = x.rs[x.rs.length - 1], bits = [];
+            if (top.net > 0) bits.push("BEST " + top.name.toUpperCase() + " " + signed(top.net));
+            if (low.net < 0) bits.push("WORST " + low.name.toUpperCase() + " " + signed(low.net));
+            var big = x.rs.reduce(function (m, r) { return r.best > m.best ? r : m; }, x.rs[0]);
+            if (big.best > 0) bits.push("BIGGEST HIT " + big.name.toUpperCase() + " $" + fmt(big.best));
+            var el = row("", x.g, bits.join(" · "), signed(x.tot), false);
+            el.classList.add(x.tot > 0 ? "up" : x.tot < 0 ? "down" : "flat");
+            list.appendChild(el);
+          });
+          list.appendChild(heading("EVERYONE'S BEST & WORST GAME"));
+          Object.keys(byName).sort().forEach(function (n) {
+            var rs = byName[n].slice().sort(function (a, c) { return c.net - a.net; });
+            var tot = rs.reduce(function (s, r) { return s + r.net; }, 0);
+            var bits = ["BEST " + rs[0].game.toUpperCase() + " " + signed(rs[0].net)];
+            if (rs.length > 1) bits.push("WORST " + rs[rs.length - 1].game.toUpperCase() + " " + signed(rs[rs.length - 1].net));
+            var el = row("", n, bits.join(" · "), signed(tot), n.toLowerCase() === me);
+            el.classList.add(tot > 0 ? "up" : tot < 0 ? "down" : "flat");
+            list.appendChild(el);
+          });
+        }
+      }
+      list.appendChild(heading("YOUR GAMES THIS WEEK"));
+      var mine = statsCache[b.week].rows.slice().sort(function (a, c) { return c.net - a.net; });
+      if (!myName()) list.appendChild(empty("Join to start keeping your stats."));
+      else if (!mine.length) list.appendChild(empty("Play a few hands and your games show up here."));
+      mine.forEach(function (r) {
+        var el = row("", r.game, r.best > 0 ? "BIGGEST HIT $" + fmt(r.best) : "", signed(r.net), false);
+        el.classList.add(r.net > 0 ? "up" : r.net < 0 ? "down" : "flat");
+        list.appendChild(el);
+      });
+      list.appendChild(empty("Everyone's stats for this week unlock when it ends at midnight Saturday."));
+    }
+    function heading(text) {
+      var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
     }
     function row(rank, name, tags, value, mine) {
       var el = document.createElement("div");
@@ -328,7 +441,11 @@
       var el = document.createElement("div"); el.className = "tt-empty"; el.textContent = text; return el;
     }
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
-      x.addEventListener("click", function () { tab = x.getAttribute("data-t"); paintBoard(); });
+      x.addEventListener("click", function () {
+        tab = x.getAttribute("data-t");
+        if (tab === "stats" && board) delete statsCache[board.week];
+        paintBoard();
+      });
     });
     $("tt-boardbtn").addEventListener("click", showBoard);
     $("tt-board-x").addEventListener("click", function () { $("tt-board").classList.remove("on"); });

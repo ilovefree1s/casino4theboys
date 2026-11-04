@@ -34,7 +34,7 @@
   #tt-join .gold-btn:disabled { opacity: .5; }
 
   /* the board */
-  #tt-board { align-items: stretch; justify-content: center; text-align: left; }
+  #tt-board { align-items: stretch; justify-content: center; text-align: left; background: rgba(5,4,8,.985); }
   .tt-wrap {
     width: 100%; max-width: 480px; display: flex; flex-direction: column;
     padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px calc(env(safe-area-inset-bottom, 0px) + 16px);
@@ -70,7 +70,7 @@
   #tt-rows { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
   .tt-row {
     display: flex; align-items: center; gap: 12px; padding: 11px 12px; border-radius: 11px;
-    background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    background: #110E13; border: 1px solid rgba(255,255,255,.08);
   }
   .tt-row.me { border-color: rgba(255,122,61,.75); background: rgba(255,122,61,.09); }
   .tt-row.out { opacity: .5; }
@@ -114,3 +114,9 @@
   #tt-rules .gold-btn { background: #FF7A3D; margin-top: 20px; }
   .tt-ruleslink { display: block; margin: 14px auto 0; font-family: var(--mono); font-size: 9px;
                   letter-spacing: .2em; color: rgba(255,154,102,.85); text-decoration: underline; }
+  /* the stats tab */
+  .tt-row .rk:empty { display: none; }
+  .tt-row.flat .val { color: rgba(245,241,232,.6); }
+  .tt-sechead { margin-top: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: .22em; color: #FF9A66; }
+  .tt-sechead:first-child { margin-top: 2px; }
+  .tt-row .who small { white-space: normal; line-height: 1.5; }
