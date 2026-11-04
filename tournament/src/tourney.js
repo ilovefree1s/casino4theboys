@@ -39,7 +39,11 @@
     function rpc(fn, args, keepalive) {
       return fetch(URL_ + "/rest/v1/rpc/" + fn, {
         method: "POST", keepalive: !!keepalive,
-        headers: { "apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json" },
+        // a publishable key (sb_publishable_…) goes in apikey alone; an older
+        // anon key is a token and goes in Authorization too
+        headers: /^sb_/.test(KEY)
+          ? { "apikey": KEY, "Content-Type": "application/json" }
+          : { "apikey": KEY, "Authorization": "Bearer " + KEY, "Content-Type": "application/json" },
         body: JSON.stringify(args || {})
       }).then(function (r) {
         if (!r.ok) throw new Error("http " + r.status);
