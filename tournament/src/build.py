@@ -17,6 +17,12 @@ def sub(old, new, count=1):
         raise SystemExit(f"expected {count} of {old[:70]!r}, found {n}")
     h = h.replace(old, new)
 
+# ---- the app icon: browser tab, and the black bar colour on Android ----
+sub('<link rel="manifest" href="manifest.webmanifest">',
+    '<link rel="manifest" href="manifest.webmanifest">\n'
+    '<link rel="icon" type="image/png" href="favicon.png">\n'
+    '<meta name="theme-color" content="#000000">')
+
 # ---- styles, before the menu markup ----
 sub("</style>\n\n<!-- ================= MENU ================= -->",
     (here / "tourney.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
