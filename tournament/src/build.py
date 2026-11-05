@@ -81,6 +81,12 @@ sub("      r.innerHTML = history.slice(-16).map(function (k) {\n        var S = 
 sub("  .wh-strip b { width: 18px;",
     "  .wh-strip b.new { box-shadow: 0 0 0 2px rgba(245,241,232,.92), 0 0 0 3.5px #141018; }\n  .wh-strip b { width: 18px;")
 
+# ---- plinko's back button shared its id with poker's, so it went nowhere ----
+sub('<button class="wayout" id="pk-back" aria-label="Back to other games">',
+    '<button class="wayout" id="plk-back" aria-label="Back to other games">')
+sub('$("pk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });',
+    '$("plk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });')
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())

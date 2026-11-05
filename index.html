@@ -4517,7 +4517,7 @@
 <div class="screen" id="screen-plinko">
   <div class="pk-sheet">
     <div class="topbar">
-      <button class="wayout" id="pk-back" aria-label="Back to other games"><i>&#8249;</i><b>OTHER GAMES</b></button>
+      <button class="wayout" id="plk-back" aria-label="Back to other games"><i>&#8249;</i><b>OTHER GAMES</b></button>
       <div class="money purse">
         <span><span class="lbl">BANKROLL </span><span class="val" id="pk-bankroll">20,000</span></span>
         <span><span class="lbl">STAKED </span><span class="val staked" id="pk-staked">0</span></span>
@@ -8083,7 +8083,7 @@
   $("om-keno").addEventListener("click", function () { Keno.enter(); Shell.show("keno"); });
   $("kn-back").addEventListener("click", function () { Keno.leave(); Shell.show("othermenu"); });
   $("om-plinko").addEventListener("click", function () { Plinko.enter(); Shell.show("plinko"); });
-  $("pk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });
+  $("plk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });
   $("om-mines").addEventListener("click", function () { Mines.enter(); Shell.show("mines"); });
   $("mn-back").addEventListener("click", function () { Shell.show("othermenu"); });
   $("om-bg").src = document.querySelector("#screen-rlmenu .mm-bg").src;
