@@ -56,6 +56,25 @@ sub("      <!-- the run -->\n",
       <!-- the run -->
 """)
 
+# ---- play testing folds down to its header; a tap opens it ----
+sub('<div class="mm-lane testing" style="--c:#9BE3FB">\n        <i class="edge"></i>\n        <div class="mm-hdr">',
+    '<div class="mm-lane testing" id="mm-testing" style="--c:#9BE3FB">\n        <i class="edge"></i>\n'
+    '        <div class="mm-hdr" id="mm-testing-hdr" role="button" tabindex="0" aria-expanded="false" aria-controls="mm-games">')
+sub('<span class="tag" id="mm-buyin">$20,000 IN CHIPS</span>',
+    '<span class="tag" id="mm-buyin">$20,000 IN CHIPS</span><span class="chev" aria-hidden="true">▸</span>')
+sub("  paintMenu();\n  /* ---------- sound",
+    "  (function () {\n"
+    "    var lane = $(\"mm-testing\"), hdr = $(\"mm-testing-hdr\");\n"
+    "    function flip() {\n"
+    "      var open = lane.classList.toggle(\"open\");\n"
+    "      hdr.setAttribute(\"aria-expanded\", open ? \"true\" : \"false\");\n"
+    "      if (open) setTimeout(function () { lane.scrollIntoView({ behavior: \"smooth\", block: \"nearest\" }); }, 30);\n"
+    "    }\n"
+    "    hdr.addEventListener(\"click\", flip);\n"
+    "    hdr.addEventListener(\"keydown\", function (e) { if (e.key === \"Enter\" || e.key === \" \") { e.preventDefault(); flip(); } });\n"
+    "  })();\n"
+    "  paintMenu();\n  /* ---------- sound")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())

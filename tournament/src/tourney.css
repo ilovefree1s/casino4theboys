@@ -143,3 +143,14 @@
   .mm-lane.campaign .mm-nums .v { font-size: 11px; }
   .mm-lane.campaign .mm-plaque { margin-top: 9px; padding: 7px 10px; }
   .mm-lane.campaign .mm-enter { margin-top: 9px; padding: 11px 0; font-size: 11px; box-shadow: 0 0 16px rgba(255,210,77,.35); }
+  /* ---- play testing: just its header until tapped open ---- */
+  .mm-lane.testing .mm-hdr { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .mm-lane.testing .mm-hdr .chev {
+    display: inline-block; margin-left: 10px; font-size: 11px; color: color-mix(in srgb, var(--c) 70%, #FFF);
+    transition: transform .2s ease;
+  }
+  .mm-lane.testing.open .mm-hdr .chev { transform: rotate(90deg); }
+  .mm-lane.testing:not(.open) > :not(.mm-hdr):not(.edge) { display: none; }
+  .mm-lane.testing:not(.open) .mm-hdr:active { opacity: .8; }
+  .mm-lane.testing .mm-hdr { justify-content: flex-start; }
+  .mm-lane.testing #mm-buyin { margin-left: auto; }
