@@ -75,6 +75,12 @@ sub("  paintMenu();\n  /* ---------- sound",
     "  })();\n"
     "  paintMenu();\n  /* ---------- sound")
 
+# ---- money wheel: the newest hit on the left, older ones pushed right ----
+sub("      r.innerHTML = history.slice(-16).map(function (k) {\n        var S = SYM[k];\n        return '<b style=\"",
+    "      r.innerHTML = history.slice(-16).reverse().map(function (k, i) {\n        var S = SYM[k];\n        return '<b' + (i === 0 ? ' class=\"new\"' : '') + ' style=\"")
+sub("  .wh-strip b { width: 18px;",
+    "  .wh-strip b.new { box-shadow: 0 0 0 2px rgba(245,241,232,.92), 0 0 0 3.5px #141018; }\n  .wh-strip b { width: 18px;")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())

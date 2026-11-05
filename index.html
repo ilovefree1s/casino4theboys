@@ -3524,6 +3524,7 @@
   .wh-sheet .actions { width: 100%; max-width: 300px; justify-content: center; margin-top: 6px; }
   .wh-strip { width: 100%; height: 26px; border-radius: 8px; background: rgba(245,241,232,.92); margin-top: 6px; display: flex; align-items: center; gap: 4px; padding: 0 6px; overflow: hidden; }
   .wh-strip .empty { width: 100%; text-align: center; font-family: var(--mono); font-size: 6px; letter-spacing: .16em; color: rgba(36,26,20,.5); }
+  .wh-strip b.new { box-shadow: 0 0 0 2px rgba(245,241,232,.92), 0 0 0 3.5px #141018; }
   .wh-strip b { width: 18px; height: 18px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; font-size: 8px; font-weight: 900; color: #fff; }
 
   /* ================= CAMPAIGN OVERLAYS ================= */
@@ -13513,9 +13514,9 @@
     function renderStrip() {
       var r = $("wh-strip");
       if (!history.length) { r.innerHTML = '<span class="empty">NO SPINS YET</span>'; return; }
-      r.innerHTML = history.slice(-16).map(function (k) {
+      r.innerHTML = history.slice(-16).reverse().map(function (k, i) {
         var S = SYM[k];
-        return '<b style="background:' + S.c + ';color:' + S.ink + (k === "t" ? ";font-size:5px" : "") + '">' + (k === "d" || k === "e" ? "◆" : k === "t" ? "4TB" : S.label.replace("X", "")) + "</b>";
+        return '<b' + (i === 0 ? ' class="new"' : '') + ' style="background:' + S.c + ';color:' + S.ink + (k === "t" ? ";font-size:5px" : "") + '">' + (k === "d" || k === "e" ? "◆" : k === "t" ? "4TB" : S.label.replace("X", "")) + "</b>";
       }).join("");
     }
     function renderRebuy() {
