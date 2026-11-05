@@ -450,11 +450,18 @@
     $("tt-boardbtn").addEventListener("click", showBoard);
     $("tt-board-x").addEventListener("click", function () { $("tt-board").classList.remove("on"); });
     $("tt-crown-ok").addEventListener("click", function () { $("tt-crown").classList.remove("on"); });
+    // While the front page or the board is up, ask the server again every 20 s,
+    // so midnight Sunday (or a new day) opens the doors without a reopen.
     setInterval(function () {
       if (document.hidden) return;
-      if ($("tt-board").classList.contains("on")) refreshLane();
-      else if ($("screen-menu").classList.contains("on")) paintLane();
+      if ($("tt-board").classList.contains("on") || $("screen-menu").classList.contains("on")) refreshLane();
     }, 20000);
+    // and right on the stroke of the start, rather than up to 20 s after it
+    setInterval(function () {
+      if (document.hidden || !board || board.status !== "upcoming") return;
+      if (Date.parse(board.starts_at) <= now()) refreshLane();
+      else if ($("screen-menu").classList.contains("on")) paintLane();
+    }, 5000);
 
     TT.showBoard = showBoard;
     TT.board = function () { return board; };
