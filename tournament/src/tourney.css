@@ -120,3 +120,26 @@
   .tt-sechead { margin-top: 14px; font-family: var(--mono); font-size: 9px; letter-spacing: .22em; color: #FF9A66; }
   .tt-sechead:first-child { margin-top: 2px; }
   .tt-row .who small { white-space: normal; line-height: 1.5; }
+  /* ---- the front page: the tournament is the headline, the campaign steps back ---- */
+  .mm-lane.tourney { padding: 18px 16px 17px; }
+  .mm-lane.tourney .mm-hdr { flex-direction: column; align-items: flex-start; gap: 9px; }
+  .mm-lane.tourney .mm-hdr .nm {
+    font-size: clamp(30px, min(5.2dvh, 10.5vw), 46px); line-height: .95;
+    text-shadow: 0 0 30px rgba(255,122,61,.5), 0 2px 0 rgba(5,3,10,.9);
+  }
+  .mm-lane.tourney #tt-tag { font-size: 8px; padding: 5px 10px; white-space: nowrap; }
+  .mm-lane.tourney .tt-line { margin-top: 12px; font-size: 11px; letter-spacing: .12em; color: rgba(245,241,232,.88); }
+  .mm-lane.tourney .tt-btns { gap: 10px; margin-top: 16px; }
+  .mm-lane.tourney .tt-btns button { padding: 17px 0; font-size: 14px; letter-spacing: .22em; }
+
+  .mm-lane.campaign { padding: 12px 14px; box-shadow: 0 0 14px color-mix(in srgb, var(--c) 25%, transparent); }
+  .mm-lane.campaign .mm-hdr .nm { font-size: 21px; line-height: 1; text-shadow: 0 0 18px rgba(255,210,77,.35); }
+  .mm-lane.campaign .mm-money { font-size: 18px; margin-top: 6px; text-shadow: 0 0 20px rgba(255,210,77,.4); }
+  .mm-lane.campaign .mm-money .goal { font-size: 13px; margin-left: 5px; }
+  .mm-lane.campaign .mm-chase { display: none; }
+  .mm-lane.campaign .mm-bar { margin-top: 8px; }
+  .mm-lane.campaign .mm-numrow { margin-top: 8px; }
+  .mm-lane.campaign .mm-numrow:has(.mm-nums:empty):has(.mm-marker:empty) { display: none; }
+  .mm-lane.campaign .mm-nums .v { font-size: 11px; }
+  .mm-lane.campaign .mm-plaque { margin-top: 9px; padding: 7px 10px; }
+  .mm-lane.campaign .mm-enter { margin-top: 9px; padding: 11px 0; font-size: 11px; box-shadow: 0 0 16px rgba(255,210,77,.35); }
