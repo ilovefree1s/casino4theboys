@@ -4940,7 +4940,7 @@
     <ol class="tt-rlist">
       <li><b>Most money wins.</b> Whoever has the most at midnight Saturday is the champion. Your score is your cash minus whatever you still owe on markers.</li>
       <li><b>Everyone starts with $5,000</b> in The Basement. Same tables and limits as Campaign. <b>Rooms open with your bankroll:</b> Main Floor at $10,000, High Limit at $50,000, The Salon at $250,000, Whale Room at $1,000,000. Moving up costs nothing, but you can't move up while you owe on a marker, and if your bankroll drops below a room's table minimum you drop back down.</li>
-      <li><b>Markers:</b> the house gives you $5,000, and you owe $7,500 back. You get <b>3 a week</b>. Go broke after your 3rd and <b>you're out</b> for the rest of the week.</li>
+      <li><b>Markers:</b> the house gives you $5,000, and you owe $7,500 back. You can hold <b>up to 3 unpaid at a time</b>. Pay them back and you can take more. Go broke while holding 3 unpaid and <b>you're out</b> for the rest of the week.</li>
       <li><b>The board:</b> TODAY shows each day's winnings and resets every night at midnight. THE WEEK shows the running totals. Every day gets a daily winner.</li>
       <li><b>One phone.</b> Your name is locked to this phone. Play on the same one all week, and don't clear the browser's data, or you lose your spot.</li>
       <li><b>Next week</b> starts fresh at $5,000 the moment this one ends, and last week's champion gets their name in lights.</li>
@@ -7017,7 +7017,7 @@
     // ---- markers ----
     /** Whether the house will still sign one — the ceiling is on what is owed. */
     canTakeMarker: function () {
-      if (TT.on) return !TT.closed && !TT.isOut() && TT.markers() < TT.max();
+      if (TT.on && (TT.closed || TT.isOut())) return false;
       return this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING;
     },
     /** The pit offers one unasked once the purse is under the offer line. */
@@ -7164,16 +7164,16 @@
         // credit line is done, and then the campaign is too.
         var owed = self.getDebt(), credit = self.canTakeMarker();
         if (TT.on) {
-          var signed = TT.markers(), max = TT.max();
+          var unpaid = TT.unpaid(), max = TT.max();
           if (!credit) TT.knockOut();
           $("ov-gameover-sub").textContent = credit
-            ? "The purse is gone. " + (signed ? "You've signed " + signed + " of " + max + " markers." : "The house will cover you.")
-            : "That was marker " + signed + " of " + max + ". You're out for the week.";
+            ? "The purse is gone. " + (unpaid ? "You're holding " + unpaid + " of " + max + " unpaid markers." : "The house will cover you.")
+            : "Broke with " + max + " unpaid markers. You're out for the week.";
           $("ov-loan").textContent = credit
-            ? "SIGN MARKER " + (signed + 1) + " OF " + max
+            ? "SIGN MARKER · " + (unpaid + 1) + " OF " + max + " UNPAID"
             : "SEE THE BOARD";
           $("ov-loan-terms").textContent = credit
-            ? "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · bust after marker " + max + " and you're out"
+            ? "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · go broke holding " + max + " unpaid and you're out"
             : "final score " + TT.money(b - owed);
           $("ov-gameover").classList.add("on");
           $("ov-loan").onclick = function () {
@@ -7391,6 +7391,8 @@
 
     TT.key = k;
     TT.markers = function () { return Math.round(store.get(k("markers"), 0)); };
+    /** Markers still owed on: the campaign's rule, 3 at a time, paid back frees one. */
+    TT.unpaid = function () { return Math.ceil(Math.max(0, store.get(k("debt"), 0)) / 7500); };
     TT.isOut = function () { return store.getStr(k("out"), "") === "1"; };
     TT.max = function () { return frame ? frame.max_markers : 3; };
     TT.signMarker = function () { store.set(k("markers"), TT.markers() + 1); TT.changed(true); };
@@ -7655,8 +7657,7 @@
       if (tab === "today") rows.sort(function (a, c) { return c.today - a.today || c.net - a.net || a.name.localeCompare(c.name); });
       rows.forEach(function (r, i) {
         var tags = [];
-        if (r.markers) tags.push(r.markers + "/" + b.max_markers + " MARKERS");
-        if (r.owed) tags.push("OWES $" + fmt(r.owed));
+        if (r.owed) tags.push("OWES $" + fmt(r.owed) + " · " + Math.ceil(r.owed / 7500) + "/" + b.max_markers + " MARKERS");
         if (r.out) tags.push("OUT");
         var v = tab === "today" ? signed(r.today) : money(r.net);
         var el = row(i + 1, r.name, tags.join(" · "), v, r.name.toLowerCase() === me);
@@ -7978,7 +7979,7 @@
         (f.day_no === 7 ? "FINAL DAY" : "DAY " + (f.day_no || 1));
       host.querySelector(".v").textContent = "$" + fmt(bank);
       host.querySelector(".g").textContent = (owed > 0 ? "OWES $" + fmt(owed) + " · " : "") +
-        "MARKERS " + TT.markers() + "/" + TT.max();
+        "UNPAID MARKERS " + TT.unpaid() + "/" + TT.max();
       return;
     }
     host.querySelector(".k").textContent = "CAMPAIGN";

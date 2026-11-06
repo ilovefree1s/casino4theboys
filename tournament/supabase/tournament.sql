@@ -224,11 +224,12 @@ begin
     return public.c4tb_state(p_name, p_token) || jsonb_build_object('ok', false, 'error', 'out');
   end if;
 
-  -- markers only go up, and never past the weekly limit
-  mk := least(greatest(coalesce(p_markers, 0), e.markers), c.max_markers);
-  ow := least(greatest(coalesce(p_owed, 0), 0), mk * c.marker_owed);
+  -- markers: up to max_markers unpaid at a time, like the campaign; paying
+  -- back frees room. markers counts every one taken this week.
+  mk := least(greatest(coalesce(p_markers, 0), e.markers), 1000);
+  ow := least(greatest(coalesce(p_owed, 0), 0), c.max_markers * c.marker_owed);
   cs := greatest(coalesce(p_cash, 0), 0);
-  dead := coalesce(p_out, false) or (cs < 25 and mk >= c.max_markers);
+  dead := coalesce(p_out, false) or (cs < 25 and ow >= c.max_markers * c.marker_owed);
 
   update public.c4tb_entries
      set cash = cs, owed = ow, markers = mk, is_out = dead, updated_at = now()

@@ -128,7 +128,7 @@ sub('store.setStr("ftb.room", ROOMS[0].key);', 'store.setStr(wkey("room"), ROOMS
 # markers: three a week in the tournament, counted whether paid back or not
 sub("    canTakeMarker: function () {\n",
     "    canTakeMarker: function () {\n"
-    "      if (TT.on) return !TT.closed && !TT.isOut() && TT.markers() < TT.max();\n")
+    "      if (TT.on && (TT.closed || TT.isOut())) return false;\n")
 sub("      if (!this.canTakeMarker()) return;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n",
     "      if (!this.canTakeMarker()) return;\n      TT.quiet = true;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n      TT.quiet = false;\n")
 sub("      this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));\n    },",
@@ -156,16 +156,16 @@ sub("    Shell.mode = \"campaign\";\n    Shell.showFloor();",
 sub("""        var owed = self.getDebt(), credit = self.canTakeMarker();
 """, """        var owed = self.getDebt(), credit = self.canTakeMarker();
         if (TT.on) {
-          var signed = TT.markers(), max = TT.max();
+          var unpaid = TT.unpaid(), max = TT.max();
           if (!credit) TT.knockOut();
           $("ov-gameover-sub").textContent = credit
-            ? "The purse is gone. " + (signed ? "You've signed " + signed + " of " + max + " markers." : "The house will cover you.")
-            : "That was marker " + signed + " of " + max + ". You're out for the week.";
+            ? "The purse is gone. " + (unpaid ? "You're holding " + unpaid + " of " + max + " unpaid markers." : "The house will cover you.")
+            : "Broke with " + max + " unpaid markers. You're out for the week.";
           $("ov-loan").textContent = credit
-            ? "SIGN MARKER " + (signed + 1) + " OF " + max
+            ? "SIGN MARKER · " + (unpaid + 1) + " OF " + max + " UNPAID"
             : "SEE THE BOARD";
           $("ov-loan-terms").textContent = credit
-            ? "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · bust after marker " + max + " and you're out"
+            ? "$" + fmt(MARKER_AMOUNT * (1 + MARKER_INTEREST)) + " to clear · go broke holding " + max + " unpaid and you're out"
             : "final score " + TT.money(b - owed);
           $("ov-gameover").classList.add("on");
           $("ov-loan").onclick = function () {
@@ -192,7 +192,7 @@ sub("""  function paintRun(id) {
         (f.day_no === 7 ? "FINAL DAY" : "DAY " + (f.day_no || 1));
       host.querySelector(".v").textContent = "$" + fmt(bank);
       host.querySelector(".g").textContent = (owed > 0 ? "OWES $" + fmt(owed) + " · " : "") +
-        "MARKERS " + TT.markers() + "/" + TT.max();
+        "UNPAID MARKERS " + TT.unpaid() + "/" + TT.max();
       return;
     }
     host.querySelector(".k").textContent = "CAMPAIGN";

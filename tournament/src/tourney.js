@@ -74,6 +74,8 @@
 
     TT.key = k;
     TT.markers = function () { return Math.round(store.get(k("markers"), 0)); };
+    /** Markers still owed on: the campaign's rule, 3 at a time, paid back frees one. */
+    TT.unpaid = function () { return Math.ceil(Math.max(0, store.get(k("debt"), 0)) / 7500); };
     TT.isOut = function () { return store.getStr(k("out"), "") === "1"; };
     TT.max = function () { return frame ? frame.max_markers : 3; };
     TT.signMarker = function () { store.set(k("markers"), TT.markers() + 1); TT.changed(true); };
@@ -338,8 +340,7 @@
       if (tab === "today") rows.sort(function (a, c) { return c.today - a.today || c.net - a.net || a.name.localeCompare(c.name); });
       rows.forEach(function (r, i) {
         var tags = [];
-        if (r.markers) tags.push(r.markers + "/" + b.max_markers + " MARKERS");
-        if (r.owed) tags.push("OWES $" + fmt(r.owed));
+        if (r.owed) tags.push("OWES $" + fmt(r.owed) + " · " + Math.ceil(r.owed / 7500) + "/" + b.max_markers + " MARKERS");
         if (r.out) tags.push("OUT");
         var v = tab === "today" ? signed(r.today) : money(r.net);
         var el = row(i + 1, r.name, tags.join(" · "), v, r.name.toLowerCase() === me);
