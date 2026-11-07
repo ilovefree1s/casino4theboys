@@ -7468,8 +7468,10 @@
       return s ? s.id.replace("screen-", "") : "menu";
     }
     function popup() { return document.querySelector(".ov.on"); }
+    // the Play Testing panel opened up on the front page counts as a page of its own
+    function testing() { var t = $("mm-testing"); return current() === "menu" && t && t.classList.contains("open"); }
     function settle() {
-      if (current() !== "menu" || popup()) {
+      if (current() !== "menu" || popup() || testing()) {
         if (!armed) { history.pushState({ c4tbBack: 1 }, ""); armed = true; }
       } else if (armed) {
         armed = false; ignore++; history.back();   // back on the front page: give the spare entry back
@@ -7477,7 +7479,7 @@
     }
     var show = Shell.show;
     Shell.show = function () { var r = show.apply(this, arguments); settle(); return r; };
-    document.querySelectorAll(".ov").forEach(function (o) {
+    document.querySelectorAll(".ov, #mm-testing").forEach(function (o) {
       new MutationObserver(settle).observe(o, { attributes: true, attributeFilter: ["class"] });
     });
     window.addEventListener("popstate", function () {
@@ -7487,6 +7489,8 @@
       if (o) {
         // a pop-up that is only news closes; one asking you to decide (going broke, a result) stays
         if (CLOSE[o.id]) $(CLOSE[o.id]).click();
+      } else if (testing()) {
+        $("mm-testing-hdr").click();               // fold Play Testing back up
       } else if (current() !== "menu") {
         var b = document.querySelector(".screen.on .wayout");
         if (b) b.click();
