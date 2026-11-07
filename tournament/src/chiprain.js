@@ -12,7 +12,7 @@
     var cv = $("cr-rain"); if (!cv || !cv.getContext) return;
     var g = cv.getContext("2d");
     var VALS = [25, 100, 500, 1000, 5000, 25000];
-    var COUNT = 150, THICK = 3.3 / 39, PX = 192;
+    var COUNT = 90, THICK = 3.3 / 39, PX = 192;
     var SPAN = 1.24;                          // all of them on the screen, a few hanging off the edges
     var SHADES = [0.24, 0.36, 0.5];           // far, middle, near: dark, as asked
     var EDGE = 0.62;                          // the side is darker than the face
