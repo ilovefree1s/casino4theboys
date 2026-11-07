@@ -87,6 +87,14 @@ sub('<button class="wayout" id="pk-back" aria-label="Back to other games">',
 sub('$("pk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });',
     '$("plk-back").addEventListener("click", function () { Plinko.leave(); Shell.show("othermenu"); });')
 
+# ---- the front page: chip rain behind glass, the sign in its own gold box ----
+sub('  <div class="mm-col">\n    <div class="mm-name">Casino Games</div>\n    <div class="mm-casino">4 THE BOYS</div>\n',
+    '  <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>\n'
+    '  <div class="mm-col">\n    <div class="mm-sign">\n      <div class="mm-name">Casino Games</div>\n'
+    '      <div class="mm-casino">4 THE BOYS</div>\n    </div>\n')
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "chiprain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())
