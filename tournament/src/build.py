@@ -102,6 +102,10 @@ sub("      return this.mode === \"campaign\" && this.getBankroll() < MARKER_OFFE
 sub("  var MARKER_OFFER_BELOW = 2500;",
     "  var MARKER_OFFER_BELOW = 2500;\n  var TT_MARKER_AT = 1000;   // tournament: down $4,000 from the $5,000 start")
 
+# ---- the phone's Back steps back a page instead of closing the game ----
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "backbutton.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())
