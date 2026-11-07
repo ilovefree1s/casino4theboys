@@ -7327,7 +7327,8 @@
     hdr.addEventListener("click", flip);
     hdr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flip(); } });
   })();
-  /* ================= CHIP RAIN =================
+  /* ================= CHIPS ON THE FRONT PAGE =================
+   * (Built to fall; now they hold still - drawn once, redrawn only on a resize.)
    * The front page's backdrop: 230 solid chips tumbling down behind the glass.
    * One canvas, not thousands of 3D layers: each chip's face is drawn once per
    * denomination and shade, then every frame each chip is a few squashed copies
@@ -7344,7 +7345,7 @@
     var SPAN = 1.6;                           // the rain is 1.6 screens tall; a screen shows part of it
     var SHADES = [0.24, 0.36, 0.5];           // far, middle, near: dark, as asked
     var EDGE = 0.62;                          // the side is darker than the face
-    var still = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var still = true;                         // they lie where they landed: drawn once, never moving
     var sprites = {}, ready = 0, chips = [], W = 0, H = 0, dpr = 1;
 
     function shaded(img, k) {
