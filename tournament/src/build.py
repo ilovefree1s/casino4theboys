@@ -95,6 +95,13 @@ sub('  <div class="mm-col">\n    <div class="mm-name">Casino Games</div>\n    <d
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chiprain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
+# ---- tournament: the marker is on offer once you are down $4,000 ($1,000 or less) ----
+sub("      return this.mode === \"campaign\" && this.getBankroll() < MARKER_OFFER_BELOW && this.canTakeMarker();",
+    "      if (TT.on) return this.getBankroll() <= TT_MARKER_AT && this.canTakeMarker();\n"
+    "      return this.mode === \"campaign\" && this.getBankroll() < MARKER_OFFER_BELOW && this.canTakeMarker();")
+sub("  var MARKER_OFFER_BELOW = 2500;",
+    "  var MARKER_OFFER_BELOW = 2500;\n  var TT_MARKER_AT = 1000;   // tournament: down $4,000 from the $5,000 start")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())
