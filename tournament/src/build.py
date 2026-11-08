@@ -106,6 +106,16 @@ sub("  var MARKER_OFFER_BELOW = 2500;",
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "backbutton.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
+# ---- the tables' top line: the tournament says so, rather than "CAMPAIGN · GOAL $∞" ----
+sub('sub.textContent = "CAMPAIGN · GOAL $" + fmt(Shell.getGoal());', 'sub.textContent = goalLine();', 2)
+sub("? 'CAMPAIGN · GOAL $' + fmt(Shell.getGoal()) + ' · <span", "? goalLine() + ' · <span")
+sub("  var Shell = {\n",
+    "  function goalLine() {\n"
+    "    if (TT.on) { var f = TT.frame ? TT.frame() : null; return \"TOURNAMENT · WEEK \" + ((f && f.week_no) || 1); }\n"
+    "    return \"CAMPAIGN · GOAL $\" + fmt(Shell.getGoal());\n"
+    "  }\n"
+    "  var Shell = {\n")
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())

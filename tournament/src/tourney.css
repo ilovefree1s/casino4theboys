@@ -167,3 +167,6 @@
   .mm-sign { background: rgba(14,10,18,.62); -webkit-backdrop-filter: blur(9px) saturate(1.2); backdrop-filter: blur(9px) saturate(1.2);
              border: 2px solid #FFD24D; border-radius: 18px; padding: 10px 18px 12px; text-align: center;
              box-shadow: 0 0 10px rgba(255,210,77,.45), inset 0 0 8px rgba(255,210,77,.18), 0 10px 30px rgba(0,0,0,.8); }
+  /* blackjack: the free-double coin beside a single hand's total was left at
+     the picture's full size and covered the table; size it like the split hands' */
+  .bj-badge .coin { width: 24px; height: 24px; border-radius: 50%; flex: none; }
