@@ -148,6 +148,7 @@
       return ask.then(function (b) {
         board = b; frame = b;
         paintLane();
+        if (!$("tt-rules").classList.contains("on")) checkPin();
         if (store.getStr("ftt.showboard", "")) { store.setStr("ftt.showboard", ""); showBoard(); }
         if ($("tt-board").classList.contains("on")) paintBoard();
         return b;
@@ -223,6 +224,7 @@
     // ---- joining ----
     function askName(then) {
       $("tt-name").value = myName();
+      $("tt-pin").value = "";
       $("tt-join-err").textContent = "";
       $("tt-join").classList.add("on");
       setTimeout(function () { $("tt-name").focus(); }, 60);
@@ -232,16 +234,20 @@
           $("tt-join-err").textContent = "2–16 letters or numbers.";
           return;
         }
+        var pin = $("tt-pin").value.trim();
+        if (!/^[0-9]{4}$/.test(pin)) { $("tt-join-err").textContent = "The PIN is 4 digits."; return; }
         $("tt-join-go").disabled = true;
-        rpc("c4tb_join", { p_name: n, p_token: token() }).then(function (j) {
+        rpc("c4tb_signin", { p_name: n, p_token: token(), p_pin: pin }).then(function (j) {
           $("tt-join-go").disabled = false;
           if (!j.ok) {
-            $("tt-join-err").textContent = j.error === "taken"
-              ? "That name is already taken on another phone."
-              : "2–16 letters or numbers.";
+            $("tt-join-err").textContent =
+              j.error === "pin" ? "Wrong PIN for that name." :
+              j.error === "taken" ? "That name is taken, and it has no PIN yet. Ask Justin to free it." :
+              j.error === "bad_pin" ? "The PIN is 4 digits." : "2–16 letters or numbers.";
             return;
           }
           store.setStr("ftt.name", j.name);
+          store.setStr("ftt.haspin", "1");
           $("tt-join").classList.remove("on");
           if (then) then(); else refreshLane();
         }, function () {
@@ -251,7 +257,37 @@
       };
     }
     $("tt-join-x").addEventListener("click", function () { $("tt-join").classList.remove("on"); });
-    $("tt-name").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-join-go").click(); });
+    $("tt-name").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-pin").focus(); });
+    $("tt-pin").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-join-go").click(); });
+
+    // ---- players from before PINs: ask once for one ----
+    var pinAsked = false;
+    function checkPin() {
+      if (pinAsked || !ready || !myName() || store.getStr("ftt.haspin", "")) return;
+      pinAsked = true;
+      rpc("c4tb_pin", { p_name: myName(), p_token: token(), p_pin: null }).then(function (j) {
+        if (!j.ok) return;
+        if (j.has_pin) { store.setStr("ftt.haspin", "1"); return; }
+        $("tt-pin2").value = ""; $("tt-setpin-err").textContent = "";
+        $("tt-setpin").classList.add("on");
+      }, function () { pinAsked = false; });
+    }
+    $("tt-setpin-go").addEventListener("click", function () {
+      var pin = $("tt-pin2").value.trim();
+      if (!/^[0-9]{4}$/.test(pin)) { $("tt-setpin-err").textContent = "The PIN is 4 digits."; return; }
+      $("tt-setpin-go").disabled = true;
+      rpc("c4tb_pin", { p_name: myName(), p_token: token(), p_pin: pin }).then(function (j) {
+        $("tt-setpin-go").disabled = false;
+        if (!j.ok) { $("tt-setpin-err").textContent = "Couldn't save it. Try again."; return; }
+        store.setStr("ftt.haspin", "1");
+        $("tt-setpin").classList.remove("on");
+      }, function () {
+        $("tt-setpin-go").disabled = false;
+        $("tt-setpin-err").textContent = "Can't reach the tournament. Check your signal.";
+      });
+    });
+    $("tt-setpin-x").addEventListener("click", function () { $("tt-setpin").classList.remove("on"); });
+    $("tt-pin2").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-setpin-go").click(); });
 
     // ---- walking in ----
     function enter() {

@@ -180,3 +180,11 @@
   .tt-you .v span { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: rgba(245,241,232,.7); }
   .tt-you .v span.up { color: #57E06A; } .tt-you .v span.down { color: #FF3B5C; }
   .tt-you small { font-family: var(--mono); font-size: 7.5px; letter-spacing: .12em; color: rgba(245,241,232,.5); }
+  /* the PIN under the name */
+  .tt-pin { display: block; width: 100%; margin-top: 10px; padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6); color: var(--bone);
+    font: 700 22px var(--mono); letter-spacing: .5em; text-align: center; outline: none; }
+  #tt-setpin .box { width: min(340px, 88vw); }
+  #tt-setpin .big { font-size: 26px; color: #FF7A3D; }
+  #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
+  #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }

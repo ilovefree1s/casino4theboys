@@ -1,8 +1,9 @@
 <div class="ov" id="tt-join">
   <div class="box">
     <div class="big">JOIN THE TOURNAMENT</div>
-    <div class="sub">Pick the name the boys will see on the board. It stays locked to this phone.</div>
+    <div class="sub">Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.</div>
     <input id="tt-name" maxlength="16" autocomplete="nickname" autocapitalize="characters" spellcheck="false" placeholder="YOUR NAME">
+    <input id="tt-pin" class="tt-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="PIN" aria-label="4-digit PIN">
     <div id="tt-join-err"></div>
     <button class="gold-btn" id="tt-join-go">THAT'S ME</button>
     <button class="ghost-btn" id="tt-join-x">NOT NOW</button>
@@ -60,5 +61,15 @@
     <div class="big">THE WEEK IS OVER</div>
     <div class="sub">Midnight Saturday. The board is final and a new week starts at $5,000.</div>
     <button class="gold-btn" id="tt-over-go">SEE WHO WON</button>
+  </div>
+</div>
+<div class="ov" id="tt-setpin">
+  <div class="box">
+    <div class="big">SET A PIN</div>
+    <div class="sub">Pick 4 digits. If this phone ever forgets you, your name and this PIN get you back in, money and all.</div>
+    <input id="tt-pin2" class="tt-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="PIN" aria-label="4-digit PIN">
+    <div id="tt-setpin-err"></div>
+    <button class="gold-btn" id="tt-setpin-go">SAVE PIN</button>
+    <button class="ghost-btn" id="tt-setpin-x">LATER</button>
   </div>
 </div>

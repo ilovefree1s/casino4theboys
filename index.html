@@ -3732,6 +3732,14 @@
   .tt-you .v span { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: rgba(245,241,232,.7); }
   .tt-you .v span.up { color: #57E06A; } .tt-you .v span.down { color: #FF3B5C; }
   .tt-you small { font-family: var(--mono); font-size: 7.5px; letter-spacing: .12em; color: rgba(245,241,232,.5); }
+  /* the PIN under the name */
+  .tt-pin { display: block; width: 100%; margin-top: 10px; padding: 14px 16px; border-radius: 12px;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6); color: var(--bone);
+    font: 700 22px var(--mono); letter-spacing: .5em; text-align: center; outline: none; }
+  #tt-setpin .box { width: min(340px, 88vw); }
+  #tt-setpin .big { font-size: 26px; color: #FF7A3D; }
+  #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
+  #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
 </style>
 
 <!-- ================= MENU ================= -->
@@ -4926,8 +4934,9 @@
 <div class="ov" id="tt-join">
   <div class="box">
     <div class="big">JOIN THE TOURNAMENT</div>
-    <div class="sub">Pick the name the boys will see on the board. It stays locked to this phone.</div>
+    <div class="sub">Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.</div>
     <input id="tt-name" maxlength="16" autocomplete="nickname" autocapitalize="characters" spellcheck="false" placeholder="YOUR NAME">
+    <input id="tt-pin" class="tt-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="PIN" aria-label="4-digit PIN">
     <div id="tt-join-err"></div>
     <button class="gold-btn" id="tt-join-go">THAT'S ME</button>
     <button class="ghost-btn" id="tt-join-x">NOT NOW</button>
@@ -4985,6 +4994,16 @@
     <div class="big">THE WEEK IS OVER</div>
     <div class="sub">Midnight Saturday. The board is final and a new week starts at $5,000.</div>
     <button class="gold-btn" id="tt-over-go">SEE WHO WON</button>
+  </div>
+</div>
+<div class="ov" id="tt-setpin">
+  <div class="box">
+    <div class="big">SET A PIN</div>
+    <div class="sub">Pick 4 digits. If this phone ever forgets you, your name and this PIN get you back in, money and all.</div>
+    <input id="tt-pin2" class="tt-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="PIN" aria-label="4-digit PIN">
+    <div id="tt-setpin-err"></div>
+    <button class="gold-btn" id="tt-setpin-go">SAVE PIN</button>
+    <button class="ghost-btn" id="tt-setpin-x">LATER</button>
   </div>
 </div>
 <div class="ov" id="ov-gameover">
@@ -7489,7 +7508,7 @@
     if (!window.history || !history.pushState) return;
     var armed = false, ignore = 0, handling = false;
     // pop-ups Back can close, and the button that closes each
-    var CLOSE = { "tt-rules": "tt-rules-ok", "tt-crown": "tt-crown-ok", "tt-join": "tt-join-x", "tt-board": "tt-board-x" };
+    var CLOSE = { "tt-rules": "tt-rules-ok", "tt-crown": "tt-crown-ok", "tt-join": "tt-join-x", "tt-board": "tt-board-x", "tt-setpin": "tt-setpin-x" };
     function current() {
       var s = document.querySelector(".screen.on");
       return s ? s.id.replace("screen-", "") : "menu";
@@ -7683,6 +7702,7 @@
       return ask.then(function (b) {
         board = b; frame = b;
         paintLane();
+        if (!$("tt-rules").classList.contains("on")) checkPin();
         if (store.getStr("ftt.showboard", "")) { store.setStr("ftt.showboard", ""); showBoard(); }
         if ($("tt-board").classList.contains("on")) paintBoard();
         return b;
@@ -7758,6 +7778,7 @@
     // ---- joining ----
     function askName(then) {
       $("tt-name").value = myName();
+      $("tt-pin").value = "";
       $("tt-join-err").textContent = "";
       $("tt-join").classList.add("on");
       setTimeout(function () { $("tt-name").focus(); }, 60);
@@ -7767,16 +7788,20 @@
           $("tt-join-err").textContent = "2–16 letters or numbers.";
           return;
         }
+        var pin = $("tt-pin").value.trim();
+        if (!/^[0-9]{4}$/.test(pin)) { $("tt-join-err").textContent = "The PIN is 4 digits."; return; }
         $("tt-join-go").disabled = true;
-        rpc("c4tb_join", { p_name: n, p_token: token() }).then(function (j) {
+        rpc("c4tb_signin", { p_name: n, p_token: token(), p_pin: pin }).then(function (j) {
           $("tt-join-go").disabled = false;
           if (!j.ok) {
-            $("tt-join-err").textContent = j.error === "taken"
-              ? "That name is already taken on another phone."
-              : "2–16 letters or numbers.";
+            $("tt-join-err").textContent =
+              j.error === "pin" ? "Wrong PIN for that name." :
+              j.error === "taken" ? "That name is taken, and it has no PIN yet. Ask Justin to free it." :
+              j.error === "bad_pin" ? "The PIN is 4 digits." : "2–16 letters or numbers.";
             return;
           }
           store.setStr("ftt.name", j.name);
+          store.setStr("ftt.haspin", "1");
           $("tt-join").classList.remove("on");
           if (then) then(); else refreshLane();
         }, function () {
@@ -7786,7 +7811,37 @@
       };
     }
     $("tt-join-x").addEventListener("click", function () { $("tt-join").classList.remove("on"); });
-    $("tt-name").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-join-go").click(); });
+    $("tt-name").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-pin").focus(); });
+    $("tt-pin").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-join-go").click(); });
+
+    // ---- players from before PINs: ask once for one ----
+    var pinAsked = false;
+    function checkPin() {
+      if (pinAsked || !ready || !myName() || store.getStr("ftt.haspin", "")) return;
+      pinAsked = true;
+      rpc("c4tb_pin", { p_name: myName(), p_token: token(), p_pin: null }).then(function (j) {
+        if (!j.ok) return;
+        if (j.has_pin) { store.setStr("ftt.haspin", "1"); return; }
+        $("tt-pin2").value = ""; $("tt-setpin-err").textContent = "";
+        $("tt-setpin").classList.add("on");
+      }, function () { pinAsked = false; });
+    }
+    $("tt-setpin-go").addEventListener("click", function () {
+      var pin = $("tt-pin2").value.trim();
+      if (!/^[0-9]{4}$/.test(pin)) { $("tt-setpin-err").textContent = "The PIN is 4 digits."; return; }
+      $("tt-setpin-go").disabled = true;
+      rpc("c4tb_pin", { p_name: myName(), p_token: token(), p_pin: pin }).then(function (j) {
+        $("tt-setpin-go").disabled = false;
+        if (!j.ok) { $("tt-setpin-err").textContent = "Couldn't save it. Try again."; return; }
+        store.setStr("ftt.haspin", "1");
+        $("tt-setpin").classList.remove("on");
+      }, function () {
+        $("tt-setpin-go").disabled = false;
+        $("tt-setpin-err").textContent = "Can't reach the tournament. Check your signal.";
+      });
+    });
+    $("tt-setpin-x").addEventListener("click", function () { $("tt-setpin").classList.remove("on"); });
+    $("tt-pin2").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-setpin-go").click(); });
 
     // ---- walking in ----
     function enter() {

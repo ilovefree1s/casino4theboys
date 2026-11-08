@@ -14,7 +14,7 @@
     if (!window.history || !history.pushState) return;
     var armed = false, ignore = 0, handling = false;
     // pop-ups Back can close, and the button that closes each
-    var CLOSE = { "tt-rules": "tt-rules-ok", "tt-crown": "tt-crown-ok", "tt-join": "tt-join-x", "tt-board": "tt-board-x" };
+    var CLOSE = { "tt-rules": "tt-rules-ok", "tt-crown": "tt-crown-ok", "tt-join": "tt-join-x", "tt-board": "tt-board-x", "tt-setpin": "tt-setpin-x" };
     function current() {
       var s = document.querySelector(".screen.on");
       return s ? s.id.replace("screen-", "") : "menu";
