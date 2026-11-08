@@ -17891,7 +17891,7 @@
     // Lightning: how long the struck numbers are shown before the ball goes.
     var STRIKE_MS = 1500;
     var SIGNS = {
-      lightning: ["⚡ LIGHTNING", "STRUCK STRAIGHT UP PAYS 50X TO 500X", "#FFD24D"],
+      lightning: ["⚡ LIGHTNING", "STRUCK STRAIGHT UP PAYS 50X TO 500X · OTHERS 30 TO 1", "#FFD24D"],
       doubleball: ["DOUBLE BALL", "EITHER BALL 17 TO 1 · BOTH 1300 TO 1", "#E6E6F0"]
     };
     function renderSign() {
@@ -17904,6 +17904,8 @@
     // ---- Lightning: the strike, drawn before the ball goes ----
     var STRIKE_COUNTS = [[1, 20], [2, 28], [3, 26], [4, 16], [5, 10]];
     var STRIKE_MULTS = [[50, 38], [100, 30], [200, 15], [300, 9], [400, 5], [500, 3]];
+    // what a straight-up pays when it isn't struck: the lightning is paid for out of this
+    var LIGHTNING_STRAIGHT = 30;
     function weighted(table) {
       var total = 0, i; for (i = 0; i < table.length; i++) total += table[i][1];
       var roll = Math.floor(Math.random() * total);
@@ -17921,7 +17923,8 @@
     function settleLightning(bet, stake, p) {
       if (bet.pockets.indexOf(p) < 0) return 0;
       var worn = strikes[p];
-      return (bet.pockets.length === 1 && worn) ? stake * (worn + 1) : stake * (bet.pays + 1);
+      if (bet.pockets.length === 1) return stake * ((worn || LIGHTNING_STRAIGHT) + 1);
+      return stake * (bet.pays + 1);
     }
     // ---- Double Ball ----
     var DOUBLE_BALL_JACKPOT = 1300;

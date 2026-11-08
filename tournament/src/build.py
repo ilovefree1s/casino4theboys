@@ -116,6 +116,17 @@ sub("  var Shell = {\n",
     "  }\n"
     "  var Shell = {\n")
 
+# ---- Lightning Roulette: an unstruck straight-up pays LIGHTNING_STRAIGHT to 1, not 35 ----
+sub("      return (bet.pockets.length === 1 && worn) ? stake * (worn + 1) : stake * (bet.pays + 1);",
+    "      if (bet.pockets.length === 1) return stake * ((worn || LIGHTNING_STRAIGHT) + 1);\n"
+    "      return stake * (bet.pays + 1);")
+sub("    var STRIKE_MULTS = [[50, 38], [100, 30], [200, 15], [300, 9], [400, 5], [500, 3]];",
+    "    var STRIKE_MULTS = [[50, 38], [100, 30], [200, 15], [300, 9], [400, 5], [500, 3]];\n"
+    "    // what a straight-up pays when it isn't struck: the lightning is paid for out of this\n"
+    "    var LIGHTNING_STRAIGHT = 30;")
+sub('lightning: ["⚡ LIGHTNING", "STRUCK STRAIGHT UP PAYS 50X TO 500X", "#FFD24D"],',
+    'lightning: ["⚡ LIGHTNING", "STRUCK STRAIGHT UP PAYS 50X TO 500X · OTHERS 30 TO 1", "#FFD24D"],')
+
 # ---- overlays ----
 sub('<!-- ================= OVERLAYS ================= -->\n',
     '<!-- ================= OVERLAYS ================= -->\n' + (here / "tourney.html").read_text())
