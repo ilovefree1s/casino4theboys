@@ -66,8 +66,10 @@ create table if not exists public.c4tb_entries (
   markers    int     not null default 0,
   is_out     boolean not null default false,
   updated_at timestamptz not null default now(),
+  best_cash  bigint,                       -- the most cash in hand at any point that week
   primary key (player_id, week)
 );
+alter table public.c4tb_entries add column if not exists best_cash bigint;
 
 -- ---------- one row per player per day: where the day started and where it is ----------
 create table if not exists public.c4tb_days (
@@ -232,7 +234,8 @@ begin
   dead := coalesce(p_out, false) or (cs < 25 and ow >= c.max_markers * c.marker_owed);
 
   update public.c4tb_entries
-     set cash = cs, owed = ow, markers = mk, is_out = dead, updated_at = now()
+     set cash = cs, owed = ow, markers = mk, is_out = dead, updated_at = now(),
+         best_cash = greatest(coalesce(best_cash, 0), cs)
    where player_id = pid and week = wk;
 
   update public.c4tb_days set net = cs - ow where player_id = pid and day = d;

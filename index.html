@@ -7948,9 +7948,11 @@
                                : dayTab ? asOf + " · WHAT EACH PLAYER MADE" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
       var rows = b.rows.slice();
       if (dayTab) rows.sort(function (a, c) { return c.day - a.day || c.net - a.net || a.name.localeCompare(c.name); });
+      var hi = b.final ? highs(lastWeekOf(b)) : null;
       rows.forEach(function (r, i) {
         var v = dayTab ? signed(r.day) : money(r.net);
-        var el = row(i + 1, r.name, "", v, r.name.toLowerCase() === me);
+        var tag = hi && hi[r.name.toLowerCase()] ? "HIGHEST CASH $" + fmt(hi[r.name.toLowerCase()]) : "";
+        var el = row(i + 1, r.name, tag, v, r.name.toLowerCase() === me);
         if (dayTab) el.classList.add(r.day > 0 ? "up" : r.day < 0 ? "down" : "flat");
         list.appendChild(el);
       });
@@ -7974,6 +7976,19 @@
      * then each player's best and worst game. Under that, your own games this week.
      */
     var statsCache = {};
+    // each player's highest cash in a finished week, by name
+    var highsCache = {};
+    function highs(week) {
+      if (highsCache[week] === undefined) {
+        highsCache[week] = null;
+        rpc("c4tb_highs", { p_week: week }).then(function (list) {
+          var m = {}; (list || []).forEach(function (h) { m[h.name.toLowerCase()] = h.best; });
+          highsCache[week] = { map: m, list: list || [] };
+          if ($("tt-board").classList.contains("on")) paintBoard();
+        }, function () { delete highsCache[week]; });
+      }
+      return highsCache[week] && highsCache[week].map;
+    }
     function getStats(week) {
       return rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: week })
         .then(function (j) { statsCache[week] = j; return j; });
@@ -8018,6 +8033,13 @@
             el.classList.add(x.tot > 0 ? "up" : x.tot < 0 ? "down" : "flat");
             list.appendChild(el);
           });
+          var hl = highs(prev) && highsCache[prev].list;
+          if (hl && hl.length) {
+            list.appendChild(heading("HIGHEST CASH AT ANY POINT"));
+            hl.forEach(function (h, i) {
+              list.appendChild(row(i + 1, h.name, "", "$" + fmt(h.best), h.name.toLowerCase() === me));
+            });
+          }
           list.appendChild(heading("EVERYONE'S BEST & WORST GAME"));
           Object.keys(byName).sort().forEach(function (n) {
             var rs = byName[n].slice().sort(function (a, c) { return c.net - a.net; });
