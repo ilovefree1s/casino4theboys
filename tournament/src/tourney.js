@@ -141,10 +141,12 @@
       $("tt-play").textContent = play;
       $("tt-play").disabled = !playOn;
     }
+    var roster = null;   // everyone signed up: names only
     function refreshLane() {
       if (!ready) return laneSay("NOT SET UP YET", "SOON", false);
       // standings as of last midnight for everyone; your own money live, for you only
       var ask = myName() ? rpc("c4tb_standings", { p_name: myName(), p_token: token() }) : rpc("c4tb_board", {});
+      rpc("c4tb_roster", {}).then(function (r) { roster = r; paintLane(); if ($("tt-board").classList.contains("on")) paintBoard(); }, function () {});
       return ask.then(function (b) {
         board = b; frame = b;
         paintLane();
@@ -162,7 +164,8 @@
         return laneSay("STARTS SUNDAY 12:00 AM · IN " + left(b.starts_at),
                        me ? "YOU'RE IN · " + me.toUpperCase() : "JOIN", !me);
       }
-      $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
+      $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7") +
+        (roster ? " · " + roster.length + " PLAYERS" : "");
       // the first time the app is opened in a new week, the rules come up
       var seenRules = "ftt.rules." + b.week;
       if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
@@ -394,7 +397,19 @@
         if (dayTab) el.classList.add(r.day > 0 ? "up" : r.day < 0 ? "down" : "flat");
         list.appendChild(el);
       });
-      if (!rows.length) list.appendChild(empty("The first standings come in at midnight. Until then, only you can see your money."));
+      // everyone else in the tournament gets a row too, left blank until they have a midnight total
+      if (!dayTab && roster && !b.final) {
+        var listed = {};
+        rows.forEach(function (r) { listed[r.name.toLowerCase()] = 1; });
+        var rest = roster.filter(function (p) { return !listed[p.name.toLowerCase()]; });
+        if (!rows.length && rest.length) list.appendChild(heading("THE WEEK · " + roster.length + " PLAYERS · MONEY SHOWS AT MIDNIGHT"));
+        rest.forEach(function (p) {
+          var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
+          el.classList.add("blank");
+          list.appendChild(el);
+        });
+        if (!rows.length && !rest.length) list.appendChild(empty("Nobody has joined yet."));
+      } else if (!rows.length) list.appendChild(empty("The first standings come in at midnight. Until then, only you can see your money."));
     }
     /*
      * The stats tab. Last week's, everyone's, once it is final: each game with

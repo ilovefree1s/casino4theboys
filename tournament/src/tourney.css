@@ -188,3 +188,6 @@
   #tt-setpin .big { font-size: 26px; color: #FF7A3D; }
   #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
   #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
+  /* players with no midnight total yet: a row with the money left blank */
+  .tt-row.blank .rk { visibility: hidden; }
+  .tt-row.blank .val::before { content: "—"; color: rgba(245,241,232,.3); }
