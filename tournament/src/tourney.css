@@ -170,3 +170,13 @@
   /* blackjack: the free-double coin beside a single hand's total was left at
      the picture's full size and covered the table; size it like the split hands' */
   .bj-badge .coin { width: 24px; height: 24px; border-radius: 50%; flex: none; }
+  /* the board: your own money, live, for your eyes only */
+  .tt-you { margin-top: 14px; padding: 12px 14px; border-radius: 12px; display: flex; flex-direction: column; gap: 4px;
+            background: rgba(255,122,61,.09); border: 1px solid rgba(255,122,61,.75); }
+  .tt-you[hidden] { display: none; }
+  .tt-you .k { font-family: var(--mono); font-size: 8.5px; letter-spacing: .2em; color: #FF9A66; }
+  .tt-you .v { display: flex; align-items: baseline; gap: 12px; }
+  .tt-you .v b { font-family: var(--display); font-size: 22px; color: var(--bone); }
+  .tt-you .v span { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; color: rgba(245,241,232,.7); }
+  .tt-you .v span.up { color: #57E06A; } .tt-you .v span.down { color: #FF3B5C; }
+  .tt-you small { font-family: var(--mono); font-size: 7.5px; letter-spacing: .12em; color: rgba(245,241,232,.5); }

@@ -143,7 +143,9 @@
     }
     function refreshLane() {
       if (!ready) return laneSay("NOT SET UP YET", "SOON", false);
-      return rpc("c4tb_board", {}).then(function (b) {
+      // standings as of last midnight for everyone; your own money live, for you only
+      var ask = myName() ? rpc("c4tb_standings", { p_name: myName(), p_token: token() }) : rpc("c4tb_board", {});
+      return ask.then(function (b) {
         board = b; frame = b;
         paintLane();
         if (store.getStr("ftt.showboard", "")) { store.setStr("ftt.showboard", ""); showBoard(); }
@@ -163,12 +165,13 @@
       // the first time the app is opened in a new week, the rules come up
       var seenRules = "ftt.rules." + b.week;
       if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
-      var row = null, rank = 0;
-      b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) { row = r; rank = i + 1; } });
-      if (!me) return laneSay(b.rows.length + " PLAYING · ENDS IN " + left(b.ends_at), "JOIN", true);
-      if (row && row.out) return laneSay("OUT FOR THE WEEK · FINISHED #" + rank, "OUT", false);
-      if (!row) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
-      laneSay("#" + rank + " OF " + b.rows.length + " · " + money(row.net) + " · TODAY " + signed(row.today), "PLAY", true);
+      var you = b.me, rank = 0;
+      if (!b.final) b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) rank = i + 1; });
+      if (!me) return laneSay("ENDS IN " + left(b.ends_at), "JOIN", true);
+      if (you && you.out) return laneSay("OUT FOR THE WEEK", "OUT", false);
+      if (!you || you.fresh) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
+      laneSay(money(you.net) + " · TODAY " + signed(you.today) +
+              (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }
 
     // ---- game stats: every move of the purse, put down to the table it happened at ----
@@ -308,10 +311,18 @@
       }
       var finalDay = b.day_no === 7;
       $("tt-bhead").textContent = "WEEK " + b.week_no + " · " + (finalDay ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
-      var leader = b.rows[0];
-      $("tt-bsub").textContent = finalDay
-        ? (leader ? "LEADING: " + leader.name.toUpperCase() + " · " : "") + "WINNER AT MIDNIGHT · " + left(b.ends_at)
-        : "TODAY RESETS IN " + left(b.day_ends_at) + " · WEEK ENDS IN " + left(b.ends_at);
+      $("tt-bsub").textContent = (finalDay ? "WINNER AT MIDNIGHT · " + left(b.ends_at)
+                                           : "STANDINGS UPDATE AT MIDNIGHT · NEXT IN " + left(b.day_ends_at));
+      // you, live - nobody else sees this
+      var you = $("tt-you"), y = b.me;
+      you.hidden = !(y && !y.fresh);
+      if (y && !y.fresh) {
+        $("tt-you-net").textContent = money(y.net);
+        $("tt-you-today").textContent = "TODAY " + signed(y.today);
+        $("tt-you-today").className = y.today > 0 ? "up" : y.today < 0 ? "down" : "";
+        $("tt-you-tags").textContent = (y.owed ? "OWES $" + fmt(y.owed) + " · " + Math.ceil(y.owed / 7500) + "/" + b.max_markers + " MARKERS · " : "") +
+          (y.out ? "OUT FOR THE WEEK · " : "") + "ONLY YOU SEE THIS UNTIL MIDNIGHT";
+      }
 
       if (b.last_champion) {
         champ.hidden = false;
@@ -336,19 +347,18 @@
       });
 
       if (tab === "stats") return paintStats(b);
+      var dayTab = tab === "day", asOf = dayName(b.as_of);
+      if (b.rows.length) list.appendChild(heading(b.final ? "WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"
+                               : dayTab ? asOf + " · WHAT EACH PLAYER MADE" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
       var rows = b.rows.slice();
-      if (tab === "today") rows.sort(function (a, c) { return c.today - a.today || c.net - a.net || a.name.localeCompare(c.name); });
+      if (dayTab) rows.sort(function (a, c) { return c.day - a.day || c.net - a.net || a.name.localeCompare(c.name); });
       rows.forEach(function (r, i) {
-        var tags = [];
-        if (r.owed) tags.push("OWES $" + fmt(r.owed) + " · " + Math.ceil(r.owed / 7500) + "/" + b.max_markers + " MARKERS");
-        if (r.out) tags.push("OUT");
-        var v = tab === "today" ? signed(r.today) : money(r.net);
-        var el = row(i + 1, r.name, tags.join(" · "), v, r.name.toLowerCase() === me);
-        if (r.out) el.classList.add("out");
-        if (tab === "today") el.classList.add(r.today > 0 ? "up" : r.today < 0 ? "down" : "flat");
+        var v = dayTab ? signed(r.day) : money(r.net);
+        var el = row(i + 1, r.name, "", v, r.name.toLowerCase() === me);
+        if (dayTab) el.classList.add(r.day > 0 ? "up" : r.day < 0 ? "down" : "flat");
         list.appendChild(el);
       });
-      if (!rows.length) list.appendChild(empty("Nobody has played yet this week."));
+      if (!rows.length) list.appendChild(empty("The first standings come in at midnight. Until then, only you can see your money."));
     }
     /*
      * The stats tab. Last week's, everyone's, once it is final: each game with
@@ -463,6 +473,11 @@
       if (Date.parse(board.starts_at) <= now()) refreshLane();
       else if ($("screen-menu").classList.contains("on")) paintLane();
     }, 5000);
+
+    // back on the front page: ask again, so the lane is never left saying "checking in"
+    new MutationObserver(function () {
+      if ($("screen-menu").classList.contains("on")) refreshLane();
+    }).observe($("screen-menu"), { attributes: true, attributeFilter: ["class"] });
 
     TT.showBoard = showBoard;
     TT.board = function () { return board; };
