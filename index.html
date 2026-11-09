@@ -7874,7 +7874,23 @@
         if (s.status === "upcoming") return refreshLane();
         TT.week = s.week;
         var local = store.getStr(k("dirty"), "");
-        if (!local) writeWallet({ cash: s.cash, owed: s.owed, markers: s.markers, out: s.out });
+        if (!local) {
+          writeWallet({ cash: s.cash, owed: s.owed, markers: s.markers, out: s.out });
+          // the game stats come from the server too, so an old copy on this phone
+          // (a name deleted and started over, or played on another phone) isn't sent up again
+          var wk = s.week;
+          store.setStr(k("stats"), "{}");
+          rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: wk }).then(function (g) {
+            if (!g || !g.ok || TT.week !== wk) return;
+            // the server's games, plus anything played while it was answering
+            var m = readStats();
+            (g.rows || []).forEach(function (r) {
+              var x = m[r.game] || { net: 0, best: 0 };
+              m[r.game] = { net: x.net + r.net, best: Math.max(x.best, r.best) };
+            });
+            store.setStr(k("stats"), JSON.stringify(m));
+          }, function () {});
+        }
         if (s.out) { store.setStr(k("out"), "1"); refreshLane(); return showBoard(); }
         TT.on = true; TT.closed = false;
         Shell.mode = "campaign";
