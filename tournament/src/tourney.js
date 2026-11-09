@@ -99,6 +99,10 @@
       }, keepalive).then(function (j) {
         inflight = false;
         clearTimeout(retry);
+        // the server doesn't know this phone any more (the name moved to another
+        // phone, or was freed): keep everything here, and get the player signed
+        // back in with name and PIN, then send what didn't save
+        if (j.error === "auth") return signedOut();
         if (j.error === "rollover") return weekOver();
         if (j.week && j.week !== wk) return weekOver();
         frame = j;
@@ -115,6 +119,13 @@
         clearTimeout(retry);
         retry = setTimeout(push, 10000);
       });
+    }
+    var askingBack = false;
+    function signedOut() {
+      if (askingBack) return;
+      askingBack = true;
+      askName(function () { askingBack = false; push(); refreshLane(); });
+      $("tt-join-err").textContent = "This phone got signed out, so your last bets didn't save. Enter your name and PIN to save them.";
     }
     document.addEventListener("visibilitychange", function () {
       if (document.hidden) { if (TT.week && store.getStr(k("dirty"), "")) push(true); }
@@ -259,7 +270,7 @@
         });
       };
     }
-    $("tt-join-x").addEventListener("click", function () { $("tt-join").classList.remove("on"); });
+    $("tt-join-x").addEventListener("click", function () { $("tt-join").classList.remove("on"); askingBack = false; });
     $("tt-name").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-pin").focus(); });
     $("tt-pin").addEventListener("keydown", function (e) { if (e.key === "Enter") $("tt-join-go").click(); });
 
