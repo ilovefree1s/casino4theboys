@@ -7495,6 +7495,53 @@
     window.addEventListener("resize", function () { if (ready === VALS.length) { size(); draw(0); } });
     new MutationObserver(wake).observe($("screen-menu"), { attributes: true, attributeFilter: ["class"] });
   })();
+  /* ================= NO WALKING AWAY FROM A HAND =================
+   * Leaving a table mid-hand used to throw the hand away with the chips on it.
+   * While a hand is live the way out (and the phone's Back) waits, and says so.
+   */
+  (function () {
+    var TABLES = { holdem: "Holdem", djwild: "DjWild", shootout: "Shootout", miniuth: "MiniUth",
+      iluvsuits: "IluvSuits", destroyer: "Destroyer", sicbo: "SicBo", roulette: "Roulette",
+      wheel: "Wheel", keno: "Keno", mines: "Mines", blackjack: "Blackjack", doubledown: "DoubleDown",
+      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps" };
+    // the tables are set up further down the page, so look them up on the tap
+    function games() {
+      return { Holdem: Holdem, DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth,
+        IluvSuits: IluvSuits, Destroyer: Destroyer, SicBo: SicBo, Roulette: Roulette, Wheel: Wheel,
+        Keno: Keno, Mines: Mines, Blackjack: Blackjack, DoubleDown: DoubleDown, Baccarat: Baccarat,
+        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps };
+    }
+    var tip = null, hide = null;
+    function say(text) {
+      if (!tip) {
+        tip = document.createElement("div");
+        tip.id = "c4tb-handtip";
+        tip.style.cssText = "position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;" +
+          "max-width:86vw;padding:12px 18px;border-radius:12px;background:rgba(10,8,18,.94);" +
+          "border:1.5px solid #FFD24D;color:#FFD24D;font:700 14px/1.35 system-ui,sans-serif;" +
+          "letter-spacing:.04em;text-align:center;pointer-events:none;transition:opacity .25s;opacity:0";
+        document.body.appendChild(tip);
+      }
+      tip.textContent = text;
+      tip.style.opacity = "1";
+      clearTimeout(hide);
+      hide = setTimeout(function () { tip.style.opacity = "0"; }, 2200);
+    }
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest(".wayout");
+      if (!b) return;
+      var s = b.closest(".screen");
+      if (!s || !s.classList.contains("on")) return;
+      var g = games()[TABLES[s.id.replace("screen-", "")]];
+      if (!g || !g.busy || !g.busy()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      say(s.id === "screen-craps" ? "YOUR BETS ARE STILL ON THE TABLE — TAKE THEM DOWN OR ROLL IT OUT FIRST"
+        : s.id === "screen-plinko" ? "LET THE BALLS LAND FIRST"
+        : "FINISH THE HAND FIRST — YOUR CHIPS ARE ON THE TABLE");
+    }, true);
+  })();
+
   /* ================= THE PHONE'S BACK BUTTON =================
    * Back steps the game back one page instead of closing it. While you are
    * anywhere but the front page (or a pop-up or the Play Testing panel is
@@ -10647,7 +10694,7 @@
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -11221,7 +11268,7 @@
       if ($("screen-doubledown").classList.contains("on")) renderAll();
     });
     // The rules are exposed so the parity page can referee them directly.
-    return {
+    return { busy: function () { return phase !== "betting" && phase !== "result"; },
       enter: enter, settleHand: settleHand, settlePush22: settlePush22, push22: push22Of,
       pairSquare: pairSquareOf,
       settlePairSquare: function (cards, stake) {
@@ -11431,7 +11478,7 @@
         });
         // Short of every raise: the pit lends at the felt rather than fold a
         // good hand for want of chips. Free play has no house to borrow from.
-        if (Shell.mode === "campaign" && !playChoices().length && Shell.canTakeMarker()) {
+        if (Shell.mode === "campaign" && playChoices().length < PLAY_OPTIONS[street()].length && Shell.canTakeMarker()) {
           a.appendChild(actionBtn("MARKER +5,000", "#D9B23A", function () {
             Shell.takeMarker();
             bankroll = Shell.getBankroll();
@@ -11680,7 +11727,7 @@
       if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -12092,7 +12139,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -12623,7 +12670,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your poker bet"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -12794,8 +12841,17 @@
         a.appendChild(actionBtn("DEAL", GOLD, deal));
       } else if (phase === "preflop" || phase === "flop") {
         a.appendChild(actionBtn("CHECK", DIM, check));
-        a.appendChild(actionBtn(MU.PLAY[phase] + "X  " + fmt(playCost()), GOLD, raise,
-          bankroll < playCost()));
+        if (Shell.mode === "campaign" && bankroll < playCost() && Shell.canTakeMarker()) {
+          a.appendChild(actionBtn("MARKER +5,000", BRASS, function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — play on");
+            renderAll();
+          }));
+        } else {
+          a.appendChild(actionBtn(MU.PLAY[phase] + "X  " + fmt(playCost()), GOLD, raise,
+            bankroll < playCost()));
+        }
       } else if (phase === "river") {
         a.appendChild(actionBtn("FOLD", LOSS, fold));
         // Short of the last raise: the pit lends at the felt rather than
@@ -13024,7 +13080,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -13450,7 +13506,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -14083,7 +14139,7 @@
         g.gain.value = Math.min(1, volume); src.connect(g); g.connect(wheelCtx.destination); src.start();
       } catch (e) { /* nothing to do */ }
     }
-    return { enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
   })();
 
   var Keno = (function () {
@@ -14311,7 +14367,7 @@
     }
     /** Walking out mid-draw: the balls still to come are dropped. */
     function leave() { clearTimers(); }
-    return { enter: enter, leave: leave };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter, leave: leave };
   })();
 
   var Plinko = (function () {
@@ -14617,7 +14673,7 @@
     }
     /** Walking out mid-drop: the balls are dropped where they are. */
     function leave() { clearTimers(); }
-    return { enter: enter, leave: leave };
+    return { busy: function () { return inFlight(); }, enter: enter, leave: leave };
   })();
 
   var Mines = (function () {
@@ -14877,7 +14933,7 @@
       renderAll();
       Shell.gate(refresh);
     }
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   var SicBo = (function () {
@@ -15225,7 +15281,7 @@
       if (phase === "result") nextRoll(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   var Craps = (function () {
@@ -16138,7 +16194,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Come out roll"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase === "rolling" || atRisk() > 0; }, enter: enter };
   })();
 
   /* ============================================================
@@ -16828,7 +16884,7 @@
       if (phase !== "betting" || bet !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -17129,7 +17185,7 @@
       if (phase === "result") nextHand(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   var Baccarat = (function () {
@@ -17792,7 +17848,7 @@
       $("roadDrawer").classList.remove("open");
       $("roadTab").classList.remove("open");
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   /* ============================================================
@@ -18461,7 +18517,7 @@
     window.addEventListener("resize", function () {
       if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelts(); }
     });
-    return { enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
   })();
 
   $("roadDrawer").style.display = "none";

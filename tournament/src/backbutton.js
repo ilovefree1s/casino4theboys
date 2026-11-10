@@ -1,3 +1,50 @@
+  /* ================= NO WALKING AWAY FROM A HAND =================
+   * Leaving a table mid-hand used to throw the hand away with the chips on it.
+   * While a hand is live the way out (and the phone's Back) waits, and says so.
+   */
+  (function () {
+    var TABLES = { holdem: "Holdem", djwild: "DjWild", shootout: "Shootout", miniuth: "MiniUth",
+      iluvsuits: "IluvSuits", destroyer: "Destroyer", sicbo: "SicBo", roulette: "Roulette",
+      wheel: "Wheel", keno: "Keno", mines: "Mines", blackjack: "Blackjack", doubledown: "DoubleDown",
+      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps" };
+    // the tables are set up further down the page, so look them up on the tap
+    function games() {
+      return { Holdem: Holdem, DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth,
+        IluvSuits: IluvSuits, Destroyer: Destroyer, SicBo: SicBo, Roulette: Roulette, Wheel: Wheel,
+        Keno: Keno, Mines: Mines, Blackjack: Blackjack, DoubleDown: DoubleDown, Baccarat: Baccarat,
+        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps };
+    }
+    var tip = null, hide = null;
+    function say(text) {
+      if (!tip) {
+        tip = document.createElement("div");
+        tip.id = "c4tb-handtip";
+        tip.style.cssText = "position:fixed;left:50%;top:18%;transform:translateX(-50%);z-index:9999;" +
+          "max-width:86vw;padding:12px 18px;border-radius:12px;background:rgba(10,8,18,.94);" +
+          "border:1.5px solid #FFD24D;color:#FFD24D;font:700 14px/1.35 system-ui,sans-serif;" +
+          "letter-spacing:.04em;text-align:center;pointer-events:none;transition:opacity .25s;opacity:0";
+        document.body.appendChild(tip);
+      }
+      tip.textContent = text;
+      tip.style.opacity = "1";
+      clearTimeout(hide);
+      hide = setTimeout(function () { tip.style.opacity = "0"; }, 2200);
+    }
+    document.addEventListener("click", function (e) {
+      var b = e.target.closest && e.target.closest(".wayout");
+      if (!b) return;
+      var s = b.closest(".screen");
+      if (!s || !s.classList.contains("on")) return;
+      var g = games()[TABLES[s.id.replace("screen-", "")]];
+      if (!g || !g.busy || !g.busy()) return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      say(s.id === "screen-craps" ? "YOUR BETS ARE STILL ON THE TABLE — TAKE THEM DOWN OR ROLL IT OUT FIRST"
+        : s.id === "screen-plinko" ? "LET THE BALLS LAND FIRST"
+        : "FINISH THE HAND FIRST — YOUR CHIPS ARE ON THE TABLE");
+    }, true);
+  })();
+
   /* ================= THE PHONE'S BACK BUTTON =================
    * Back steps the game back one page instead of closing it. While you are
    * anywhere but the front page (or a pop-up or the Play Testing panel is

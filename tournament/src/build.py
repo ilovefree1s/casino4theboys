@@ -238,6 +238,44 @@ sub("""  function paintRun(id) {
     host.querySelector(".k").textContent = "CAMPAIGN";
 """)
 
+# ---- markers at the felt on every raise you are short for ----
+# Mini UTH only lent on the river; preflop and flop just greyed the raise out.
+sub("""        a.appendChild(actionBtn("CHECK", DIM, check));
+        a.appendChild(actionBtn(MU.PLAY[phase] + "X  " + fmt(playCost()), GOLD, raise,
+          bankroll < playCost()));""",
+"""        a.appendChild(actionBtn("CHECK", DIM, check));
+        if (Shell.mode === "campaign" && bankroll < playCost() && Shell.canTakeMarker()) {
+          a.appendChild(actionBtn("MARKER +5,000", BRASS, function () {
+            Shell.takeMarker();
+            bankroll = Shell.getBankroll();
+            setMessage("Marker taken — play on");
+            renderAll();
+          }));
+        } else {
+          a.appendChild(actionBtn(MU.PLAY[phase] + "X  " + fmt(playCost()), GOLD, raise,
+            bankroll < playCost()));
+        }""")
+# Hold'em lent only when short of every raise; now when short of the big one.
+sub('if (Shell.mode === "campaign" && !playChoices().length && Shell.canTakeMarker()) {',
+    'if (Shell.mode === "campaign" && playChoices().length < PLAY_OPTIONS[street()].length && Shell.canTakeMarker()) {')
+
+# ---- no walking away from a hand ----
+# Leaving a table mid-hand and coming back started a fresh hand, and the chips
+# already on the felt went with the old one. Each table now says when a hand
+# is live, and the way out waits until it is over.
+BUSY_DEFAULT = 'phase !== "betting" && phase !== "result"'
+BUSY = {"Holdem": None, "DjWild": None, "Shootout": None, "MiniUth": None, "IluvSuits": None,
+        "Destroyer": None, "SicBo": None, "Roulette": None, "Wheel": None, "Keno": None,
+        "Mines": None, "Blackjack": None, "DoubleDown": None, "Baccarat": None,
+        "DragonTiger": None, "Plinko": "inFlight()", "Craps": 'phase === "rolling" || atRisk() > 0'}
+for name, test in BUSY.items():
+    a = h.index("\n  var %s = (function () {" % name)
+    b = h.index("\n  })();", a)
+    body = h[a:b]
+    r = body.rindex("\n    return {")
+    body = body[:r] + "\n    return { busy: function () { return %s; }," % (test or BUSY_DEFAULT) + body[r + len("\n    return {"):]
+    h = h[:a] + body + h[b:]
+
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
