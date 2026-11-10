@@ -281,6 +281,10 @@ sub("          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);",
     "          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards) &&\n"
     "            !(h.cards.length === 2 && h.cards[0].rank === \"5\" && h.cards[1].rank === \"5\");")
 
+# ---- free bet blackjack: the free-double coins are the gold logo ----
+sub("""coinsHtml += '<img class="coin" src="' + BOYS_IMG + '" alt="coin">';""",
+    """coinsHtml += '<img class="coin" src="' + COIN_IMG + '" alt="coin">';""")
+
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
