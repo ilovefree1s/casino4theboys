@@ -276,6 +276,11 @@ for name, test in BUSY.items():
     body = body[:r] + "\n    return { busy: function () { return %s; }," % (test or BUSY_DEFAULT) + body[r + len("\n    return {"):]
     h = h[:a] + body + h[b:]
 
+# ---- free bet blackjack: a pair of 5s splits free, it never doubles ----
+sub("          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);",
+    "          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards) &&\n"
+    "            !(h.cards.length === 2 && h.cards[0].rank === \"5\" && h.cards[1].rank === \"5\");")
+
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")

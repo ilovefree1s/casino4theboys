@@ -10296,7 +10296,8 @@
           }
         } else {
           // Free double on hard 9-11; paid double only when holding an ace.
-          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);
+          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards) &&
+            !(h.cards.length === 2 && h.cards[0].rank === "5" && h.cards[1].rank === "5");
           var paidDbl = live && !h.aceSplit && h.cards.length === 2 && !h.isFree &&
             h.cards.some(function (c) { return c.rank === "A"; }) && bankroll >= h.betUnit;
           if (freeDbl || paidDbl) {
