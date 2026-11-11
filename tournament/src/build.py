@@ -308,9 +308,26 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
         </span>
         <span class="play">PLAY</span>
       </button>
+      <button class="cm-plate" id="om-lantern" style="--c:#FF6A3A; display:none" aria-label="Chili Lanterns slot, play testing only">
+        <span class="art"><svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="omlbg" cx=".5" cy=".45" r=".8"><stop offset="0" stop-color="#5A140C"/><stop offset="1" stop-color="#120302"/></radialGradient><radialGradient id="omll" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFB08A"/><stop offset=".45" stop-color="#F0301E"/><stop offset="1" stop-color="#7A0A06"/></radialGradient><radialGradient id="omlg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(255,150,60,.55)"/><stop offset="1" stop-color="rgba(255,150,60,0)"/></radialGradient><linearGradient id="omlc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A0"/><stop offset="1" stop-color="#B8800E"/></linearGradient></defs><rect width="102" height="78" fill="url(#omlbg)"/><g transform="translate(20 14) scale(.62)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/></g><g transform="translate(36 6) scale(.9)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/><text x="26" y="40" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="11" fill="#FFF2D6">MAJOR</text></g><g transform="translate(66 18) scale(.55)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/></g></svg></span>
+        <span class="txt">
+          <span class="nm">CHILI LANTERNS</span>
+          <span class="l1">HOLD &amp; SPIN SLOT · 25 LINES</span>
+          <span class="l2">PLAY TESTING ONLY · FILL 15 FOR THE GRAND</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
     </div>""")
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
+# ---- CHILI LANTERNS: the hold & spin slot, on the Play Testing side of Other Games only ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "lantern.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "lantern.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "lantern.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips

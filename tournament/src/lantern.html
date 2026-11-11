@@ -1,0 +1,103 @@
+<!-- ================= CHILI LANTERNS (play testing) ================= -->
+<div class="screen" id="screen-lantern">
+<div class="cl-wrap">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="cl-g-lan" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#FFB08A"/><stop offset=".45" stop-color="#F0301E"/><stop offset="1" stop-color="#7A0A06"/></radialGradient>
+      <radialGradient id="cl-g-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(255,150,60,.6)"/><stop offset="1" stop-color="rgba(255,150,60,0)"/></radialGradient>
+      <linearGradient id="cl-g-cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A0"/><stop offset="1" stop-color="#B8800E"/></linearGradient>
+      <radialGradient id="cl-g-coin" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#FFF7CF"/><stop offset=".45" stop-color="#FFD255"/><stop offset="1" stop-color="#A86F0C"/></radialGradient>
+      <linearGradient id="cl-g-chili" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF9A7A"/><stop offset=".45" stop-color="#F0251A"/><stop offset="1" stop-color="#8A0A06"/></linearGradient>
+      <linearGradient id="cl-g-wok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7E8A92"/><stop offset=".5" stop-color="#2E3438"/><stop offset="1" stop-color="#121516"/></linearGradient>
+      <linearGradient id="cl-g-fire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF3A10"/><stop offset=".6" stop-color="#FFA21E"/><stop offset="1" stop-color="#FFE98A"/></linearGradient>
+      <linearGradient id="cl-g-bam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D08A"/><stop offset="1" stop-color="#A0702A"/></linearGradient>
+      <linearGradient id="cl-g-crack" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9A0E08"/><stop offset=".5" stop-color="#F0402A"/><stop offset="1" stop-color="#9A0E08"/></linearGradient>
+      <linearGradient id="cl-g-L-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF0B0"/><stop offset="1" stop-color="#D08A10"/></linearGradient>
+      <linearGradient id="cl-g-L-jade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8FFD0"/><stop offset="1" stop-color="#1E9A5E"/></linearGradient>
+      <linearGradient id="cl-g-L-blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8D4FF"/><stop offset="1" stop-color="#2A64C8"/></linearGradient>
+      <linearGradient id="cl-g-L-pink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB0D0"/><stop offset="1" stop-color="#C8306E"/></linearGradient>
+    </defs>
+  </svg>
+
+  <div class="cl-bar">
+    <button class="wayout" id="cl-back" type="button" aria-label="Back to other games"><i>&#8249;</i><b>OTHER GAMES</b></button>
+    <div class="cl-pill"><span class="cl-lbl">BANKROLL</span><span class="cl-val" id="cl-bank">20,000</span></div>
+    <button class="cl-iconbtn" id="cl-paysBtn" type="button" aria-label="Pays and rules">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v4"/><circle cx="8" cy="4.8" r=".6" fill="currentColor"/></svg>
+    </button>
+  </div>
+
+  <div class="cl-marquee">
+    <div class="cl-row1">
+      <svg viewBox="0 0 26 36" aria-hidden="true"><path d="M13 0v4" stroke="#E8B850" stroke-width="1.5"/><rect x="7" y="4" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><ellipse cx="13" cy="17" rx="11" ry="10" fill="url(#cl-g-lan)"/><rect x="7" y="26" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><path d="M13 29v6" stroke="#E8B850" stroke-width="1.5"/></svg>
+      <span class="cl-small">CHILI</span>
+      <svg viewBox="0 0 26 36" aria-hidden="true"><path d="M13 0v4" stroke="#E8B850" stroke-width="1.5"/><rect x="7" y="4" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><ellipse cx="13" cy="17" rx="11" ry="10" fill="url(#cl-g-lan)"/><rect x="7" y="26" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><path d="M13 29v6" stroke="#E8B850" stroke-width="1.5"/></svg>
+    </div>
+    <h1>LANTERNS</h1>
+    <div class="cl-tag">HOLD &amp; SPIN · 5 REELS · 25 LINES</div>
+  </div>
+
+  <div class="cl-jacks">
+    <div class="cl-jack cl-grand"><span class="cl-k">GRAND</span><span class="cl-v" id="cl-jpG">0</span></div>
+    <div class="cl-jack cl-major"><span class="cl-k">MAJOR</span><span class="cl-v" id="cl-jpM">0</span></div>
+    <div class="cl-jack cl-minor"><span class="cl-k">MINOR</span><span class="cl-v" id="cl-jpN">0</span></div>
+    <div class="cl-jack cl-mini"><span class="cl-k">MINI</span><span class="cl-v" id="cl-jpI">0</span></div>
+  </div>
+
+  <div class="cl-cabinet">
+    <div class="cl-window">
+      <div class="cl-reels" id="cl-reels"></div>
+      <div class="cl-hold" id="cl-hold" hidden></div>
+      <div class="cl-glass"></div>
+    </div>
+  </div>
+
+  <div class="cl-hud" id="cl-hud" hidden>
+    <div class="cl-spins" id="cl-spinsLeft"><span>SPINS</span><i></i><i></i><i></i></div>
+    <div class="cl-sum" id="cl-hsum">0</div>
+  </div>
+  <div class="cl-msg cl-quiet" id="cl-msg"><div class="cl-big">Good luck</div><div class="cl-small">6 lanterns start Hold &amp; Spin</div></div>
+
+  <div class="cl-console">
+    <div class="cl-deck">
+      <div class="cl-readout">
+        <div class="cl-k">TOTAL BET</div>
+        <div class="cl-stepper">
+          <button class="cl-step" id="cl-betDown" type="button" aria-label="Lower bet">&minus;</button>
+          <div class="cl-v" id="cl-betv">100</div>
+          <button class="cl-step" id="cl-betUp" type="button" aria-label="Raise bet">+</button>
+        </div>
+      </div>
+      <button class="cl-spin" id="cl-throw" type="button" aria-label="Spin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>
+        <b>SPIN</b>
+      </button>
+      <div class="cl-readout cl-win"><div class="cl-k">WIN</div><div class="cl-v" id="cl-winv">0</div></div>
+    </div>
+    <div class="cl-chips">
+      <button class="cl-chip" id="cl-fast" type="button">TURBO</button>
+      <button class="cl-chip" id="cl-sound" type="button">SOUND</button>
+      <button class="cl-chip" id="cl-reset" type="button">BUY BACK IN</button>
+    </div>
+    <div class="cl-stats" id="cl-stats">0 spins</div>
+  </div>
+</div>
+
+<div class="cl-sheet" id="cl-sheet" hidden>
+  <div class="cl-panel">
+    <h2>PAYS &amp; RULES</h2>
+    <p>25 lines, paid left to right from the first reel. Amounts are for your current total bet.</p>
+    <div class="cl-pt" id="cl-pt"></div>
+    <h3>WILD</h3>
+    <p>The chili lands on reels 2, 3 and 4 and stands in for every symbol except the lantern.</p>
+    <h3>HOLD &amp; SPIN</h3>
+    <p>Every lantern carries a prize: 1× to 15× your bet, or the Mini, Minor or Major jackpot. Land 6 or more lanterns anywhere and they lock in place. You get 3 spins where only the empty spots spin. Every new lantern locks too and sets you back to 3 spins. When the spins run out you collect every lantern on the screen.</p>
+    <p>Fill all 15 spots and you win the GRAND on top.</p>
+    <p>Play testing only: free-play chips, never the campaign or the tournament.</p>
+    <button class="cl-done" id="cl-sheetX" type="button">CLOSE</button>
+  </div>
+</div>
+
+<div class="cl-flash" id="cl-flash" hidden><div class="cl-s" id="cl-flashS">HOLD &amp; SPIN</div><div class="cl-t" id="cl-flashT">LANTERNS!</div><div class="cl-n" id="cl-flashN"></div></div>
+</div>
+
