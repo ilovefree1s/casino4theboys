@@ -280,6 +280,19 @@ sub('<div class="pk-head"><b>POKER</b><span id="pk-sign">FIVE TABLES</span></div
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "kirby.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
+sub('{ nm: "POKER",     sub: "5",', '{ nm: "POKER",     sub: "6",')
+
+# ---- CHAIN REACTION: the disc golf slot, on the Play Testing panel only ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "chain.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "chain.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+sub("""<button class="st-tab plain mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i><b>OTHER GAMES</b><span class="play">PLAY</span></button>""",
+    """<button class="st-tab plain mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i><b>OTHER GAMES</b><span class="play">PLAY</span></button>
+        <button class="st-tab plain mm-other" id="mm-chain" type="button" aria-label="Chain Reaction slot, free play" style="--c:#57E06A; margin-top: 8px"><i></i><b>SLOT · CHAIN REACTION</b><span class="play">PLAY</span></button>""")
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "chain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

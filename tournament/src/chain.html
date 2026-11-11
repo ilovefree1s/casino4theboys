@@ -1,0 +1,61 @@
+<!-- ================= CHAIN REACTION (play testing) ================= -->
+<div class="screen" id="screen-chain">
+<div class="wrap">
+  <div class="top">
+    <button class="wayout" id="ch-back" aria-label="Back to menu"><i>&#8249;</i><b>MENU</b></button>
+    <div class="money"><div class="lbl">BANKROLL</div><div class="val" id="ch-bank">20,000</div></div>
+    <div class="money right"><div class="lbl">LAST WIN</div><div class="val" id="ch-last" style="color: var(--green)">0</div></div>
+  </div>
+  <h1>CHAIN REACTION</h1>
+  <div class="sub">5 REELS · 25 LINES · PUTT FOR THE BONUS</div>
+  <div class="jack">
+    <div class="box"><div class="lbl">PAR</div><div class="val" id="ch-jp0">0</div><div class="ft">10 FT PUTT</div></div>
+    <div class="box"><div class="lbl">BIRDIE</div><div class="val" id="ch-jp1">0</div><div class="ft">20 FT PUTT</div></div>
+    <div class="box ace"><div class="lbl" style="color: var(--gold)">ACE</div><div class="val" id="ch-jp2">0</div><div class="ft">30 FT PUTT</div></div>
+  </div>
+  <div class="machine">
+    <div class="reels" id="ch-reels"></div>
+  </div>
+  <div class="msg" id="ch-msg"><div class="big" style="color: var(--dim); font-size: 16px">Pick a bet and throw</div><div class="small">3 baskets anywhere start the Chain Rattle bonus</div></div>
+  <div class="controls">
+    <div class="bets" id="ch-bets"></div>
+    <div class="row">
+      <div class="box"><div class="lbl">BET</div><div class="val" id="ch-betv">100</div></div>
+      <button class="throw" id="ch-throw" type="button">THROW</button>
+      <div class="box win r"><div class="lbl">WIN</div><div class="val" id="ch-winv">0</div></div>
+    </div>
+    <div class="toggles">
+      <button class="ghost" id="ch-fast" type="button">FAST SPIN · OFF</button>
+      <button class="ghost" id="ch-sound" type="button">SOUND · OFF</button>
+      <button class="ghost" id="ch-paysBtn" type="button">PAYS &amp; RULES</button>
+      <button class="ghost" id="ch-reset" type="button">BUY BACK IN</button>
+    </div>
+    <div class="stats" id="ch-stats">0 spins</div>
+  </div>
+</div>
+
+<div class="sheet" id="ch-sheet" hidden>
+  <div class="card">
+    <h2>PAYS &amp; RULES</h2>
+    <p>25 lines, paid left to right from the first reel. Your bet covers all 25 lines, so each line plays 1/25 of it. Amounts below are for your current bet.</p>
+    <p><b>ACE</b> is wild on reels 2, 3 and 4. It stands in for everything except the basket.</p>
+    <div class="pt" id="ch-pt"></div>
+    <p><b>Chain Rattle bonus.</b> 3, 4 or 5 baskets anywhere pay 5×, 15× or 50× your bet up front. Then you putt: stop the needle in the green. Make the 10 footer for Par, then the 20 footer for Birdie, then the 30 footer for the Ace. The green gets smaller and the needle gets faster each time. Miss and the bonus ends, but you keep everything you made.</p>
+    <p>Play testing only. It plays with free-play chips and never touches the campaign or the tournament.</p>
+    <button class="ghost" id="ch-sheetX" type="button" style="width: 100%; height: 44px; margin-top: 8px">CLOSE</button>
+  </div>
+</div>
+
+<div class="bonus" id="ch-bonus" hidden>
+  <div class="green">
+    <div class="t">CHAIN RATTLE</div>
+    <div class="bank" id="ch-bBank">0</div>
+    <div class="ladder" id="ch-ladder"></div>
+    <div class="basket" id="ch-basketBig"></div>
+    <div class="meter" id="ch-meter"><div class="zone" id="ch-zone"></div><div class="needle" id="ch-needle"></div></div>
+    <div class="note" id="ch-bNote">Stop the needle in the green</div>
+    <button class="putt" id="ch-putt" type="button">PUTT</button>
+  </div>
+</div>
+</div>
+
