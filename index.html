@@ -10780,11 +10780,13 @@
      */
     function settleHand(player, dealer, stake, betUnit, doubled) {
       var dealerBj = isBJ(dealer), dTotal = total(dealer), pTotal = total(player);
-      // A hand that took a card can no longer be a blackjack, however it adds up.
+      // Ace and ten on the first two cards is a blackjack. Not doubled it pays
+      // 3:2; doubled, it beats every dealer hand but a blackjack at even money.
       var playerBj = !doubled && isBJ(player);
       if (playerBj && dealerBj) return stake;
       if (playerBj) return wholeDollars(stake + 1.5 * betUnit);
       if (dealerBj) return 0;
+      if (isBJ(player)) return stake * 2;
       if (isBust(player)) return 0;
       // The dealer's 22 pays for all that doubling: it pushes rather than loses.
       if (dTotal === 22) return stake;
@@ -11205,7 +11207,7 @@
         var returned = settleHand(hand.cards, dealer, hand.stake, hand.betUnit, hand.doubled);
         pushed22 = push22 && !isBust(hand.cards) && !dealerBj;
         totalReturn += returned;
-        results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand.stake });
+        results.push({ label: isBJ(hand.cards) ? "Blackjack" : "Hand", net: returned - hand.stake });
       }
       // A dealer blackjack can end the hand on one card. Pair Square was
       // never decided, so its stake goes back — there was no second card.

@@ -303,6 +303,25 @@ sub("""        amount = allowBadBeat(lim, affordable, badBeat);
 """        amount = allowBadBeat(doubleBadBeat(lim), affordable, badBeat);
         refused = badBeatRefusal(doubleBadBeat(lim));""")
 
+# ---- Double Down Madness: an ace and a ten is a blackjack even after doubling ----
+# It used to count as a plain 21 once doubled, so a dealer who drew out to 21
+# (he keeps drawing while Push 22 is up) pushed it. Doubled, it now beats
+# everything but a dealer blackjack and wins even money on the whole stake.
+sub("""      // A hand that took a card can no longer be a blackjack, however it adds up.
+      var playerBj = !doubled && isBJ(player);
+      if (playerBj && dealerBj) return stake;
+      if (playerBj) return wholeDollars(stake + 1.5 * betUnit);
+      if (dealerBj) return 0;""",
+"""      // Ace and ten on the first two cards is a blackjack. Not doubled it pays
+      // 3:2; doubled, it beats every dealer hand but a blackjack at even money.
+      var playerBj = !doubled && isBJ(player);
+      if (playerBj && dealerBj) return stake;
+      if (playerBj) return wholeDollars(stake + 1.5 * betUnit);
+      if (dealerBj) return 0;
+      if (isBJ(player)) return stake * 2;""")
+sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand.stake });',
+    'results.push({ label: isBJ(hand.cards) ? "Blackjack" : "Hand", net: returned - hand.stake });')
+
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
