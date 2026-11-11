@@ -282,6 +282,9 @@ sub("  paintMenu();\n  /* ---------- sound",
 
 sub('{ nm: "POKER",     sub: "5",', '{ nm: "POKER",     sub: "6",')
 
+# the slot's lettering
+sub("</head><body>", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">\n</head><body>')
+
 # ---- CHAIN REACTION: the disc golf slot, on the Play Testing panel only ----
 sub("</style>\n\n<!-- ================= MENU ================= -->",
     (here / "chain.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")

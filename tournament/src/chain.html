@@ -1,60 +1,106 @@
 <!-- ================= CHAIN REACTION (play testing) ================= -->
 <div class="screen" id="screen-chain">
-<div class="wrap">
-  <div class="top">
-    <button class="wayout" id="ch-back" aria-label="Back to menu"><i>&#8249;</i><b>MENU</b></button>
-    <div class="money"><div class="lbl">BANKROLL</div><div class="val" id="ch-bank">20,000</div></div>
-    <div class="money right"><div class="lbl">LAST WIN</div><div class="val" id="ch-last" style="color: var(--green)">0</div></div>
+<div class="ch-wrap">
+  <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id="ch-g-gold" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#FFF7CF"/><stop offset=".45" stop-color="#FFD255"/><stop offset="1" stop-color="#A86F0C"/></radialGradient>
+      <linearGradient id="ch-g-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A0"/><stop offset="1" stop-color="#6E4A06"/></linearGradient>
+      <linearGradient id="ch-g-orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC266"/><stop offset=".55" stop-color="#F28C1E"/><stop offset="1" stop-color="#A4500A"/></linearGradient>
+      <linearGradient id="ch-g-pink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF9CC4"/><stop offset=".55" stop-color="#E8457F"/><stop offset="1" stop-color="#8E1C45"/></linearGradient>
+      <linearGradient id="ch-g-blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9FD8FF"/><stop offset=".55" stop-color="#2E8BE6"/><stop offset="1" stop-color="#14498A"/></linearGradient>
+      <linearGradient id="ch-g-pine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7FE39A"/><stop offset=".5" stop-color="#2E9E57"/><stop offset="1" stop-color="#145C30"/></linearGradient>
+      <linearGradient id="ch-g-steel" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6B767D"/><stop offset=".45" stop-color="#E4EAEE"/><stop offset="1" stop-color="#5A646A"/></linearGradient>
+      <linearGradient id="ch-g-band" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE38A"/><stop offset="1" stop-color="#D99A14"/></linearGradient>
+      <linearGradient id="ch-g-L-red" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF8A7A"/><stop offset="1" stop-color="#C8102E"/></linearGradient>
+      <linearGradient id="ch-g-L-blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8CC8FF"/><stop offset="1" stop-color="#2459C4"/></linearGradient>
+      <linearGradient id="ch-g-L-purple" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D6A8FF"/><stop offset="1" stop-color="#7034C4"/></linearGradient>
+      <linearGradient id="ch-g-L-green" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9BF5B0"/><stop offset="1" stop-color="#1D8A47"/></linearGradient>
+      <linearGradient id="ch-g-L-orange" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFC07A"/><stop offset="1" stop-color="#D2541A"/></linearGradient>
+      <radialGradient id="ch-g-halo" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(255,216,102,.55)"/><stop offset="1" stop-color="rgba(255,216,102,0)"/></radialGradient>
+    </defs>
+  </svg>
+
+  <div class="ch-bar">
+    <button class="wayout" id="ch-back" type="button" aria-label="Back to menu"><i>&#8249;</i><b>MENU</b></button>
+    <div class="ch-pill"><span class="ch-lbl">BANKROLL</span><span class="ch-val" id="ch-bank">20,000</span></div>
+    <button class="ch-iconbtn" id="ch-paysBtn" type="button" aria-label="Pays and rules">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v4"/><circle cx="8" cy="4.8" r=".6" fill="currentColor"/></svg>
+    </button>
   </div>
-  <h1>CHAIN REACTION</h1>
-  <div class="sub">5 REELS · 25 LINES · PUTT FOR THE BONUS</div>
-  <div class="jack">
-    <div class="box"><div class="lbl">PAR</div><div class="val" id="ch-jp0">0</div><div class="ft">10 FT PUTT</div></div>
-    <div class="box"><div class="lbl">BIRDIE</div><div class="val" id="ch-jp1">0</div><div class="ft">20 FT PUTT</div></div>
-    <div class="box ace"><div class="lbl" style="color: var(--gold)">ACE</div><div class="val" id="ch-jp2">0</div><div class="ft">30 FT PUTT</div></div>
-  </div>
-  <div class="machine">
-    <div class="reels" id="ch-reels"></div>
-  </div>
-  <div class="msg" id="ch-msg"><div class="big" style="color: var(--dim); font-size: 16px">Pick a bet and throw</div><div class="small">3 baskets anywhere start the Chain Rattle bonus</div></div>
-  <div class="controls">
-    <div class="bets" id="ch-bets"></div>
-    <div class="row">
-      <div class="box"><div class="lbl">BET</div><div class="val" id="ch-betv">100</div></div>
-      <button class="throw" id="ch-throw" type="button">THROW</button>
-      <div class="box win r"><div class="lbl">WIN</div><div class="val" id="ch-winv">0</div></div>
+
+  <div class="ch-marquee">
+    <div class="ch-chainrow">
+      <svg viewBox="0 0 64 14" aria-hidden="true" fill="none" stroke="#C9A240" stroke-width="2"><rect x="1" y="3" width="16" height="8" rx="4"/><rect x="13" y="3" width="16" height="8" rx="4"/><rect x="25" y="3" width="16" height="8" rx="4"/><rect x="37" y="3" width="16" height="8" rx="4"/><path d="M53 7h10"/></svg>
+      <span class="ch-small">CHAIN</span>
+      <svg viewBox="0 0 64 14" aria-hidden="true" fill="none" stroke="#C9A240" stroke-width="2"><path d="M1 7h10"/><rect x="11" y="3" width="16" height="8" rx="4"/><rect x="23" y="3" width="16" height="8" rx="4"/><rect x="35" y="3" width="16" height="8" rx="4"/><rect x="47" y="3" width="16" height="8" rx="4"/></svg>
     </div>
-    <div class="toggles">
-      <button class="ghost" id="ch-fast" type="button">FAST SPIN · OFF</button>
-      <button class="ghost" id="ch-sound" type="button">SOUND · OFF</button>
-      <button class="ghost" id="ch-paysBtn" type="button">PAYS &amp; RULES</button>
-      <button class="ghost" id="ch-reset" type="button">BUY BACK IN</button>
+    <h1>REACTION</h1>
+    <div class="ch-tag">DISC GOLF · 5 REELS · 25 LINES</div>
+  </div>
+
+  <div class="ch-plaques">
+    <div class="ch-plaque"><div class="ch-k">PAR</div><div class="ch-v" id="ch-jp0">0</div><div class="ch-ft">10 FT PUTT</div></div>
+    <div class="ch-plaque ch-ace"><div class="ch-k">ACE</div><div class="ch-v" id="ch-jp2">0</div><div class="ch-ft">30 FT PUTT</div></div>
+    <div class="ch-plaque"><div class="ch-k">BIRDIE</div><div class="ch-v" id="ch-jp1">0</div><div class="ch-ft">20 FT PUTT</div></div>
+  </div>
+
+  <div class="ch-cabinet">
+    <div class="ch-window">
+      <div class="ch-reels" id="ch-reels"></div>
+      <div class="ch-glass"></div>
     </div>
-    <div class="stats" id="ch-stats">0 spins</div>
+  </div>
+
+  <div class="ch-msg ch-quiet" id="ch-msg"><div class="ch-big">Good luck</div><div class="ch-small">3 baskets anywhere start the Chain Rattle bonus</div></div>
+
+  <div class="ch-console">
+    <div class="ch-deck">
+      <div class="ch-readout">
+        <div class="ch-k">TOTAL BET</div>
+        <div class="ch-stepper">
+          <button class="ch-step" id="ch-betDown" type="button" aria-label="Lower bet">&minus;</button>
+          <div class="ch-v" id="ch-betv">100</div>
+          <button class="ch-step" id="ch-betUp" type="button" aria-label="Raise bet">+</button>
+        </div>
+      </div>
+      <button class="ch-spin" id="ch-throw" type="button" aria-label="Spin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>
+        <b>SPIN</b>
+      </button>
+      <div class="ch-readout ch-win"><div class="ch-k">WIN</div><div class="ch-v" id="ch-winv">0</div></div>
+    </div>
+    <div class="ch-chips">
+      <button class="ch-chip" id="ch-fast" type="button">TURBO</button>
+      <button class="ch-chip" id="ch-sound" type="button">SOUND</button>
+      <button class="ch-chip" id="ch-reset" type="button">BUY BACK IN</button>
+    </div>
+    <div class="ch-stats" id="ch-stats">0 spins</div>
   </div>
 </div>
 
-<div class="sheet" id="ch-sheet" hidden>
-  <div class="card">
+<div class="ch-sheet" id="ch-sheet" hidden>
+  <div class="ch-card">
     <h2>PAYS &amp; RULES</h2>
-    <p>25 lines, paid left to right from the first reel. Your bet covers all 25 lines, so each line plays 1/25 of it. Amounts below are for your current bet.</p>
-    <p><b>ACE</b> is wild on reels 2, 3 and 4. It stands in for everything except the basket.</p>
-    <div class="pt" id="ch-pt"></div>
-    <p><b>Chain Rattle bonus.</b> 3, 4 or 5 baskets anywhere pay 5×, 15× or 50× your bet up front. Then you putt: stop the needle in the green. Make the 10 footer for Par, then the 20 footer for Birdie, then the 30 footer for the Ace. The green gets smaller and the needle gets faster each time. Miss and the bonus ends, but you keep everything you made.</p>
-    <p>Play testing only. It plays with free-play chips and never touches the campaign or the tournament.</p>
-    <button class="ghost" id="ch-sheetX" type="button" style="width: 100%; height: 44px; margin-top: 8px">CLOSE</button>
+    <p>25 lines, paid left to right from the first reel. Amounts are for your current total bet.</p>
+    <div class="ch-pt" id="ch-pt"></div>
+    <h3>WILD</h3>
+    <p>The ACE medallion lands on reels 2, 3 and 4 and stands in for every symbol except the basket.</p>
+    <h3>CHAIN RATTLE BONUS</h3>
+    <p>3, 4 or 5 baskets anywhere pay 5×, 15× or 50× your bet up front. Then you putt: stop the needle in the green. Make the 10 footer for Par, the 20 footer for Birdie and the 30 footer for the Ace. The green shrinks and the needle speeds up each time. A miss ends the bonus, and you keep everything you made.</p>
+    <p>Play testing only: free-play chips, never the campaign or the tournament.</p>
+    <button class="ch-done" id="ch-sheetX" type="button">CLOSE</button>
   </div>
 </div>
 
-<div class="bonus" id="ch-bonus" hidden>
-  <div class="green">
-    <div class="t">CHAIN RATTLE</div>
-    <div class="bank" id="ch-bBank">0</div>
-    <div class="ladder" id="ch-ladder"></div>
-    <div class="basket" id="ch-basketBig"></div>
-    <div class="meter" id="ch-meter"><div class="zone" id="ch-zone"></div><div class="needle" id="ch-needle"></div></div>
-    <div class="note" id="ch-bNote">Stop the needle in the green</div>
-    <button class="putt" id="ch-putt" type="button">PUTT</button>
+<div class="ch-bonus" id="ch-bonus" hidden>
+  <div class="ch-green">
+    <div class="ch-t">CHAIN RATTLE</div>
+    <div class="ch-bank" id="ch-bBank">0</div>
+    <div class="ch-ladder" id="ch-ladder"></div>
+    <div class="ch-basket" id="ch-basketBig"></div>
+    <div class="ch-meter" id="ch-meter"><div class="ch-zone" id="ch-zone"></div><div class="ch-needle" id="ch-needle"></div></div>
+    <div class="ch-note" id="ch-bNote">Stop the needle in the green</div>
+    <button class="ch-putt" id="ch-putt" type="button">PUTT</button>
   </div>
 </div>
 </div>
