@@ -3,9 +3,9 @@
      Everyone antes into one pot and gets three cards. On the count of three
      each player holds or drops. The best hand that held takes the pot, as
      long as it beats Kirby, the dummy hand that always plays; every other
-     hand that held matches the pot for the next deal. If Kirby beats them
-     all, every hand that held matches the pot. The pot carries until
-     somebody takes it clean; then everyone antes again. If everybody drops,
+     hand that held pays the winner the pot amount too. If Kirby beats them
+     all, every hand that held matches the pot and it rides to the next deal.
+     Once a hand takes the pot, everyone antes again. If everybody drops,
      everybody antes again into the same pot.
      Ranks: straight flush, three of a kind, pair, high card. Plain straights
      and flushes count for nothing. 2s wild is a switch.
@@ -146,11 +146,11 @@
     function renderCards() {
       var k = $("kb-kirby"); k.innerHTML = "";
       for (var i = 0; i < 3; i++) {
-        if (kirby[i]) k.appendChild(cardEl(kirby[i], shown())); else slot(k);
+        if (kirby[i]) k.appendChild(cardEl(kirby[i], shown() && hold.some(Boolean))); else slot(k);
       }
       var kirbyWon = outcome && outcome.kirby;
       $("kb-kirby").parentNode.classList.toggle("win", !!kirbyWon);
-      label("kb-kirby-label", "KIRBY", shown() && kirby.length ? KB.name(kirbyScore) : null, kirbyWon ? "lose" : "");
+      label("kb-kirby-label", "KIRBY", shown() && kirby.length && hold.some(Boolean) ? KB.name(kirbyScore) : null, kirbyWon ? "lose" : "");
       // the computer players
       var seats = $("kb-seats"); seats.innerHTML = "";
       BOTS.forEach(function (b, j) {
@@ -336,14 +336,17 @@
         outcome.kirby = true;
         payers = held;
       } else {
+        // A hand beat Kirby and everyone: it takes the pot, every other hand
+        // that held pays it the pot amount too, and the next deal antes fresh.
         var winners = held.filter(function (s) { return scores[s] === best; });
         payers = held.filter(function (s) { return scores[s] !== best; });
-        var share = Math.floor(P / winners.length);
+        outcome.toWinner = true;
+        var share = Math.floor(P * (1 + payers.length) / winners.length);
         winners.forEach(function (s) { net[s] += share; });
-        table.pot = P - share * winners.length;        // an odd dollar stays in
+        table.pot = 0;
         if (net[0] > 0) { bankroll += share; syncWallet(); }
       }
-      payers.forEach(function (s) { if (s !== 0) { net[s] -= P; table.pot += P; } });
+      payers.forEach(function (s) { if (s !== 0) { net[s] -= P; if (!outcome.toWinner) table.pot += P; } });
       save();
       if (payers.indexOf(0) >= 0) { owed = P; return collect(); }
       settled();
@@ -366,7 +369,7 @@
       amount = Math.min(amount, bankroll);
       bankroll -= amount;
       syncWallet();
-      table.pot += amount;
+      if (!outcome.toWinner) table.pot += amount;   // to Kirby's pot, or straight to the hand that beat you
       outcome.net[0] -= amount;
       outcome.short = owed - amount;
       owed = 0;
@@ -390,7 +393,7 @@
         ? (hold[0] ? "Kirby wins with " + KB.name(kirbyScore) + " — you match $" + fmt(-you)
                    : "Kirby wins — the pot grows to $" + fmt(table.pot))
         : you > 0 ? "You take the pot! +$" + fmt(you)
-        : hold[0] ? "Beat — you match $" + fmt(-you)
+        : hold[0] ? "Beat — you pay the winner $" + fmt(-you)
         : (function () {
             var w = []; for (var s = 1; s < SEATS; s++) if (outcome.net[s] > 0) w.push(BOTS[s - 1].name);
             return w.join(" & ") + " takes the pot";
