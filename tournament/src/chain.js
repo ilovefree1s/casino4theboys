@@ -385,7 +385,7 @@
   $("ch-sheetX").addEventListener("click", function () { $("ch-sheet").hidden = true; });
   $("ch-sheet").addEventListener("click", function (e) { if (e.target === $("ch-sheet")) $("ch-sheet").hidden = true; });
 
-  $("ch-back").addEventListener("click", function () { if (!busy) Shell.show("menu"); });
+  $("ch-back").addEventListener("click", function () { if (!busy) Shell.show("othermenu"); });
   function enter() {
     Shell.mode = "testing";
     bank = FREEPLAY.buyIn;
@@ -394,7 +394,13 @@
     say("Good luck", "3 baskets anywhere start the Chain Rattle bonus", "quiet");
     paint();
   }
-  $("mm-chain").addEventListener("click", function () { enter(); Shell.show("chain"); });
+  $("om-chain").addEventListener("click", function () { enter(); Shell.show("chain"); });
+  // Other Games lists the slot only on the Play Testing side; the campaign and tournament never see it
+  var show = Shell.show;
+  Shell.show = function (name) {
+    if (name === "othermenu") $("om-chain").style.display = Shell.mode === "testing" ? "" : "none";
+    return show.apply(this, arguments);
+  };
   build();
   var first = CHX.spin(Math.random);
   for (var c = 0; c < 5; c++) setStrip(c, first[c]);

@@ -290,9 +290,25 @@ sub("</style>\n\n<!-- ================= MENU ================= -->",
     (here / "chain.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
 sub('<!-- ================= SETTINGS ================= -->',
     (here / "chain.html").read_text() + '<!-- ================= SETTINGS ================= -->')
-sub("""<button class="st-tab plain mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i><b>OTHER GAMES</b><span class="play">PLAY</span></button>""",
-    """<button class="st-tab plain mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i><b>OTHER GAMES</b><span class="play">PLAY</span></button>
-        <button class="st-tab plain mm-other" id="mm-chain" type="button" aria-label="Chain Reaction slot, free play" style="--c:#57E06A; margin-top: 8px"><i></i><b>SLOT · CHAIN REACTION</b><span class="play">PLAY</span></button>""")
+sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+    </div>""",
+"""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="cm-plate" id="om-chain" style="--c:#6BF08A; display:none" aria-label="Chain Reaction slot, play testing only">
+        <span class="art"><svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="omcbg" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#16402A"/><stop offset="1" stop-color="#04100A"/></radialGradient><radialGradient id="omcg" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#FFF7CF"/><stop offset=".45" stop-color="#FFD255"/><stop offset="1" stop-color="#A86F0C"/></radialGradient><linearGradient id="omcf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE7A1"/><stop offset=".5" stop-color="#8A6A1F"/><stop offset="1" stop-color="#F4D27C"/></linearGradient></defs><rect width="102" height="78" fill="url(#omcbg)"/><rect x="7" y="13" width="88" height="52" rx="8" fill="#06100B" stroke="url(#omcf)" stroke-width="2.5"/><rect x="12" y="18" width="24" height="42" rx="4" fill="#123222"/><rect x="39" y="18" width="24" height="42" rx="4" fill="#123222"/><rect x="66" y="18" width="24" height="42" rx="4" fill="#123222"/><ellipse cx="24" cy="40" rx="10" ry="5.5" fill="#E8457F"/><ellipse cx="24" cy="38" rx="10" ry="5.5" fill="#FF7FAF"/><circle cx="51" cy="39" r="10" fill="url(#omcg)" stroke="#6E4A06" stroke-width="1"/><text x="51" y="42.5" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="8" fill="#5A3A00">ACE</text><path d="M78 27 l7 10 h-4 l6 9 h-18 l6 -9 h-4z" fill="#2E9E57"/><rect x="76.5" y="46" width="3" height="5" fill="#7A5232"/><path d="M10 39 h82" stroke="#FFD866" stroke-width="1.5" opacity=".8"/></svg></span>
+        <span class="txt">
+          <span class="nm">CHAIN REACTION</span>
+          <span class="l1">DISC GOLF SLOT · 25 LINES</span>
+          <span class="l2">PLAY TESTING ONLY · PUTT FOR THE ACE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+    </div>""")
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
