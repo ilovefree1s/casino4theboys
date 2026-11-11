@@ -285,6 +285,23 @@ sub("          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);",
 sub("""coinsHtml += '<img class="coin" src="' + BOYS_IMG + '" alt="coin">';""",
     """coinsHtml += '<img class="coin" src="' + COIN_IMG + '" alt="coin">';""")
 
+# ---- Ultimate Hold'em and DJ Wild: twice the Bad Beat cap of the other tables ----
+sub('  function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }',
+    '  function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }\n'
+    '  function doubleBadBeat(limits) {\n'
+    '    var l = {}; for (var k in limits) l[k] = limits[k];\n'
+    '    l.badBeatMax = limits.badBeatMax * 2;\n'
+    '    return l;\n'
+    '  }')
+sub('var amount = spot === "badbeat" ? allowBadBeat(lim, affordable, badBeat)',
+    'var amount = spot === "badbeat" ? allowBadBeat(doubleBadBeat(lim), affordable, badBeat)')
+sub('if (amount <= 0) { setMessage(spot === "badbeat" ? badBeatRefusal(lim) : refusal(lim, side)); return; }',
+    'if (amount <= 0) { setMessage(spot === "badbeat" ? badBeatRefusal(doubleBadBeat(lim)) : refusal(lim, side)); return; }')
+sub("""        amount = allowBadBeat(lim, affordable, badBeat);
+        refused = badBeatRefusal(lim);""",
+"""        amount = allowBadBeat(doubleBadBeat(lim), affordable, badBeat);
+        refused = badBeatRefusal(doubleBadBeat(lim));""")
+
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")

@@ -6897,6 +6897,11 @@
     return Math.min(wanted, Math.max(0, limits.badBeatMax - alreadyOn));
   }
   function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }
+  function doubleBadBeat(limits) {
+    var l = {}; for (var k in limits) l[k] = limits[k];
+    l.badBeatMax = limits.badBeatMax * 2;
+    return l;
+  }
 
   // ---------- wallet & shell ----------
   var CAMPAIGN_START = 5000, CAMPAIGN_GOAL = 1000000;
@@ -11518,9 +11523,9 @@
       var side = spot === "trips", lim = Shell.limits();
       // The Bad Beat rides its own, far lower cap: at 10,000 to 1 the ordinary
       // side limit would let one hand pay off the whole campaign.
-      var amount = spot === "badbeat" ? allowBadBeat(lim, affordable, badBeat)
+      var amount = spot === "badbeat" ? allowBadBeat(doubleBadBeat(lim), affordable, badBeat)
         : allow(lim, affordable, side ? trips : ante, side);
-      if (amount <= 0) { setMessage(spot === "badbeat" ? badBeatRefusal(lim) : refusal(lim, side)); return; }
+      if (amount <= 0) { setMessage(spot === "badbeat" ? badBeatRefusal(doubleBadBeat(lim)) : refusal(lim, side)); return; }
       if (spot === "ante") ante += amount;
       else if (spot === "trips") trips += amount;
       else badBeat += amount;
@@ -11959,8 +11964,8 @@
         amount = allow(lim, affordable, trips, true);
         refused = refusal(lim, true);
       } else {
-        amount = allowBadBeat(lim, affordable, badBeat);
-        refused = badBeatRefusal(lim);
+        amount = allowBadBeat(doubleBadBeat(lim), affordable, badBeat);
+        refused = badBeatRefusal(doubleBadBeat(lim));
       }
       if (amount <= 0) { setMessage(refused); return; }
       if (spot === "ante") ante += amount;
