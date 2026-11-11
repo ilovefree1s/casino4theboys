@@ -1,0 +1,48 @@
+<!-- ================= KIRBY ================= -->
+<div class="screen" id="screen-kirby">
+  <div class="uth-table dj-table kb-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="wayout" id="kb-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
+        <div class="uth-money purse">
+          <span class="lbl">BANKROLL</span><span class="val" id="kb-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">POT</span><span class="val pot" id="kb-potsm">0</span>
+        </div>
+      </div>
+      <div class="kb-kirby">
+        <div class="uth-label" id="kb-kirby-label"><span class="nm">KIRBY</span></div>
+        <div class="cards kb-mid" id="kb-kirby"></div>
+      </div>
+      <div class="kb-seats" id="kb-seats"></div>
+      <div class="kb-pot">
+        <div class="kb-potval" id="kb-pot">$0</div>
+        <div class="kb-potsub" id="kb-potsub">ANTE TO START</div>
+      </div>
+      <div class="uth-label gold" id="kb-you-label"><span class="nm">YOU</span></div>
+      <div class="cards kb-you" id="kb-you"></div>
+      <div class="uth-message" id="kb-message">Pick your ante</div>
+      <div class="kb-count" id="kb-count"></div>
+    </div>
+    <div class="dj-bottom">
+      <div class="kb-opts" id="kb-opts"></div>
+      <div id="kb-rack"></div>
+      <div class="uth-actions" id="kb-actions"></div>
+    </div>
+  </div>
+  <div class="kb-owe" id="kb-owe">
+    <div class="box">
+      <div class="ttl">YOU OWE THE POT</div>
+      <div class="amt" id="kb-owe-amt">$0</div>
+      <div class="sub" id="kb-owe-sub"></div>
+      <button class="uth-btn mk" id="kb-owe-marker">TAKE MARKER +5,000</button>
+      <button class="uth-btn all" id="kb-owe-all">PAY WHAT I HAVE</button>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="kb-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="kb-buyin">BUY BACK IN</button>
+  </div>
+</div>
+

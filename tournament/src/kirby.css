@@ -1,0 +1,83 @@
+  /* ========== KIRBY ==========
+     Three-card guts against four players and a dummy hand that always plays. */
+  #screen-kirby {
+    position: relative; --uth-green: #FF9A3D; --uth-dim: rgba(255,154,61,.35);
+    background: radial-gradient(120% 70% at 50% 42%, #2A1606 0%, #120A04 55%, #070403 100%);
+  }
+  #screen-kirby .uth-money .val { color: #FFD24D; }
+  #screen-kirby .uth-money .val.pot { color: #FF9A3D; }
+  .kb-kirby { display: flex; flex-direction: column; align-items: center; margin-top: 2px; }
+  .kb-mid .card, .kb-mid .slot { width: 44px; height: 66px; }
+  .kb-mid .card .mid { font-size: 17px; }
+  .kb-you .card, .kb-you .slot { width: 60px; height: 90px; }
+  .kb-you .card .mid { font-size: 24px; }
+  .kb-sm .card, .kb-sm .slot { width: 30px; height: 45px; }
+  .kb-sm { gap: 3px; min-height: 45px; }
+  .kb-mid { min-height: 66px; margin-top: 4px; }
+  .kb-you { min-height: 90px; margin-top: 4px; }
+  .kb-sm .card .front { padding: 2px 3px; }
+  .kb-sm .card .tl, .kb-sm .card .br { font-size: 10px; }
+  .kb-sm .card .mid { font-size: 13px; }
+  .kb-sm .card .joker .nm { display: none; }
+  .kb-seats {
+    width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; margin: 8px 0 4px;
+  }
+  .kb-seat {
+    border: 1px solid rgba(255,154,61,.25); border-radius: 10px; padding: 4px 6px 6px;
+    background: rgba(10,6,3,.55); display: flex; flex-direction: column; align-items: center;
+    transition: border-color .25s, opacity .25s;
+  }
+  .kb-seat .hd { width: 100%; display: flex; justify-content: space-between; align-items: baseline; }
+  .kb-seat .nm { font-family: var(--display); font-size: 11px; letter-spacing: .08em; color: rgba(245,241,232,.85); }
+  .kb-seat .tag { font-family: var(--display); font-size: 10px; letter-spacing: .06em; color: rgba(245,241,232,.45); }
+  .kb-seat .hand { font-size: 9px; letter-spacing: .04em; color: rgba(245,241,232,.6); height: 12px; margin-top: 2px; }
+  .kb-seat.hold { border-color: #FFD24D; }
+  .kb-seat.hold .tag { color: #FFD24D; }
+  .kb-seat.drop { opacity: .45; }
+  .kb-seat.win { border-color: #57E06A; box-shadow: 0 0 12px rgba(87,224,106,.35); }
+  .kb-seat.win .tag { color: #57E06A; }
+  .kb-seat.lose .tag { color: #FF4D4D; }
+  .kb-seat .cards { margin-top: 3px; }
+  .kb-pot { text-align: center; margin: 4px 0 6px; }
+  .kb-potval { font-family: var(--display); font-size: 30px; color: #FF9A3D; line-height: 1; text-shadow: 0 0 18px rgba(255,154,61,.35); }
+  .kb-potsub { font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.55); margin-top: 3px; }
+  #screen-kirby .uth-label.win .nm { color: #57E06A; }
+  #screen-kirby .uth-label.lose .nm { color: #FF4D4D; }
+  #screen-kirby .kb-kirby.win .card .front { box-shadow: 0 0 0 2px #FF4D4D; }
+  .kb-count {
+    height: 34px; font-family: var(--display); font-size: 30px; color: #FFD24D;
+    text-align: center; line-height: 34px; letter-spacing: .1em;
+  }
+  .kb-opts { display: flex; justify-content: center; gap: 8px; margin-bottom: 8px; min-height: 30px; }
+  .kb-toggle {
+    height: 30px; padding: 0 14px; border-radius: 999px; background: rgba(14,10,11,.8);
+    border: 1.5px solid rgba(255,154,61,.5); color: rgba(245,241,232,.7);
+    font-family: var(--display); font-size: 11px; letter-spacing: .08em;
+  }
+  .kb-toggle.on { border-color: #FFD24D; color: #FFD24D; }
+  .kb-toggle[disabled] { opacity: .45; }
+  #screen-kirby .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
+  #screen-kirby .uth-btn[disabled] { opacity: .4; }
+  #screen-kirby .uth-actions { width: 100%; display: flex; gap: 10px; margin-top: 8px; }
+  #screen-kirby .you-held .card .front { box-shadow: 0 0 0 2px #FFD24D; }
+  .kb-owe {
+    position: absolute; inset: 0; z-index: 30; display: none;
+    align-items: center; justify-content: center; background: rgba(0,0,0,.72);
+  }
+  .kb-owe.on { display: flex; }
+  .kb-owe .box {
+    width: min(330px, 86vw); padding: 20px 18px; border-radius: 16px; text-align: center;
+    background: #140C06; border: 1.5px solid #FF9A3D; display: flex; flex-direction: column; gap: 10px;
+  }
+  .kb-owe .ttl { font-family: var(--display); letter-spacing: .1em; color: #FF9A3D; font-size: 15px; }
+  .kb-owe .amt { font-family: var(--display); font-size: 30px; color: #FF4D4D; }
+  .kb-owe .sub { font-size: 12px; color: rgba(245,241,232,.7); line-height: 1.4; }
+  .kb-owe .uth-btn { flex: none; width: 100%; }
+  .kb-owe .mk { color: #D9B23A; border-color: #D9B23A; }
+  .kb-owe .all { color: #FF4D4D; border-color: #FF4D4D; }
+  @media (max-height: 700px) {
+    .kb-you .card, .kb-you .slot { width: 50px; height: 75px; }
+    .kb-you { min-height: 75px; }
+    .kb-potval { font-size: 24px; }
+    .kb-count { height: 26px; font-size: 24px; line-height: 26px; }
+  }

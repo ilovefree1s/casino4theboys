@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="34 2 116 118">
+<defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB25E"/><stop offset="1" stop-color="#E06A12"/></linearGradient></defs>
+<g transform="translate(92 66)">
+<g transform="rotate(-20) translate(-22 -40)"><rect width="44" height="64" rx="6" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="7" y="17" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#1a1a1a">K</text><text x="22" y="44" text-anchor="middle" font-size="22" fill="#1a1a1a">&#9824;</text></g>
+<g transform="rotate(20) translate(-22 -40)"><rect width="44" height="64" rx="6" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="7" y="17" font-family="Georgia,serif" font-size="14" font-weight="700" fill="#C8102E">K</text><text x="22" y="44" text-anchor="middle" font-size="22" fill="#C8102E">&#9829;</text></g>
+<g transform="translate(-22 -44)"><rect width="44" height="64" rx="6" fill="url(#g)" stroke="#000" stroke-opacity=".4"/><rect x="5" y="5" width="34" height="54" rx="4" fill="none" stroke="#FFF3E0" stroke-opacity=".7" stroke-width="1.5"/><text x="22" y="42" text-anchor="middle" font-family="Georgia,serif" font-size="26" font-weight="700" fill="#FFF3E0">?</text></g>
+</g></svg>

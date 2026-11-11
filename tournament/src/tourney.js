@@ -194,7 +194,7 @@
       "bm-punto": "Punto Banco", "bm-dragontiger": "Dragon Tiger",
       "bjm-freebet": "Free Bet Blackjack", "bjm-blazing": "Blazing 777", "bjm-doubledown": "Double Down Madness",
       "pk-uth": "Ultimate Texas Hold'em", "pk-djwild": "DJ Wild", "pk-shootout": "Shootout",
-      "pk-mini": "Mini UTH", "pk-suits": "I Luv Suits",
+      "pk-mini": "Mini UTH", "pk-suits": "I Luv Suits", "pk-kirby": "Kirby",
       "rlm-classic": "Double Zero Roulette", "rlm-lightning": "Lightning Roulette", "rlm-doubleball": "Double Ball Roulette",
       "cm-crapless": "Crapless Craps", "cm-destroyer": "Destroyer",
       "om-keno": "Keno", "om-wheel": "Money Wheel", "om-sicbo": "Sic Bo", "om-plinko": "Plinko", "om-mines": "Mines"
