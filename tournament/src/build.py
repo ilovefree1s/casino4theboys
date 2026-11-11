@@ -285,12 +285,13 @@ sub("          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);",
 sub("""coinsHtml += '<img class="coin" src="' + BOYS_IMG + '" alt="coin">';""",
     """coinsHtml += '<img class="coin" src="' + COIN_IMG + '" alt="coin">';""")
 
-# ---- Ultimate Hold'em and DJ Wild: twice the Bad Beat cap of the other tables ----
+# ---- Ultimate Hold'em and DJ Wild: their own, bigger Bad Beat caps ----
 sub('  function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }',
     '  function badBeatRefusal(limits) { return "Bad Beat max $" + fmt(limits.badBeatMax); }\n'
     '  function doubleBadBeat(limits) {\n'
     '    var l = {}; for (var k in limits) l[k] = limits[k];\n'
-    '    l.badBeatMax = limits.badBeatMax * 2;\n'
+    '    // by room: Basement 50, Main Floor 250, High Limit 500, Salon 1,000, Whale Room 5,000\n'
+    '    l.badBeatMax = { 25: 50, 50: 250, 75: 500, 100: 1000, 125: 5000 }[limits.badBeatMax] || limits.badBeatMax;\n'
     '    return l;\n'
     '  }')
 sub('var amount = spot === "badbeat" ? allowBadBeat(lim, affordable, badBeat)',
