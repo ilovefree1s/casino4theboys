@@ -3845,19 +3845,12 @@
     display: flex; flex-direction: column; gap: 10px;
     background:
       radial-gradient(90% 38% at 50% 0%, rgba(255,216,102,.12), transparent 70%),
-      radial-gradient(120% 60% at 50% 48%, var(--pine-2) 0%, var(--pine) 50%, var(--night) 100%);
-  }
-  /* a treeline along the bottom of the marquee, drawn with gradients */
-  #screen-chain .ch-wrap::before {
-    content: ""; position: absolute; left: 0; right: 0; top: 118px; height: 60px; pointer-events: none; opacity: .5;
-    background:
-      linear-gradient(transparent, var(--pine) 95%),
-      conic-gradient(from 150deg at 8% 100%, transparent 0 60deg, #0E2418 0) 0 0 / 34px 60px repeat-x;
+      radial-gradient(120% 60% at 50% 45%, var(--pine-2) 0%, var(--pine) 45%, var(--night) 100%);
   }
   #screen-chain .ch-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 40px; }
   #screen-chain .ch-pill {
-    margin-left: auto; display: flex; align-items: baseline; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px;
-    background: rgba(0,0,0,.45); border: 1px solid var(--hair); box-sizing: border-box; align-items: center;
+    margin-left: auto; display: flex; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px; align-items: center;
+    background: rgba(0,0,0,.45); border: 1px solid var(--hair); box-sizing: border-box;
   }
   #screen-chain .ch-pill .ch-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .16em; color: var(--dim); }
   #screen-chain .ch-pill .ch-val { font-family: var(--display); font-size: 24px; line-height: 1; padding-top: 3px; color: var(--gold); font-variant-numeric: tabular-nums; }
@@ -3868,29 +3861,28 @@
   #screen-chain .ch-iconbtn svg { width: 16px; height: 16px; }
   #screen-chain button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-  #screen-chain .ch-marquee { position: relative; text-align: center; padding-top: 2px; }
+  #screen-chain .ch-marquee { position: relative; text-align: center; }
   #screen-chain .ch-marquee .ch-chainrow { display: flex; align-items: center; justify-content: center; gap: 10px; }
   #screen-chain .ch-marquee .ch-chainrow svg { width: 64px; height: 14px; }
   #screen-chain .ch-marquee .ch-small { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: .5em; line-height: 1; color: var(--brass); padding-left: .5em; }
   #screen-chain .ch-marquee h1 {
-    margin: -4px 0 0; font-family: var(--display); font-weight: 700; font-size: 64px; line-height: .9; letter-spacing: .03em;
+    margin: -4px 0 0; font-family: var(--display); font-weight: 700; font-size: 62px; line-height: .9; letter-spacing: .03em;
     background: linear-gradient(180deg, #FFF3C4 0%, #FFD866 42%, #E09B2D 60%, #FFE9A0 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 3px 0 #4A3300) drop-shadow(0 0 18px rgba(255,200,80,.35));
   }
   #screen-chain .ch-marquee .ch-tag { font-size: 10px; font-weight: 700; letter-spacing: .3em; color: var(--dim); margin-top: 2px; }
 
-  #screen-chain .ch-plaques { position: relative; display: grid; grid-template-columns: 1fr 1.18fr 1fr; gap: 8px; align-items: end; }
-  #screen-chain .ch-plaque {
-    border-radius: 12px; padding: 6px 6px 7px; text-align: center; position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.35)); border: 1px solid rgba(227,188,92,.35);
+  #screen-chain .ch-jacks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  #screen-chain .ch-jack {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 6px; border-radius: 10px; padding: 5px 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4)); border: 1px solid rgba(227,188,92,.3);
   }
-  #screen-chain .ch-plaque .ch-k { font-size: 9px; font-weight: 800; letter-spacing: .2em; color: var(--brass); }
-  #screen-chain .ch-plaque .ch-v { font-family: var(--display); font-size: 22px; line-height: 1; padding-top: 3px; color: var(--cream); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-plaque .ch-ft { font-size: 9px; color: var(--dim); letter-spacing: .06em; }
-  #screen-chain .ch-plaque.ch-ace { padding-block: 9px 9px; border: 1.5px solid var(--gold); background: linear-gradient(180deg, rgba(255,216,102,.22), rgba(60,40,0,.5)); box-shadow: 0 0 22px rgba(255,216,102,.25); }
-  #screen-chain .ch-plaque.ch-ace .ch-k { color: var(--gold); }
-  #screen-chain .ch-plaque.ch-ace .ch-v { font-size: 28px; color: var(--gold); }
+  #screen-chain .ch-jack .ch-k { font-size: 10px; font-weight: 800; letter-spacing: .18em; }
+  #screen-chain .ch-jack .ch-v { font-family: var(--display); font-size: 21px; line-height: 1; padding-top: 2px; color: var(--cream); font-variant-numeric: tabular-nums; }
+  #screen-chain .ch-jack.ch-grand { border-color: var(--gold); background: linear-gradient(180deg, rgba(255,216,102,.2), rgba(70,30,0,.5)); box-shadow: 0 0 18px rgba(255,216,102,.22); }
+  #screen-chain .ch-jack.ch-grand .ch-k, #screen-chain .ch-jack.ch-grand .ch-v { color: var(--gold); }
+  #screen-chain .ch-jack.ch-major .ch-k { color: #FF8A5A; } #screen-chain .ch-jack.ch-minor .ch-k { color: #6FB8FF; } #screen-chain .ch-jack.ch-mini .ch-k { color: var(--mint); }
 
   #screen-chain .ch-cabinet {
     position: relative; border-radius: 22px; padding: 4px;
@@ -3911,6 +3903,11 @@
   #screen-chain .ch-strip.ch-blur .ch-cell svg { filter: blur(1.4px); }
   #screen-chain .ch-cell { position: relative; height: var(--h); display: flex; align-items: center; justify-content: center; transition: filter .25s, opacity .25s; }
   #screen-chain .ch-cell svg { width: 84%; height: 84%; overflow: visible; }
+  #screen-chain .ch-cell .ch-amt, #screen-chain .ch-hcell .ch-amt {
+    position: absolute; left: 0; right: 0; bottom: 18%; text-align: center; font-family: var(--display); font-weight: 700;
+    font-size: 17px; line-height: 1; color: #FFF6D8; text-shadow: 0 1px 0 #3A2600, 0 0 6px rgba(0,0,0,.9); pointer-events: none;
+  }
+  #screen-chain .ch-cell .ch-amt.ch-jp, #screen-chain .ch-hcell .ch-amt.ch-jp { font-size: 15px; letter-spacing: .04em; }
   #screen-chain .ch-cell.ch-dim { opacity: .32; filter: saturate(.4); }
   #screen-chain .ch-cell.ch-hit::before {
     content: ""; position: absolute; inset: 4px; border-radius: 10px;
@@ -3920,7 +3917,6 @@
   #screen-chain .ch-cell.ch-hit svg { animation: ch-pop .5s ease-out; }
   @keyframes ch-pulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 28px rgba(255,216,102,.85), inset 0 0 22px rgba(255,216,102,.45); } }
   @keyframes ch-pop { 40% { transform: scale(1.12); } }
-  /* glass: darker top and bottom edges plus a soft sheen */
   #screen-chain .ch-glass {
     position: absolute; inset: 8px 6px; border-radius: 10px; pointer-events: none;
     background:
@@ -3929,6 +3925,27 @@
   }
   #screen-chain .ch-lines { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   #screen-chain .ch-lines polyline { fill: none; stroke: var(--gold); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(255,216,102,.95)); }
+
+  /* hold & spin: fifteen cells that spin on their own */
+  #screen-chain .ch-hold { position: absolute; inset: 8px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  #screen-chain .ch-hcell { position: relative; border-radius: 10px; background: radial-gradient(circle at 50% 45%, #13261B, #06100B); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #screen-chain .ch-hcell svg { width: 84%; height: 84%; overflow: visible; }
+  #screen-chain .ch-hcell.ch-locked { background: radial-gradient(circle at 50% 45%, #2E5A3A, #0C1D14); box-shadow: inset 0 0 0 1.5px rgba(255,216,102,.55); }
+  #screen-chain .ch-hcell.ch-spinning::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(180deg, rgba(107,240,138,0) 0 10px, rgba(107,240,138,.16) 10px 14px);
+    animation: ch-roll .18s linear infinite;
+  }
+  @keyframes ch-roll { to { background-position: 0 28px; } }
+  #screen-chain .ch-hcell.ch-fresh { animation: ch-land .5s ease-out; }
+  @keyframes ch-land { 0% { transform: scale(.5); filter: brightness(2.2); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  #screen-chain .ch-hcell .ch-amt { bottom: 14%; font-size: 18px; }
+  #screen-chain .ch-hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
+  #screen-chain .ch-hud .ch-spins { display: flex; gap: 6px; align-items: center; }
+  #screen-chain .ch-hud .ch-spins i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--brass); }
+  #screen-chain .ch-hud .ch-spins i.ch-on { background: radial-gradient(circle at 40% 35%, #C8FFD6, #2FBF5A); box-shadow: 0 0 10px rgba(107,240,138,.7); }
+  #screen-chain .ch-hud .ch-spins span { font-size: 10px; font-weight: 800; letter-spacing: .16em; color: var(--dim); margin-right: 4px; }
+  #screen-chain .ch-hud .ch-sum { font-family: var(--display); font-size: 30px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
 
   #screen-chain .ch-msg { position: relative; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   #screen-chain .ch-msg .ch-big { font-family: var(--display); font-size: 34px; line-height: 1; letter-spacing: .04em; color: var(--mint); text-shadow: 0 0 18px rgba(107,240,138,.4); font-variant-numeric: tabular-nums; }
@@ -3953,11 +3970,10 @@
   }
   #screen-chain .ch-step:disabled { opacity: .3; cursor: default; }
   #screen-chain .ch-spin {
-    position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: pointer; padding: 0;
-    border: 0; color: #fff;
+    position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: pointer; padding: 0; border: 0; color: #fff;
     background: radial-gradient(circle at 50% 30%, #8CFFA7 0%, #3BD465 30%, #16883C 70%, #0C5A27 100%);
     box-shadow: 0 0 0 4px #0B1A12, 0 0 0 6px var(--brass), 0 10px 26px rgba(0,0,0,.6), 0 0 30px rgba(107,240,138,.35);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   #screen-chain .ch-spin svg { width: 30px; height: 30px; }
   #screen-chain .ch-spin b { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: .1em; margin-top: 2px; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
@@ -3973,9 +3989,8 @@
   #screen-chain .ch-chip.ch-on { color: var(--gold); border-color: rgba(255,216,102,.55); background: rgba(255,216,102,.08); }
   #screen-chain .ch-stats { text-align: center; font-size: 10.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
 
-  /* pay table */
   #screen-chain .ch-sheet { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; justify-content: center; }
-  #screen-chain .ch-sheet .ch-card {
+  #screen-chain .ch-sheet .ch-panel {
     width: 100%; max-width: 440px; max-height: 88%; overflow: auto; box-sizing: border-box; background: linear-gradient(#10261A, #08140D);
     border: 1px solid rgba(227,188,92,.5); border-bottom: 0; border-radius: 22px 22px 0 0;
     padding-block: 18px calc(22px + env(safe-area-inset-bottom, 0px));
@@ -3983,7 +3998,7 @@
   }
   #screen-chain .ch-sheet h2 { margin: 0; font-family: var(--display); font-weight: 600; color: var(--gold); font-size: 32px; line-height: 1; letter-spacing: .04em; }
   #screen-chain .ch-sheet h3 { margin: 16px 0 4px; font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--brass); }
-  #screen-chain .ch-sheet p { margin: 6px 0; font-size: 13px; line-height: 1.5; color: rgba(255,246,218,.8); }
+  #screen-chain .ch-sheet p { margin: 6px 0; font-size: 13px; line-height: 1.5; color: rgba(255,242,214,.82); }
   #screen-chain .ch-pt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   #screen-chain .ch-pt .ch-row { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--hair); }
   #screen-chain .ch-pt .ch-ic { width: 46px; height: 46px; flex: none; }
@@ -3995,251 +4010,20 @@
     width: 100%; height: 46px; margin-top: 14px; border-radius: 23px; border: 1px solid rgba(227,188,92,.55); background: rgba(255,216,102,.08);
     color: var(--gold); font: 800 12px var(--body); letter-spacing: .16em; cursor: pointer;
   }
-
-  /* the putting green */
-  #screen-chain .ch-bonus {
-    position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(70% 50% at 50% 55%, #1F5A33 0%, #0E2C1A 55%, #040A06 100%);
-    padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
+  #screen-chain .ch-flash {
+    position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: radial-gradient(60% 40% at 50% 50%, rgba(20,70,36,.94), rgba(3,10,6,.95)); pointer-events: none; text-align: center;
   }
-  #screen-chain .ch-green { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-  #screen-chain .ch-green .ch-t { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: .4em; color: var(--brass); padding-left: .4em; }
-  #screen-chain .ch-green .ch-bank { font-family: var(--display); font-weight: 700; font-size: 58px; line-height: .9; color: var(--gold); text-shadow: 0 0 24px rgba(255,216,102,.4); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-green .ch-note { font-size: 13px; color: var(--dim); line-height: 1.4; min-height: 36px; }
-  #screen-chain .ch-ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
-  #screen-chain .ch-rung { border-radius: 12px; border: 1px solid var(--hair); padding: 7px 4px; background: rgba(0,0,0,.35); }
-  #screen-chain .ch-rung .ch-nm { font-size: 9px; font-weight: 800; letter-spacing: .18em; color: var(--dim); }
-  #screen-chain .ch-rung .ch-ft { font-family: var(--display); font-size: 22px; line-height: 1; padding-top: 2px; }
-  #screen-chain .ch-rung .ch-p { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-rung.ch-now { border-color: var(--gold); box-shadow: 0 0 16px rgba(255,216,102,.3); }
-  #screen-chain .ch-rung.ch-now .ch-nm { color: var(--gold); }
-  #screen-chain .ch-rung.ch-made { border-color: var(--mint); background: rgba(107,240,138,.08); }
-  #screen-chain .ch-rung.ch-made .ch-ft, #screen-chain .ch-rung.ch-made .ch-nm { color: var(--mint); }
-  #screen-chain .ch-rung.ch-miss { border-color: var(--red); opacity: .6; }
-  #screen-chain .ch-basket { height: 168px; display: flex; align-items: flex-end; justify-content: center; }
-  #screen-chain .ch-basket svg { width: 132px; height: 168px; overflow: visible; }
-  #screen-chain .ch-basket.ch-ch-rattle svg { animation: ch-rattle .55s ease-in-out; }
-  @keyframes ch-rattle { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-4deg); } 40% { transform: rotate(4deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
-  #screen-chain .ch-meter {
-    position: relative; width: 100%; height: 28px; border-radius: 14px; overflow: hidden;
-    background: linear-gradient(90deg, #3A1712, #2A2410 50%, #3A1712); border: 1px solid rgba(255,246,218,.2);
-  }
-  #screen-chain .ch-zone { position: absolute; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(107,240,138,.25), rgba(107,240,138,.8), rgba(107,240,138,.25)); box-shadow: 0 0 14px rgba(107,240,138,.5); }
-  #screen-chain .ch-needle { position: absolute; top: -3px; bottom: -3px; width: 6px; margin-left: -3px; background: #fff; border-radius: 3px; box-shadow: 0 0 10px #fff, 0 0 2px #000; }
-  #screen-chain .ch-putt {
-    width: 100%; height: 58px; border-radius: 29px; border: 0; cursor: pointer; color: #fff;
-    background: radial-gradient(circle at 50% 20%, #74F590, #1E8A44 75%);
-    box-shadow: 0 0 0 2px var(--brass), 0 10px 24px rgba(0,0,0,.5);
-    font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: .12em; line-height: 1; padding-top: 4px;
-  }
-  #screen-chain .ch-putt:disabled { filter: saturate(.3) brightness(.7); }
+  #screen-chain .ch-flash .ch-t { font-family: var(--display); font-weight: 700; font-size: 64px; line-height: .9; color: var(--gold); text-shadow: 0 0 30px rgba(255,216,102,.6); }
+  #screen-chain .ch-flash .ch-s { font-size: 13px; font-weight: 700; letter-spacing: .24em; color: var(--cream); }
+  #screen-chain .ch-flash .ch-n { font-family: var(--display); font-weight: 700; font-size: 48px; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
   @media (max-height: 740px) {
     #screen-chain .ch-reel { --h: min(72px, 19vw); }
-    #screen-chain .ch-marquee h1 { font-size: 52px; }
+    #screen-chain .ch-marquee h1 { font-size: 50px; }
     #screen-chain .ch-spin { width: 88px; height: 88px; }
-    #screen-chain .ch-basket { height: 130px; } #screen-chain .ch-basket svg { height: 130px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    #screen-chain .ch-basket.ch-ch-rattle svg, #screen-chain .ch-cell.ch-hit::before, #screen-chain .ch-cell.ch-hit svg, #screen-chain .ch-spin.ch-going svg { animation: none; }
-  }
-
-  /* ========== CHILI LANTERNS (play testing only) ========== */
-  #screen-lantern {
-    --night: #0B0303; --lacquer: #2A0707; --lacquer-2: #4A0D0B; --ember: #FF5A2E;
-    --brass: #E8B850; --brass-lo: #8A5E14; --gold: #FFD866; --cream: #FFF2D6;
-    --jade: #5FE0A0; --ink: rgba(255,242,214,.92); --dim: rgba(255,242,214,.56); --hair: rgba(255,242,214,.13);
-    --red: #FF4A3A;
-    --display: Teko, "Arial Narrow", Impact, sans-serif; --body: var(--ui);
-    
-    background: var(--night); color: var(--ink); font-family: var(--body); min-height: 100dvh; -webkit-tap-highlight-color: transparent;
-  }
-  #screen-lantern [hidden] { display: none !important; }
-  #screen-lantern .cl-wrap {
-    position: relative; max-width: 440px; min-height: 100%; margin: 0 auto; box-sizing: border-box; overflow: hidden;
-    padding-block: 10px 16px;
-    padding-left: max(14px, env(safe-area-inset-left, 0px)); padding-right: max(14px, env(safe-area-inset-right, 0px));
-    display: flex; flex-direction: column; gap: 10px;
-    background:
-      radial-gradient(80% 30% at 50% 0%, rgba(255,120,60,.18), transparent 70%),
-      radial-gradient(120% 60% at 50% 45%, var(--lacquer-2) 0%, var(--lacquer) 45%, var(--night) 100%);
-  }
-  #screen-lantern .cl-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 40px; }
-  #screen-lantern .cl-pill {
-    margin-left: auto; display: flex; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px; align-items: center;
-    background: rgba(0,0,0,.45); border: 1px solid var(--hair); box-sizing: border-box;
-  }
-  #screen-lantern .cl-pill .cl-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .16em; color: var(--dim); }
-  #screen-lantern .cl-pill .cl-val { font-family: var(--display); font-size: 24px; line-height: 1; padding-top: 3px; color: var(--gold); font-variant-numeric: tabular-nums; }
-  #screen-lantern .cl-iconbtn {
-    width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--hair); background: rgba(0,0,0,.45);
-    color: var(--ink); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0;
-  }
-  #screen-lantern .cl-iconbtn svg { width: 16px; height: 16px; }
-  #screen-lantern button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-
-  #screen-lantern .cl-marquee { position: relative; text-align: center; }
-  #screen-lantern .cl-marquee .cl-row1 { display: flex; align-items: center; justify-content: center; gap: 10px; }
-  #screen-lantern .cl-marquee .cl-row1 svg { width: 26px; height: 36px; }
-  #screen-lantern .cl-marquee .cl-small { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: .5em; line-height: 1; color: var(--brass); padding-left: .5em; }
-  #screen-lantern .cl-marquee h1 {
-    margin: -4px 0 0; font-family: var(--display); font-weight: 700; font-size: 62px; line-height: .9; letter-spacing: .03em;
-    background: linear-gradient(180deg, #FFF0B8 0%, #FFC94A 38%, #FF7A1E 62%, #FFD866 100%);
-    -webkit-background-clip: text; background-clip: text; color: transparent;
-    filter: drop-shadow(0 3px 0 #4A0A00) drop-shadow(0 0 20px rgba(255,110,40,.45));
-  }
-  #screen-lantern .cl-marquee .cl-tag { font-size: 10px; font-weight: 700; letter-spacing: .3em; color: var(--dim); margin-top: 2px; }
-
-  #screen-lantern .cl-jacks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
-  #screen-lantern .cl-jack {
-    display: flex; align-items: baseline; justify-content: space-between; gap: 6px; border-radius: 10px; padding: 5px 10px;
-    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4)); border: 1px solid rgba(232,184,80,.3);
-  }
-  #screen-lantern .cl-jack .cl-k { font-size: 10px; font-weight: 800; letter-spacing: .18em; }
-  #screen-lantern .cl-jack .cl-v { font-family: var(--display); font-size: 21px; line-height: 1; padding-top: 2px; color: var(--cream); font-variant-numeric: tabular-nums; }
-  #screen-lantern .cl-jack.cl-grand { border-color: var(--gold); background: linear-gradient(180deg, rgba(255,216,102,.2), rgba(70,30,0,.5)); box-shadow: 0 0 18px rgba(255,216,102,.22); }
-  #screen-lantern .cl-jack.cl-grand .cl-k, #screen-lantern .cl-jack.cl-grand .cl-v { color: var(--gold); }
-  #screen-lantern .cl-jack.cl-major .cl-k { color: #FF6A5A; } #screen-lantern .cl-jack.cl-minor .cl-k { color: #6FB8FF; } #screen-lantern .cl-jack.cl-mini .cl-k { color: var(--jade); }
-
-  #screen-lantern .cl-cabinet {
-    position: relative; border-radius: 22px; padding: 4px;
-    background: linear-gradient(160deg, #FFE7A1, var(--brass) 25%, var(--brass-lo) 55%, #F4D27C 80%, #7A4A10);
-    box-shadow: 0 18px 40px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.6);
-  }
-  #screen-lantern .cl-window {
-    position: relative; border-radius: 18px; padding: 8px 6px; background: #120302;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.8), inset 0 2px 10px rgba(0,0,0,.9);
-  }
-  #screen-lantern .cl-reels { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
-  #screen-lantern .cl-reel {
-    position: relative; overflow: hidden; border-radius: 10px; --h: min(86px, 21.5vw);
-    height: calc(var(--h) * 3);
-    background: linear-gradient(90deg, #1E0605, #3A0D0A 50%, #1E0605);
-  }
-  #screen-lantern .cl-strip { position: absolute; left: 0; right: 0; top: 0; display: flex; flex-direction: column; will-change: transform; }
-  #screen-lantern .cl-strip.cl-blur .cl-cell svg { filter: blur(1.4px); }
-  #screen-lantern .cl-cell { position: relative; height: var(--h); display: flex; align-items: center; justify-content: center; transition: filter .25s, opacity .25s; }
-  #screen-lantern .cl-cell svg { width: 84%; height: 84%; overflow: visible; }
-  #screen-lantern .cl-cell .cl-amt, #screen-lantern .cl-hcell .cl-amt {
-    position: absolute; left: 0; right: 0; bottom: 18%; text-align: center; font-family: var(--display); font-weight: 700;
-    font-size: 17px; line-height: 1; color: #FFF6D8; text-shadow: 0 1px 0 #5A0A00, 0 0 6px rgba(0,0,0,.8); pointer-events: none;
-  }
-  #screen-lantern .cl-cell .cl-amt.cl-jp, #screen-lantern .cl-hcell .cl-amt.cl-jp { font-size: 15px; letter-spacing: .04em; }
-  #screen-lantern .cl-cell.cl-dim { opacity: .32; filter: saturate(.4); }
-  #screen-lantern .cl-cell.cl-hit::before {
-    content: ""; position: absolute; inset: 4px; border-radius: 10px;
-    box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(255,216,102,.65), inset 0 0 18px rgba(255,216,102,.3);
-    animation: cl-pulse 1.1s ease-in-out infinite;
-  }
-  #screen-lantern .cl-cell.cl-hit svg { animation: cl-pop .5s ease-out; }
-  @keyframes cl-pulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 28px rgba(255,216,102,.85), inset 0 0 22px rgba(255,216,102,.45); } }
-  @keyframes cl-pop { 40% { transform: scale(1.12); } }
-  #screen-lantern .cl-glass {
-    position: absolute; inset: 8px 6px; border-radius: 10px; pointer-events: none;
-    background:
-      linear-gradient(180deg, rgba(0,0,0,.55), transparent 16%, transparent 84%, rgba(0,0,0,.6)),
-      linear-gradient(115deg, rgba(255,255,255,.07) 0 22%, transparent 22% 100%);
-  }
-  #screen-lantern .cl-lines { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
-  #screen-lantern .cl-lines polyline { fill: none; stroke: var(--gold); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(255,216,102,.95)); }
-
-  /* the lantern feature: fifteen cells that spin on their own */
-  #screen-lantern .cl-hold { position: absolute; inset: 8px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 4px; }
-  #screen-lantern .cl-hcell { position: relative; border-radius: 10px; background: radial-gradient(circle at 50% 45%, #2A0806, #120302); display: flex; align-items: center; justify-content: center; overflow: hidden; }
-  #screen-lantern .cl-hcell svg { width: 84%; height: 84%; overflow: visible; }
-  #screen-lantern .cl-hcell.cl-locked { background: radial-gradient(circle at 50% 45%, #5A1208, #1E0403); box-shadow: inset 0 0 0 1.5px rgba(255,216,102,.55); }
-  #screen-lantern .cl-hcell.cl-spinning::after {
-    content: ""; position: absolute; inset: 0;
-    background: repeating-linear-gradient(180deg, rgba(255,140,60,.0) 0 10px, rgba(255,140,60,.18) 10px 14px);
-    animation: cl-roll .18s linear infinite;
-  }
-  @keyframes cl-roll { to { background-position: 0 28px; } }
-  #screen-lantern .cl-hcell.cl-fresh { animation: cl-land .5s ease-out; }
-  @keyframes cl-land { 0% { transform: scale(.5); filter: brightness(2.2); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
-  #screen-lantern .cl-hcell .cl-amt { bottom: 14%; font-size: 18px; }
-  #screen-lantern .cl-hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
-  #screen-lantern .cl-hud .cl-spins { display: flex; gap: 6px; align-items: center; }
-  #screen-lantern .cl-hud .cl-spins i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--brass); }
-  #screen-lantern .cl-hud .cl-spins i.cl-on { background: radial-gradient(circle at 40% 35%, #FFE9A0, #E07A1E); box-shadow: 0 0 10px rgba(255,140,40,.7); }
-  #screen-lantern .cl-hud .cl-spins span { font-size: 10px; font-weight: 800; letter-spacing: .16em; color: var(--dim); margin-right: 4px; }
-  #screen-lantern .cl-hud .cl-sum { font-family: var(--display); font-size: 30px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
-
-  #screen-lantern .cl-msg { position: relative; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-  #screen-lantern .cl-msg .cl-big { font-family: var(--display); font-size: 34px; line-height: 1; letter-spacing: .04em; color: var(--gold); text-shadow: 0 0 18px rgba(255,180,60,.45); font-variant-numeric: tabular-nums; }
-  #screen-lantern .cl-msg .cl-small { font-size: 11.5px; color: var(--dim); margin-top: 2px; }
-  #screen-lantern .cl-msg.cl-quiet .cl-big { font-size: 22px; color: var(--dim); text-shadow: none; }
-  #screen-lantern .cl-msg.cl-bonus .cl-big { color: #FF8A4A; text-shadow: 0 0 18px rgba(255,110,40,.6); }
-
-  #screen-lantern .cl-console {
-    margin-top: auto; position: relative; border-radius: 22px; padding: 12px; display: flex; flex-direction: column; gap: 10px;
-    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4)); border: 1px solid var(--hair);
-  }
-  #screen-lantern .cl-deck { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 10px; }
-  #screen-lantern .cl-readout .cl-k { font-size: 9.5px; font-weight: 800; letter-spacing: .18em; color: var(--dim); }
-  #screen-lantern .cl-readout .cl-v { font-family: var(--display); font-size: 28px; line-height: 1; padding-top: 3px; font-variant-numeric: tabular-nums; }
-  #screen-lantern .cl-readout.cl-win { text-align: right; }
-  #screen-lantern .cl-readout.cl-win .cl-v { color: var(--gold); }
-  #screen-lantern .cl-stepper { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
-  #screen-lantern .cl-stepper .cl-v { min-width: 0; flex: 1; text-align: center; font-size: 24px; }
-  #screen-lantern .cl-step {
-    width: 28px; height: 28px; flex: none; border-radius: 50%; border: 1px solid rgba(232,184,80,.5); background: rgba(0,0,0,.4);
-    color: var(--gold); font: 700 18px/1 var(--body); cursor: pointer; padding: 0;
-  }
-  #screen-lantern .cl-step:disabled { opacity: .3; cursor: default; }
-  #screen-lantern .cl-spin {
-    position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: pointer; padding: 0; border: 0; color: #fff;
-    background: radial-gradient(circle at 50% 30%, #FFB27A 0%, #FF5A2E 32%, #B8200E 70%, #6E0F06 100%);
-    box-shadow: 0 0 0 4px #1E0403, 0 0 0 6px var(--brass), 0 10px 26px rgba(0,0,0,.6), 0 0 30px rgba(255,90,46,.4);
-    display: flex; flex-direction: column; align-items: center; justify-content: center;
-  }
-  #screen-lantern .cl-spin svg { width: 30px; height: 30px; }
-  #screen-lantern .cl-spin b { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: .1em; margin-top: 2px; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
-  #screen-lantern .cl-spin:active { transform: scale(.96); }
-  #screen-lantern .cl-spin:disabled { filter: saturate(.25) brightness(.7); cursor: default; }
-  #screen-lantern .cl-spin.cl-going svg { animation: cl-turn .7s linear infinite; }
-  @keyframes cl-turn { to { transform: rotate(360deg); } }
-  #screen-lantern .cl-chips { display: flex; gap: 6px; justify-content: space-between; }
-  #screen-lantern .cl-chip {
-    flex: 1; height: 32px; border-radius: 16px; border: 1px solid var(--hair); background: rgba(0,0,0,.35);
-    color: var(--dim); font: 700 10px var(--body); letter-spacing: .12em; cursor: pointer; padding: 0 6px; white-space: nowrap;
-  }
-  #screen-lantern .cl-chip.cl-on { color: var(--gold); border-color: rgba(255,216,102,.55); background: rgba(255,216,102,.08); }
-  #screen-lantern .cl-stats { text-align: center; font-size: 10.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
-
-  #screen-lantern .cl-sheet { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; justify-content: center; }
-  #screen-lantern .cl-sheet .cl-panel {
-    width: 100%; max-width: 440px; max-height: 88%; overflow: auto; box-sizing: border-box; background: linear-gradient(#3A0B08, #160403);
-    border: 1px solid rgba(232,184,80,.5); border-bottom: 0; border-radius: 22px 22px 0 0;
-    padding-block: 18px calc(22px + env(safe-area-inset-bottom, 0px));
-    padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
-  }
-  #screen-lantern .cl-sheet h2 { margin: 0; font-family: var(--display); font-weight: 600; color: var(--gold); font-size: 32px; line-height: 1; letter-spacing: .04em; }
-  #screen-lantern .cl-sheet h3 { margin: 16px 0 4px; font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--brass); }
-  #screen-lantern .cl-sheet p { margin: 6px 0; font-size: 13px; line-height: 1.5; color: rgba(255,242,214,.82); }
-  #screen-lantern .cl-pt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
-  #screen-lantern .cl-pt .cl-row { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--hair); }
-  #screen-lantern .cl-pt .cl-ic { width: 46px; height: 46px; flex: none; }
-  #screen-lantern .cl-pt .cl-ic svg { width: 100%; height: 100%; overflow: visible; }
-  #screen-lantern .cl-pt .cl-pays { display: grid; grid-template-columns: auto 1fr; gap: 0 6px; font-size: 11px; font-variant-numeric: tabular-nums; }
-  #screen-lantern .cl-pt .cl-pays span:nth-child(odd) { color: var(--dim); }
-  #screen-lantern .cl-pt .cl-pays span:nth-child(even) { color: var(--cream); font-weight: 700; text-align: right; }
-  #screen-lantern .cl-done {
-    width: 100%; height: 46px; margin-top: 14px; border-radius: 23px; border: 1px solid rgba(232,184,80,.55); background: rgba(255,216,102,.08);
-    color: var(--gold); font: 800 12px var(--body); letter-spacing: .16em; cursor: pointer;
-  }
-  #screen-lantern .cl-flash {
-    position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    background: radial-gradient(60% 40% at 50% 50%, rgba(120,20,6,.92), rgba(10,2,2,.94)); pointer-events: none; text-align: center;
-  }
-  #screen-lantern .cl-flash .cl-t { font-family: var(--display); font-weight: 700; font-size: 64px; line-height: .9; color: var(--gold); text-shadow: 0 0 30px rgba(255,140,40,.7); }
-  #screen-lantern .cl-flash .cl-s { font-size: 13px; font-weight: 700; letter-spacing: .24em; color: var(--cream); }
-  #screen-lantern .cl-flash .cl-n { font-family: var(--display); font-weight: 700; font-size: 48px; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
-  @media (max-height: 740px) {
-    #screen-lantern .cl-reel { --h: min(72px, 19vw); }
-    #screen-lantern .cl-marquee h1 { font-size: 50px; }
-    #screen-lantern .cl-spin { width: 88px; height: 88px; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    #screen-lantern .cl-cell.cl-hit::before, #screen-lantern .cl-cell.cl-hit svg, #screen-lantern .cl-spin.cl-going svg, #screen-lantern .cl-hcell.cl-spinning::after, #screen-lantern .cl-hcell.cl-fresh { animation: none; }
+    #screen-chain .ch-cell.ch-hit::before, #screen-chain .ch-cell.ch-hit svg, #screen-chain .ch-spin.ch-going svg, #screen-chain .ch-hcell.ch-spinning::after, #screen-chain .ch-hcell.ch-fresh { animation: none; }
   }
 
 </style>
@@ -4525,23 +4309,29 @@
       <svg viewBox="0 0 64 14" aria-hidden="true" fill="none" stroke="#C9A240" stroke-width="2"><path d="M1 7h10"/><rect x="11" y="3" width="16" height="8" rx="4"/><rect x="23" y="3" width="16" height="8" rx="4"/><rect x="35" y="3" width="16" height="8" rx="4"/><rect x="47" y="3" width="16" height="8" rx="4"/></svg>
     </div>
     <h1>REACTION</h1>
-    <div class="ch-tag">DISC GOLF · 5 REELS · 25 LINES</div>
+    <div class="ch-tag">DISC GOLF · HOLD &amp; SPIN · 25 LINES</div>
   </div>
 
-  <div class="ch-plaques">
-    <div class="ch-plaque"><div class="ch-k">PAR</div><div class="ch-v" id="ch-jp0">0</div><div class="ch-ft">10 FT PUTT</div></div>
-    <div class="ch-plaque ch-ace"><div class="ch-k">ACE</div><div class="ch-v" id="ch-jp2">0</div><div class="ch-ft">30 FT PUTT</div></div>
-    <div class="ch-plaque"><div class="ch-k">BIRDIE</div><div class="ch-v" id="ch-jp1">0</div><div class="ch-ft">20 FT PUTT</div></div>
+  <div class="ch-jacks">
+    <div class="ch-jack ch-grand"><span class="ch-k">ACE</span><span class="ch-v" id="ch-jpG">0</span></div>
+    <div class="ch-jack ch-major"><span class="ch-k">EAGLE</span><span class="ch-v" id="ch-jpM">0</span></div>
+    <div class="ch-jack ch-minor"><span class="ch-k">BIRDIE</span><span class="ch-v" id="ch-jpN">0</span></div>
+    <div class="ch-jack ch-mini"><span class="ch-k">PAR</span><span class="ch-v" id="ch-jpI">0</span></div>
   </div>
 
   <div class="ch-cabinet">
     <div class="ch-window">
       <div class="ch-reels" id="ch-reels"></div>
+      <div class="ch-hold" id="ch-hold" hidden></div>
       <div class="ch-glass"></div>
     </div>
   </div>
 
-  <div class="ch-msg ch-quiet" id="ch-msg"><div class="ch-big">Good luck</div><div class="ch-small">3 baskets anywhere start the Chain Rattle bonus</div></div>
+  <div class="ch-hud" id="ch-hud" hidden>
+    <div class="ch-spins" id="ch-spinsLeft"><span>SPINS</span><i></i><i></i><i></i></div>
+    <div class="ch-sum" id="ch-hsum">0</div>
+  </div>
+  <div class="ch-msg ch-quiet" id="ch-msg"><div class="ch-big">Good luck</div><div class="ch-small">6 baskets start Hold &amp; Spin</div></div>
 
   <div class="ch-console">
     <div class="ch-deck">
@@ -4569,133 +4359,21 @@
 </div>
 
 <div class="ch-sheet" id="ch-sheet" hidden>
-  <div class="ch-card">
+  <div class="ch-panel">
     <h2>PAYS &amp; RULES</h2>
     <p>25 lines, paid left to right from the first reel. Amounts are for your current total bet.</p>
     <div class="ch-pt" id="ch-pt"></div>
     <h3>WILD</h3>
     <p>The ACE medallion lands on reels 2, 3 and 4 and stands in for every symbol except the basket.</p>
-    <h3>CHAIN RATTLE BONUS</h3>
-    <p>3, 4 or 5 baskets anywhere pay 5×, 15× or 50× your bet up front. Then you putt: stop the needle in the green. Make the 10 footer for Par, the 20 footer for Birdie and the 30 footer for the Ace. The green shrinks and the needle speeds up each time. A miss ends the bonus, and you keep everything you made.</p>
+    <h3>HOLD &amp; SPIN</h3>
+    <p>Every basket carries a prize: 1× to 15× your bet, or the Par, Birdie or Eagle jackpot. Land 6 or more baskets anywhere and they lock in place. You get 3 spins where only the empty spots spin. Every new basket locks too and sets you back to 3 spins. When the spins run out you collect every basket on the screen.</p>
+    <p>Fill all 15 spots and you hit the ACE jackpot on top.</p>
     <p>Play testing only: free-play chips, never the campaign or the tournament.</p>
     <button class="ch-done" id="ch-sheetX" type="button">CLOSE</button>
   </div>
 </div>
 
-<div class="ch-bonus" id="ch-bonus" hidden>
-  <div class="ch-green">
-    <div class="ch-t">CHAIN RATTLE</div>
-    <div class="ch-bank" id="ch-bBank">0</div>
-    <div class="ch-ladder" id="ch-ladder"></div>
-    <div class="ch-basket" id="ch-basketBig"></div>
-    <div class="ch-meter" id="ch-meter"><div class="ch-zone" id="ch-zone"></div><div class="ch-needle" id="ch-needle"></div></div>
-    <div class="ch-note" id="ch-bNote">Stop the needle in the green</div>
-    <button class="ch-putt" id="ch-putt" type="button">PUTT</button>
-  </div>
-</div>
-</div>
-
-<!-- ================= CHILI LANTERNS (play testing) ================= -->
-<div class="screen" id="screen-lantern">
-<div class="cl-wrap">
-  <svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
-    <defs>
-      <radialGradient id="cl-g-lan" cx="40%" cy="35%" r="70%"><stop offset="0" stop-color="#FFB08A"/><stop offset=".45" stop-color="#F0301E"/><stop offset="1" stop-color="#7A0A06"/></radialGradient>
-      <radialGradient id="cl-g-glow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="rgba(255,150,60,.6)"/><stop offset="1" stop-color="rgba(255,150,60,0)"/></radialGradient>
-      <linearGradient id="cl-g-cap" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A0"/><stop offset="1" stop-color="#B8800E"/></linearGradient>
-      <radialGradient id="cl-g-coin" cx="40%" cy="30%" r="75%"><stop offset="0" stop-color="#FFF7CF"/><stop offset=".45" stop-color="#FFD255"/><stop offset="1" stop-color="#A86F0C"/></radialGradient>
-      <linearGradient id="cl-g-chili" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF9A7A"/><stop offset=".45" stop-color="#F0251A"/><stop offset="1" stop-color="#8A0A06"/></linearGradient>
-      <linearGradient id="cl-g-wok" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7E8A92"/><stop offset=".5" stop-color="#2E3438"/><stop offset="1" stop-color="#121516"/></linearGradient>
-      <linearGradient id="cl-g-fire" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#FF3A10"/><stop offset=".6" stop-color="#FFA21E"/><stop offset="1" stop-color="#FFE98A"/></linearGradient>
-      <linearGradient id="cl-g-bam" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2D08A"/><stop offset="1" stop-color="#A0702A"/></linearGradient>
-      <linearGradient id="cl-g-crack" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9A0E08"/><stop offset=".5" stop-color="#F0402A"/><stop offset="1" stop-color="#9A0E08"/></linearGradient>
-      <linearGradient id="cl-g-L-gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFF0B0"/><stop offset="1" stop-color="#D08A10"/></linearGradient>
-      <linearGradient id="cl-g-L-jade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8FFD0"/><stop offset="1" stop-color="#1E9A5E"/></linearGradient>
-      <linearGradient id="cl-g-L-blue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#A8D4FF"/><stop offset="1" stop-color="#2A64C8"/></linearGradient>
-      <linearGradient id="cl-g-L-pink" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFB0D0"/><stop offset="1" stop-color="#C8306E"/></linearGradient>
-    </defs>
-  </svg>
-
-  <div class="cl-bar">
-    <button class="wayout" id="cl-back" type="button" aria-label="Back to other games"><i>&#8249;</i><b>OTHER GAMES</b></button>
-    <div class="cl-pill"><span class="cl-lbl">BANKROLL</span><span class="cl-val" id="cl-bank">20,000</span></div>
-    <button class="cl-iconbtn" id="cl-paysBtn" type="button" aria-label="Pays and rules">
-      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.2v4"/><circle cx="8" cy="4.8" r=".6" fill="currentColor"/></svg>
-    </button>
-  </div>
-
-  <div class="cl-marquee">
-    <div class="cl-row1">
-      <svg viewBox="0 0 26 36" aria-hidden="true"><path d="M13 0v4" stroke="#E8B850" stroke-width="1.5"/><rect x="7" y="4" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><ellipse cx="13" cy="17" rx="11" ry="10" fill="url(#cl-g-lan)"/><rect x="7" y="26" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><path d="M13 29v6" stroke="#E8B850" stroke-width="1.5"/></svg>
-      <span class="cl-small">CHILI</span>
-      <svg viewBox="0 0 26 36" aria-hidden="true"><path d="M13 0v4" stroke="#E8B850" stroke-width="1.5"/><rect x="7" y="4" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><ellipse cx="13" cy="17" rx="11" ry="10" fill="url(#cl-g-lan)"/><rect x="7" y="26" width="12" height="3" rx="1" fill="url(#cl-g-cap)"/><path d="M13 29v6" stroke="#E8B850" stroke-width="1.5"/></svg>
-    </div>
-    <h1>LANTERNS</h1>
-    <div class="cl-tag">HOLD &amp; SPIN · 5 REELS · 25 LINES</div>
-  </div>
-
-  <div class="cl-jacks">
-    <div class="cl-jack cl-grand"><span class="cl-k">GRAND</span><span class="cl-v" id="cl-jpG">0</span></div>
-    <div class="cl-jack cl-major"><span class="cl-k">MAJOR</span><span class="cl-v" id="cl-jpM">0</span></div>
-    <div class="cl-jack cl-minor"><span class="cl-k">MINOR</span><span class="cl-v" id="cl-jpN">0</span></div>
-    <div class="cl-jack cl-mini"><span class="cl-k">MINI</span><span class="cl-v" id="cl-jpI">0</span></div>
-  </div>
-
-  <div class="cl-cabinet">
-    <div class="cl-window">
-      <div class="cl-reels" id="cl-reels"></div>
-      <div class="cl-hold" id="cl-hold" hidden></div>
-      <div class="cl-glass"></div>
-    </div>
-  </div>
-
-  <div class="cl-hud" id="cl-hud" hidden>
-    <div class="cl-spins" id="cl-spinsLeft"><span>SPINS</span><i></i><i></i><i></i></div>
-    <div class="cl-sum" id="cl-hsum">0</div>
-  </div>
-  <div class="cl-msg cl-quiet" id="cl-msg"><div class="cl-big">Good luck</div><div class="cl-small">6 lanterns start Hold &amp; Spin</div></div>
-
-  <div class="cl-console">
-    <div class="cl-deck">
-      <div class="cl-readout">
-        <div class="cl-k">TOTAL BET</div>
-        <div class="cl-stepper">
-          <button class="cl-step" id="cl-betDown" type="button" aria-label="Lower bet">&minus;</button>
-          <div class="cl-v" id="cl-betv">100</div>
-          <button class="cl-step" id="cl-betUp" type="button" aria-label="Raise bet">+</button>
-        </div>
-      </div>
-      <button class="cl-spin" id="cl-throw" type="button" aria-label="Spin">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 4v5h-5"/></svg>
-        <b>SPIN</b>
-      </button>
-      <div class="cl-readout cl-win"><div class="cl-k">WIN</div><div class="cl-v" id="cl-winv">0</div></div>
-    </div>
-    <div class="cl-chips">
-      <button class="cl-chip" id="cl-fast" type="button">TURBO</button>
-      <button class="cl-chip" id="cl-sound" type="button">SOUND</button>
-      <button class="cl-chip" id="cl-reset" type="button">BUY BACK IN</button>
-    </div>
-    <div class="cl-stats" id="cl-stats">0 spins</div>
-  </div>
-</div>
-
-<div class="cl-sheet" id="cl-sheet" hidden>
-  <div class="cl-panel">
-    <h2>PAYS &amp; RULES</h2>
-    <p>25 lines, paid left to right from the first reel. Amounts are for your current total bet.</p>
-    <div class="cl-pt" id="cl-pt"></div>
-    <h3>WILD</h3>
-    <p>The chili lands on reels 2, 3 and 4 and stands in for every symbol except the lantern.</p>
-    <h3>HOLD &amp; SPIN</h3>
-    <p>Every lantern carries a prize: 1× to 15× your bet, or the Mini, Minor or Major jackpot. Land 6 or more lanterns anywhere and they lock in place. You get 3 spins where only the empty spots spin. Every new lantern locks too and sets you back to 3 spins. When the spins run out you collect every lantern on the screen.</p>
-    <p>Fill all 15 spots and you win the GRAND on top.</p>
-    <p>Play testing only: free-play chips, never the campaign or the tournament.</p>
-    <button class="cl-done" id="cl-sheetX" type="button">CLOSE</button>
-  </div>
-</div>
-
-<div class="cl-flash" id="cl-flash" hidden><div class="cl-s" id="cl-flashS">HOLD &amp; SPIN</div><div class="cl-t" id="cl-flashT">LANTERNS!</div><div class="cl-n" id="cl-flashN"></div></div>
+<div class="ch-flash" id="ch-flash" hidden><div class="ch-s" id="ch-flashS">HOLD &amp; SPIN</div><div class="ch-t" id="ch-flashT">CHAINS!</div><div class="ch-n" id="ch-flashN"></div></div>
 </div>
 
 <!-- ================= SETTINGS ================= -->
@@ -5283,17 +4961,8 @@
         <span class="art"><svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="omcbg" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#16402A"/><stop offset="1" stop-color="#04100A"/></radialGradient><radialGradient id="omcg" cx=".4" cy=".3" r=".75"><stop offset="0" stop-color="#FFF7CF"/><stop offset=".45" stop-color="#FFD255"/><stop offset="1" stop-color="#A86F0C"/></radialGradient><linearGradient id="omcf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE7A1"/><stop offset=".5" stop-color="#8A6A1F"/><stop offset="1" stop-color="#F4D27C"/></linearGradient></defs><rect width="102" height="78" fill="url(#omcbg)"/><rect x="7" y="13" width="88" height="52" rx="8" fill="#06100B" stroke="url(#omcf)" stroke-width="2.5"/><rect x="12" y="18" width="24" height="42" rx="4" fill="#123222"/><rect x="39" y="18" width="24" height="42" rx="4" fill="#123222"/><rect x="66" y="18" width="24" height="42" rx="4" fill="#123222"/><ellipse cx="24" cy="40" rx="10" ry="5.5" fill="#E8457F"/><ellipse cx="24" cy="38" rx="10" ry="5.5" fill="#FF7FAF"/><circle cx="51" cy="39" r="10" fill="url(#omcg)" stroke="#6E4A06" stroke-width="1"/><text x="51" y="42.5" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="8" fill="#5A3A00">ACE</text><path d="M78 27 l7 10 h-4 l6 9 h-18 l6 -9 h-4z" fill="#2E9E57"/><rect x="76.5" y="46" width="3" height="5" fill="#7A5232"/><path d="M10 39 h82" stroke="#FFD866" stroke-width="1.5" opacity=".8"/></svg></span>
         <span class="txt">
           <span class="nm">CHAIN REACTION</span>
-          <span class="l1">DISC GOLF SLOT · 25 LINES</span>
-          <span class="l2">PLAY TESTING ONLY · PUTT FOR THE ACE</span>
-        </span>
-        <span class="play">PLAY</span>
-      </button>
-      <button class="cm-plate" id="om-lantern" style="--c:#FF6A3A; display:none" aria-label="Chili Lanterns slot, play testing only">
-        <span class="art"><svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="omlbg" cx=".5" cy=".45" r=".8"><stop offset="0" stop-color="#5A140C"/><stop offset="1" stop-color="#120302"/></radialGradient><radialGradient id="omll" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#FFB08A"/><stop offset=".45" stop-color="#F0301E"/><stop offset="1" stop-color="#7A0A06"/></radialGradient><radialGradient id="omlg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="rgba(255,150,60,.55)"/><stop offset="1" stop-color="rgba(255,150,60,0)"/></radialGradient><linearGradient id="omlc" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFE9A0"/><stop offset="1" stop-color="#B8800E"/></linearGradient></defs><rect width="102" height="78" fill="url(#omlbg)"/><g transform="translate(20 14) scale(.62)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/></g><g transform="translate(36 6) scale(.9)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/><text x="26" y="40" text-anchor="middle" font-family="Arial Black, Arial" font-weight="900" font-size="11" fill="#FFF2D6">MAJOR</text></g><g transform="translate(66 18) scale(.55)"><circle cx="26" cy="38" r="34" fill="url(#omlg)"/><path d="M26 0v6" stroke="#E8B850" stroke-width="2"/><rect x="14" y="6" width="24" height="6" rx="2" fill="url(#omlc)"/><ellipse cx="26" cy="34" rx="24" ry="22" fill="url(#omll)"/><rect x="14" y="55" width="24" height="6" rx="2" fill="url(#omlc)"/><path d="M26 61v10" stroke="#E8B850" stroke-width="2"/></g></svg></span>
-        <span class="txt">
-          <span class="nm">CHILI LANTERNS</span>
-          <span class="l1">HOLD &amp; SPIN SLOT · 25 LINES</span>
-          <span class="l2">PLAY TESTING ONLY · FILL 15 FOR THE GRAND</span>
+          <span class="l1">DISC GOLF · HOLD &amp; SPIN · 25 LINES</span>
+          <span class="l2">PLAY TESTING ONLY · FILL 15 FOR THE ACE</span>
         </span>
         <span class="play">PLAY</span>
       </button>
@@ -8289,13 +7958,13 @@
     var TABLES = { holdem: "Holdem", djwild: "DjWild", shootout: "Shootout", miniuth: "MiniUth",
       iluvsuits: "IluvSuits", destroyer: "Destroyer", sicbo: "SicBo", roulette: "Roulette",
       wheel: "Wheel", keno: "Keno", mines: "Mines", blackjack: "Blackjack", doubledown: "DoubleDown",
-      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps", kirby: "Kirby", chain: "ChainSlot", lantern: "LanternSlot" };
+      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps", kirby: "Kirby", chain: "ChainSlot" };
     // the tables are set up further down the page, so look them up on the tap
     function games() {
       return { Holdem: Holdem, DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth,
         IluvSuits: IluvSuits, Destroyer: Destroyer, SicBo: SicBo, Roulette: Roulette, Wheel: Wheel,
         Keno: Keno, Mines: Mines, Blackjack: Blackjack, DoubleDown: DoubleDown, Baccarat: Baccarat,
-        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps, Kirby: Kirby, ChainSlot: ChainSlot, LanternSlot: LanternSlot };
+        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps, Kirby: Kirby, ChainSlot: ChainSlot };
     }
     var tip = null, hide = null;
     function say(text) {
@@ -8835,18 +8504,16 @@
     };
   })();
   /* ============================================================
-     CHAIN REACTION — the disc golf slot, play testing only
+     CHAIN REACTION — the disc golf hold & spin slot, play testing only
      ============================================================ */
 // Chain Reaction engine: shared by the page and the simulation.
   var CHX = (function () {
-  var SYMS = ["ACE","GOLD","PINK","BLUE","TREE","A","K","Q","J","10","BASKET"];
-  var PAY = { ACE:[110,550,2500], GOLD:[65,240,1000], PINK:[45,165,650], BLUE:[35,120,450], TREE:[28,85,330],
-              A:[17,55,165], K:[16,50,155], Q:[11,38,120], J:[11,33,100], "10":[11,28,85] };
-  // weights per reel; ACE (wild) only on reels 2-4
+  var PAY = { ACE:[150,750,3000], GOLD:[100,380,1500], PINK:[80,260,1000], BLUE:[65,200,750], TREE:[50,150,500],
+              A:[26,80,260], K:[26,80,260], Q:[21,65,210], J:[21,52,180], "10":[16,46,155], "9":[16,40,130] };
   var W = {
-    ACE:[0,6,6,6,0], GOLD:[4,4,4,4,4], PINK:[6,6,6,6,6], BLUE:[8,8,8,8,8], TREE:[10,10,10,10,10],
-    A:[13,13,13,13,13], K:[13,13,13,13,13], Q:[15,15,15,15,15], J:[15,15,15,15,15], "10":[15,15,15,15,15],
-    BASKET:[3.1,3.1,3.1,3.1,3.1]
+    ACE:[0,4,4,4,0], GOLD:[4,4,4,4,4], PINK:[5,5,5,5,5], BLUE:[6,6,6,6,6], TREE:[7,7,7,7,7],
+    A:[11,11,11,11,11], K:[11,11,11,11,11], Q:[12,12,12,12,12], J:[12,12,12,12,12], "10":[13,13,13,13,13], "9":[13,13,13,13,13],
+    BASKET:[15,15,15,15,15]
   };
   var LINES = [
     [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
@@ -8855,27 +8522,27 @@
     [1,1,0,1,1],[1,1,2,1,1],[0,0,2,0,0],[2,2,0,2,2],[0,2,0,2,0],
     [2,0,2,0,2],[1,0,2,0,1],[1,2,0,2,1],[0,2,2,2,0],[2,0,0,0,2]
   ];
-  var BONUS_START = { 3: 5, 4: 15, 5: 50 };      // × total bet, on landing
-  var PUTTS = [ { ft: 10, pay: 10, zone: 0.24, speed: 1.0 },
-                { ft: 20, pay: 30, zone: 0.14, speed: 1.35 },
-                { ft: 30, pay: 150, zone: 0.07, speed: 1.75 } ];   // × total bet
+  // what a basket carries, in total bets (PAR/BIRDIE/EAGLE are the jackpot baskets)
+  var VALUES = [[1,30],[2,24],[3,16],[4,10],[5,8],[8,5],[10,3],[15,2],["PAR",2.4],["BIRDIE",0.9],["EAGLE",0.12]];
+  var JACK = { PAR: 10, BIRDIE: 30, EAGLE: 150, GRAND: 1000 };
+  var TRIGGER = 6, RESPIN_HIT = 0.07;
+  function wpick(t, rnd) { var tot = 0, i; for (i = 0; i < t.length; i++) tot += t[i][1]; var r = rnd() * tot;
+    for (i = 0; i < t.length; i++) { r -= t[i][1]; if (r < 0) return t[i][0]; } return t[0][0]; }
   function pick(reel, rnd) {
-    var tot = 0, k;
-    for (k in W) tot += W[k][reel];
-    var r = rnd() * tot;
-    for (k in W) { r -= W[k][reel]; if (r < 0) return k; }
-    return "10";
+    var tot = 0, k; for (k in W) tot += W[k][reel];
+    var r = rnd() * tot; for (k in W) { r -= W[k][reel]; if (r < 0) return k; } return "9";
   }
+  function basketValue(rnd) { return wpick(VALUES, rnd); }
+  /** g[col][row] = {s, v} */
   function spin(rnd) {
     var g = [];
-    for (var c = 0; c < 5; c++) { g.push([pick(c, rnd), pick(c, rnd), pick(c, rnd)]); }
-    return g;   // g[col][row]
+    for (var c = 0; c < 5; c++) { var col = []; for (var r = 0; r < 3; r++) { var s = pick(c, rnd); col.push({ s: s, v: s === "BASKET" ? basketValue(rnd) : null }); } g.push(col); }
+    return g;
   }
-  /** Line wins (in line-bet units) and the scatter count. */
   function evaluate(g) {
     var wins = [];
     for (var l = 0; l < LINES.length; l++) {
-      var L = LINES[l], syms = L.map(function (row, col) { return g[col][row]; });
+      var L = LINES[l], syms = L.map(function (row, col) { return g[col][row].s; });
       var base = null, n = 0;
       for (var i = 0; i < 5; i++) {
         var s = syms[i];
@@ -8885,26 +8552,27 @@
         if (s === base) { n++; continue; }
         break;
       }
-      // all wilds, or wilds then a symbol: pay the better of the two readings
       var best = 0, sym = null, cnt = 0;
       if (n >= 3 && base) { best = PAY[base][n - 3]; sym = base; cnt = n; }
       var w = 0; while (w < 5 && syms[w] === "ACE") w++;
       if (w >= 3 && PAY.ACE[w - 3] > best) { best = PAY.ACE[w - 3]; sym = "ACE"; cnt = w; }
       if (best) wins.push({ line: l, sym: sym, count: cnt, pay: best });
     }
-    var scat = 0;
-    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (g[c][r] === "BASKET") scat++;
-    return { wins: wins, scatters: scat };
+    var baskets = 0;
+    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (g[c][r].s === "BASKET") baskets++;
+    return { wins: wins, baskets: baskets };
   }
-  return { SYMS: SYMS, PAY: PAY, LINES: LINES, BONUS_START: BONUS_START, PUTTS: PUTTS, spin: spin, evaluate: evaluate };
+  function valueX(v) { return typeof v === "number" ? v : JACK[v]; }
+  return { PAY: PAY, LINES: LINES, VALUES: VALUES, JACK: JACK, TRIGGER: TRIGGER, RESPIN_HIT: RESPIN_HIT,
+           spin: spin, evaluate: evaluate, basketValue: basketValue, valueX: valueX };
 })();
   var ChainSlot = (function () {
   var root = document.getElementById("screen-chain");
   var BETS = [25, 50, 100, 250, 500, 1000, 2500];
   var fmt = function (n) { return Math.round(n).toLocaleString("en-US"); };
   var store = {
-    get: function (k, d) { try { var v = localStorage.getItem("cr." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set: function (k, v) { try { localStorage.setItem("cr." + k, JSON.stringify(v)); } catch (e) {} }
+    get: function (k, d) { try { var v = localStorage.getItem("cr2." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem("cr2." + k, JSON.stringify(v)); } catch (e) {} }
   };
   var bank = FREEPLAY.buyIn, bet = store.get("bet", 100), fast = store.get("fast", false);
   var stats = store.get("stats", { spins: 0, in: 0, out: 0, bonuses: 0, best: 0 });
@@ -8965,9 +8633,15 @@
   var ART = {
     ACE: WILD, GOLD: disc("g-orange", STAMP_STAR), PINK: disc("g-pink", STAMP_BOLT), BLUE: disc("g-blue", STAMP_RING),
     TREE: TREE, BASKET: BASKET,
-    A: letter("A", "g-L-red"), K: letter("K", "g-L-blue"), Q: letter("Q", "g-L-purple"), J: letter("J", "g-L-green"), "10": letter("10", "g-L-orange")
+    A: letter("A", "g-L-red"), K: letter("K", "g-L-blue"), Q: letter("Q", "g-L-purple"), J: letter("J", "g-L-green"), "10": letter("10", "g-L-orange"), "9": letter("9", "g-L-green")
   };
-  var NAMES = { ACE: "Ace", GOLD: "Driver", PINK: "Midrange", BLUE: "Putter", TREE: "Tree", A: "A", K: "K", Q: "Q", J: "J", "10": "10" };
+  var NAMES = { ACE: "Ace", GOLD: "Driver", PINK: "Midrange", BLUE: "Putter", TREE: "Tree", A: "A", K: "K", Q: "Q", J: "J", "10": "10", "9": "9" };
+
+  function amtHtml(v) {
+    if (v === null || v === undefined) return "";
+    if (typeof v === "number") return '<div class="ch-amt">' + fmt(v * bet) + "</div>";
+    return '<div class="ch-amt ch-jp">' + v + "</div>";
+  }
 
   // ---------- sound (only after the player turns it on) ----------
   var ac = null;
@@ -8979,8 +8653,9 @@
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t0 + dur);
     o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.02);
   }
-  function chains() { for (var i = 0; i < 16; i++) tone(2400 + Math.random() * 2600, i * 0.025 + Math.random() * 0.02, 0.09, "square", 0.022); }
+  function gong() { for (var i = 0; i < 16; i++) tone(2400 + Math.random() * 2600, i * 0.025 + Math.random() * 0.02, 0.09, "square", 0.022); }
   function stopClick() { tone(160, 0, 0.07, "square", 0.05); }
+  function ding() { tone(1320, 0, 0.25, "triangle", 0.07); tone(1760, 0.06, 0.25, "triangle", 0.05); }
   function winJingle() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, i * 0.08, 0.2, "triangle", 0.06); }); }
 
   // ---------- build ----------
@@ -8996,18 +8671,17 @@
     svg.setAttribute("class", "ch-lines"); svg.id = "ch-lines"; svg.setAttribute("aria-hidden", "true");
     host.appendChild(svg);
   }
-  function cellHtml(sym) { return '<div class="ch-cell" data-s="' + sym + '">' + ART[sym] + "</div>"; }
-  function setStrip(c, syms) {
+  function cellHtml(x) { return '<div class="ch-cell" data-s="' + x.s + '">' + ART[x.s] + amtHtml(x.v) + "</div>"; }
+  function setStrip(c, col) {
     strips[c].classList.remove("ch-blur");
-    strips[c].innerHTML = syms.map(cellHtml).join(""); strips[c].style.transition = "none"; strips[c].style.transform = "translateY(0)";
+    strips[c].innerHTML = col.map(cellHtml).join(""); strips[c].style.transition = "none"; strips[c].style.transform = "translateY(0)";
   }
 
   function paint() {
     $("ch-bank").textContent = fmt(bank);
     $("ch-betv").textContent = fmt(bet);
-    $("ch-jp0").textContent = fmt(bet * CHX.PUTTS[0].pay);
-    $("ch-jp1").textContent = fmt(bet * CHX.PUTTS[1].pay);
-    $("ch-jp2").textContent = fmt(bet * CHX.PUTTS[2].pay);
+    $("ch-jpG").textContent = fmt(bet * CHX.JACK.GRAND); $("ch-jpM").textContent = fmt(bet * CHX.JACK.EAGLE);
+    $("ch-jpN").textContent = fmt(bet * CHX.JACK.BIRDIE); $("ch-jpI").textContent = fmt(bet * CHX.JACK.PAR);
     var i = BETS.indexOf(bet);
     $("ch-betDown").disabled = busy || i <= 0;
     $("ch-betUp").disabled = busy || i >= BETS.length - 1 || BETS[i + 1] > bank;
@@ -9016,7 +8690,7 @@
     $("ch-fast").classList.toggle("ch-on", fast);
     $("ch-sound").classList.toggle("ch-on", soundOn);
     var rtp = stats.in ? (100 * stats.out / stats.in).toFixed(1) + "% back" : "no spins yet";
-    $("ch-stats").textContent = fmt(stats.spins) + " spins · " + rtp + " · " + stats.bonuses + " bonus" + (stats.bonuses === 1 ? "" : "es") +
+    $("ch-stats").textContent = fmt(stats.spins) + " spins · " + rtp + " · " + stats.bonuses + " feature" + (stats.bonuses === 1 ? "" : "s") +
       (stats.best ? " · best win " + fmt(stats.best) : "");
     if (bet > bank && bank >= BETS[0]) { for (var j = BETS.length - 1; j >= 0; j--) if (BETS[j] <= bank) { bet = BETS[j]; break; } paint(); }
   }
@@ -9024,12 +8698,12 @@
     $("ch-msg").className = "ch-msg" + (mode ? " ch-" + mode : "");
     $("ch-msg").innerHTML = '<div class="ch-big">' + big + '</div><div class="ch-small">' + (small || "&nbsp;") + "</div>";
   }
-  function countUp(el, to, ms, prefix) {
+  function countUp(el, to, ms) {
     cancelAnimationFrame(countRaf);
     var t0 = performance.now();
     var step = function (now) {
       var k = Math.min(1, (now - t0) / ms), v = Math.round(to * (1 - Math.pow(1 - k, 3)));
-      el.textContent = (prefix || "") + fmt(v);
+      el.textContent = fmt(v);
       if (k < 1) countRaf = requestAnimationFrame(step);
     };
     countRaf = requestAnimationFrame(step);
@@ -9037,7 +8711,7 @@
   function save() { store.set("stats", stats); }
 
   // ---------- spin ----------
-  function randSym(c) { return CHX.spin(Math.random)[c][0]; }
+  function randCell(c) { return CHX.spin(Math.random)[c][0]; }
   function throwDisc() {
     if (busy || bank < bet) return;
     busy = true; clearInterval(showTimer); clearLines();
@@ -9049,13 +8723,13 @@
     var h = reels[0].getBoundingClientRect().height / 3;
     var base = fast ? 520 : 1240, gap = fast ? 220 : 460;
     for (var c = 0; c < 5; c++) {
-      var n = (fast ? 16 : 34) + c * (fast ? 5 : 9), syms = [];
-      for (var i = 0; i < n; i++) syms.push(randSym(c));
-      var stripSyms = grid[c].concat(syms).concat(currentCol(c));
-      strips[c].innerHTML = stripSyms.map(cellHtml).join("");
+      var n = (fast ? 16 : 34) + c * (fast ? 5 : 9), col = [];
+      for (var i = 0; i < n; i++) col.push(randCell(c));
+      var stripCells = grid[c].concat(col).concat(currentCol(c));
+      strips[c].innerHTML = stripCells.map(cellHtml).join("");
       strips[c].classList.add("ch-blur");
       strips[c].style.transition = "none";
-      strips[c].style.transform = "translateY(" + (-(stripSyms.length - 3) * h) + "px)";
+      strips[c].style.transform = "translateY(" + (-(stripCells.length - 3) * h) + "px)";
       void strips[c].offsetHeight;
       var dur = base + c * gap;
       strips[c].style.transition = "transform " + dur + "ms cubic-bezier(.12,.55,.22,1.04)";
@@ -9066,11 +8740,8 @@
       })(c, dur);
     }
   }
-  function currentCol(c) {
-    var out = [], kids = strips[c].children;
-    for (var i = 0; i < 3 && i < kids.length; i++) out.push(kids[i].dataset.s);
-    return out.length === 3 ? out : [randSym(c), randSym(c), randSym(c)];
-  }
+  var lastCols = [];
+  function currentCol(c) { return lastCols[c] || [randCell(c), randCell(c), randCell(c)]; }
   function cellAt(c, r) { return strips[c].children[r]; }
   function clearLines() {
     $("ch-lines").innerHTML = "";
@@ -9089,10 +8760,10 @@
     $("ch-lines").innerHTML = '<polyline points="' + pts.join(" ") + '"/>';
   }
   function landed() {
+    lastCols = grid;
     var e = CHX.evaluate(grid), lineBet = bet / 25, total = 0;
     e.wins.forEach(function (w) { total += w.pay * lineBet; });
     total = Math.round(total);
-    var baskets = e.scatters;
     if (total > 0) {
       bank += total; stats.out += total; stats.best = Math.max(stats.best, total); save();
       var top = e.wins.slice().sort(function (a, b) { return b.pay - a.pay; })[0];
@@ -9101,96 +8772,99 @@
       countUp($("ch-winv"), total, Math.min(1600, 400 + x * 60));
       winJingle();
       var i = 0; showWin(e.wins[0]);
-      if (e.wins.length > 1) showTimer = setInterval(function () { i = (i + 1) % e.wins.length; showWin(e.wins[i]); }, 1200);
-    } else if (baskets < 3) {
-      say(baskets === 2 ? "2 baskets — so close" : "No win", "", "quiet");
+      if (e.wins.length > 1 && e.baskets < CHX.TRIGGER) showTimer = setInterval(function () { i = (i + 1) % e.wins.length; showWin(e.wins[i]); }, 1200);
+    } else if (e.baskets < CHX.TRIGGER) {
+      say(e.baskets >= 4 ? e.baskets + " baskets — so close" : "No win", e.baskets >= 4 ? "6 start Hold & Spin" : "", "quiet");
     }
-    if (baskets >= 3) {
-      for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (grid[c][r] === "BASKET") cellAt(c, r).classList.add("ch-hit");
-      say("CHAIN RATTLE!", baskets + " baskets", "bonus");
-      chains();
-      setTimeout(function () { startBonus(Math.min(5, baskets), total); }, 1500);
+    if (e.baskets >= CHX.TRIGGER) {
+      clearLines(); clearInterval(showTimer);
+      for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (grid[c][r].s === "BASKET") cellAt(c, r).classList.add("ch-hit");
+      say(e.baskets + " BASKETS!", "Hold & Spin", "bonus");
+      gong();
+      setTimeout(function () { startHold(total); }, 1500);
       return;
     }
     busy = false; paint();
   }
 
-  // ---------- Chain Rattle ----------
-  var B = null, raf = 0, RUNG = ["PAR", "BIRDIE", "ACE"];
-  function startBonus(n, lineWin) {
-    stats.bonuses++; save();
-    B = { won: CHX.BONUS_START[n] * bet, step: 0, results: [], lineWin: lineWin, moving: false };
-    bank += B.won; stats.out += B.won; save();
-    $("ch-basketBig").innerHTML = BASKET;
-    $("ch-bonus").hidden = false;
-    $("ch-bNote").textContent = n + " baskets pay " + CHX.BONUS_START[n] + "× to start. Stop the needle in the green.";
-    paintBonus();
-    setupPutt();
+  // ---------- Hold & Spin ----------
+  var H = null;
+  function hcellHtml(v, fresh) {
+    return v === null ? "" : ART.BASKET + amtHtml(v);
   }
-  function paintBonus() {
-    $("ch-bBank").textContent = "$" + fmt(B.won);
-    $("ch-ladder").innerHTML = CHX.PUTTS.map(function (p, i) {
-      var cls = B.results[i] === true ? "ch-made" : B.results[i] === false ? "ch-miss" : i === B.step ? "ch-now" : "";
-      return '<div class="ch-rung ' + cls + '"><div class="ch-nm">' + RUNG[i] + '</div><div class="ch-ft">' + p.ft + ' FT</div><div class="ch-p">+' + fmt(p.pay * bet) + "</div></div>";
-    }).join("");
-  }
-  function setupPutt() {
-    var p = CHX.PUTTS[B.step];
-    var left = 0.12 + Math.random() * (0.76 - p.zone);
-    B.zone = [left, left + p.zone];
-    $("ch-zone").style.left = (left * 100) + "%"; $("ch-zone").style.width = (p.zone * 100) + "%";
-    $("ch-putt").disabled = false; $("ch-putt").textContent = "PUTT " + p.ft + " FT";
-    B.moving = true; B.t0 = performance.now(); B.speed = p.speed;
-    cancelAnimationFrame(raf);
-    var tick = function (now) {
-      if (!B || !B.moving) return;
-      var t = (now - B.t0) / 1000 * B.speed * 0.9;
-      B.pos = 0.5 - 0.5 * Math.cos(t * Math.PI);
-      $("ch-needle").style.left = (B.pos * 100) + "%";
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-  }
-  function putt() {
-    if (!B || !B.moving) return;
-    B.moving = false; cancelAnimationFrame(raf);
-    $("ch-putt").disabled = true;
-    var made = B.pos >= B.zone[0] && B.pos <= B.zone[1], p = CHX.PUTTS[B.step];
-    B.results[B.step] = made;
-    if (made) {
-      var add = p.pay * bet; B.won += add; bank += add; stats.out += add; save();
-      $("ch-basketBig").classList.remove("ch-rattle"); void $("ch-basketBig").offsetWidth; $("ch-basketBig").classList.add("ch-rattle");
-      chains();
-      $("ch-bNote").textContent = RUNG[B.step] + "! +" + fmt(add);
-      B.step++;
-      paintBonus();
-      if (B.step < CHX.PUTTS.length) setTimeout(function () { $("ch-bNote").textContent = "Next up: " + CHX.PUTTS[B.step].ft + " feet. The green shrinks."; setupPutt(); }, 1400);
-      else setTimeout(endBonus, 1800);
-    } else {
-      $("ch-bNote").textContent = "Spit out. The bonus is over.";
-      tone(130, 0, 0.35, "sawtooth", 0.05);
-      paintBonus();
-      setTimeout(endBonus, 1600);
+  function paintHold() {
+    var host = $("ch-hold"); host.innerHTML = "";
+    for (var k = 0; k < 15; k++) {
+      var d = document.createElement("div");
+      d.className = "ch-hcell" + (H.cells[k] !== null ? " ch-locked" : "") + (H.spinning && H.cells[k] === null ? " ch-spinning" : "") + (H.fresh[k] ? " ch-fresh" : "");
+      d.innerHTML = hcellHtml(H.cells[k]);
+      host.appendChild(d);
     }
+    var dots = $("ch-spinsLeft").querySelectorAll("i");
+    for (var i = 0; i < 3; i++) dots[i].classList.toggle("ch-on", i < H.left);
+    var sum = 0; H.cells.forEach(function (v) { if (v !== null) sum += CHX.valueX(v) * bet; });
+    $("ch-hsum").textContent = "$" + fmt(sum);
   }
-  function endBonus() {
-    var total = B.won + B.lineWin;
+  function flash(sub, title, num, ms, then) {
+    $("ch-flashS").textContent = sub; $("ch-flashT").textContent = title; $("ch-flashN").textContent = num || "";
+    $("ch-flash").hidden = false;
+    setTimeout(function () { $("ch-flash").hidden = true; if (then) then(); }, ms);
+  }
+  function startHold(lineWin) {
+    stats.bonuses++; save();
+    // grid is [col][row]; the hold grid reads row by row
+    var cells = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 5; c++) cells.push(grid[c][r].s === "BASKET" ? grid[c][r].v : null);
+    H = { cells: cells, left: 3, lineWin: lineWin, fresh: [], spinning: false };
+    flash("HOLD & SPIN", "CHAINS!", "3 SPINS · NEW BASKETS RESET THEM", 1800, function () {
+      $("ch-hold").hidden = false; $("ch-hud").hidden = false;
+      say("Baskets lock in place", "Every new basket resets you to 3 spins", "bonus");
+      paintHold();
+      setTimeout(respin, 900);
+    });
+  }
+  function respin() {
+    if (!H) return;
+    H.fresh = []; H.spinning = true; paintHold();
+    var dur = fast ? 700 : 1300;
+    setTimeout(function () {
+      var hit = false;
+      for (var k = 0; k < 15; k++) if (H.cells[k] === null && Math.random() < CHX.RESPIN_HIT) { H.cells[k] = CHX.basketValue(Math.random); H.fresh[k] = true; hit = true; }
+      H.spinning = false;
+      H.left = hit ? 3 : H.left - 1;
+      paintHold();
+      if (hit) ding(); else stopClick();
+      var full = H.cells.every(function (v) { return v !== null; });
+      if (full || H.left === 0) setTimeout(endHold, 1100);
+      else setTimeout(respin, hit ? 1000 : 700);
+    }, dur);
+  }
+  function endHold() {
+    var sum = 0, full = H.cells.every(function (v) { return v !== null; }), jps = [];
+    H.cells.forEach(function (v) { if (v !== null) { sum += CHX.valueX(v) * bet; if (typeof v !== "number") jps.push(v); } });
+    if (full) { sum += CHX.JACK.GRAND * bet; jps.push("ACE"); }
+    sum = Math.round(sum);
+    bank += sum; stats.out += sum;
+    var total = sum + H.lineWin;
     stats.best = Math.max(stats.best, total); save();
-    $("ch-bonus").hidden = true;
-    countUp($("ch-winv"), total, 1400);
-    say("CHAIN RATTLE " + fmt(B.won), B.results.filter(Boolean).length + " of 3 putts made", "bonus");
-    B = null; busy = false; paint();
+    gong();
+    flash(full ? "ALL 15 FILLED" : "HOLD & SPIN PAYS", full ? "ACE!" : jps.length ? jps[jps.length - 1] + "!" : "COLLECT", "$" + fmt(sum), 2400, function () {
+      $("ch-hold").hidden = true; $("ch-hud").hidden = true;
+      countUp($("ch-winv"), total, 1400);
+      var n = H.cells.filter(function (v) { return v !== null; }).length;
+      say("BASKETS PAY " + fmt(sum), n + " of 15 baskets" + (jps.length ? " · " + jps.join(", ") : ""), "bonus");
+      H = null; busy = false; paint();
+    });
   }
 
   // ---------- pay table ----------
   function paintPays() {
     var lb = bet / 25, rows = [];
-    ["ACE", "GOLD", "PINK", "BLUE", "TREE", "A", "K", "Q", "J", "10"].forEach(function (s) {
+    ["ACE", "GOLD", "PINK", "BLUE", "TREE", "A", "K", "Q", "J", "10", "9"].forEach(function (s) {
       rows.push('<div class="ch-row"><div class="ch-ic">' + ART[s] + '</div><div class="ch-pays">' +
-        CHX.PAY[s].map(function (v, i) { return "<span>" + (5 - i === 5 ? "" : "") + (i + 3) + "×</span><span>" + fmt(v * lb) + "</span>"; }).reverse().join("") + "</div></div>");
+        CHX.PAY[s].map(function (v, i) { return "<span>" + (i + 3) + "×</span><span>" + fmt(v * lb) + "</span>"; }).reverse().join("") + "</div></div>");
     });
-    rows.push('<div class="ch-row"><div class="ch-ic">' + BASKET + '</div><div class="ch-pays">' +
-      [[5, 50], [4, 15], [3, 5]].map(function (m) { return "<span>" + m[0] + "×</span><span>" + fmt(m[1] * bet) + "</span>"; }).join("") + "</div></div>");
+    rows.push('<div class="ch-row"><div class="ch-ic">' + ART.BASKET + '</div><div class="ch-pays"><span>6+</span><span>HOLD &amp; SPIN</span></div></div>');
     $("ch-pt").innerHTML = rows.join("");
   }
 
@@ -9198,18 +8872,16 @@
   $("ch-throw").addEventListener("click", throwDisc);
   document.addEventListener("keydown", function (e) {
     if (e.code !== "Space" || !root.classList.contains("on")) return;
-    if (!$("ch-bonus").hidden) { e.preventDefault(); putt(); }
-    else if ($("ch-sheet").hidden) { e.preventDefault(); throwDisc(); }
+    if ($("ch-sheet").hidden) { e.preventDefault(); throwDisc(); }
   });
   $("ch-betDown").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i > 0) { bet = BETS[i - 1]; store.set("bet", bet); paint(); } });
   $("ch-betUp").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i < BETS.length - 1 && BETS[i + 1] <= bank) { bet = BETS[i + 1]; store.set("bet", bet); paint(); } });
-  $("ch-putt").addEventListener("click", putt);
   $("ch-fast").addEventListener("click", function () { fast = !fast; store.set("fast", fast); paint(); });
   $("ch-sound").addEventListener("click", function () {
     soundOn = !soundOn;
     if (soundOn && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { soundOn = false; } }
     if (ac && ac.state === "suspended") ac.resume();
-    paint(); if (soundOn) winJingle();
+    paint(); if (soundOn) ding();
   });
   $("ch-reset").addEventListener("click", function () {
     if (busy) return;
@@ -9227,7 +8899,7 @@
     bank = FREEPLAY.buyIn;
     clearInterval(showTimer); clearLines();
     $("ch-winv").textContent = "0";
-    say("Good luck", "3 baskets anywhere start the Chain Rattle bonus", "quiet");
+    say("Good luck", "6 baskets start Hold & Spin", "quiet");
     paint();
   }
   $("om-chain").addEventListener("click", function () { enter(); Shell.show("chain"); });
@@ -9239,423 +8911,6 @@
   };
   build();
   var first = CHX.spin(Math.random);
-  for (var c = 0; c < 5; c++) setStrip(c, first[c]);
-  if (BETS.indexOf(bet) < 0) bet = 100;
-  paint();
-  return { enter: enter, busy: function () { return busy; } };
-})();
-  /* ============================================================
-     CHILI LANTERNS — the hold & spin slot, play testing only
-     ============================================================ */
-// Chili Lanterns engine: shared by the page and the simulation.
-  var LNX = (function () {
-  var PAY = { WILD:[150,750,3000], WOK:[100,380,1500], DUMP:[80,260,1000], CRACK:[65,200,750], COIN:[50,150,500],
-              A:[26,80,260], K:[26,80,260], Q:[21,65,210], J:[21,52,180], "10":[16,46,155], "9":[16,40,130] };
-  var W = {
-    WILD:[0,4,4,4,0], WOK:[4,4,4,4,4], DUMP:[5,5,5,5,5], CRACK:[6,6,6,6,6], COIN:[7,7,7,7,7],
-    A:[11,11,11,11,11], K:[11,11,11,11,11], Q:[12,12,12,12,12], J:[12,12,12,12,12], "10":[13,13,13,13,13], "9":[13,13,13,13,13],
-    LANTERN:[15,15,15,15,15]
-  };
-  var LINES = [
-    [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
-    [0,0,1,2,2],[2,2,1,0,0],[1,0,0,0,1],[1,2,2,2,1],[1,0,1,2,1],
-    [1,2,1,0,1],[0,1,1,1,0],[2,1,1,1,2],[0,1,0,1,0],[2,1,2,1,2],
-    [1,1,0,1,1],[1,1,2,1,1],[0,0,2,0,0],[2,2,0,2,2],[0,2,0,2,0],
-    [2,0,2,0,2],[1,0,2,0,1],[1,2,0,2,1],[0,2,2,2,0],[2,0,0,0,2]
-  ];
-  // what a lantern carries, in total bets (MINI/MINOR/MAJOR are the jackpot lanterns)
-  var VALUES = [[1,30],[2,24],[3,16],[4,10],[5,8],[8,5],[10,3],[15,2],["MINI",2.4],["MINOR",0.9],["MAJOR",0.12]];
-  var JACK = { MINI: 10, MINOR: 30, MAJOR: 150, GRAND: 1000 };
-  var TRIGGER = 6, RESPIN_HIT = 0.07;
-  function wpick(t, rnd) { var tot = 0, i; for (i = 0; i < t.length; i++) tot += t[i][1]; var r = rnd() * tot;
-    for (i = 0; i < t.length; i++) { r -= t[i][1]; if (r < 0) return t[i][0]; } return t[0][0]; }
-  function pick(reel, rnd) {
-    var tot = 0, k; for (k in W) tot += W[k][reel];
-    var r = rnd() * tot; for (k in W) { r -= W[k][reel]; if (r < 0) return k; } return "9";
-  }
-  function lanternValue(rnd) { return wpick(VALUES, rnd); }
-  /** g[col][row] = {s, v} */
-  function spin(rnd) {
-    var g = [];
-    for (var c = 0; c < 5; c++) { var col = []; for (var r = 0; r < 3; r++) { var s = pick(c, rnd); col.push({ s: s, v: s === "LANTERN" ? lanternValue(rnd) : null }); } g.push(col); }
-    return g;
-  }
-  function evaluate(g) {
-    var wins = [];
-    for (var l = 0; l < LINES.length; l++) {
-      var L = LINES[l], syms = L.map(function (row, col) { return g[col][row].s; });
-      var base = null, n = 0;
-      for (var i = 0; i < 5; i++) {
-        var s = syms[i];
-        if (s === "LANTERN") break;
-        if (s === "WILD") { n++; continue; }
-        if (base === null) { base = s; n++; continue; }
-        if (s === base) { n++; continue; }
-        break;
-      }
-      var best = 0, sym = null, cnt = 0;
-      if (n >= 3 && base) { best = PAY[base][n - 3]; sym = base; cnt = n; }
-      var w = 0; while (w < 5 && syms[w] === "WILD") w++;
-      if (w >= 3 && PAY.WILD[w - 3] > best) { best = PAY.WILD[w - 3]; sym = "WILD"; cnt = w; }
-      if (best) wins.push({ line: l, sym: sym, count: cnt, pay: best });
-    }
-    var lanterns = 0;
-    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (g[c][r].s === "LANTERN") lanterns++;
-    return { wins: wins, lanterns: lanterns };
-  }
-  function valueX(v) { return typeof v === "number" ? v : JACK[v]; }
-  return { PAY: PAY, LINES: LINES, VALUES: VALUES, JACK: JACK, TRIGGER: TRIGGER, RESPIN_HIT: RESPIN_HIT,
-           spin: spin, evaluate: evaluate, lanternValue: lanternValue, valueX: valueX };
-})();
-  var LanternSlot = (function () {
-  var root = document.getElementById("screen-lantern");
-  var BETS = [25, 50, 100, 250, 500, 1000, 2500];
-  var fmt = function (n) { return Math.round(n).toLocaleString("en-US"); };
-  var store = {
-    get: function (k, d) { try { var v = localStorage.getItem("cl." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set: function (k, v) { try { localStorage.setItem("cl." + k, JSON.stringify(v)); } catch (e) {} }
-  };
-  var bank = FREEPLAY.buyIn, bet = store.get("bet", 100), fast = store.get("fast", false);
-  var stats = store.get("stats", { spins: 0, in: 0, out: 0, bonuses: 0, best: 0 });
-  var soundOn = false, busy = false, grid = null, showTimer = null, countRaf = 0;
-
-  // ---------- symbols ----------
-  var LANTERN =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle cx="50" cy="52" r="46" fill="url(#cl-g-glow)"/>' +
-    '<path d="M50 2 v8" stroke="#E8B850" stroke-width="2.5"/>' +
-    '<rect x="32" y="10" width="36" height="8" rx="2" fill="url(#cl-g-cap)"/>' +
-    '<ellipse cx="50" cy="48" rx="36" ry="31" fill="url(#cl-g-lan)"/>' +
-    '<path d="M50 17 Q30 48 50 79 M50 17 Q70 48 50 79 M50 17 Q16 48 50 79 M50 17 Q84 48 50 79" stroke="rgba(110,10,6,.55)" stroke-width="1.6" fill="none"/>' +
-    '<ellipse cx="40" cy="34" rx="10" ry="6" fill="rgba(255,255,255,.28)"/>' +
-    '<rect x="32" y="77" width="36" height="8" rx="2" fill="url(#cl-g-cap)"/>' +
-    '<path d="M44 85 v12 M50 85 v14 M56 85 v12" stroke="#E8B850" stroke-width="2"/>' +
-    "</svg>";
-  var WILD =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle cx="50" cy="48" r="46" fill="url(#cl-g-glow)"/>' +
-    '<path d="M62 14 q8 -10 18 -6" stroke="#2E8A3A" stroke-width="6" fill="none" stroke-linecap="round"/>' +
-    '<path d="M52 18 q10 -6 18 2 q4 6 -2 10 l-6 2 z" fill="#3FB050"/>' +
-    '<path d="M60 22 C80 32 74 66 46 82 C30 90 14 86 18 78 C34 72 46 58 50 36 C52 26 54 20 60 22 Z" fill="url(#cl-g-chili)" stroke="#5A0604" stroke-width="1.5"/>' +
-    '<path d="M58 30 C66 40 60 58 46 70" stroke="rgba(255,255,255,.5)" stroke-width="3.5" fill="none" stroke-linecap="round"/>' +
-    '<path d="M16 72 h68 l-5 9 5 9 h-68 l5 -9 z" fill="#FFD255" stroke="#8A5A06" stroke-width="1"/>' +
-    '<text x="50" y="86" text-anchor="middle" font-family="Teko, Impact, sans-serif" font-weight="700" font-size="17" letter-spacing="2" fill="#7A0A06">WILD</text>' +
-    "</svg>";
-  var WOK =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<path d="M30 52 q-4 -16 8 -26 q-2 12 8 14 q-4 -16 10 -28 q0 16 12 20 q4 -10 0 -16 q14 10 6 36 z" fill="url(#cl-g-fire)"/>' +
-    '<path d="M8 50 h84 q-6 30 -42 30 q-36 0 -42 -30 z" fill="url(#cl-g-wok)" stroke="#0A0C0D" stroke-width="1.5"/>' +
-    '<path d="M14 54 q36 10 72 0" stroke="rgba(255,255,255,.35)" stroke-width="2" fill="none"/>' +
-    '<rect x="88" y="46" width="12" height="7" rx="3" fill="#6B4A2A"/><rect x="0" y="46" width="12" height="7" rx="3" fill="#6B4A2A"/>' +
-    "</svg>";
-  var DUMP =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<path d="M28 30 q4 -10 10 -2 q6 -12 12 0 q6 -12 12 0 q6 -8 10 2" stroke="rgba(255,255,255,.55)" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-    '<ellipse cx="50" cy="40" rx="38" ry="10" fill="#F6E3B4"/>' +
-    '<path d="M24 40 q8 -14 16 0 M42 40 q8 -16 16 0 M60 40 q8 -14 16 0" fill="#FFF4D8" stroke="#D8B878" stroke-width="1.2"/>' +
-    '<path d="M12 42 h76 v30 q0 8 -8 8 h-60 q-8 0 -8 -8 z" fill="url(#cl-g-bam)" stroke="#6A4410" stroke-width="1.5"/>' +
-    '<path d="M12 52 h76 M12 64 h76" stroke="#7A5418" stroke-width="2"/>' +
-    "</svg>";
-  var CRACK =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<path d="M50 18 q6 -10 16 -10" stroke="#C8A060" stroke-width="2.5" fill="none"/>' +
-    '<circle cx="68" cy="8" r="5" fill="#FFE98A"/><circle cx="68" cy="8" r="9" fill="rgba(255,200,80,.35)"/>' +
-    '<g stroke="#5A0604" stroke-width="1.2"><rect x="22" y="26" width="16" height="56" rx="4" fill="url(#cl-g-crack)"/><rect x="42" y="20" width="16" height="62" rx="4" fill="url(#cl-g-crack)"/><rect x="62" y="26" width="16" height="56" rx="4" fill="url(#cl-g-crack)"/></g>' +
-    '<path d="M18 46 h64" stroke="#FFD255" stroke-width="5"/><path d="M18 64 h64" stroke="#FFD255" stroke-width="3"/>' +
-    "</svg>";
-  var COIN =
-    '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-    '<circle cx="50" cy="52" r="40" fill="#7A4A06"/><circle cx="50" cy="48" r="40" fill="url(#cl-g-coin)" stroke="#8A5A06" stroke-width="1.5"/>' +
-    '<circle cx="50" cy="48" r="30" fill="none" stroke="rgba(120,80,6,.6)" stroke-width="2"/>' +
-    '<rect x="40" y="38" width="20" height="20" rx="2" fill="#3A0A04" stroke="#8A5A06" stroke-width="1.5"/>' +
-    '<path d="M24 36 q10 -12 22 -14" stroke="rgba(255,255,255,.7)" stroke-width="3" fill="none" stroke-linecap="round"/>' +
-    "</svg>";
-  function letter(t, grad) {
-    var size = t === "10" ? 52 : 66;
-    return '<svg viewBox="0 0 100 100" aria-hidden="true">' +
-      '<text x="50" y="74" text-anchor="middle" font-family="Teko, Impact, sans-serif" font-weight="700" font-size="' + size + '" fill="rgba(0,0,0,.55)" transform="translate(0 3)">' + t + "</text>" +
-      '<text x="50" y="74" text-anchor="middle" font-family="Teko, Impact, sans-serif" font-weight="700" font-size="' + size + '" fill="url(#cl-' + grad + ')" stroke="rgba(255,255,255,.5)" stroke-width="1.2">' + t + "</text></svg>";
-  }
-  var ART = {
-    WILD: WILD, WOK: WOK, DUMP: DUMP, CRACK: CRACK, COIN: COIN, LANTERN: LANTERN,
-    A: letter("A", "g-L-gold"), K: letter("K", "g-L-jade"), Q: letter("Q", "g-L-blue"), J: letter("J", "g-L-pink"),
-    "10": letter("10", "g-L-gold"), "9": letter("9", "g-L-jade")
-  };
-  var NAMES = { WILD: "Chili", WOK: "Wok", DUMP: "Dumplings", CRACK: "Firecrackers", COIN: "Lucky coin", A: "A", K: "K", Q: "Q", J: "J", "10": "10", "9": "9" };
-  function amtHtml(v) {
-    if (v === null || v === undefined) return "";
-    if (typeof v === "number") return '<div class="cl-amt">' + fmt(v * bet) + "</div>";
-    return '<div class="cl-amt cl-jp">' + v + "</div>";
-  }
-
-  // ---------- sound (only after the player turns it on) ----------
-  var ac = null;
-  function tone(f, t0, dur, type, vol) {
-    if (!soundOn || !ac) return;
-    var o = ac.createOscillator(), g = ac.createGain();
-    o.type = type || "triangle"; o.frequency.value = f;
-    g.gain.setValueAtTime(vol || 0.06, ac.currentTime + t0);
-    g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t0 + dur);
-    o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.02);
-  }
-  function gong() { tone(110, 0, 1.2, "sine", 0.12); tone(220, 0, 0.9, "sine", 0.05); tone(331, 0.02, 0.7, "sine", 0.03); }
-  function stopClick() { tone(160, 0, 0.07, "square", 0.05); }
-  function ding() { tone(1320, 0, 0.25, "triangle", 0.07); tone(1760, 0.06, 0.25, "triangle", 0.05); }
-  function winJingle() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, i * 0.08, 0.2, "triangle", 0.06); }); }
-
-  // ---------- build ----------
-  var reels = [], strips = [];
-  function build() {
-    var host = $("cl-reels");
-    for (var c = 0; c < 5; c++) {
-      var r = document.createElement("div"); r.className = "cl-reel";
-      var s = document.createElement("div"); s.className = "cl-strip";
-      r.appendChild(s); host.appendChild(r); reels.push(r); strips.push(s);
-    }
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("class", "cl-lines"); svg.id = "cl-lines"; svg.setAttribute("aria-hidden", "true");
-    host.appendChild(svg);
-  }
-  function cellHtml(x) { return '<div class="cl-cell" data-s="' + x.s + '">' + ART[x.s] + amtHtml(x.v) + "</div>"; }
-  function setStrip(c, col) {
-    strips[c].classList.remove("cl-blur");
-    strips[c].innerHTML = col.map(cellHtml).join(""); strips[c].style.transition = "none"; strips[c].style.transform = "translateY(0)";
-  }
-
-  function paint() {
-    $("cl-bank").textContent = fmt(bank);
-    $("cl-betv").textContent = fmt(bet);
-    $("cl-jpG").textContent = fmt(bet * LNX.JACK.GRAND); $("cl-jpM").textContent = fmt(bet * LNX.JACK.MAJOR);
-    $("cl-jpN").textContent = fmt(bet * LNX.JACK.MINOR); $("cl-jpI").textContent = fmt(bet * LNX.JACK.MINI);
-    var i = BETS.indexOf(bet);
-    $("cl-betDown").disabled = busy || i <= 0;
-    $("cl-betUp").disabled = busy || i >= BETS.length - 1 || BETS[i + 1] > bank;
-    $("cl-throw").disabled = busy || bank < bet;
-    $("cl-throw").classList.toggle("cl-going", busy);
-    $("cl-fast").classList.toggle("cl-on", fast);
-    $("cl-sound").classList.toggle("cl-on", soundOn);
-    var rtp = stats.in ? (100 * stats.out / stats.in).toFixed(1) + "% back" : "no spins yet";
-    $("cl-stats").textContent = fmt(stats.spins) + " spins · " + rtp + " · " + stats.bonuses + " feature" + (stats.bonuses === 1 ? "" : "s") +
-      (stats.best ? " · best win " + fmt(stats.best) : "");
-    if (bet > bank && bank >= BETS[0]) { for (var j = BETS.length - 1; j >= 0; j--) if (BETS[j] <= bank) { bet = BETS[j]; break; } paint(); }
-  }
-  function say(big, small, mode) {
-    $("cl-msg").className = "cl-msg" + (mode ? " cl-" + mode : "");
-    $("cl-msg").innerHTML = '<div class="cl-big">' + big + '</div><div class="cl-small">' + (small || "&nbsp;") + "</div>";
-  }
-  function countUp(el, to, ms) {
-    cancelAnimationFrame(countRaf);
-    var t0 = performance.now();
-    var step = function (now) {
-      var k = Math.min(1, (now - t0) / ms), v = Math.round(to * (1 - Math.pow(1 - k, 3)));
-      el.textContent = fmt(v);
-      if (k < 1) countRaf = requestAnimationFrame(step);
-    };
-    countRaf = requestAnimationFrame(step);
-  }
-  function save() { store.set("stats", stats); }
-
-  // ---------- spin ----------
-  function randCell(c) { return LNX.spin(Math.random)[c][0]; }
-  function throwDisc() {
-    if (busy || bank < bet) return;
-    busy = true; clearInterval(showTimer); clearLines();
-    bank -= bet; stats.spins++; stats.in += bet; save();
-    $("cl-winv").textContent = "0";
-    say("Good luck", "", "quiet");
-    paint();
-    grid = LNX.spin(Math.random);
-    var h = reels[0].getBoundingClientRect().height / 3;
-    var base = fast ? 520 : 1240, gap = fast ? 220 : 460;
-    for (var c = 0; c < 5; c++) {
-      var n = (fast ? 16 : 34) + c * (fast ? 5 : 9), col = [];
-      for (var i = 0; i < n; i++) col.push(randCell(c));
-      var stripCells = grid[c].concat(col).concat(currentCol(c));
-      strips[c].innerHTML = stripCells.map(cellHtml).join("");
-      strips[c].classList.add("cl-blur");
-      strips[c].style.transition = "none";
-      strips[c].style.transform = "translateY(" + (-(stripCells.length - 3) * h) + "px)";
-      void strips[c].offsetHeight;
-      var dur = base + c * gap;
-      strips[c].style.transition = "transform " + dur + "ms cubic-bezier(.12,.55,.22,1.04)";
-      strips[c].style.transform = "translateY(0)";
-      (function (col, d) {
-        setTimeout(function () { strips[col].classList.remove("cl-blur"); }, d - 160);
-        setTimeout(function () { setStrip(col, grid[col]); stopClick(); if (col === 4) landed(); }, d);
-      })(c, dur);
-    }
-  }
-  var lastCols = [];
-  function currentCol(c) { return lastCols[c] || [randCell(c), randCell(c), randCell(c)]; }
-  function cellAt(c, r) { return strips[c].children[r]; }
-  function clearLines() {
-    $("cl-lines").innerHTML = "";
-    root.querySelectorAll(".cl-cell").forEach(function (el) { el.classList.remove("cl-hit", "cl-dim"); });
-  }
-  function showWin(w) {
-    clearLines();
-    var host = $("cl-reels").getBoundingClientRect(), pts = [], L = LNX.LINES[w.line];
-    $("cl-lines").setAttribute("viewBox", "0 0 " + host.width + " " + host.height);
-    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) cellAt(c, r).classList.add("cl-dim");
-    for (c = 0; c < 5; c++) {
-      var el = cellAt(c, L[c]), b = el.getBoundingClientRect();
-      pts.push((b.left - host.left + b.width / 2) + "," + (b.top - host.top + b.height / 2));
-      if (c < w.count) { el.classList.remove("cl-dim"); el.classList.add("cl-hit"); }
-    }
-    $("cl-lines").innerHTML = '<polyline points="' + pts.join(" ") + '"/>';
-  }
-  function landed() {
-    lastCols = grid;
-    var e = LNX.evaluate(grid), lineBet = bet / 25, total = 0;
-    e.wins.forEach(function (w) { total += w.pay * lineBet; });
-    total = Math.round(total);
-    if (total > 0) {
-      bank += total; stats.out += total; stats.best = Math.max(stats.best, total); save();
-      var top = e.wins.slice().sort(function (a, b) { return b.pay - a.pay; })[0];
-      var x = total / bet, label = x >= 50 ? "MEGA WIN" : x >= 15 ? "BIG WIN" : x >= 5 ? "NICE WIN" : "WIN";
-      say(label + " " + fmt(total), e.wins.length + " line" + (e.wins.length > 1 ? "s" : "") + " · " + top.count + " × " + NAMES[top.sym]);
-      countUp($("cl-winv"), total, Math.min(1600, 400 + x * 60));
-      winJingle();
-      var i = 0; showWin(e.wins[0]);
-      if (e.wins.length > 1 && e.lanterns < LNX.TRIGGER) showTimer = setInterval(function () { i = (i + 1) % e.wins.length; showWin(e.wins[i]); }, 1200);
-    } else if (e.lanterns < LNX.TRIGGER) {
-      say(e.lanterns >= 4 ? e.lanterns + " lanterns — so close" : "No win", e.lanterns >= 4 ? "6 start Hold & Spin" : "", "quiet");
-    }
-    if (e.lanterns >= LNX.TRIGGER) {
-      clearLines(); clearInterval(showTimer);
-      for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (grid[c][r].s === "LANTERN") cellAt(c, r).classList.add("cl-hit");
-      say(e.lanterns + " LANTERNS!", "Hold & Spin", "bonus");
-      gong();
-      setTimeout(function () { startHold(total); }, 1500);
-      return;
-    }
-    busy = false; paint();
-  }
-
-  // ---------- Hold & Spin ----------
-  var H = null;
-  function hcellHtml(v, fresh) {
-    return v === null ? "" : ART.LANTERN + amtHtml(v);
-  }
-  function paintHold() {
-    var host = $("cl-hold"); host.innerHTML = "";
-    for (var k = 0; k < 15; k++) {
-      var d = document.createElement("div");
-      d.className = "cl-hcell" + (H.cells[k] !== null ? " cl-locked" : "") + (H.spinning && H.cells[k] === null ? " cl-spinning" : "") + (H.fresh[k] ? " cl-fresh" : "");
-      d.innerHTML = hcellHtml(H.cells[k]);
-      host.appendChild(d);
-    }
-    var dots = $("cl-spinsLeft").querySelectorAll("i");
-    for (var i = 0; i < 3; i++) dots[i].classList.toggle("cl-on", i < H.left);
-    var sum = 0; H.cells.forEach(function (v) { if (v !== null) sum += LNX.valueX(v) * bet; });
-    $("cl-hsum").textContent = "$" + fmt(sum);
-  }
-  function flash(sub, title, num, ms, then) {
-    $("cl-flashS").textContent = sub; $("cl-flashT").textContent = title; $("cl-flashN").textContent = num || "";
-    $("cl-flash").hidden = false;
-    setTimeout(function () { $("cl-flash").hidden = true; if (then) then(); }, ms);
-  }
-  function startHold(lineWin) {
-    stats.bonuses++; save();
-    // grid is [col][row]; the hold grid reads row by row
-    var cells = [];
-    for (var r = 0; r < 3; r++) for (var c = 0; c < 5; c++) cells.push(grid[c][r].s === "LANTERN" ? grid[c][r].v : null);
-    H = { cells: cells, left: 3, lineWin: lineWin, fresh: [], spinning: false };
-    flash("HOLD & SPIN", "LANTERNS!", "3 SPINS · NEW LANTERNS RESET THEM", 1800, function () {
-      $("cl-hold").hidden = false; $("cl-hud").hidden = false;
-      say("Lanterns lock in place", "Every new lantern resets you to 3 spins", "bonus");
-      paintHold();
-      setTimeout(respin, 900);
-    });
-  }
-  function respin() {
-    if (!H) return;
-    H.fresh = []; H.spinning = true; paintHold();
-    var dur = fast ? 700 : 1300;
-    setTimeout(function () {
-      var hit = false;
-      for (var k = 0; k < 15; k++) if (H.cells[k] === null && Math.random() < LNX.RESPIN_HIT) { H.cells[k] = LNX.lanternValue(Math.random); H.fresh[k] = true; hit = true; }
-      H.spinning = false;
-      H.left = hit ? 3 : H.left - 1;
-      paintHold();
-      if (hit) ding(); else stopClick();
-      var full = H.cells.every(function (v) { return v !== null; });
-      if (full || H.left === 0) setTimeout(endHold, 1100);
-      else setTimeout(respin, hit ? 1000 : 700);
-    }, dur);
-  }
-  function endHold() {
-    var sum = 0, full = H.cells.every(function (v) { return v !== null; }), jps = [];
-    H.cells.forEach(function (v) { if (v !== null) { sum += LNX.valueX(v) * bet; if (typeof v !== "number") jps.push(v); } });
-    if (full) { sum += LNX.JACK.GRAND * bet; jps.push("GRAND"); }
-    sum = Math.round(sum);
-    bank += sum; stats.out += sum;
-    var total = sum + H.lineWin;
-    stats.best = Math.max(stats.best, total); save();
-    gong();
-    flash(full ? "ALL 15 FILLED" : "HOLD & SPIN PAYS", full ? "GRAND!" : jps.length ? jps[jps.length - 1] + "!" : "COLLECT", "$" + fmt(sum), 2400, function () {
-      $("cl-hold").hidden = true; $("cl-hud").hidden = true;
-      countUp($("cl-winv"), total, 1400);
-      var n = H.cells.filter(function (v) { return v !== null; }).length;
-      say("LANTERNS PAY " + fmt(sum), n + " of 15 lanterns" + (jps.length ? " · " + jps.join(", ") : ""), "bonus");
-      H = null; busy = false; paint();
-    });
-  }
-
-  // ---------- pay table ----------
-  function paintPays() {
-    var lb = bet / 25, rows = [];
-    ["WILD", "WOK", "DUMP", "CRACK", "COIN", "A", "K", "Q", "J", "10", "9"].forEach(function (s) {
-      rows.push('<div class="cl-row"><div class="cl-ic">' + ART[s] + '</div><div class="cl-pays">' +
-        LNX.PAY[s].map(function (v, i) { return "<span>" + (i + 3) + "×</span><span>" + fmt(v * lb) + "</span>"; }).reverse().join("") + "</div></div>");
-    });
-    rows.push('<div class="cl-row"><div class="cl-ic">' + ART.LANTERN + '</div><div class="cl-pays"><span>6+</span><span>HOLD &amp; SPIN</span></div></div>');
-    $("cl-pt").innerHTML = rows.join("");
-  }
-
-  // ---------- wiring ----------
-  $("cl-throw").addEventListener("click", throwDisc);
-  document.addEventListener("keydown", function (e) {
-    if (e.code !== "Space" || !root.classList.contains("on")) return;
-    if ($("cl-sheet").hidden) { e.preventDefault(); throwDisc(); }
-  });
-  $("cl-betDown").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i > 0) { bet = BETS[i - 1]; store.set("bet", bet); paint(); } });
-  $("cl-betUp").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i < BETS.length - 1 && BETS[i + 1] <= bank) { bet = BETS[i + 1]; store.set("bet", bet); paint(); } });
-  $("cl-fast").addEventListener("click", function () { fast = !fast; store.set("fast", fast); paint(); });
-  $("cl-sound").addEventListener("click", function () {
-    soundOn = !soundOn;
-    if (soundOn && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { soundOn = false; } }
-    if (ac && ac.state === "suspended") ac.resume();
-    paint(); if (soundOn) ding();
-  });
-  $("cl-reset").addEventListener("click", function () {
-    if (busy) return;
-    freshStack(function (v) { bank = v; }); stats = { spins: 0, in: 0, out: 0, bonuses: 0, best: 0 }; save();
-    $("cl-winv").textContent = "0"; clearLines(); clearInterval(showTimer);
-    say("Fresh $" + fmt(bank), "Stats cleared", "quiet"); paint();
-  });
-  $("cl-paysBtn").addEventListener("click", function () { paintPays(); $("cl-sheet").hidden = false; });
-  $("cl-sheetX").addEventListener("click", function () { $("cl-sheet").hidden = true; });
-  $("cl-sheet").addEventListener("click", function (e) { if (e.target === $("cl-sheet")) $("cl-sheet").hidden = true; });
-
-  $("cl-back").addEventListener("click", function () { if (!busy) Shell.show("othermenu"); });
-  function enter() {
-    Shell.mode = "testing";
-    bank = FREEPLAY.buyIn;
-    clearInterval(showTimer); clearLines();
-    $("cl-winv").textContent = "0";
-    say("Good luck", "6 lanterns start Hold & Spin", "quiet");
-    paint();
-  }
-  $("om-lantern").addEventListener("click", function () { enter(); Shell.show("lantern"); });
-  // Other Games lists the slot only on the Play Testing side; the campaign and tournament never see it
-  var show = Shell.show;
-  Shell.show = function (name) {
-    if (name === "othermenu") $("om-lantern").style.display = Shell.mode === "testing" ? "" : "none";
-    return show.apply(this, arguments);
-  };
-  build();
-  var first = LNX.spin(Math.random);
   for (var c = 0; c < 5; c++) setStrip(c, first[c]);
   lastCols = first;
   if (BETS.indexOf(bet) < 0) bet = 100;

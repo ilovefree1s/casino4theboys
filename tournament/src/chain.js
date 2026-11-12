@@ -1,16 +1,14 @@
   /* ============================================================
-     CHAIN REACTION — the disc golf slot, play testing only
+     CHAIN REACTION — the disc golf hold & spin slot, play testing only
      ============================================================ */
 // Chain Reaction engine: shared by the page and the simulation.
   var CHX = (function () {
-  var SYMS = ["ACE","GOLD","PINK","BLUE","TREE","A","K","Q","J","10","BASKET"];
-  var PAY = { ACE:[110,550,2500], GOLD:[65,240,1000], PINK:[45,165,650], BLUE:[35,120,450], TREE:[28,85,330],
-              A:[17,55,165], K:[16,50,155], Q:[11,38,120], J:[11,33,100], "10":[11,28,85] };
-  // weights per reel; ACE (wild) only on reels 2-4
+  var PAY = { ACE:[150,750,3000], GOLD:[100,380,1500], PINK:[80,260,1000], BLUE:[65,200,750], TREE:[50,150,500],
+              A:[26,80,260], K:[26,80,260], Q:[21,65,210], J:[21,52,180], "10":[16,46,155], "9":[16,40,130] };
   var W = {
-    ACE:[0,6,6,6,0], GOLD:[4,4,4,4,4], PINK:[6,6,6,6,6], BLUE:[8,8,8,8,8], TREE:[10,10,10,10,10],
-    A:[13,13,13,13,13], K:[13,13,13,13,13], Q:[15,15,15,15,15], J:[15,15,15,15,15], "10":[15,15,15,15,15],
-    BASKET:[3.1,3.1,3.1,3.1,3.1]
+    ACE:[0,4,4,4,0], GOLD:[4,4,4,4,4], PINK:[5,5,5,5,5], BLUE:[6,6,6,6,6], TREE:[7,7,7,7,7],
+    A:[11,11,11,11,11], K:[11,11,11,11,11], Q:[12,12,12,12,12], J:[12,12,12,12,12], "10":[13,13,13,13,13], "9":[13,13,13,13,13],
+    BASKET:[15,15,15,15,15]
   };
   var LINES = [
     [1,1,1,1,1],[0,0,0,0,0],[2,2,2,2,2],[0,1,2,1,0],[2,1,0,1,2],
@@ -19,27 +17,27 @@
     [1,1,0,1,1],[1,1,2,1,1],[0,0,2,0,0],[2,2,0,2,2],[0,2,0,2,0],
     [2,0,2,0,2],[1,0,2,0,1],[1,2,0,2,1],[0,2,2,2,0],[2,0,0,0,2]
   ];
-  var BONUS_START = { 3: 5, 4: 15, 5: 50 };      // × total bet, on landing
-  var PUTTS = [ { ft: 10, pay: 10, zone: 0.24, speed: 1.0 },
-                { ft: 20, pay: 30, zone: 0.14, speed: 1.35 },
-                { ft: 30, pay: 150, zone: 0.07, speed: 1.75 } ];   // × total bet
+  // what a basket carries, in total bets (PAR/BIRDIE/EAGLE are the jackpot baskets)
+  var VALUES = [[1,30],[2,24],[3,16],[4,10],[5,8],[8,5],[10,3],[15,2],["PAR",2.4],["BIRDIE",0.9],["EAGLE",0.12]];
+  var JACK = { PAR: 10, BIRDIE: 30, EAGLE: 150, GRAND: 1000 };
+  var TRIGGER = 6, RESPIN_HIT = 0.07;
+  function wpick(t, rnd) { var tot = 0, i; for (i = 0; i < t.length; i++) tot += t[i][1]; var r = rnd() * tot;
+    for (i = 0; i < t.length; i++) { r -= t[i][1]; if (r < 0) return t[i][0]; } return t[0][0]; }
   function pick(reel, rnd) {
-    var tot = 0, k;
-    for (k in W) tot += W[k][reel];
-    var r = rnd() * tot;
-    for (k in W) { r -= W[k][reel]; if (r < 0) return k; }
-    return "10";
+    var tot = 0, k; for (k in W) tot += W[k][reel];
+    var r = rnd() * tot; for (k in W) { r -= W[k][reel]; if (r < 0) return k; } return "9";
   }
+  function basketValue(rnd) { return wpick(VALUES, rnd); }
+  /** g[col][row] = {s, v} */
   function spin(rnd) {
     var g = [];
-    for (var c = 0; c < 5; c++) { g.push([pick(c, rnd), pick(c, rnd), pick(c, rnd)]); }
-    return g;   // g[col][row]
+    for (var c = 0; c < 5; c++) { var col = []; for (var r = 0; r < 3; r++) { var s = pick(c, rnd); col.push({ s: s, v: s === "BASKET" ? basketValue(rnd) : null }); } g.push(col); }
+    return g;
   }
-  /** Line wins (in line-bet units) and the scatter count. */
   function evaluate(g) {
     var wins = [];
     for (var l = 0; l < LINES.length; l++) {
-      var L = LINES[l], syms = L.map(function (row, col) { return g[col][row]; });
+      var L = LINES[l], syms = L.map(function (row, col) { return g[col][row].s; });
       var base = null, n = 0;
       for (var i = 0; i < 5; i++) {
         var s = syms[i];
@@ -49,26 +47,27 @@
         if (s === base) { n++; continue; }
         break;
       }
-      // all wilds, or wilds then a symbol: pay the better of the two readings
       var best = 0, sym = null, cnt = 0;
       if (n >= 3 && base) { best = PAY[base][n - 3]; sym = base; cnt = n; }
       var w = 0; while (w < 5 && syms[w] === "ACE") w++;
       if (w >= 3 && PAY.ACE[w - 3] > best) { best = PAY.ACE[w - 3]; sym = "ACE"; cnt = w; }
       if (best) wins.push({ line: l, sym: sym, count: cnt, pay: best });
     }
-    var scat = 0;
-    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (g[c][r] === "BASKET") scat++;
-    return { wins: wins, scatters: scat };
+    var baskets = 0;
+    for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (g[c][r].s === "BASKET") baskets++;
+    return { wins: wins, baskets: baskets };
   }
-  return { SYMS: SYMS, PAY: PAY, LINES: LINES, BONUS_START: BONUS_START, PUTTS: PUTTS, spin: spin, evaluate: evaluate };
+  function valueX(v) { return typeof v === "number" ? v : JACK[v]; }
+  return { PAY: PAY, LINES: LINES, VALUES: VALUES, JACK: JACK, TRIGGER: TRIGGER, RESPIN_HIT: RESPIN_HIT,
+           spin: spin, evaluate: evaluate, basketValue: basketValue, valueX: valueX };
 })();
   var ChainSlot = (function () {
   var root = document.getElementById("screen-chain");
   var BETS = [25, 50, 100, 250, 500, 1000, 2500];
   var fmt = function (n) { return Math.round(n).toLocaleString("en-US"); };
   var store = {
-    get: function (k, d) { try { var v = localStorage.getItem("cr." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
-    set: function (k, v) { try { localStorage.setItem("cr." + k, JSON.stringify(v)); } catch (e) {} }
+    get: function (k, d) { try { var v = localStorage.getItem("cr2." + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+    set: function (k, v) { try { localStorage.setItem("cr2." + k, JSON.stringify(v)); } catch (e) {} }
   };
   var bank = FREEPLAY.buyIn, bet = store.get("bet", 100), fast = store.get("fast", false);
   var stats = store.get("stats", { spins: 0, in: 0, out: 0, bonuses: 0, best: 0 });
@@ -129,9 +128,15 @@
   var ART = {
     ACE: WILD, GOLD: disc("g-orange", STAMP_STAR), PINK: disc("g-pink", STAMP_BOLT), BLUE: disc("g-blue", STAMP_RING),
     TREE: TREE, BASKET: BASKET,
-    A: letter("A", "g-L-red"), K: letter("K", "g-L-blue"), Q: letter("Q", "g-L-purple"), J: letter("J", "g-L-green"), "10": letter("10", "g-L-orange")
+    A: letter("A", "g-L-red"), K: letter("K", "g-L-blue"), Q: letter("Q", "g-L-purple"), J: letter("J", "g-L-green"), "10": letter("10", "g-L-orange"), "9": letter("9", "g-L-green")
   };
-  var NAMES = { ACE: "Ace", GOLD: "Driver", PINK: "Midrange", BLUE: "Putter", TREE: "Tree", A: "A", K: "K", Q: "Q", J: "J", "10": "10" };
+  var NAMES = { ACE: "Ace", GOLD: "Driver", PINK: "Midrange", BLUE: "Putter", TREE: "Tree", A: "A", K: "K", Q: "Q", J: "J", "10": "10", "9": "9" };
+
+  function amtHtml(v) {
+    if (v === null || v === undefined) return "";
+    if (typeof v === "number") return '<div class="ch-amt">' + fmt(v * bet) + "</div>";
+    return '<div class="ch-amt ch-jp">' + v + "</div>";
+  }
 
   // ---------- sound (only after the player turns it on) ----------
   var ac = null;
@@ -143,8 +148,9 @@
     g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t0 + dur);
     o.connect(g); g.connect(ac.destination); o.start(ac.currentTime + t0); o.stop(ac.currentTime + t0 + dur + 0.02);
   }
-  function chains() { for (var i = 0; i < 16; i++) tone(2400 + Math.random() * 2600, i * 0.025 + Math.random() * 0.02, 0.09, "square", 0.022); }
+  function gong() { for (var i = 0; i < 16; i++) tone(2400 + Math.random() * 2600, i * 0.025 + Math.random() * 0.02, 0.09, "square", 0.022); }
   function stopClick() { tone(160, 0, 0.07, "square", 0.05); }
+  function ding() { tone(1320, 0, 0.25, "triangle", 0.07); tone(1760, 0.06, 0.25, "triangle", 0.05); }
   function winJingle() { [523, 659, 784, 1046].forEach(function (f, i) { tone(f, i * 0.08, 0.2, "triangle", 0.06); }); }
 
   // ---------- build ----------
@@ -160,18 +166,17 @@
     svg.setAttribute("class", "ch-lines"); svg.id = "ch-lines"; svg.setAttribute("aria-hidden", "true");
     host.appendChild(svg);
   }
-  function cellHtml(sym) { return '<div class="ch-cell" data-s="' + sym + '">' + ART[sym] + "</div>"; }
-  function setStrip(c, syms) {
+  function cellHtml(x) { return '<div class="ch-cell" data-s="' + x.s + '">' + ART[x.s] + amtHtml(x.v) + "</div>"; }
+  function setStrip(c, col) {
     strips[c].classList.remove("ch-blur");
-    strips[c].innerHTML = syms.map(cellHtml).join(""); strips[c].style.transition = "none"; strips[c].style.transform = "translateY(0)";
+    strips[c].innerHTML = col.map(cellHtml).join(""); strips[c].style.transition = "none"; strips[c].style.transform = "translateY(0)";
   }
 
   function paint() {
     $("ch-bank").textContent = fmt(bank);
     $("ch-betv").textContent = fmt(bet);
-    $("ch-jp0").textContent = fmt(bet * CHX.PUTTS[0].pay);
-    $("ch-jp1").textContent = fmt(bet * CHX.PUTTS[1].pay);
-    $("ch-jp2").textContent = fmt(bet * CHX.PUTTS[2].pay);
+    $("ch-jpG").textContent = fmt(bet * CHX.JACK.GRAND); $("ch-jpM").textContent = fmt(bet * CHX.JACK.EAGLE);
+    $("ch-jpN").textContent = fmt(bet * CHX.JACK.BIRDIE); $("ch-jpI").textContent = fmt(bet * CHX.JACK.PAR);
     var i = BETS.indexOf(bet);
     $("ch-betDown").disabled = busy || i <= 0;
     $("ch-betUp").disabled = busy || i >= BETS.length - 1 || BETS[i + 1] > bank;
@@ -180,7 +185,7 @@
     $("ch-fast").classList.toggle("ch-on", fast);
     $("ch-sound").classList.toggle("ch-on", soundOn);
     var rtp = stats.in ? (100 * stats.out / stats.in).toFixed(1) + "% back" : "no spins yet";
-    $("ch-stats").textContent = fmt(stats.spins) + " spins · " + rtp + " · " + stats.bonuses + " bonus" + (stats.bonuses === 1 ? "" : "es") +
+    $("ch-stats").textContent = fmt(stats.spins) + " spins · " + rtp + " · " + stats.bonuses + " feature" + (stats.bonuses === 1 ? "" : "s") +
       (stats.best ? " · best win " + fmt(stats.best) : "");
     if (bet > bank && bank >= BETS[0]) { for (var j = BETS.length - 1; j >= 0; j--) if (BETS[j] <= bank) { bet = BETS[j]; break; } paint(); }
   }
@@ -188,12 +193,12 @@
     $("ch-msg").className = "ch-msg" + (mode ? " ch-" + mode : "");
     $("ch-msg").innerHTML = '<div class="ch-big">' + big + '</div><div class="ch-small">' + (small || "&nbsp;") + "</div>";
   }
-  function countUp(el, to, ms, prefix) {
+  function countUp(el, to, ms) {
     cancelAnimationFrame(countRaf);
     var t0 = performance.now();
     var step = function (now) {
       var k = Math.min(1, (now - t0) / ms), v = Math.round(to * (1 - Math.pow(1 - k, 3)));
-      el.textContent = (prefix || "") + fmt(v);
+      el.textContent = fmt(v);
       if (k < 1) countRaf = requestAnimationFrame(step);
     };
     countRaf = requestAnimationFrame(step);
@@ -201,7 +206,7 @@
   function save() { store.set("stats", stats); }
 
   // ---------- spin ----------
-  function randSym(c) { return CHX.spin(Math.random)[c][0]; }
+  function randCell(c) { return CHX.spin(Math.random)[c][0]; }
   function throwDisc() {
     if (busy || bank < bet) return;
     busy = true; clearInterval(showTimer); clearLines();
@@ -213,13 +218,13 @@
     var h = reels[0].getBoundingClientRect().height / 3;
     var base = fast ? 520 : 1240, gap = fast ? 220 : 460;
     for (var c = 0; c < 5; c++) {
-      var n = (fast ? 16 : 34) + c * (fast ? 5 : 9), syms = [];
-      for (var i = 0; i < n; i++) syms.push(randSym(c));
-      var stripSyms = grid[c].concat(syms).concat(currentCol(c));
-      strips[c].innerHTML = stripSyms.map(cellHtml).join("");
+      var n = (fast ? 16 : 34) + c * (fast ? 5 : 9), col = [];
+      for (var i = 0; i < n; i++) col.push(randCell(c));
+      var stripCells = grid[c].concat(col).concat(currentCol(c));
+      strips[c].innerHTML = stripCells.map(cellHtml).join("");
       strips[c].classList.add("ch-blur");
       strips[c].style.transition = "none";
-      strips[c].style.transform = "translateY(" + (-(stripSyms.length - 3) * h) + "px)";
+      strips[c].style.transform = "translateY(" + (-(stripCells.length - 3) * h) + "px)";
       void strips[c].offsetHeight;
       var dur = base + c * gap;
       strips[c].style.transition = "transform " + dur + "ms cubic-bezier(.12,.55,.22,1.04)";
@@ -230,11 +235,8 @@
       })(c, dur);
     }
   }
-  function currentCol(c) {
-    var out = [], kids = strips[c].children;
-    for (var i = 0; i < 3 && i < kids.length; i++) out.push(kids[i].dataset.s);
-    return out.length === 3 ? out : [randSym(c), randSym(c), randSym(c)];
-  }
+  var lastCols = [];
+  function currentCol(c) { return lastCols[c] || [randCell(c), randCell(c), randCell(c)]; }
   function cellAt(c, r) { return strips[c].children[r]; }
   function clearLines() {
     $("ch-lines").innerHTML = "";
@@ -253,10 +255,10 @@
     $("ch-lines").innerHTML = '<polyline points="' + pts.join(" ") + '"/>';
   }
   function landed() {
+    lastCols = grid;
     var e = CHX.evaluate(grid), lineBet = bet / 25, total = 0;
     e.wins.forEach(function (w) { total += w.pay * lineBet; });
     total = Math.round(total);
-    var baskets = e.scatters;
     if (total > 0) {
       bank += total; stats.out += total; stats.best = Math.max(stats.best, total); save();
       var top = e.wins.slice().sort(function (a, b) { return b.pay - a.pay; })[0];
@@ -265,96 +267,99 @@
       countUp($("ch-winv"), total, Math.min(1600, 400 + x * 60));
       winJingle();
       var i = 0; showWin(e.wins[0]);
-      if (e.wins.length > 1) showTimer = setInterval(function () { i = (i + 1) % e.wins.length; showWin(e.wins[i]); }, 1200);
-    } else if (baskets < 3) {
-      say(baskets === 2 ? "2 baskets — so close" : "No win", "", "quiet");
+      if (e.wins.length > 1 && e.baskets < CHX.TRIGGER) showTimer = setInterval(function () { i = (i + 1) % e.wins.length; showWin(e.wins[i]); }, 1200);
+    } else if (e.baskets < CHX.TRIGGER) {
+      say(e.baskets >= 4 ? e.baskets + " baskets — so close" : "No win", e.baskets >= 4 ? "6 start Hold & Spin" : "", "quiet");
     }
-    if (baskets >= 3) {
-      for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (grid[c][r] === "BASKET") cellAt(c, r).classList.add("ch-hit");
-      say("CHAIN RATTLE!", baskets + " baskets", "bonus");
-      chains();
-      setTimeout(function () { startBonus(Math.min(5, baskets), total); }, 1500);
+    if (e.baskets >= CHX.TRIGGER) {
+      clearLines(); clearInterval(showTimer);
+      for (var c = 0; c < 5; c++) for (var r = 0; r < 3; r++) if (grid[c][r].s === "BASKET") cellAt(c, r).classList.add("ch-hit");
+      say(e.baskets + " BASKETS!", "Hold & Spin", "bonus");
+      gong();
+      setTimeout(function () { startHold(total); }, 1500);
       return;
     }
     busy = false; paint();
   }
 
-  // ---------- Chain Rattle ----------
-  var B = null, raf = 0, RUNG = ["PAR", "BIRDIE", "ACE"];
-  function startBonus(n, lineWin) {
-    stats.bonuses++; save();
-    B = { won: CHX.BONUS_START[n] * bet, step: 0, results: [], lineWin: lineWin, moving: false };
-    bank += B.won; stats.out += B.won; save();
-    $("ch-basketBig").innerHTML = BASKET;
-    $("ch-bonus").hidden = false;
-    $("ch-bNote").textContent = n + " baskets pay " + CHX.BONUS_START[n] + "× to start. Stop the needle in the green.";
-    paintBonus();
-    setupPutt();
+  // ---------- Hold & Spin ----------
+  var H = null;
+  function hcellHtml(v, fresh) {
+    return v === null ? "" : ART.BASKET + amtHtml(v);
   }
-  function paintBonus() {
-    $("ch-bBank").textContent = "$" + fmt(B.won);
-    $("ch-ladder").innerHTML = CHX.PUTTS.map(function (p, i) {
-      var cls = B.results[i] === true ? "ch-made" : B.results[i] === false ? "ch-miss" : i === B.step ? "ch-now" : "";
-      return '<div class="ch-rung ' + cls + '"><div class="ch-nm">' + RUNG[i] + '</div><div class="ch-ft">' + p.ft + ' FT</div><div class="ch-p">+' + fmt(p.pay * bet) + "</div></div>";
-    }).join("");
-  }
-  function setupPutt() {
-    var p = CHX.PUTTS[B.step];
-    var left = 0.12 + Math.random() * (0.76 - p.zone);
-    B.zone = [left, left + p.zone];
-    $("ch-zone").style.left = (left * 100) + "%"; $("ch-zone").style.width = (p.zone * 100) + "%";
-    $("ch-putt").disabled = false; $("ch-putt").textContent = "PUTT " + p.ft + " FT";
-    B.moving = true; B.t0 = performance.now(); B.speed = p.speed;
-    cancelAnimationFrame(raf);
-    var tick = function (now) {
-      if (!B || !B.moving) return;
-      var t = (now - B.t0) / 1000 * B.speed * 0.9;
-      B.pos = 0.5 - 0.5 * Math.cos(t * Math.PI);
-      $("ch-needle").style.left = (B.pos * 100) + "%";
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-  }
-  function putt() {
-    if (!B || !B.moving) return;
-    B.moving = false; cancelAnimationFrame(raf);
-    $("ch-putt").disabled = true;
-    var made = B.pos >= B.zone[0] && B.pos <= B.zone[1], p = CHX.PUTTS[B.step];
-    B.results[B.step] = made;
-    if (made) {
-      var add = p.pay * bet; B.won += add; bank += add; stats.out += add; save();
-      $("ch-basketBig").classList.remove("ch-rattle"); void $("ch-basketBig").offsetWidth; $("ch-basketBig").classList.add("ch-rattle");
-      chains();
-      $("ch-bNote").textContent = RUNG[B.step] + "! +" + fmt(add);
-      B.step++;
-      paintBonus();
-      if (B.step < CHX.PUTTS.length) setTimeout(function () { $("ch-bNote").textContent = "Next up: " + CHX.PUTTS[B.step].ft + " feet. The green shrinks."; setupPutt(); }, 1400);
-      else setTimeout(endBonus, 1800);
-    } else {
-      $("ch-bNote").textContent = "Spit out. The bonus is over.";
-      tone(130, 0, 0.35, "sawtooth", 0.05);
-      paintBonus();
-      setTimeout(endBonus, 1600);
+  function paintHold() {
+    var host = $("ch-hold"); host.innerHTML = "";
+    for (var k = 0; k < 15; k++) {
+      var d = document.createElement("div");
+      d.className = "ch-hcell" + (H.cells[k] !== null ? " ch-locked" : "") + (H.spinning && H.cells[k] === null ? " ch-spinning" : "") + (H.fresh[k] ? " ch-fresh" : "");
+      d.innerHTML = hcellHtml(H.cells[k]);
+      host.appendChild(d);
     }
+    var dots = $("ch-spinsLeft").querySelectorAll("i");
+    for (var i = 0; i < 3; i++) dots[i].classList.toggle("ch-on", i < H.left);
+    var sum = 0; H.cells.forEach(function (v) { if (v !== null) sum += CHX.valueX(v) * bet; });
+    $("ch-hsum").textContent = "$" + fmt(sum);
   }
-  function endBonus() {
-    var total = B.won + B.lineWin;
+  function flash(sub, title, num, ms, then) {
+    $("ch-flashS").textContent = sub; $("ch-flashT").textContent = title; $("ch-flashN").textContent = num || "";
+    $("ch-flash").hidden = false;
+    setTimeout(function () { $("ch-flash").hidden = true; if (then) then(); }, ms);
+  }
+  function startHold(lineWin) {
+    stats.bonuses++; save();
+    // grid is [col][row]; the hold grid reads row by row
+    var cells = [];
+    for (var r = 0; r < 3; r++) for (var c = 0; c < 5; c++) cells.push(grid[c][r].s === "BASKET" ? grid[c][r].v : null);
+    H = { cells: cells, left: 3, lineWin: lineWin, fresh: [], spinning: false };
+    flash("HOLD & SPIN", "CHAINS!", "3 SPINS · NEW BASKETS RESET THEM", 1800, function () {
+      $("ch-hold").hidden = false; $("ch-hud").hidden = false;
+      say("Baskets lock in place", "Every new basket resets you to 3 spins", "bonus");
+      paintHold();
+      setTimeout(respin, 900);
+    });
+  }
+  function respin() {
+    if (!H) return;
+    H.fresh = []; H.spinning = true; paintHold();
+    var dur = fast ? 700 : 1300;
+    setTimeout(function () {
+      var hit = false;
+      for (var k = 0; k < 15; k++) if (H.cells[k] === null && Math.random() < CHX.RESPIN_HIT) { H.cells[k] = CHX.basketValue(Math.random); H.fresh[k] = true; hit = true; }
+      H.spinning = false;
+      H.left = hit ? 3 : H.left - 1;
+      paintHold();
+      if (hit) ding(); else stopClick();
+      var full = H.cells.every(function (v) { return v !== null; });
+      if (full || H.left === 0) setTimeout(endHold, 1100);
+      else setTimeout(respin, hit ? 1000 : 700);
+    }, dur);
+  }
+  function endHold() {
+    var sum = 0, full = H.cells.every(function (v) { return v !== null; }), jps = [];
+    H.cells.forEach(function (v) { if (v !== null) { sum += CHX.valueX(v) * bet; if (typeof v !== "number") jps.push(v); } });
+    if (full) { sum += CHX.JACK.GRAND * bet; jps.push("ACE"); }
+    sum = Math.round(sum);
+    bank += sum; stats.out += sum;
+    var total = sum + H.lineWin;
     stats.best = Math.max(stats.best, total); save();
-    $("ch-bonus").hidden = true;
-    countUp($("ch-winv"), total, 1400);
-    say("CHAIN RATTLE " + fmt(B.won), B.results.filter(Boolean).length + " of 3 putts made", "bonus");
-    B = null; busy = false; paint();
+    gong();
+    flash(full ? "ALL 15 FILLED" : "HOLD & SPIN PAYS", full ? "ACE!" : jps.length ? jps[jps.length - 1] + "!" : "COLLECT", "$" + fmt(sum), 2400, function () {
+      $("ch-hold").hidden = true; $("ch-hud").hidden = true;
+      countUp($("ch-winv"), total, 1400);
+      var n = H.cells.filter(function (v) { return v !== null; }).length;
+      say("BASKETS PAY " + fmt(sum), n + " of 15 baskets" + (jps.length ? " · " + jps.join(", ") : ""), "bonus");
+      H = null; busy = false; paint();
+    });
   }
 
   // ---------- pay table ----------
   function paintPays() {
     var lb = bet / 25, rows = [];
-    ["ACE", "GOLD", "PINK", "BLUE", "TREE", "A", "K", "Q", "J", "10"].forEach(function (s) {
+    ["ACE", "GOLD", "PINK", "BLUE", "TREE", "A", "K", "Q", "J", "10", "9"].forEach(function (s) {
       rows.push('<div class="ch-row"><div class="ch-ic">' + ART[s] + '</div><div class="ch-pays">' +
-        CHX.PAY[s].map(function (v, i) { return "<span>" + (5 - i === 5 ? "" : "") + (i + 3) + "×</span><span>" + fmt(v * lb) + "</span>"; }).reverse().join("") + "</div></div>");
+        CHX.PAY[s].map(function (v, i) { return "<span>" + (i + 3) + "×</span><span>" + fmt(v * lb) + "</span>"; }).reverse().join("") + "</div></div>");
     });
-    rows.push('<div class="ch-row"><div class="ch-ic">' + BASKET + '</div><div class="ch-pays">' +
-      [[5, 50], [4, 15], [3, 5]].map(function (m) { return "<span>" + m[0] + "×</span><span>" + fmt(m[1] * bet) + "</span>"; }).join("") + "</div></div>");
+    rows.push('<div class="ch-row"><div class="ch-ic">' + ART.BASKET + '</div><div class="ch-pays"><span>6+</span><span>HOLD &amp; SPIN</span></div></div>');
     $("ch-pt").innerHTML = rows.join("");
   }
 
@@ -362,18 +367,16 @@
   $("ch-throw").addEventListener("click", throwDisc);
   document.addEventListener("keydown", function (e) {
     if (e.code !== "Space" || !root.classList.contains("on")) return;
-    if (!$("ch-bonus").hidden) { e.preventDefault(); putt(); }
-    else if ($("ch-sheet").hidden) { e.preventDefault(); throwDisc(); }
+    if ($("ch-sheet").hidden) { e.preventDefault(); throwDisc(); }
   });
   $("ch-betDown").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i > 0) { bet = BETS[i - 1]; store.set("bet", bet); paint(); } });
   $("ch-betUp").addEventListener("click", function () { var i = BETS.indexOf(bet); if (!busy && i < BETS.length - 1 && BETS[i + 1] <= bank) { bet = BETS[i + 1]; store.set("bet", bet); paint(); } });
-  $("ch-putt").addEventListener("click", putt);
   $("ch-fast").addEventListener("click", function () { fast = !fast; store.set("fast", fast); paint(); });
   $("ch-sound").addEventListener("click", function () {
     soundOn = !soundOn;
     if (soundOn && !ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { soundOn = false; } }
     if (ac && ac.state === "suspended") ac.resume();
-    paint(); if (soundOn) winJingle();
+    paint(); if (soundOn) ding();
   });
   $("ch-reset").addEventListener("click", function () {
     if (busy) return;
@@ -391,7 +394,7 @@
     bank = FREEPLAY.buyIn;
     clearInterval(showTimer); clearLines();
     $("ch-winv").textContent = "0";
-    say("Good luck", "3 baskets anywhere start the Chain Rattle bonus", "quiet");
+    say("Good luck", "6 baskets start Hold & Spin", "quiet");
     paint();
   }
   $("om-chain").addEventListener("click", function () { enter(); Shell.show("chain"); });
@@ -404,6 +407,7 @@
   build();
   var first = CHX.spin(Math.random);
   for (var c = 0; c < 5; c++) setStrip(c, first[c]);
+  lastCols = first;
   if (BETS.indexOf(bet) < 0) bet = 100;
   paint();
   return { enter: enter, busy: function () { return busy; } };

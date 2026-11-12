@@ -16,19 +16,12 @@
     display: flex; flex-direction: column; gap: 10px;
     background:
       radial-gradient(90% 38% at 50% 0%, rgba(255,216,102,.12), transparent 70%),
-      radial-gradient(120% 60% at 50% 48%, var(--pine-2) 0%, var(--pine) 50%, var(--night) 100%);
-  }
-  /* a treeline along the bottom of the marquee, drawn with gradients */
-  #screen-chain .ch-wrap::before {
-    content: ""; position: absolute; left: 0; right: 0; top: 118px; height: 60px; pointer-events: none; opacity: .5;
-    background:
-      linear-gradient(transparent, var(--pine) 95%),
-      conic-gradient(from 150deg at 8% 100%, transparent 0 60deg, #0E2418 0) 0 0 / 34px 60px repeat-x;
+      radial-gradient(120% 60% at 50% 45%, var(--pine-2) 0%, var(--pine) 45%, var(--night) 100%);
   }
   #screen-chain .ch-bar { position: relative; display: flex; align-items: center; gap: 8px; height: 40px; }
   #screen-chain .ch-pill {
-    margin-left: auto; display: flex; align-items: baseline; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px;
-    background: rgba(0,0,0,.45); border: 1px solid var(--hair); box-sizing: border-box; align-items: center;
+    margin-left: auto; display: flex; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px; align-items: center;
+    background: rgba(0,0,0,.45); border: 1px solid var(--hair); box-sizing: border-box;
   }
   #screen-chain .ch-pill .ch-lbl { font-size: 9.5px; font-weight: 700; letter-spacing: .16em; color: var(--dim); }
   #screen-chain .ch-pill .ch-val { font-family: var(--display); font-size: 24px; line-height: 1; padding-top: 3px; color: var(--gold); font-variant-numeric: tabular-nums; }
@@ -39,29 +32,28 @@
   #screen-chain .ch-iconbtn svg { width: 16px; height: 16px; }
   #screen-chain button:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 
-  #screen-chain .ch-marquee { position: relative; text-align: center; padding-top: 2px; }
+  #screen-chain .ch-marquee { position: relative; text-align: center; }
   #screen-chain .ch-marquee .ch-chainrow { display: flex; align-items: center; justify-content: center; gap: 10px; }
   #screen-chain .ch-marquee .ch-chainrow svg { width: 64px; height: 14px; }
   #screen-chain .ch-marquee .ch-small { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: .5em; line-height: 1; color: var(--brass); padding-left: .5em; }
   #screen-chain .ch-marquee h1 {
-    margin: -4px 0 0; font-family: var(--display); font-weight: 700; font-size: 64px; line-height: .9; letter-spacing: .03em;
+    margin: -4px 0 0; font-family: var(--display); font-weight: 700; font-size: 62px; line-height: .9; letter-spacing: .03em;
     background: linear-gradient(180deg, #FFF3C4 0%, #FFD866 42%, #E09B2D 60%, #FFE9A0 100%);
     -webkit-background-clip: text; background-clip: text; color: transparent;
     filter: drop-shadow(0 3px 0 #4A3300) drop-shadow(0 0 18px rgba(255,200,80,.35));
   }
   #screen-chain .ch-marquee .ch-tag { font-size: 10px; font-weight: 700; letter-spacing: .3em; color: var(--dim); margin-top: 2px; }
 
-  #screen-chain .ch-plaques { position: relative; display: grid; grid-template-columns: 1fr 1.18fr 1fr; gap: 8px; align-items: end; }
-  #screen-chain .ch-plaque {
-    border-radius: 12px; padding: 6px 6px 7px; text-align: center; position: relative;
-    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.35)); border: 1px solid rgba(227,188,92,.35);
+  #screen-chain .ch-jacks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+  #screen-chain .ch-jack {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 6px; border-radius: 10px; padding: 5px 10px;
+    background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.4)); border: 1px solid rgba(227,188,92,.3);
   }
-  #screen-chain .ch-plaque .ch-k { font-size: 9px; font-weight: 800; letter-spacing: .2em; color: var(--brass); }
-  #screen-chain .ch-plaque .ch-v { font-family: var(--display); font-size: 22px; line-height: 1; padding-top: 3px; color: var(--cream); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-plaque .ch-ft { font-size: 9px; color: var(--dim); letter-spacing: .06em; }
-  #screen-chain .ch-plaque.ch-ace { padding-block: 9px 9px; border: 1.5px solid var(--gold); background: linear-gradient(180deg, rgba(255,216,102,.22), rgba(60,40,0,.5)); box-shadow: 0 0 22px rgba(255,216,102,.25); }
-  #screen-chain .ch-plaque.ch-ace .ch-k { color: var(--gold); }
-  #screen-chain .ch-plaque.ch-ace .ch-v { font-size: 28px; color: var(--gold); }
+  #screen-chain .ch-jack .ch-k { font-size: 10px; font-weight: 800; letter-spacing: .18em; }
+  #screen-chain .ch-jack .ch-v { font-family: var(--display); font-size: 21px; line-height: 1; padding-top: 2px; color: var(--cream); font-variant-numeric: tabular-nums; }
+  #screen-chain .ch-jack.ch-grand { border-color: var(--gold); background: linear-gradient(180deg, rgba(255,216,102,.2), rgba(70,30,0,.5)); box-shadow: 0 0 18px rgba(255,216,102,.22); }
+  #screen-chain .ch-jack.ch-grand .ch-k, #screen-chain .ch-jack.ch-grand .ch-v { color: var(--gold); }
+  #screen-chain .ch-jack.ch-major .ch-k { color: #FF8A5A; } #screen-chain .ch-jack.ch-minor .ch-k { color: #6FB8FF; } #screen-chain .ch-jack.ch-mini .ch-k { color: var(--mint); }
 
   #screen-chain .ch-cabinet {
     position: relative; border-radius: 22px; padding: 4px;
@@ -82,6 +74,11 @@
   #screen-chain .ch-strip.ch-blur .ch-cell svg { filter: blur(1.4px); }
   #screen-chain .ch-cell { position: relative; height: var(--h); display: flex; align-items: center; justify-content: center; transition: filter .25s, opacity .25s; }
   #screen-chain .ch-cell svg { width: 84%; height: 84%; overflow: visible; }
+  #screen-chain .ch-cell .ch-amt, #screen-chain .ch-hcell .ch-amt {
+    position: absolute; left: 0; right: 0; bottom: 18%; text-align: center; font-family: var(--display); font-weight: 700;
+    font-size: 17px; line-height: 1; color: #FFF6D8; text-shadow: 0 1px 0 #3A2600, 0 0 6px rgba(0,0,0,.9); pointer-events: none;
+  }
+  #screen-chain .ch-cell .ch-amt.ch-jp, #screen-chain .ch-hcell .ch-amt.ch-jp { font-size: 15px; letter-spacing: .04em; }
   #screen-chain .ch-cell.ch-dim { opacity: .32; filter: saturate(.4); }
   #screen-chain .ch-cell.ch-hit::before {
     content: ""; position: absolute; inset: 4px; border-radius: 10px;
@@ -91,7 +88,6 @@
   #screen-chain .ch-cell.ch-hit svg { animation: ch-pop .5s ease-out; }
   @keyframes ch-pulse { 50% { box-shadow: 0 0 0 2px var(--gold), 0 0 28px rgba(255,216,102,.85), inset 0 0 22px rgba(255,216,102,.45); } }
   @keyframes ch-pop { 40% { transform: scale(1.12); } }
-  /* glass: darker top and bottom edges plus a soft sheen */
   #screen-chain .ch-glass {
     position: absolute; inset: 8px 6px; border-radius: 10px; pointer-events: none;
     background:
@@ -100,6 +96,27 @@
   }
   #screen-chain .ch-lines { position: absolute; inset: 0; pointer-events: none; overflow: visible; }
   #screen-chain .ch-lines polyline { fill: none; stroke: var(--gold); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px rgba(255,216,102,.95)); }
+
+  /* hold & spin: fifteen cells that spin on their own */
+  #screen-chain .ch-hold { position: absolute; inset: 8px 6px; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 4px; }
+  #screen-chain .ch-hcell { position: relative; border-radius: 10px; background: radial-gradient(circle at 50% 45%, #13261B, #06100B); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  #screen-chain .ch-hcell svg { width: 84%; height: 84%; overflow: visible; }
+  #screen-chain .ch-hcell.ch-locked { background: radial-gradient(circle at 50% 45%, #2E5A3A, #0C1D14); box-shadow: inset 0 0 0 1.5px rgba(255,216,102,.55); }
+  #screen-chain .ch-hcell.ch-spinning::after {
+    content: ""; position: absolute; inset: 0;
+    background: repeating-linear-gradient(180deg, rgba(107,240,138,0) 0 10px, rgba(107,240,138,.16) 10px 14px);
+    animation: ch-roll .18s linear infinite;
+  }
+  @keyframes ch-roll { to { background-position: 0 28px; } }
+  #screen-chain .ch-hcell.ch-fresh { animation: ch-land .5s ease-out; }
+  @keyframes ch-land { 0% { transform: scale(.5); filter: brightness(2.2); } 60% { transform: scale(1.1); } 100% { transform: scale(1); } }
+  #screen-chain .ch-hcell .ch-amt { bottom: 14%; font-size: 18px; }
+  #screen-chain .ch-hud { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
+  #screen-chain .ch-hud .ch-spins { display: flex; gap: 6px; align-items: center; }
+  #screen-chain .ch-hud .ch-spins i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--brass); }
+  #screen-chain .ch-hud .ch-spins i.ch-on { background: radial-gradient(circle at 40% 35%, #C8FFD6, #2FBF5A); box-shadow: 0 0 10px rgba(107,240,138,.7); }
+  #screen-chain .ch-hud .ch-spins span { font-size: 10px; font-weight: 800; letter-spacing: .16em; color: var(--dim); margin-right: 4px; }
+  #screen-chain .ch-hud .ch-sum { font-family: var(--display); font-size: 30px; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; }
 
   #screen-chain .ch-msg { position: relative; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
   #screen-chain .ch-msg .ch-big { font-family: var(--display); font-size: 34px; line-height: 1; letter-spacing: .04em; color: var(--mint); text-shadow: 0 0 18px rgba(107,240,138,.4); font-variant-numeric: tabular-nums; }
@@ -124,11 +141,10 @@
   }
   #screen-chain .ch-step:disabled { opacity: .3; cursor: default; }
   #screen-chain .ch-spin {
-    position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: pointer; padding: 0;
-    border: 0; color: #fff;
+    position: relative; width: 104px; height: 104px; border-radius: 50%; cursor: pointer; padding: 0; border: 0; color: #fff;
     background: radial-gradient(circle at 50% 30%, #8CFFA7 0%, #3BD465 30%, #16883C 70%, #0C5A27 100%);
     box-shadow: 0 0 0 4px #0B1A12, 0 0 0 6px var(--brass), 0 10px 26px rgba(0,0,0,.6), 0 0 30px rgba(107,240,138,.35);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
   }
   #screen-chain .ch-spin svg { width: 30px; height: 30px; }
   #screen-chain .ch-spin b { font-family: var(--display); font-weight: 700; font-size: 26px; line-height: 1; letter-spacing: .1em; margin-top: 2px; text-shadow: 0 2px 0 rgba(0,0,0,.35); }
@@ -144,9 +160,8 @@
   #screen-chain .ch-chip.ch-on { color: var(--gold); border-color: rgba(255,216,102,.55); background: rgba(255,216,102,.08); }
   #screen-chain .ch-stats { text-align: center; font-size: 10.5px; color: var(--dim); font-variant-numeric: tabular-nums; }
 
-  /* pay table */
   #screen-chain .ch-sheet { position: fixed; inset: 0; z-index: 20; background: rgba(0,0,0,.75); display: flex; align-items: flex-end; justify-content: center; }
-  #screen-chain .ch-sheet .ch-card {
+  #screen-chain .ch-sheet .ch-panel {
     width: 100%; max-width: 440px; max-height: 88%; overflow: auto; box-sizing: border-box; background: linear-gradient(#10261A, #08140D);
     border: 1px solid rgba(227,188,92,.5); border-bottom: 0; border-radius: 22px 22px 0 0;
     padding-block: 18px calc(22px + env(safe-area-inset-bottom, 0px));
@@ -154,7 +169,7 @@
   }
   #screen-chain .ch-sheet h2 { margin: 0; font-family: var(--display); font-weight: 600; color: var(--gold); font-size: 32px; line-height: 1; letter-spacing: .04em; }
   #screen-chain .ch-sheet h3 { margin: 16px 0 4px; font-size: 11px; font-weight: 800; letter-spacing: .18em; color: var(--brass); }
-  #screen-chain .ch-sheet p { margin: 6px 0; font-size: 13px; line-height: 1.5; color: rgba(255,246,218,.8); }
+  #screen-chain .ch-sheet p { margin: 6px 0; font-size: 13px; line-height: 1.5; color: rgba(255,242,214,.82); }
   #screen-chain .ch-pt { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
   #screen-chain .ch-pt .ch-row { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 12px; background: rgba(0,0,0,.3); border: 1px solid var(--hair); }
   #screen-chain .ch-pt .ch-ic { width: 46px; height: 46px; flex: none; }
@@ -166,51 +181,19 @@
     width: 100%; height: 46px; margin-top: 14px; border-radius: 23px; border: 1px solid rgba(227,188,92,.55); background: rgba(255,216,102,.08);
     color: var(--gold); font: 800 12px var(--body); letter-spacing: .16em; cursor: pointer;
   }
-
-  /* the putting green */
-  #screen-chain .ch-bonus {
-    position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
-    background: radial-gradient(70% 50% at 50% 55%, #1F5A33 0%, #0E2C1A 55%, #040A06 100%);
-    padding-left: max(18px, env(safe-area-inset-left, 0px)); padding-right: max(18px, env(safe-area-inset-right, 0px));
+  #screen-chain .ch-flash {
+    position: fixed; inset: 0; z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    background: radial-gradient(60% 40% at 50% 50%, rgba(20,70,36,.94), rgba(3,10,6,.95)); pointer-events: none; text-align: center;
   }
-  #screen-chain .ch-green { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; }
-  #screen-chain .ch-green .ch-t { font-family: var(--display); font-weight: 600; font-size: 22px; letter-spacing: .4em; color: var(--brass); padding-left: .4em; }
-  #screen-chain .ch-green .ch-bank { font-family: var(--display); font-weight: 700; font-size: 58px; line-height: .9; color: var(--gold); text-shadow: 0 0 24px rgba(255,216,102,.4); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-green .ch-note { font-size: 13px; color: var(--dim); line-height: 1.4; min-height: 36px; }
-  #screen-chain .ch-ladder { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; }
-  #screen-chain .ch-rung { border-radius: 12px; border: 1px solid var(--hair); padding: 7px 4px; background: rgba(0,0,0,.35); }
-  #screen-chain .ch-rung .ch-nm { font-size: 9px; font-weight: 800; letter-spacing: .18em; color: var(--dim); }
-  #screen-chain .ch-rung .ch-ft { font-family: var(--display); font-size: 22px; line-height: 1; padding-top: 2px; }
-  #screen-chain .ch-rung .ch-p { font-size: 11px; color: var(--dim); font-variant-numeric: tabular-nums; }
-  #screen-chain .ch-rung.ch-now { border-color: var(--gold); box-shadow: 0 0 16px rgba(255,216,102,.3); }
-  #screen-chain .ch-rung.ch-now .ch-nm { color: var(--gold); }
-  #screen-chain .ch-rung.ch-made { border-color: var(--mint); background: rgba(107,240,138,.08); }
-  #screen-chain .ch-rung.ch-made .ch-ft, #screen-chain .ch-rung.ch-made .ch-nm { color: var(--mint); }
-  #screen-chain .ch-rung.ch-miss { border-color: var(--red); opacity: .6; }
-  #screen-chain .ch-basket { height: 168px; display: flex; align-items: flex-end; justify-content: center; }
-  #screen-chain .ch-basket svg { width: 132px; height: 168px; overflow: visible; }
-  #screen-chain .ch-basket.ch-ch-rattle svg { animation: ch-rattle .55s ease-in-out; }
-  @keyframes ch-rattle { 0%,100% { transform: rotate(0); } 20% { transform: rotate(-4deg); } 40% { transform: rotate(4deg); } 60% { transform: rotate(-3deg); } 80% { transform: rotate(2deg); } }
-  #screen-chain .ch-meter {
-    position: relative; width: 100%; height: 28px; border-radius: 14px; overflow: hidden;
-    background: linear-gradient(90deg, #3A1712, #2A2410 50%, #3A1712); border: 1px solid rgba(255,246,218,.2);
-  }
-  #screen-chain .ch-zone { position: absolute; top: 0; bottom: 0; background: linear-gradient(90deg, rgba(107,240,138,.25), rgba(107,240,138,.8), rgba(107,240,138,.25)); box-shadow: 0 0 14px rgba(107,240,138,.5); }
-  #screen-chain .ch-needle { position: absolute; top: -3px; bottom: -3px; width: 6px; margin-left: -3px; background: #fff; border-radius: 3px; box-shadow: 0 0 10px #fff, 0 0 2px #000; }
-  #screen-chain .ch-putt {
-    width: 100%; height: 58px; border-radius: 29px; border: 0; cursor: pointer; color: #fff;
-    background: radial-gradient(circle at 50% 20%, #74F590, #1E8A44 75%);
-    box-shadow: 0 0 0 2px var(--brass), 0 10px 24px rgba(0,0,0,.5);
-    font-family: var(--display); font-weight: 700; font-size: 28px; letter-spacing: .12em; line-height: 1; padding-top: 4px;
-  }
-  #screen-chain .ch-putt:disabled { filter: saturate(.3) brightness(.7); }
+  #screen-chain .ch-flash .ch-t { font-family: var(--display); font-weight: 700; font-size: 64px; line-height: .9; color: var(--gold); text-shadow: 0 0 30px rgba(255,216,102,.6); }
+  #screen-chain .ch-flash .ch-s { font-size: 13px; font-weight: 700; letter-spacing: .24em; color: var(--cream); }
+  #screen-chain .ch-flash .ch-n { font-family: var(--display); font-weight: 700; font-size: 48px; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
   @media (max-height: 740px) {
     #screen-chain .ch-reel { --h: min(72px, 19vw); }
-    #screen-chain .ch-marquee h1 { font-size: 52px; }
+    #screen-chain .ch-marquee h1 { font-size: 50px; }
     #screen-chain .ch-spin { width: 88px; height: 88px; }
-    #screen-chain .ch-basket { height: 130px; } #screen-chain .ch-basket svg { height: 130px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    #screen-chain .ch-basket.ch-ch-rattle svg, #screen-chain .ch-cell.ch-hit::before, #screen-chain .ch-cell.ch-hit svg, #screen-chain .ch-spin.ch-going svg { animation: none; }
+    #screen-chain .ch-cell.ch-hit::before, #screen-chain .ch-cell.ch-hit svg, #screen-chain .ch-spin.ch-going svg, #screen-chain .ch-hcell.ch-spinning::after, #screen-chain .ch-hcell.ch-fresh { animation: none; }
   }
 

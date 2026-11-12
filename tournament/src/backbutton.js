@@ -6,13 +6,13 @@
     var TABLES = { holdem: "Holdem", djwild: "DjWild", shootout: "Shootout", miniuth: "MiniUth",
       iluvsuits: "IluvSuits", destroyer: "Destroyer", sicbo: "SicBo", roulette: "Roulette",
       wheel: "Wheel", keno: "Keno", mines: "Mines", blackjack: "Blackjack", doubledown: "DoubleDown",
-      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps", kirby: "Kirby", chain: "ChainSlot", lantern: "LanternSlot" };
+      baccarat: "Baccarat", dragontiger: "DragonTiger", plinko: "Plinko", craps: "Craps", kirby: "Kirby", chain: "ChainSlot" };
     // the tables are set up further down the page, so look them up on the tap
     function games() {
       return { Holdem: Holdem, DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth,
         IluvSuits: IluvSuits, Destroyer: Destroyer, SicBo: SicBo, Roulette: Roulette, Wheel: Wheel,
         Keno: Keno, Mines: Mines, Blackjack: Blackjack, DoubleDown: DoubleDown, Baccarat: Baccarat,
-        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps, Kirby: Kirby, ChainSlot: ChainSlot, LanternSlot: LanternSlot };
+        DragonTiger: DragonTiger, Plinko: Plinko, Craps: Craps, Kirby: Kirby, ChainSlot: ChainSlot };
     }
     var tip = null, hide = null;
     function say(text) {

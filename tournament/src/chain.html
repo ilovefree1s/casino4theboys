@@ -35,23 +35,29 @@
       <svg viewBox="0 0 64 14" aria-hidden="true" fill="none" stroke="#C9A240" stroke-width="2"><path d="M1 7h10"/><rect x="11" y="3" width="16" height="8" rx="4"/><rect x="23" y="3" width="16" height="8" rx="4"/><rect x="35" y="3" width="16" height="8" rx="4"/><rect x="47" y="3" width="16" height="8" rx="4"/></svg>
     </div>
     <h1>REACTION</h1>
-    <div class="ch-tag">DISC GOLF · 5 REELS · 25 LINES</div>
+    <div class="ch-tag">DISC GOLF · HOLD &amp; SPIN · 25 LINES</div>
   </div>
 
-  <div class="ch-plaques">
-    <div class="ch-plaque"><div class="ch-k">PAR</div><div class="ch-v" id="ch-jp0">0</div><div class="ch-ft">10 FT PUTT</div></div>
-    <div class="ch-plaque ch-ace"><div class="ch-k">ACE</div><div class="ch-v" id="ch-jp2">0</div><div class="ch-ft">30 FT PUTT</div></div>
-    <div class="ch-plaque"><div class="ch-k">BIRDIE</div><div class="ch-v" id="ch-jp1">0</div><div class="ch-ft">20 FT PUTT</div></div>
+  <div class="ch-jacks">
+    <div class="ch-jack ch-grand"><span class="ch-k">ACE</span><span class="ch-v" id="ch-jpG">0</span></div>
+    <div class="ch-jack ch-major"><span class="ch-k">EAGLE</span><span class="ch-v" id="ch-jpM">0</span></div>
+    <div class="ch-jack ch-minor"><span class="ch-k">BIRDIE</span><span class="ch-v" id="ch-jpN">0</span></div>
+    <div class="ch-jack ch-mini"><span class="ch-k">PAR</span><span class="ch-v" id="ch-jpI">0</span></div>
   </div>
 
   <div class="ch-cabinet">
     <div class="ch-window">
       <div class="ch-reels" id="ch-reels"></div>
+      <div class="ch-hold" id="ch-hold" hidden></div>
       <div class="ch-glass"></div>
     </div>
   </div>
 
-  <div class="ch-msg ch-quiet" id="ch-msg"><div class="ch-big">Good luck</div><div class="ch-small">3 baskets anywhere start the Chain Rattle bonus</div></div>
+  <div class="ch-hud" id="ch-hud" hidden>
+    <div class="ch-spins" id="ch-spinsLeft"><span>SPINS</span><i></i><i></i><i></i></div>
+    <div class="ch-sum" id="ch-hsum">0</div>
+  </div>
+  <div class="ch-msg ch-quiet" id="ch-msg"><div class="ch-big">Good luck</div><div class="ch-small">6 baskets start Hold &amp; Spin</div></div>
 
   <div class="ch-console">
     <div class="ch-deck">
@@ -79,29 +85,20 @@
 </div>
 
 <div class="ch-sheet" id="ch-sheet" hidden>
-  <div class="ch-card">
+  <div class="ch-panel">
     <h2>PAYS &amp; RULES</h2>
     <p>25 lines, paid left to right from the first reel. Amounts are for your current total bet.</p>
     <div class="ch-pt" id="ch-pt"></div>
     <h3>WILD</h3>
     <p>The ACE medallion lands on reels 2, 3 and 4 and stands in for every symbol except the basket.</p>
-    <h3>CHAIN RATTLE BONUS</h3>
-    <p>3, 4 or 5 baskets anywhere pay 5×, 15× or 50× your bet up front. Then you putt: stop the needle in the green. Make the 10 footer for Par, the 20 footer for Birdie and the 30 footer for the Ace. The green shrinks and the needle speeds up each time. A miss ends the bonus, and you keep everything you made.</p>
+    <h3>HOLD &amp; SPIN</h3>
+    <p>Every basket carries a prize: 1× to 15× your bet, or the Par, Birdie or Eagle jackpot. Land 6 or more baskets anywhere and they lock in place. You get 3 spins where only the empty spots spin. Every new basket locks too and sets you back to 3 spins. When the spins run out you collect every basket on the screen.</p>
+    <p>Fill all 15 spots and you hit the ACE jackpot on top.</p>
     <p>Play testing only: free-play chips, never the campaign or the tournament.</p>
     <button class="ch-done" id="ch-sheetX" type="button">CLOSE</button>
   </div>
 </div>
 
-<div class="ch-bonus" id="ch-bonus" hidden>
-  <div class="ch-green">
-    <div class="ch-t">CHAIN RATTLE</div>
-    <div class="ch-bank" id="ch-bBank">0</div>
-    <div class="ch-ladder" id="ch-ladder"></div>
-    <div class="ch-basket" id="ch-basketBig"></div>
-    <div class="ch-meter" id="ch-meter"><div class="ch-zone" id="ch-zone"></div><div class="ch-needle" id="ch-needle"></div></div>
-    <div class="ch-note" id="ch-bNote">Stop the needle in the green</div>
-    <button class="ch-putt" id="ch-putt" type="button">PUTT</button>
-  </div>
-</div>
+<div class="ch-flash" id="ch-flash" hidden><div class="ch-s" id="ch-flashS">HOLD &amp; SPIN</div><div class="ch-t" id="ch-flashT">CHAINS!</div><div class="ch-n" id="ch-flashN"></div></div>
 </div>
 
