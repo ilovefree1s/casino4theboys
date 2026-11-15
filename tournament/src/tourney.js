@@ -412,7 +412,32 @@
         wins.appendChild(c);
       });
 
+      // the first tab is yesterday's day, or last week's final standings until this week has a midnight
+      var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
+      if (dayBtn) dayBtn.textContent = b.final ? "LAST WEEK" : "YESTERDAY";
       if (tab === "stats") return paintStats(b);
+      if (b.final) {
+        if (tab === "day") {
+          var hiw = highs(lastWeekOf(b));
+          if (b.rows.length) list.appendChild(heading("WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"));
+          b.rows.forEach(function (r, i) {
+            var t = hiw && hiw[r.name.toLowerCase()] ? "HIGHEST CASH $" + fmt(hiw[r.name.toLowerCase()]) : "";
+            list.appendChild(row(i + 1, r.name, t, money(r.net), r.name.toLowerCase() === me));
+          });
+          if (!b.rows.length) list.appendChild(empty("No standings from last week."));
+        } else {
+          // a new week: everybody's name, no money until the first midnight
+          var all = roster || [];
+          if (all.length) list.appendChild(heading("WEEK " + b.week_no + " · " + all.length + " PLAYERS · MONEY SHOWS AT MIDNIGHT"));
+          all.forEach(function (p) {
+            var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
+            el.classList.add("blank");
+            list.appendChild(el);
+          });
+          if (!all.length) list.appendChild(empty("The first standings come in at midnight."));
+        }
+        return;
+      }
       var dayTab = tab === "day", asOf = dayName(b.as_of);
       if (b.rows.length) list.appendChild(heading(b.final ? "WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"
                                : dayTab ? asOf + " · WHAT EACH PLAYER MADE" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
