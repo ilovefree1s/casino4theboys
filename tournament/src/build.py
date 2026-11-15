@@ -312,6 +312,20 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
+# ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
+sub("""        else if (dealerBj) { returned = 0; lost = true; }
+        else if (isBust(h.cards)) { returned = 0; lost = true; }
+        else if (push22) returned = h.stake;""",
+"""        else if (dealerBj) { returned = 0; lost = true; }
+        else if (superBusterWin && superBusterStake > 0) returned = h.stake;   // a winning Super Buster saves the hand
+        else if (isBust(h.cards)) { returned = 0; lost = true; }
+        else if (push22) returned = h.stake;""")
+
+sub("""        Anything but an ace or a ten busts the hand and loses the bet.
+      </div>""", """        Anything but an ace or a ten busts the hand and loses the bet.
+        Win it and your main bet pushes.
+      </div>""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

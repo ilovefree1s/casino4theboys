@@ -4444,6 +4444,7 @@
       <div style="margin-top:6px;font-size:10px;color:rgba(245,241,232,.6)">
         Dealt a hard 20, stake it and take one card on purpose, up to your bet.
         Anything but an ace or a ten busts the hand and loses the bet.
+        Win it and your main bet pushes.
       </div>
       <div style="margin-top:14px;font-size:10px;color:rgba(245,241,232,.6)">
         Both read your two cards plus the dealer's up card.
@@ -11908,6 +11909,7 @@
         if (playerBj && dealerBj) returned = h.stake;
         else if (playerBj) returned = wholeDollars(h.stake + 1.5 * h.betUnit);
         else if (dealerBj) { returned = 0; lost = true; }
+        else if (superBusterWin && superBusterStake > 0) returned = h.stake;   // a winning Super Buster saves the hand
         else if (isBust(h.cards)) { returned = 0; lost = true; }
         else if (push22) returned = h.stake;
         else if (dTotal > 21) returned = h.stake + winUnits * h.betUnit;
