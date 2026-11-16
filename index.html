@@ -16658,6 +16658,25 @@
 
     // ---------- render ----------
     function setMessage(text) { message = text; $("cr-message").textContent = text; }
+    var popTimer = 0;
+    /** A pop-up over the felt, for a throw the table won't take. */
+    function pop(title, text) {
+      var p = $("cr-pop");
+      if (!p) {
+        p = document.createElement("div"); p.id = "cr-pop";
+        p.style.cssText = "position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:9999;width:min(320px,84vw);" +
+          "padding:16px 18px;border-radius:14px;background:rgba(10,8,18,.96);border:1.5px solid #FF3B3B;" +
+          "box-shadow:0 12px 30px rgba(0,0,0,.6);text-align:center;pointer-events:none;transition:opacity .25s;opacity:0;" +
+          "font-family:system-ui,sans-serif";
+        document.body.appendChild(p);
+      }
+      p.innerHTML = '<div style="font-weight:800;letter-spacing:.1em;color:#FF5A5A;font-size:14px"></div>' +
+        '<div style="margin-top:6px;color:#F5F1E8;font-size:14px;line-height:1.4"></div>';
+      p.children[0].textContent = title; p.children[1].textContent = text;
+      p.style.opacity = "1";
+      clearTimeout(popTimer);
+      popTimer = setTimeout(function () { p.style.opacity = "0"; }, 2600);
+    }
     function renderTop() {
       $("cr-bankroll").textContent = fmt(bankroll);
       $("cr-risk").textContent = fmt(atRisk());
@@ -17028,8 +17047,9 @@
       }
       if (swept) a.appendChild(actionBtn("SAME BET", GOLD, rebet));
       else a.appendChild(actionBtn("TAKE DOWN", DIM, takeDown));
-      a.appendChild(actionBtn(comeOut() ? "COME OUT" : "ROLL", RED, throwDice,
-        comeOut() && bets.pass <= 0));
+      var rb = actionBtn(comeOut() ? "COME OUT" : "ROLL", RED, throwDice);
+      if (comeOut() && bets.pass <= 0) rb.style.opacity = ".5";   // looks off, but a tap still says why
+      a.appendChild(rb);
     }
     function renderRebuy() {
       var broke = Shell.mode === "testing" && bankroll < 25 &&
@@ -17432,6 +17452,7 @@
          * pixels tall. So the spot that needs a chip says so itself.
          */
         setMessage("The line must be covered to come out"); renderHead();
+        pop("NO PASS LINE BET", "Put chips on the PASS LINE to come out. Then you can roll.");
         [].forEach.call(document.querySelectorAll("#cr-felt [id='cr-pass'], #cr-felt [data-pass]"),
           function (el) {
             el.classList.remove("nag");

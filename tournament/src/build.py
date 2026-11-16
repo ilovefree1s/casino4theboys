@@ -333,6 +333,37 @@ sub("""        msgText = "BOOM — the house takes " + fmt(stake);
         if (stake <= bankroll) bet = stake;
         stake = 0; phase = "result";""")
 
+# ---- Craps: the roll button always answers; when the table won't take the throw, a pop-up says why ----
+sub("""      a.appendChild(actionBtn(comeOut() ? "COME OUT" : "ROLL", RED, throwDice,
+        comeOut() && bets.pass <= 0));""",
+"""      var rb = actionBtn(comeOut() ? "COME OUT" : "ROLL", RED, throwDice);
+      if (comeOut() && bets.pass <= 0) rb.style.opacity = ".5";   // looks off, but a tap still says why
+      a.appendChild(rb);""")
+sub("""    function setMessage(text) { message = text; $("cr-message").textContent = text; }""",
+"""    function setMessage(text) { message = text; $("cr-message").textContent = text; }
+    var popTimer = 0;
+    /** A pop-up over the felt, for a throw the table won't take. */
+    function pop(title, text) {
+      var p = $("cr-pop");
+      if (!p) {
+        p = document.createElement("div"); p.id = "cr-pop";
+        p.style.cssText = "position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:9999;width:min(320px,84vw);" +
+          "padding:16px 18px;border-radius:14px;background:rgba(10,8,18,.96);border:1.5px solid #FF3B3B;" +
+          "box-shadow:0 12px 30px rgba(0,0,0,.6);text-align:center;pointer-events:none;transition:opacity .25s;opacity:0;" +
+          "font-family:system-ui,sans-serif";
+        document.body.appendChild(p);
+      }
+      p.innerHTML = '<div style="font-weight:800;letter-spacing:.1em;color:#FF5A5A;font-size:14px"></div>' +
+        '<div style="margin-top:6px;color:#F5F1E8;font-size:14px;line-height:1.4"></div>';
+      p.children[0].textContent = title; p.children[1].textContent = text;
+      p.style.opacity = "1";
+      clearTimeout(popTimer);
+      popTimer = setTimeout(function () { p.style.opacity = "0"; }, 2600);
+    }""")
+sub("""        setMessage("The line must be covered to come out"); renderHead();""",
+"""        setMessage("The line must be covered to come out"); renderHead();
+        pop("NO PASS LINE BET", "Put chips on the PASS LINE to come out. Then you can roll.");""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
