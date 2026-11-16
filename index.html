@@ -16244,6 +16244,7 @@
       if (mineSet[i]) {
         struck = i; Wheel.tick(1);
         msgText = "BOOM — the house takes " + fmt(stake);
+        if (stake <= bankroll) bet = stake;
         stake = 0; phase = "result";
         renderAll(); return;
       }

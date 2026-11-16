@@ -326,6 +326,13 @@ sub("""        Anything but an ace or a ten busts the hand and loses the bet.
         Win it and your main bet pushes.
       </div>""")
 
+# ---- Mines: after a mine, the same bet stays on the spot for another go, as it does after a cash-out ----
+sub("""        msgText = "BOOM — the house takes " + fmt(stake);
+        stake = 0; phase = "result";""",
+"""        msgText = "BOOM — the house takes " + fmt(stake);
+        if (stake <= bankroll) bet = stake;
+        stake = 0; phase = "result";""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
