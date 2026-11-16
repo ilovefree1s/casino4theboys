@@ -191,3 +191,11 @@
   /* players with no midnight total yet: a row with the money left blank */
   .tt-row.blank .rk { visibility: hidden; }
   .tt-row.blank .val::before { content: "—"; color: rgba(245,241,232,.3); }
+
+  /* the hot game's own button: a lit border and a 🔥 2× tag in the corner */
+  .tt-hotbtn { position: relative; box-shadow: 0 0 0 2px #FF8A3D, 0 0 22px rgba(255,120,40,.45) !important; }
+  .tt-hot2x {
+    position: absolute; top: -9px; right: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px;
+    background: linear-gradient(90deg, #FF5A1E, #FFB238); color: #1A0A00; font: 900 11px/1 system-ui, sans-serif;
+    letter-spacing: .08em; box-shadow: 0 3px 10px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap;
+  }

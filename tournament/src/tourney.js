@@ -213,8 +213,26 @@
         var r = show.apply(this, arguments);
         if (sess) { if (!sess.screen) sess.screen = name; else if (name !== sess.screen) end(); }
         if (name === "lobby") paintBanner();
+        paintBadges();
         return r;
       };
+      /** A 🔥 2× tag on the hot game's own button, wherever it's listed. */
+      function paintBadges() {
+        var g = TT.on && TT.day ? today() : "";
+        Object.keys(GAMES).forEach(function (id) {
+          var btn = $(id);
+          if (!btn) return;
+          var tag = btn.querySelector(".tt-hot2x");
+          var on = g && GAMES[id] === g;
+          if (!on) { if (tag) tag.remove(); btn.classList.remove("tt-hotbtn"); return; }
+          btn.classList.add("tt-hotbtn");
+          if (!tag) {
+            tag = document.createElement("span"); tag.className = "tt-hot2x";
+            tag.textContent = "🔥 2× TODAY";
+            btn.appendChild(tag);
+          }
+        });
+      }
       function paintBanner() {
         var line = $("lb-campaign-line"), el = $("tt-hotline");
         if (!line) return;
@@ -230,7 +248,8 @@
         el.style.display = g ? "" : "none";
         if (g) el.textContent = "🔥 HOT GAME TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
       }
-      return { today: today, sit: sit, track: track, end: end, net: function () { return sess ? sess.net : 0; }, banner: paintBanner };
+      return { today: today, sit: sit, track: track, end: end, net: function () { return sess ? sess.net : 0; },
+               banner: function () { paintBanner(); paintBadges(); } };
     })();
 
     // ---- the front-page lane ----
