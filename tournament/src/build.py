@@ -368,7 +368,7 @@ sub("""        setMessage("The line must be covered to come out"); renderHead();
 sub("      if (isOutside(bet)) return hits === 2 ? stake * (bothBalls(bet) + 1) : 0;",
     "      // half the stake rides each ball at the outside bet's own price: red with one\n"
     "      // ball in is a push, both in pays even money; a dozen with one in wins half\n"
-    "      if (isOutside(bet)) return Math.round(hits * (stake / 2) * (bet.pays + 1));")
+    "      if (isOutside(bet)) return Math.floor(hits * (stake / 2) * (bet.pays + 1));")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
