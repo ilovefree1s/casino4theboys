@@ -442,6 +442,7 @@
     $("pk-kirby").addEventListener("click", function () { Kirby.enter(); Shell.show("kirby"); });
     return {
       busy: function () { return phase !== "betting" && phase !== "result"; },
+      credit: function (x) { bankroll += x; syncWallet(); renderAll(); },
       enter: enter
     };
   })();

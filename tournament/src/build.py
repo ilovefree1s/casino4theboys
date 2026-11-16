@@ -384,7 +384,10 @@ for name, test in BUSY.items():
     b = h.index("\n  })();", a)
     body = h[a:b]
     r = body.rindex("\n    return {")
-    body = body[:r] + "\n    return { busy: function () { return %s; }," % (test or BUSY_DEFAULT) + body[r + len("\n    return {"):]
+    # credit: the hot game's second helping, put straight onto the table's own stack
+    draw = "updateMoney" if name == "Baccarat" else "renderAll"
+    credit = " credit: function (x) { bankroll += x; syncWallet(); try { %s(); } catch (e) {} }," % draw
+    body = body[:r] + "\n    return { busy: function () { return %s; },%s" % (test or BUSY_DEFAULT, credit) + body[r + len("\n    return {"):]
     h = h[:a] + body + h[b:]
 
 # ---- free bet blackjack: a pair of 5s splits free, it never doubles ----

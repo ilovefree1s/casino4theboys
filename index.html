@@ -5441,7 +5441,7 @@
     <ol class="tt-rlist">
       <li><b>A fresh $5,000 every day.</b> At midnight your money resets and you start over in The Basement. Same tables and limits as Campaign. <b>Rooms open with your bankroll:</b> Main Floor at $10,000, High Limit at $50,000, The Salon at $250,000, Whale Room at $1,000,000.</li>
       <li><b>Your best 3 days win the week.</b> Each day's score is what you made: your money at midnight, minus what you owe on markers, minus the $5,000 you started with. At the end of the week your 3 best days are added up, and the biggest total is the champion. If you play fewer than 3 days, the days you played are what count.</li>
-      <li><b>🔥 Hot game of the day.</b> Every day one game is the hot game (look for the 🔥 2× TODAY tag), and every win there pays double: a hand that wins $1,000 pays you $2,000. The extra counts toward your day the moment you win it and lands in your bankroll when you leave the table. The two craps games are never the hot game.</li>
+      <li><b>🔥 Hot game of the day.</b> Every day one game is the hot game (look for the 🔥 2× TODAY tag), and every win there pays double: a hand that wins $1,000 pays you $2,000. The extra goes straight onto your stack the moment you win. The two craps games are never the hot game.</li>
       <li><b>Markers:</b> the house gives you $5,000, and you owe $7,500 back. You can take one once you're <b>down to $1,000</b> or when you go broke, and hold <b>up to 3 unpaid at a time</b>. Whatever you still owe at midnight comes off that day's score, then it's wiped. Go broke holding 3 unpaid and <b>you're out for the day</b>; you're back with $5,000 at midnight.</li>
       <li><b>The board updates once a day, at midnight.</b> THE WEEK shows everyone's best-3 total as of last midnight, and YESTERDAY shows what each player made that day, with a daily winner. During the day, only you can see your own money.</li>
       <li><b>One phone.</b> Your name is locked to this phone, and your PIN gets you back in if it ever forgets you.</li>
@@ -8509,6 +8509,7 @@
     $("pk-kirby").addEventListener("click", function () { Kirby.enter(); Shell.show("kirby"); });
     return {
       busy: function () { return phase !== "betting" && phase !== "result"; },
+      credit: function (x) { bankroll += x; syncWallet(); renderAll(); },
       enter: enter
     };
   })();
@@ -9159,8 +9160,17 @@
         var profit = Math.max(0, delta - sess.out);
         sess.out = Math.max(0, sess.out - delta);
         if (profit <= 0) return;
-        setExtra(extra() + profit);
-        say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE · $" + fmt(extra()) + " IN BONUSES SO FAR", 2600);
+        var table = sess.table, game = sess.game;
+        // the win pays again, onto the table's own stack, once the table has finished paying it
+        setTimeout(function () {
+          if (!TT.on || TT.closed) return;
+          if (table && table.credit) {
+            TT.quiet = true;
+            try { table.credit(profit); } finally { TT.quiet = false; }
+            TT.changed(true);
+          } else setExtra(extra() + profit);
+          say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE AT " + game.toUpperCase(), 2600);
+        }, 0);
       }
       /** Up from the table: the bonuses won there go into the bankroll. */
       function end() {
@@ -12203,7 +12213,7 @@
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -12779,7 +12789,7 @@
       if ($("screen-doubledown").classList.contains("on")) renderAll();
     });
     // The rules are exposed so the parity page can referee them directly.
-    return { busy: function () { return phase !== "betting" && phase !== "result"; },
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} },
       enter: enter, settleHand: settleHand, settlePush22: settlePush22, push22: push22Of,
       pairSquare: pairSquareOf,
       settlePairSquare: function (cards, stake) {
@@ -13238,7 +13248,7 @@
       if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -13650,7 +13660,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -14181,7 +14191,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your poker bet"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -14591,7 +14601,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -15017,7 +15027,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -15650,7 +15660,7 @@
         g.gain.value = Math.min(1, volume); src.connect(g); g.connect(wheelCtx.destination); src.start();
       } catch (e) { /* nothing to do */ }
     }
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
   })();
 
   var Keno = (function () {
@@ -15878,7 +15888,7 @@
     }
     /** Walking out mid-draw: the balls still to come are dropped. */
     function leave() { clearTimers(); }
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter, leave: leave };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter, leave: leave };
   })();
 
   var Plinko = (function () {
@@ -16184,7 +16194,7 @@
     }
     /** Walking out mid-drop: the balls are dropped where they are. */
     function leave() { clearTimers(); }
-    return { busy: function () { return inFlight(); }, enter: enter, leave: leave };
+    return { busy: function () { return inFlight(); }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter, leave: leave };
   })();
 
   var Mines = (function () {
@@ -16445,7 +16455,7 @@
       renderAll();
       Shell.gate(refresh);
     }
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   var SicBo = (function () {
@@ -16793,7 +16803,7 @@
       if (phase === "result") nextRoll(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   var Craps = (function () {
@@ -17727,7 +17737,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Come out roll"); renderAll(); });
     });
-    return { busy: function () { return phase === "rolling" || atRisk() > 0; }, enter: enter };
+    return { busy: function () { return phase === "rolling" || atRisk() > 0; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -18417,7 +18427,7 @@
       if (phase !== "betting" || bet !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -18718,7 +18728,7 @@
       if (phase === "result") nextHand(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   var Baccarat = (function () {
@@ -19381,7 +19391,7 @@
       $("roadDrawer").classList.remove("open");
       $("roadTab").classList.remove("open");
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { updateMoney(); } catch (e) {} }, enter: enter };
   })();
 
   /* ============================================================
@@ -20052,7 +20062,7 @@
     window.addEventListener("resize", function () {
       if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelts(); }
     });
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, enter: enter };
+    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, enter: enter };
   })();
 
   $("roadDrawer").style.display = "none";

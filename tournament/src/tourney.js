@@ -230,8 +230,17 @@
         var profit = Math.max(0, delta - sess.out);
         sess.out = Math.max(0, sess.out - delta);
         if (profit <= 0) return;
-        setExtra(extra() + profit);
-        say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE · $" + fmt(extra()) + " IN BONUSES SO FAR", 2600);
+        var table = sess.table, game = sess.game;
+        // the win pays again, onto the table's own stack, once the table has finished paying it
+        setTimeout(function () {
+          if (!TT.on || TT.closed) return;
+          if (table && table.credit) {
+            TT.quiet = true;
+            try { table.credit(profit); } finally { TT.quiet = false; }
+            TT.changed(true);
+          } else setExtra(extra() + profit);
+          say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE AT " + game.toUpperCase(), 2600);
+        }, 0);
       }
       /** Up from the table: the bonuses won there go into the bankroll. */
       function end() {
