@@ -97,7 +97,7 @@
       var args = {
         p_name: myName(), p_token: token(), p_week: wk,
         // a hot-game bonus still being earned at the table counts toward the day already
-        p_cash: w.cash + Math.max(0, hot.net()), p_owed: w.owed, p_markers: w.markers, p_out: w.out
+        p_cash: w.cash + hot.extra(), p_owed: w.owed, p_markers: w.markers, p_out: w.out
       };
       if (daily) args.p_day = TT.day;
       rpc(daily ? "c4tb_sync_day" : "c4tb_sync", args, keepalive).then(function (j) {
@@ -161,51 +161,91 @@
     }, 15000);
 
     /* ---- the hot game of the day ----
-     * One game a day pays double: whatever you win there, the house matches.
-     * It is counted from the moment you sit down to the moment you leave, and
-     * the match lands in your bankroll when you get up (the table keeps its
-     * own stack while you play). While you're still at the table it already
-     * counts toward the day, so midnight doesn't cost you a cent of it.
+     * One game a day pays double: every winning hand or spin there pays its
+     * profit twice. The table keeps its own stack while you play, so the
+     * second helping is held beside it, counted toward your day the moment
+     * it's won, and lands in your bankroll when you get up.
+     * A win's profit is read off the purse: what came back, less what went
+     * out on that hand. A hand ends when the table goes quiet again.
+     * The two dice games are left out: bets that stay up across rolls can't
+     * be read that way.
      */
     var hot = (function () {
-      var sess = null, tipEl = null, tipT = 0;
-      function pool() { return Object.keys(GAMES).map(function (id) { return GAMES[id]; }); }
-      /** Everyone gets the same game: the days walk the list 8 apart, so none repeats for three weeks. */
+      var sess = null, tipEl = null, tipT = 0, poll = 0;
+      var SKIP = { "Crapless Craps": 1, "Destroyer": 1 };
+      // the table each game is played at, for telling when a hand is over
+      var TABLE = { "Punto Banco": "Baccarat", "Dragon Tiger": "DragonTiger", "Free Bet Blackjack": "Blackjack",
+        "Blazing 777": "Blackjack", "Double Down Madness": "DoubleDown", "Ultimate Texas Hold'em": "Holdem",
+        "DJ Wild": "DjWild", "Shootout": "Shootout", "Mini UTH": "MiniUth", "I Luv Suits": "IluvSuits", "Kirby": "Kirby",
+        "Double Zero Roulette": "Roulette", "Lightning Roulette": "Roulette", "Double Ball Roulette": "Roulette",
+        "Keno": "Keno", "Money Wheel": "Wheel", "Sic Bo": "SicBo", "Plinko": "Plinko", "Mines": "Mines" };
+      function tableOf(game) {
+        try {
+          return { Baccarat: Baccarat, DragonTiger: DragonTiger, Blackjack: Blackjack, DoubleDown: DoubleDown, Holdem: Holdem,
+            DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth, IluvSuits: IluvSuits, Kirby: Kirby, Roulette: Roulette,
+            Keno: Keno, Wheel: Wheel, SicBo: SicBo, Plinko: Plinko, Mines: Mines }[TABLE[game]];
+        } catch (e) { return null; }
+      }
+      function pool() {
+        return Object.keys(GAMES).map(function (id) { return GAMES[id]; }).filter(function (g) { return !SKIP[g]; });
+      }
+      /** Everyone gets the same game: the days walk the list two at a time, so none repeats for nineteen days. */
       function today(day) {
         day = day || TT.day || (frame && frame.day);
         if (!day) return "";
         var n = Math.round((Date.parse(day + "T12:00:00Z") - Date.parse("2026-01-01T12:00:00Z")) / 86400000);
         var p = pool();
-        return p[((n * 8) % p.length + p.length) % p.length];
+        return p[((n * 2) % p.length + p.length) % p.length];
       }
-      function say(text) {
+      function say(text, ms) {
         if (!tipEl) {
           tipEl = document.createElement("div");
           tipEl.style.cssText = "position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:9999;max-width:86vw;" +
             "padding:12px 18px;border-radius:12px;background:rgba(20,8,4,.95);border:1.5px solid #FF8A3D;color:#FFD24D;" +
-            "font:700 14px/1.35 system-ui,sans-serif;letter-spacing:.04em;text-align:center;pointer-events:none;transition:opacity .3s;opacity:0";
+            "font:800 15px/1.35 system-ui,sans-serif;letter-spacing:.04em;text-align:center;pointer-events:none;transition:opacity .3s;opacity:0";
           document.body.appendChild(tipEl);
         }
         tipEl.textContent = text; tipEl.style.opacity = "1";
-        clearTimeout(tipT); tipT = setTimeout(function () { tipEl.style.opacity = "0"; }, 3200);
+        clearTimeout(tipT); tipT = setTimeout(function () { tipEl.style.opacity = "0"; }, ms || 3200);
       }
+      // the second helping not yet in the bankroll, kept with the day's wallet
+      function extra() { return Math.max(0, Math.round(store.get(k("hotextra"), 0))); }
+      function setExtra(v) { store.set(k("hotextra"), Math.max(0, Math.round(v))); }
       function sit(game) {
         end();
         if (!TT.on || !TT.day || TT.closed || game !== today()) return;
-        sess = { game: game, net: 0, screen: null };
-        say("🔥 HOT GAME — your wins at " + game.toUpperCase() + " pay double today");
+        sess = { game: game, screen: null, out: 0, busy: false, table: tableOf(game) };
+        clearInterval(poll);
+        poll = setInterval(function () {
+          if (!sess || !sess.table || !sess.table.busy) return;
+          var b = !!sess.table.busy();
+          if (sess.busy && !b) sess.out = 0;      // that hand is over: what's left on it was lost
+          sess.busy = b;
+        }, 200);
+        say("🔥 HOT GAME — every win at " + game.toUpperCase() + " pays double today");
       }
-      function track(delta) { if (sess && TT.game === sess.game) sess.net += delta; }
+      function track(delta) {
+        if (!sess || TT.game !== sess.game) return;
+        if (delta < 0) { sess.out += -delta; return; }
+        var profit = Math.max(0, delta - sess.out);
+        sess.out = Math.max(0, sess.out - delta);
+        if (profit <= 0) return;
+        setExtra(extra() + profit);
+        say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE · $" + fmt(extra()) + " IN BONUSES SO FAR", 2600);
+      }
+      /** Up from the table: the bonuses won there go into the bankroll. */
       function end() {
-        if (!sess) return;
-        var won = Math.max(0, Math.round(sess.net)), game = sess.game;
+        clearInterval(poll);
+        var game = sess && sess.game;
         sess = null;
+        var won = extra();
         if (!won || !TT.on || TT.closed) return;
+        setExtra(0);
         TT.quiet = true;
         Shell.setBankroll(Shell.getBankroll() + won);
         TT.quiet = false;
         TT.changed(true);
-        say("🔥 HOT GAME BONUS +$" + fmt(won) + " from " + game);
+        say("🔥 HOT GAME BONUSES +$" + fmt(won) + " ADDED TO YOUR BANKROLL" + (game ? "" : ""));
       }
       // the first screen after sitting down is the table; any other screen means you got up
       var show = Shell.show;
@@ -248,7 +288,7 @@
         el.style.display = g ? "" : "none";
         if (g) el.textContent = "🔥 HOT GAME TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
       }
-      return { today: today, sit: sit, track: track, end: end, net: function () { return sess ? sess.net : 0; },
+      return { today: today, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra,
                banner: function () { paintBanner(); paintBadges(); } };
     })();
 
@@ -428,6 +468,9 @@
         TT.week = s.week;
         TT.day = s.daily ? s.day : "";
         var local = store.getStr(k("dirty"), "");
+        // bonuses won at the hot game before a reload: the server's figure has them, a local one gets them now
+        if (local && hot.extra()) store.set(k("bankroll"), Math.round(store.get(k("bankroll"), 0)) + hot.extra());
+        hot.setExtra(0);
         if (!local) {
           writeWallet({ cash: s.cash, owed: s.owed, markers: s.markers, out: s.out });
           // the game stats come from the server too, so an old copy on this phone
