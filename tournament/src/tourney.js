@@ -189,14 +189,20 @@
       function pool() {
         return Object.keys(GAMES).map(function (id) { return GAMES[id]; }).filter(function (g) { return !SKIP[g]; });
       }
-      /** Everyone gets the same game: the days walk the list two at a time, so none repeats for nineteen days. */
-      function today(day) {
+      /**
+       * Everyone gets the same games: the days walk the list two at a time.
+       * From Tuesday 17 November there are two a day, the second ten places
+       * along from the first, so the pair never doubles up on one game.
+       */
+      function list(day) {
         day = day || TT.day || (frame && frame.day);
-        if (!day) return "";
+        if (!day) return [];
         var n = Math.round((Date.parse(day + "T12:00:00Z") - Date.parse("2026-01-01T12:00:00Z")) / 86400000);
-        var p = pool();
-        return p[((n * 2) % p.length + p.length) % p.length];
+        var p = pool(), m = p.length, i = ((n * 2) % m + m) % m;
+        return day >= "2026-11-17" ? [p[i], p[(i + 10) % m]] : [p[i]];
       }
+      /** The day's hot games, said out loud. */
+      function today(day) { return list(day).join(" & "); }
       function say(text, ms) {
         if (!tipEl) {
           tipEl = document.createElement("div");
@@ -213,7 +219,7 @@
       function setExtra(v) { store.set(k("hotextra"), Math.max(0, Math.round(v))); }
       function sit(game) {
         end();
-        if (!TT.on || !TT.day || TT.closed || game !== today()) return;
+        if (!TT.on || !TT.day || TT.closed || list().indexOf(game) < 0) return;
         sess = { game: game, screen: null, out: 0, busy: false, table: tableOf(game) };
         clearInterval(poll);
         poll = setInterval(function () {
@@ -267,12 +273,12 @@
       };
       /** A 🔥 2× tag on the hot game's own button, wherever it's listed. */
       function paintBadges() {
-        var g = TT.on && TT.day ? today() : "";
+        var g = TT.on && TT.day ? list() : [];
         Object.keys(GAMES).forEach(function (id) {
           var btn = $(id);
           if (!btn) return;
           var tag = btn.querySelector(".tt-hot2x");
-          var on = g && GAMES[id] === g;
+          var on = g.indexOf(GAMES[id]) >= 0;
           if (!on) { if (tag) tag.remove(); btn.classList.remove("tt-hotbtn"); return; }
           btn.classList.add("tt-hotbtn");
           if (!tag) {
@@ -295,7 +301,7 @@
         var g = TT.on && TT.day ? today() : "";
         el.hidden = !g;
         el.style.display = g ? "" : "none";
-        if (g) el.textContent = "🔥 HOT GAME TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
+        if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
       }
       return { today: today, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra,
                banner: function () { paintBanner(); paintBadges(); } };
