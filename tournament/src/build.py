@@ -364,6 +364,12 @@ sub("""        setMessage("The line must be covered to come out"); renderHead();
 """        setMessage("The line must be covered to come out"); renderHead();
         pop("NO PASS LINE BET", "Put chips on the PASS LINE to come out. Then you can roll.");""")
 
+# ---- Double Ball: outside bets ride half on each ball, so one ball in counts ----
+sub("      if (isOutside(bet)) return hits === 2 ? stake * (bothBalls(bet) + 1) : 0;",
+    "      // half the stake rides each ball at the outside bet's own price: red with one\n"
+    "      // ball in is a push, both in pays even money; a dozen with one in wins half\n"
+    "      if (isOutside(bet)) return Math.round(hits * (stake / 2) * (bet.pays + 1));")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
