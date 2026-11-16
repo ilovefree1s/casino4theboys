@@ -55,7 +55,8 @@
     }
 
     // ---- the wallet, by week ----
-    function k(name) { return "ftt." + TT.week + "." + name; }
+    function k(name) { return "ftt." + TT.week + (TT.day ? "." + TT.day : "") + "." + name; }
+    function kw(name) { return "ftt." + TT.week + "." + name; }
     function readWallet() {
       return {
         cash: Math.max(0, Math.round(store.get(k("bankroll"), frame ? frame.start_cash : 5000))),
@@ -92,19 +93,22 @@
       if (!TT.week || TT.closed) return;
       if (inflight) { again = true; return; }
       inflight = true;
-      var w = readWallet(), wk = TT.week;
-      rpc("c4tb_sync", {
+      var w = readWallet(), wk = TT.week, daily = !!TT.day;
+      var args = {
         p_name: myName(), p_token: token(), p_week: wk,
-        p_cash: w.cash, p_owed: w.owed, p_markers: w.markers, p_out: w.out
-      }, keepalive).then(function (j) {
+        // a hot-game bonus still being earned at the table counts toward the day already
+        p_cash: w.cash + Math.max(0, hot.net()), p_owed: w.owed, p_markers: w.markers, p_out: w.out
+      };
+      if (daily) args.p_day = TT.day;
+      rpc(daily ? "c4tb_sync_day" : "c4tb_sync", args, keepalive).then(function (j) {
         inflight = false;
         clearTimeout(retry);
         // the server doesn't know this phone any more (the name moved to another
         // phone, or was freed): keep everything here, and get the player signed
         // back in with name and PIN, then send what didn't save
         if (j.error === "auth") return signedOut();
-        if (j.error === "rollover") return weekOver();
         if (j.week && j.week !== wk) return weekOver();
+        if (j.error === "rollover") return j.daily ? dayOver() : weekOver();
         frame = j;
         // the server's word is final on markers and on being out
         if (j.ok || j.error === "out") {
@@ -138,13 +142,96 @@
       TT.closed = true;
       $("tt-over").classList.add("on");
     }
+    /** Midnight under daily rules: today's money is locked in, tomorrow starts at $5,000. */
+    function dayOver() {
+      if (TT.closed) return;
+      TT.closed = true;
+      $("tt-over-big").textContent = "A NEW DAY";
+      $("tt-over-sub").textContent = "Midnight. Yesterday's profit is locked in, and today starts fresh at $5,000.";
+      $("tt-over-go").textContent = "SEE THE BOARD";
+      $("tt-over").classList.add("on");
+    }
     $("tt-over-go").addEventListener("click", function () {
       store.setStr("ftt.showboard", "1");
       location.reload();
     });
     setInterval(function () {
       if (frame && frame.status === "live" && TT.on && Date.parse(frame.ends_at) <= now()) weekOver();
+      else if (frame && frame.daily && TT.on && TT.day && Date.parse(frame.day_ends_at) <= now()) dayOver();
     }, 15000);
+
+    /* ---- the hot game of the day ----
+     * One game a day pays double: whatever you win there, the house matches.
+     * It is counted from the moment you sit down to the moment you leave, and
+     * the match lands in your bankroll when you get up (the table keeps its
+     * own stack while you play). While you're still at the table it already
+     * counts toward the day, so midnight doesn't cost you a cent of it.
+     */
+    var hot = (function () {
+      var sess = null, tipEl = null, tipT = 0;
+      function pool() { return Object.keys(GAMES).map(function (id) { return GAMES[id]; }); }
+      /** Everyone gets the same game: the days walk the list 8 apart, so none repeats for three weeks. */
+      function today(day) {
+        day = day || TT.day || (frame && frame.day);
+        if (!day) return "";
+        var n = Math.round((Date.parse(day + "T12:00:00Z") - Date.parse("2026-01-01T12:00:00Z")) / 86400000);
+        var p = pool();
+        return p[((n * 8) % p.length + p.length) % p.length];
+      }
+      function say(text) {
+        if (!tipEl) {
+          tipEl = document.createElement("div");
+          tipEl.style.cssText = "position:fixed;left:50%;top:16%;transform:translateX(-50%);z-index:9999;max-width:86vw;" +
+            "padding:12px 18px;border-radius:12px;background:rgba(20,8,4,.95);border:1.5px solid #FF8A3D;color:#FFD24D;" +
+            "font:700 14px/1.35 system-ui,sans-serif;letter-spacing:.04em;text-align:center;pointer-events:none;transition:opacity .3s;opacity:0";
+          document.body.appendChild(tipEl);
+        }
+        tipEl.textContent = text; tipEl.style.opacity = "1";
+        clearTimeout(tipT); tipT = setTimeout(function () { tipEl.style.opacity = "0"; }, 3200);
+      }
+      function sit(game) {
+        end();
+        if (!TT.on || !TT.day || TT.closed || game !== today()) return;
+        sess = { game: game, net: 0, screen: null };
+        say("🔥 HOT GAME — your wins at " + game.toUpperCase() + " pay double today");
+      }
+      function track(delta) { if (sess && TT.game === sess.game) sess.net += delta; }
+      function end() {
+        if (!sess) return;
+        var won = Math.max(0, Math.round(sess.net)), game = sess.game;
+        sess = null;
+        if (!won || !TT.on || TT.closed) return;
+        TT.quiet = true;
+        Shell.setBankroll(Shell.getBankroll() + won);
+        TT.quiet = false;
+        TT.changed(true);
+        say("🔥 HOT GAME BONUS +$" + fmt(won) + " from " + game);
+      }
+      // the first screen after sitting down is the table; any other screen means you got up
+      var show = Shell.show;
+      Shell.show = function (name) {
+        var r = show.apply(this, arguments);
+        if (sess) { if (!sess.screen) sess.screen = name; else if (name !== sess.screen) end(); }
+        if (name === "lobby") paintBanner();
+        return r;
+      };
+      function paintBanner() {
+        var line = $("lb-campaign-line"), el = $("tt-hotline");
+        if (!line) return;
+        if (!el) {
+          el = document.createElement("div"); el.id = "tt-hotline";
+          el.style.cssText = "margin:8px 0 2px;padding:9px 12px;border-radius:12px;border:1.5px solid #FF8A3D;" +
+            "background:linear-gradient(90deg,rgba(255,110,40,.22),rgba(255,210,77,.12));color:#FFD24D;" +
+            "font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.08em;text-align:center";
+          line.parentNode.insertBefore(el, line.nextSibling);
+        }
+        var g = TT.on && TT.day ? today() : "";
+        el.hidden = !g;
+        el.style.display = g ? "" : "none";
+        if (g) el.textContent = "🔥 HOT GAME TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
+      }
+      return { today: today, sit: sit, track: track, end: end, net: function () { return sess ? sess.net : 0; }, banner: paintBanner };
+    })();
 
     // ---- the front-page lane ----
     function laneSay(line, play, playOn) {
@@ -178,13 +265,16 @@
       $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7") +
         (roster ? " · " + roster.length + " PLAYERS" : "");
       // the first time the app is opened in a new week, the rules come up
-      var seenRules = "ftt.rules." + b.week;
+      var seenRules = "ftt.rules" + (b.daily ? "2." : ".") + b.week;
       if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
       var you = b.me, rank = 0;
       if (!b.final) b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) rank = i + 1; });
       if (!me) return laneSay("ENDS IN " + left(b.ends_at), "JOIN", true);
-      if (you && you.out) return laneSay("OUT FOR THE WEEK", "OUT", false);
+      if (you && you.out && !b.daily) return laneSay("OUT FOR THE WEEK", "OUT", false);
       if (!you || you.fresh) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
+      if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
+      if (b.daily) return laneSay("BEST 3 DAYS " + money(you.score || 0) + " · TODAY " + signed(you.today) +
+              (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " 2×", "PLAY", true);
       laneSay(money(you.net) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }
@@ -203,10 +293,10 @@
     // capture, so the game is named before its own click handler deals the first hand
     document.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest("button[id]");
-      if (b && GAMES[b.id]) TT.game = GAMES[b.id];
+      if (b && GAMES[b.id]) { TT.game = GAMES[b.id]; hot.sit(TT.game); }
     }, true);
     function readStats() {
-      try { return JSON.parse(store.getStr(k("stats"), "{}")) || {}; } catch (e) { return {}; }
+      try { return JSON.parse(store.getStr(kw("stats"), "{}")) || {}; } catch (e) { return {}; }
     }
     /** The purse moved by [delta] at the table you are at. Markers do not count. */
     TT.track = function (delta) {
@@ -214,8 +304,9 @@
       var s = readStats(), g = s[TT.game] || (s[TT.game] = { net: 0, best: 0 });
       g.net += delta;
       if (delta > g.best) g.best = delta;
-      store.setStr(k("stats"), JSON.stringify(s));
+      store.setStr(kw("stats"), JSON.stringify(s));
       statsDirty = true;
+      hot.track(delta);
     };
     function pushStats() {
       if (!statsDirty || !TT.week) return;
@@ -316,13 +407,14 @@
         frame = s;
         if (s.status === "upcoming") return refreshLane();
         TT.week = s.week;
+        TT.day = s.daily ? s.day : "";
         var local = store.getStr(k("dirty"), "");
         if (!local) {
           writeWallet({ cash: s.cash, owed: s.owed, markers: s.markers, out: s.out });
           // the game stats come from the server too, so an old copy on this phone
           // (a name deleted and started over, or played on another phone) isn't sent up again
           var wk = s.week;
-          store.setStr(k("stats"), "{}");
+          store.setStr(kw("stats"), "{}");
           rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: wk }).then(function (g) {
             if (!g || !g.ok || TT.week !== wk) return;
             // the server's games, plus anything played while it was answering
@@ -331,13 +423,14 @@
               var x = m[r.game] || { net: 0, best: 0 };
               m[r.game] = { net: x.net + r.net, best: Math.max(x.best, r.best) };
             });
-            store.setStr(k("stats"), JSON.stringify(m));
+            store.setStr(kw("stats"), JSON.stringify(m));
           }, function () {});
         }
         if (s.out) { store.setStr(k("out"), "1"); refreshLane(); return showBoard(); }
         TT.on = true; TT.closed = false;
         Shell.mode = "campaign";
         Shell.showLobby();
+        hot.banner();
         if (local) push();
       };
       rpc("c4tb_state", { p_name: myName(), p_token: token() }).then(go, function () {
@@ -386,8 +479,9 @@
         $("tt-you-net").textContent = money(y.net);
         $("tt-you-today").textContent = "TODAY " + signed(y.today);
         $("tt-you-today").className = y.today > 0 ? "up" : y.today < 0 ? "down" : "";
-        $("tt-you-tags").textContent = (y.owed ? "OWES $" + fmt(y.owed) + " · " + Math.ceil(y.owed / 7500) + "/" + b.max_markers + " MARKERS · " : "") +
-          (y.out ? "OUT FOR THE WEEK · " : "") + "ONLY YOU SEE THIS UNTIL MIDNIGHT";
+        $("tt-you-tags").textContent = (b.daily ? "BEST 3 DAYS " + money(y.score || 0) + " · " : "") +
+          (y.owed ? "OWES $" + fmt(y.owed) + " · " + Math.ceil(y.owed / 7500) + "/" + b.max_markers + " MARKERS · " : "") +
+          (y.out ? (b.daily ? "OUT FOR TODAY · " : "OUT FOR THE WEEK · ") : "") + "ONLY YOU SEE THIS UNTIL MIDNIGHT";
       }
 
       if (b.last_champion) {
@@ -440,7 +534,8 @@
       }
       var dayTab = tab === "day", asOf = dayName(b.as_of);
       if (b.rows.length) list.appendChild(heading(b.final ? "WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"
-                               : dayTab ? asOf + " · WHAT EACH PLAYER MADE" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
+                               : dayTab ? asOf + " · WHAT EACH PLAYER MADE"
+                               : b.daily ? "BEST 3 DAYS ADDED UP · AS OF " + asOf + " MIDNIGHT" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
       var rows = b.rows.slice();
       if (dayTab) rows.sort(function (a, c) { return c.day - a.day || c.net - a.net || a.name.localeCompare(c.name); });
       var hi = b.final ? highs(lastWeekOf(b)) : null;
