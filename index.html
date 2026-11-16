@@ -20032,13 +20032,20 @@
         b.setAttribute("data-chip", v);
         b.innerHTML = chipFace(v);
         b.addEventListener("click", function () {
-          if (chipsFor(bankroll, Shell.limits()).indexOf(v) < 0) return;
-          selectedChip = v; renderRing();
+          var cv = +b.getAttribute("data-chip");
+          if (chipsFor(bankroll, Shell.limits()).indexOf(cv) < 0) return;
+          selectedChip = cv; renderRing();
         });
         rack.appendChild(b);
       });
       renderRing = function () {
         var rackv = chipsFor(bankroll, Shell.limits());
+        // six chips won't fit five places: the room's five biggest take them
+        var show = rackv.length > 5 ? rackv.slice(-5) : vals;
+        [].forEach.call(rack.children, function (b, i) {
+          if (+b.getAttribute("data-chip") !== show[i]) { b.setAttribute("data-chip", show[i]); b.innerHTML = chipFace(show[i]); }
+        });
+        if (show.indexOf(selectedChip) < 0 && rackv.indexOf(selectedChip) < 0) selectedChip = rackv[rackv.length - 1];
         [].forEach.call(rack.children, function (b) {
           var v = +b.getAttribute("data-chip"), out = rackv.indexOf(v) < 0;
           b.style.boxShadow = v === selectedChip ? "inset 0 0 0 3px #FFD24D" : "";

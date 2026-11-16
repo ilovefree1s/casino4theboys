@@ -370,6 +370,31 @@ sub("      if (isOutside(bet)) return hits === 2 ? stake * (bothBalls(bet) + 1) 
     "      // ball in is a push, both in pays even money; a dozen with one in wins half\n"
     "      if (isOutside(bet)) return Math.floor(hits * (stake / 2) * (bet.pays + 1));")
 
+# ---- Roulette: five chip places on the felt; a room that takes the 25K chip racks its top five ----
+sub("""        b.addEventListener("click", function () {
+          if (chipsFor(bankroll, Shell.limits()).indexOf(v) < 0) return;
+          selectedChip = v; renderRing();
+        });""",
+"""        b.addEventListener("click", function () {
+          var cv = +b.getAttribute("data-chip");
+          if (chipsFor(bankroll, Shell.limits()).indexOf(cv) < 0) return;
+          selectedChip = cv; renderRing();
+        });""")
+sub("""      renderRing = function () {
+        var rackv = chipsFor(bankroll, Shell.limits());
+        [].forEach.call(rack.children, function (b) {
+          var v = +b.getAttribute("data-chip"), out = rackv.indexOf(v) < 0;""",
+"""      renderRing = function () {
+        var rackv = chipsFor(bankroll, Shell.limits());
+        // six chips won't fit five places: the room's five biggest take them
+        var show = rackv.length > 5 ? rackv.slice(-5) : vals;
+        [].forEach.call(rack.children, function (b, i) {
+          if (+b.getAttribute("data-chip") !== show[i]) { b.setAttribute("data-chip", show[i]); b.innerHTML = chipFace(show[i]); }
+        });
+        if (show.indexOf(selectedChip) < 0 && rackv.indexOf(selectedChip) < 0) selectedChip = rackv[rackv.length - 1];
+        [].forEach.call(rack.children, function (b) {
+          var v = +b.getAttribute("data-chip"), out = rackv.indexOf(v) < 0;""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
