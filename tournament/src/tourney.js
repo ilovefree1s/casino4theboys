@@ -161,8 +161,8 @@
     }, 15000);
 
     /* ---- the hot game of the day ----
-     * One game a day pays double: every winning hand or spin there pays its
-     * profit twice. The table keeps its own stack while you play, so the
+     * The day's hot games pay extra: every winning hand or spin there pays its
+     * profit again, in full (2×) through 17 November and half again (1.5×) after. The table keeps its own stack while you play, so the
      * second helping is held beside it, counted toward your day the moment
      * it's won, and lands in your bankroll when you get up.
      * A win's profit is read off the purse: what came back, less what went
@@ -206,6 +206,9 @@
       }
       /** The day's hot games, said out loud. */
       function today(day) { return list(day).join(" & "); }
+      /** The share of a win's profit the house adds on top: all of it, then half from 18 November. */
+      function rate(day) { day = day || TT.day || (frame && frame.day) || ""; return day >= "2026-11-18" ? 0.5 : 1; }
+      function tagX(day) { return rate(day) === 1 ? "2×" : "1.5×"; }
       function say(text, ms) {
         if (!tipEl) {
           tipEl = document.createElement("div");
@@ -231,13 +234,14 @@
           if (sess.busy && !b) sess.out = 0;      // that hand is over: what's left on it was lost
           sess.busy = b;
         }, 200);
-        say("🔥 HOT GAME — every win at " + game.toUpperCase() + " pays double today");
+        say("🔥 HOT GAME — every win at " + game.toUpperCase() + " pays " + tagX() + " today");
       }
       function track(delta) {
         if (!sess || TT.game !== sess.game) return;
         if (delta < 0) { sess.out += -delta; return; }
-        var profit = Math.max(0, delta - sess.out);
+        var won = Math.max(0, delta - sess.out);
         sess.out = Math.max(0, sess.out - delta);
+        var profit = Math.floor(won * rate());
         if (profit <= 0) return;
         var table = sess.table, game = sess.game;
         // the win pays again, onto the table's own stack, once the table has finished paying it
@@ -248,7 +252,7 @@
             try { table.credit(profit); } finally { TT.quiet = false; }
             TT.changed(true);
           } else setExtra(extra() + profit);
-          say("🔥 2× PAYOUT · +$" + fmt(profit) + " MORE AT " + game.toUpperCase(), 2600);
+          say("🔥 " + tagX() + " PAYOUT · +$" + fmt(profit) + " MORE AT " + game.toUpperCase(), 2600);
         }, 0);
       }
       /** Up from the table: the bonuses won there go into the bankroll. */
@@ -284,9 +288,10 @@
           var on = g.indexOf(GAMES[id]) >= 0;
           if (!on) { if (tag) tag.remove(); btn.classList.remove("tt-hotbtn"); return; }
           btn.classList.add("tt-hotbtn");
+          if (tag && tag.textContent !== "🔥 " + tagX() + " TODAY") { tag.remove(); tag = null; }
           if (!tag) {
             tag = document.createElement("span"); tag.className = "tt-hot2x";
-            tag.textContent = "🔥 2× TODAY";
+            tag.textContent = "🔥 " + tagX() + " TODAY";
             btn.appendChild(tag);
           }
         });
@@ -304,9 +309,9 @@
         var g = TT.on && TT.day ? today() : "";
         el.hidden = !g;
         el.style.display = g ? "" : "none";
-        if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY DOUBLE";
+        if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY " + tagX();
       }
-      return { today: today, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra,
+      return { today: today, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra,
                banner: function () { paintBanner(); paintBadges(); } };
     })();
 
@@ -351,7 +356,7 @@
       if (!you || you.fresh) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
       if (b.daily) return laneSay("BEST 3 DAYS " + money(you.score || 0) + " · TODAY " + signed(you.today) +
-              (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " 2×", "PLAY", true);
+              (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
       laneSay(money(you.net) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }
