@@ -9116,6 +9116,8 @@
             Keno: Keno, Wheel: Wheel, SicBo: SicBo, Plinko: Plinko, Mines: Mines }[TABLE[game]];
         } catch (e) { return null; }
       }
+      // days the house picked by hand
+      var PICKED = { "2026-11-17": ["Ultimate Texas Hold'em", "Blazing 777"] };
       function pool() {
         return Object.keys(GAMES).map(function (id) { return GAMES[id]; }).filter(function (g) { return !SKIP[g]; });
       }
@@ -9128,6 +9130,7 @@
         day = day || TT.day || (frame && frame.day);
         if (!day) return [];
         var n = Math.round((Date.parse(day + "T12:00:00Z") - Date.parse("2026-01-01T12:00:00Z")) / 86400000);
+        if (PICKED[day]) return PICKED[day].slice();
         var p = pool(), m = p.length, i = ((n * 2) % m + m) % m;
         return day >= "2026-11-17" ? [p[i], p[(i + 10) % m]] : [p[i]];
       }
