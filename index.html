@@ -7314,11 +7314,11 @@
     { key: "MAIN_FLOOR", name: "Main Floor",   buyIn: 10000,   min: 100,   max: 2500,   sideMax: 500,   badBeatMax: 50 },
     { key: "HIGH_LIMIT", name: "High Limit",   buyIn: 50000,   min: 500,   max: 10000,  sideMax: 2000,  badBeatMax: 75 },
     { key: "SALON",      name: "The Salon",    buyIn: 250000,  min: 2500,  max: 50000,  sideMax: 10000, badBeatMax: 100 },
-    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: 250000, sideMax: 50000, badBeatMax: 125 }
+    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: Infinity, sideMax: Infinity, badBeatMax: Infinity }
   ];
   function roomShort(v) { return v >= 1000 ? (v / 1000) + "K" : String(v); }
-  function roomSign(r) { return "$" + roomShort(r.min) + " – $" + roomShort(r.max); }
-  function roomSideSign(r) { return "SIDE $" + roomShort(r.sideMax); }
+  function roomSign(r) { return "$" + roomShort(r.min) + (r.max === Infinity ? " – NO LIMIT" : " – $" + roomShort(r.max)); }
+  function roomSideSign(r) { return r.sideMax === Infinity ? "SIDES NO LIMIT" : "SIDE $" + roomShort(r.sideMax); }
 
   /** What the house hands over on a marker, and what it costs to clear it. */
   var MARKER_AMOUNT = 5000, MARKER_INTEREST = 0.5;
@@ -9958,7 +9958,7 @@
     $("st-nums").innerHTML = menuNums([
       ["MIN", L.enforced ? "$" + fmt(L.min) : "ANY"],
       ["TABLES", String(r.tables)],
-      ["MAX", L.enforced ? "$" + fmt(L.max) : "ANY"]
+      ["MAX", L.enforced && L.max !== Infinity ? "$" + fmt(L.max) : "ANY"]
     ]);
     var tabs = $("st-strip").children;
     for (var i = 0; i < tabs.length; i++) tabs[i].classList.toggle("on", i === stageAt);

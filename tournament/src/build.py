@@ -395,6 +395,16 @@ sub("""      renderRing = function () {
         [].forEach.call(rack.children, function (b) {
           var v = +b.getAttribute("data-chip"), out = rackv.indexOf(v) < 0;""")
 
+# ---- Whale Room: no table max, no side-bet max, no Bad Beat max ----
+sub('    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: 250000, sideMax: 50000, badBeatMax: 125 }',
+    '    { key: "WHALE",      name: "Whale Room",   buyIn: 1000000, min: 10000, max: Infinity, sideMax: Infinity, badBeatMax: Infinity }')
+sub('  function roomSign(r) { return "$" + roomShort(r.min) + " – $" + roomShort(r.max); }',
+    '  function roomSign(r) { return "$" + roomShort(r.min) + (r.max === Infinity ? " – NO LIMIT" : " – $" + roomShort(r.max)); }')
+sub('  function roomSideSign(r) { return "SIDE $" + roomShort(r.sideMax); }',
+    '  function roomSideSign(r) { return r.sideMax === Infinity ? "SIDES NO LIMIT" : "SIDE $" + roomShort(r.sideMax); }')
+sub('      ["MAX", L.enforced ? "$" + fmt(L.max) : "ANY"]',
+    '      ["MAX", L.enforced && L.max !== Infinity ? "$" + fmt(L.max) : "ANY"]')
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
