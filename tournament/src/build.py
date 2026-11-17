@@ -387,7 +387,7 @@ sub("""      renderRing = function () {
 """      renderRing = function () {
         var rackv = chipsFor(bankroll, Shell.limits());
         // six chips won't fit five places: the room's five biggest take them
-        var show = rackv.length > 5 ? rackv.slice(-5) : vals;
+        var show = rackv.length >= 5 ? rackv.slice(-5) : vals;
         [].forEach.call(rack.children, function (b, i) {
           if (+b.getAttribute("data-chip") !== show[i]) { b.setAttribute("data-chip", show[i]); b.innerHTML = chipFace(show[i]); }
         });
@@ -404,6 +404,46 @@ sub('  function roomSideSign(r) { return "SIDE $" + roomShort(r.sideMax); }',
     '  function roomSideSign(r) { return r.sideMax === Infinity ? "SIDES NO LIMIT" : "SIDE $" + roomShort(r.sideMax); }')
 sub('      ["MAX", L.enforced ? "$" + fmt(L.max) : "ANY"]',
     '      ["MAX", L.enforced && L.max !== Infinity ? "$" + fmt(L.max) : "ANY"]')
+
+# ---- Whale Room chips: 500 up to a new 100K, no 25s or 100s ----
+sub("""        "v": 25000,
+        "label": "25K",
+        "body": "#d9dd03",
+        "a": "#000000",
+        "b": "#001df5",
+        "face": "#3e2e0c",
+        "ink": "#ffffff",
+        "spotLight": 0.48
+      }
+    ]""", """        "v": 25000,
+        "label": "25K",
+        "body": "#d9dd03",
+        "a": "#000000",
+        "b": "#001df5",
+        "face": "#3e2e0c",
+        "ink": "#ffffff",
+        "spotLight": 0.48
+      },
+      {
+        "v": 100000,
+        "label": "100K",
+        "body": "#7a0019",
+        "a": "#ffd24d",
+        "b": "#111111",
+        "face": "#2a0008",
+        "ink": "#ffffff",
+        "spotLight": 0.3
+      }
+    ]""")
+sub("""    var all = [25, 100, 500, 1000, 5000, 25000];
+    var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""",
+"""    // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
+    if (limits && limits.enforced && limits.max === Infinity) return [500, 1000, 5000, 25000, 100000];
+    var all = [25, 100, 500, 1000, 5000, 25000];
+    var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""")
+sub("""    var values = [25, 100, 500, 1000, 5000, 25000];
+    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000];
+    var chip = null;""")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips

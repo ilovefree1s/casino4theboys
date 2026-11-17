@@ -6925,6 +6925,16 @@
         "face": "#3e2e0c",
         "ink": "#ffffff",
         "spotLight": 0.48
+      },
+      {
+        "v": 100000,
+        "label": "100K",
+        "body": "#7a0019",
+        "a": "#ffd24d",
+        "b": "#111111",
+        "face": "#2a0008",
+        "ink": "#ffffff",
+        "spotLight": 0.3
       }
     ]
   }
@@ -7277,6 +7287,8 @@
    * Free play has no room, so it goes on the purse as it always did.
    */
   function chipsFor(bankroll, limits) {
+    // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
+    if (limits && limits.enforced && limits.max === Infinity) return [500, 1000, 5000, 25000, 100000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);
     var out = all.filter(function (v) { return v <= ceiling; });
@@ -7290,7 +7302,7 @@
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
   function chipHtml(amount, size) {
-    var values = [25, 100, 500, 1000, 5000, 25000];
+    var values = [25, 100, 500, 1000, 5000, 25000, 100000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? chipFace(chip) : "";
@@ -20050,7 +20062,7 @@
       renderRing = function () {
         var rackv = chipsFor(bankroll, Shell.limits());
         // six chips won't fit five places: the room's five biggest take them
-        var show = rackv.length > 5 ? rackv.slice(-5) : vals;
+        var show = rackv.length >= 5 ? rackv.slice(-5) : vals;
         [].forEach.call(rack.children, function (b, i) {
           if (+b.getAttribute("data-chip") !== show[i]) { b.setAttribute("data-chip", show[i]); b.innerHTML = chipFace(show[i]); }
         });
