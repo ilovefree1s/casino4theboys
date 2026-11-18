@@ -98,6 +98,11 @@
       ask: "Tristen, dead serious: \"Bro. The gift shop has a GIANT dildo. Like, huge. I need it. {amt} and I pay you back tonight, swear.\"",
       good: "Tristen walks up with the giant dildo under his arm AND your money. \"Worth every penny, bro.\" {back}.",
       bad: "Tristen bought the giant dildo. You're not getting paid back. He's never been happier." };
+    var TRISTEN_KEEPS = [
+      "Tristen hit for {won} at blackjack. He hands you back {back}. Exactly {back}. \"Good intentions, bro.\"",
+      "Tristen's back with a rack of chips. You get your {back} back. The other {kept}? \"That's mine, bro.\"",
+      "Tristen turned it into {won}. Pays you {back} and pockets the rest. \"Bad habits.\""
+    ];
     /* Lines only one friend says, mixed in with the usual ones. */
     var OWN = {
       Tristen: {
@@ -106,11 +111,11 @@
               "Tristen, eyes bloodshot: \"I'm locked in, bro. {amt} on blackjack, trust.\""],
         lost: ["Tristen: \"Bad habits, bro. Bad habits.\" Your money's gone.",
                "Tristen's back holding a beer and no chips. \"Good intentions though.\""],
-        win: ["Tristen's screaming. \"GOOD INTENTIONS PAY, BRO!\" Hit for {won}, your half: {back}."]
+        win: []
       }
     };
     function own(who, key, base) { return lines(who, key, base); }
-    function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && (key === "ask" || Math.random() < 0.6) ? o : base; }
+    function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && o.length && (key === "ask" || Math.random() < 0.6) ? o : base; }
     var SPOTS = ["blackjack", "craps", "roulette", "the slots", "baccarat", "Pai Gow", "the Money Wheel", "Ultimate Texas Hold'em"];
     var FRIEND_ASK = [
       "Bro spot me {amt}, I'm feeling {game} right now. I'll bring it back, swear.",
@@ -437,8 +442,10 @@
       else if (r < 0.57) { back = p.amt; lines = FRIEND_EVEN; }
       else lines = own(p.name, "lost", FRIEND_LOST);
       if (won) back = won / 2;
+      // Tristen wins, Tristen keeps it: you get exactly what you lent him
+      if (won && p.name === "Tristen") { back = p.amt; lines = TRISTEN_KEEPS; }
       back = Math.round(back);
-      o.won = $$(won);
+      o.won = $$(won); o.kept = $$(Math.max(0, won - p.amt));
       o.back = $$(back);
       if (back > 0) money(back);
       show(back > 0 ? "good" : "bad", p.name, p.name, fill(pick(lines), o));
