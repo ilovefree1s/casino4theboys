@@ -6935,6 +6935,16 @@
         "face": "#2a0008",
         "ink": "#ffffff",
         "spotLight": 0
+      },
+      {
+        "v": 1000000,
+        "label": "1M",
+        "body": "#2e8e88",
+        "a": "#f58f00",
+        "b": "#bd0000",
+        "face": "#0e2e2c",
+        "ink": "#ffd24d",
+        "spotLight": 0.34
       }
     ]
   }
@@ -7288,7 +7298,7 @@
    */
   function chipsFor(bankroll, limits) {
     // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
-    if (limits && limits.enforced && limits.max === Infinity) return [500, 1000, 5000, 25000, 100000];
+    if (limits && limits.enforced && limits.max === Infinity) return [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);
     var out = all.filter(function (v) { return v <= ceiling; });
@@ -7302,7 +7312,7 @@
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
   function chipHtml(amount, size) {
-    var values = [25, 100, 500, 1000, 5000, 25000, 100000];
+    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? chipFace(chip) : "";

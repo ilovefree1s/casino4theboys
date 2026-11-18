@@ -405,7 +405,7 @@ sub('  function roomSideSign(r) { return "SIDE $" + roomShort(r.sideMax); }',
 sub('      ["MAX", L.enforced ? "$" + fmt(L.max) : "ANY"]',
     '      ["MAX", L.enforced && L.max !== Infinity ? "$" + fmt(L.max) : "ANY"]')
 
-# ---- Whale Room chips: 500 up to a new 100K, no 25s or 100s ----
+# ---- Whale Room chips: 1K up to 1M, no 25s, 100s or 500s ----
 sub("""        "v": 25000,
         "label": "25K",
         "body": "#d9dd03",
@@ -433,16 +433,26 @@ sub("""        "v": 25000,
         "face": "#2a0008",
         "ink": "#ffffff",
         "spotLight": 0
+      },
+      {
+        "v": 1000000,
+        "label": "1M",
+        "body": "#2e8e88",
+        "a": "#f58f00",
+        "b": "#bd0000",
+        "face": "#0e2e2c",
+        "ink": "#ffd24d",
+        "spotLight": 0.34
       }
     ]""")
 sub("""    var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""",
 """    // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
-    if (limits && limits.enforced && limits.max === Infinity) return [500, 1000, 5000, 25000, 100000];
+    if (limits && limits.enforced && limits.max === Infinity) return [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""")
 sub("""    var values = [25, 100, 500, 1000, 5000, 25000];
-    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000];
+    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000];
     var chip = null;""")
 
 # ---- no walking away from a hand ----
