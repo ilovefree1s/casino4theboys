@@ -9058,7 +9058,7 @@
               "Tristen, eyes bloodshot: \"I'm locked in, bro. {amt} on blackjack, trust.\""],
         lost: ["Tristen: \"Bad habits, bro. Bad habits.\" Your money's gone.",
                "Tristen's back holding a beer and no chips. \"Good intentions though.\""],
-        win: ["Tristen's screaming. \"GOOD INTENTIONS PAY, BRO!\" {back}."]
+        win: ["Tristen's screaming. \"GOOD INTENTIONS PAY, BRO!\" Hit for {won}, your half: {back}."]
       }
     };
     function own(who, key, base) { return lines(who, key, base); }
@@ -9072,13 +9072,13 @@
       "You trust me? {amt}. {game}. Don't ask questions."
     ];
     var FRIEND_WIN = [
-      "{who} is back, yelling. \"I CALLED IT!\" Hit at {game}. Here's {back}.",
-      "{who} slides you {back}. \"{game} paid. Told you, bro.\"",
-      "{who} comes back grinning: \"Never doubt me.\" {back}."
+      "{who} is back, yelling. \"I CALLED IT!\" Ran it up to {won} at {game}. Split 50/50: {back}.",
+      "{who} slides you {back}. \"{game} paid {won}. Half's yours, bro.\"",
+      "{who} comes back grinning: \"Never doubt me.\" Turned it into {won}, you get half: {back}."
     ];
     var FRIEND_BIG = [
-      "{who} is SPRINTING over. \"BRO WE HIT, WE HIT AT {GAME}!\" Your cut: {back}.",
-      "{who} drops a rack on your table. \"{GAME} WENT CRAZY.\" {back}!"
+      "{who} is SPRINTING over. \"BRO WE HIT, WE HIT AT {GAME}!\" {won}! Your half: {back}.",
+      "{who} drops a rack on your table. \"{GAME} WENT CRAZY.\" {won}, split down the middle: {back}!"
     ];
     var FRIEND_EVEN = [
       "{who} broke even at {game}. \"Here's your money back, bro. Respect.\" {back}.",
@@ -9379,15 +9379,19 @@
       var o = { who: p.name, game: p.game };
       if (p.snub) { show("friend", p.name, p.name, fill(pick(FRIEND_SNUB), o)); return; }
       var r = Math.random(), back = 0, lines;
-      if (r < 0.08) { back = p.amt * rnd(4, 6); lines = FRIEND_BIG; }
-      else if (r < 0.48) { back = p.amt * rnd(1.5, 2.5); lines = own(p.name, "win", FRIEND_WIN); }
-      else if (r < 0.63) { back = p.amt; lines = FRIEND_EVEN; }
+      // a friend who wins splits it with you 50/50: half of what your money turned into
+      var won = 0;
+      if (r < 0.07) { won = nice(p.amt * rnd(10, 16)); lines = FRIEND_BIG; }
+      else if (r < 0.42) { won = nice(p.amt * rnd(4, 8)); lines = own(p.name, "win", FRIEND_WIN); }
+      else if (r < 0.57) { back = p.amt; lines = FRIEND_EVEN; }
       else lines = own(p.name, "lost", FRIEND_LOST);
+      if (won) back = won / 2;
       back = Math.round(back);
+      o.won = $$(won);
       o.back = $$(back);
       if (back > 0) money(back);
       show(back > 0 ? "good" : "bad", p.name, p.name, fill(pick(lines), o));
-      if (back > p.amt) jingle(); else if (back === 0) womp();
+      if (back > 0) jingle(); else womp();
     }
 
     /** A hand just finished at this table. */
