@@ -95,7 +95,7 @@
     ];
 
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
-    var hands = 0, gap = 3, pending = [], offer = null;
+    var hands = 0, gap = 3, pending = [], offer = null, deck = [];
 
     function style() {
       if ($("wu-style")) return;
@@ -163,8 +163,8 @@
     // a game name that starts a sentence (or a quote) gets a capital
     function up(t) { return t.replace(/(^|[.!?] |")([a-z])/g, function (_, a, c) { return a + c.toUpperCase(); }); }
 
-    function strangerOffer() {
-      var s = pick(STRANGERS), br = cash();
+    function strangerOffer(s) {
+      s = s || pick(STRANGERS); var br = cash();
       var amt = nice(br * rnd(s.cut[0], s.cut[1]));
       if (amt > br) return false;
       var o = { amt: $$(amt) };
@@ -181,11 +181,12 @@
       });
       return true;
     }
-    function friendOffer() {
+    function friendOffer(forced) {
       var busyNames = pending.map(function (p) { return p.name; });
       var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0; });
       if (!free.length) return false;
-      var who = pick(free), game = pick(SPOTS), br = cash();
+      if (forced && free.indexOf(forced) < 0) return false;   // still out playing with your money
+      var who = forced || pick(free), game = pick(SPOTS), br = cash();
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
@@ -237,9 +238,13 @@
       var due = null;
       for (var i = 0; i < pending.length; i++) if (pending[i].in <= 0) { due = pending.splice(i, 1)[0]; break; }
       if (due) { settle(due); hands = 0; return; }
-      if (hands < gap || Math.random() > 0.3) return;
       if (cash() < 50) return;
-      var ok = Math.random() < 0.55 ? friendOffer() : strangerOffer();
+      // testing: someone every hand, working through everybody before anyone repeats
+      if (!deck.length) deck = FRIENDS.map(function (n) { return { f: n }; })
+        .concat(STRANGERS.map(function (x) { return { s: x }; })).sort(function () { return Math.random() - 0.5; });
+      var nx = deck.shift();
+      var ok = nx.f ? friendOffer(nx.f) : strangerOffer(nx.s);
+      if (!ok) deck.push(nx);
       if (ok) { hands = 0; gap = Math.round(rnd(3, 6)); }
     }
     function on() { return Shell.mode === "testing" && !(typeof TT !== "undefined" && TT.on); }
