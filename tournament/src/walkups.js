@@ -27,38 +27,38 @@
     }
     function $$(s) { return "$" + fmt(Math.round(s)); }
 
-    /* Strangers: a friend's face, a stranger's name. odds = chance they're legit, back = what legit pays back. */
+    /* Hustlers: the boys themselves, running the street scams. odds = chance they're legit, back = what legit pays back. */
     var STRANGERS = [
-      { face: "Grace", name: "Earl", odds: 0.40, back: [2, 3], cut: [0.02, 0.05],
+      { face: "Grace", name: "Grace", odds: 0.40, back: [2, 3], cut: [0.02, 0.05],
         ask: ["Sorry to bother you… I lost my wallet and my grandson's in the hospital in Reno. Could you spare {amt} for the bus? I'll pay you back, I swear on my late wife.",
               "Son, I've been sitting here since noon. My truck got towed with my insulin in it. {amt} gets it out."],
-        good: "Earl found you. \"Grandson's doing fine. A man keeps his word.\" He hands you {back}.",
-        bad: "You see Earl at the craps table blowing on dice with your money. He winks." },
-      { face: "Cougar", name: "Vinnie", odds: 0.15, back: [4, 6], cut: [0.05, 0.10],
+        good: "Grace found you. \"Grandson's doing fine. A man keeps his word.\" He hands you {back}.",
+        bad: "You see Grace at the craps table blowing on dice with your money. He winks." },
+      { face: "Cougar", name: "Cougar", odds: 0.15, back: [4, 6], cut: [0.05, 0.10],
         ask: ["Hey, hey, you look like a smart guy. I got a guy with a horse running at Santa Anita, can't lose. Put {amt} in, I triple it by tonight. Trust me.",
               "Listen. Crypto. My cousin's coin. Gets listed Friday. {amt} now and you're on the ground floor, baby."],
-        good: "Vinnie's back, sweating. \"TOLD you. Horse came in at 9 to 1.\" He counts out {back}.",
-        bad: "Vinnie's number is disconnected. The horse was named 'Lol Sucker'." },
-      { face: "Zephyrox", name: "Marco", odds: 0.08, back: [3, 4], cut: [0.03, 0.08],
+        good: "Cougar's back, sweating. \"TOLD you. Horse came in at 9 to 1.\" He counts out {back}.",
+        bad: "Cougar's number is disconnected. The horse was named 'Lol Sucker'." },
+      { face: "Zephyrox", name: "Zephyrox", odds: 0.08, back: [3, 4], cut: [0.03, 0.08],
         ask: ["Bro… my little girl needs surgery and the insurance won't cover it. I just need {amt} more. Please. Anything.",
               "I'm not proud of this. My kid's sick and I got nothing left. {amt} would save my life."],
-        good: "Marco tracks you down, crying. \"She's okay. Here, I hit a jackpot, half's yours.\" {back}.",
-        bad: "Marco's at the bar ordering bottle service. His 'kid' is a 25-year-old named Brandi." },
-      { face: "Chris", name: "Rick", odds: 0.25, back: [2, 2.5], cut: [0.02, 0.04],
+        good: "Zephyrox tracks you down, crying. \"She's okay. Here, I hit a jackpot, half's yours.\" {back}.",
+        bad: "Zephyrox's at the bar ordering bottle service. His 'kid' is a 25-year-old named Brandi." },
+      { face: "Chris", name: "Chris", odds: 0.25, back: [2, 2.5], cut: [0.02, 0.04],
         ask: ["Hey man, my car ran out of gas in the garage and my phone's dead. {amt} gets me home to Ohio. I'll Venmo you, what's your @?",
               "Bro I'm locked out of my room and the front desk wants a deposit. {amt}? I'm good for it, I'm in sales."],
-        good: "Rick actually Venmos you. \"Told you I'm in sales.\" {back}.",
-        bad: "Rick's Venmo is 'Rick-Not-Paying-U'. Gone." },
-      { face: "Lyndsi", name: "Destiny", odds: 0.20, back: [2, 3], cut: [0.03, 0.06],
+        good: "Chris actually Venmos you. \"Told you I'm in sales.\" {back}.",
+        bad: "Chris's Venmo is 'Chris-Not-Paying-U'. Gone." },
+      { face: "Lyndsi", name: "Lyndsi", odds: 0.20, back: [2, 3], cut: [0.03, 0.06],
         ask: ["Hi! My friends ditched me and my card got declined. Could you cover {amt} for an Uber? I'll pay you right back, I promise!",
               "Omg you seem nice. I'm raising money for my sister's medical bills, it's a GoFundMe. {amt}?"],
-        good: "Destiny comes back with the cash plus some. \"See? Not everyone's a scammer.\" {back}.",
-        bad: "Destiny's 'Uber' was a limo to the club. With 4 other guys' money." },
-      { face: "Lucy", name: "Kai", odds: 0.30, back: [2.5, 4], cut: [0.03, 0.07],
+        good: "Lyndsi comes back with the cash plus some. \"See? Not everyone's a scammer.\" {back}.",
+        bad: "Lyndsi's 'Uber' was a limo to the club. With 4 other guys' money." },
+      { face: "Lucy", name: "Lucy", odds: 0.30, back: [2.5, 4], cut: [0.03, 0.07],
         ask: ["Brah, I got a system for roulette. Never loses. Front me {amt} and we split the take, I'm serious.",
               "Yo, I know the dealer at table 6, she's gonna 'slip' tonight. {amt} gets you in."],
-        good: "Kai runs up yelling. \"THE SYSTEM WORKS!\" Your cut: {back}.",
-        bad: "Security walks Kai out by both arms. Your money stays with the casino." }
+        good: "Lucy runs up yelling. \"THE SYSTEM WORKS!\" Your cut: {back}.",
+        bad: "Security walks Lucy out by both arms. Your money stays with the casino." }
     ];
     /* Friends: they borrow to go play something, then come back. */
     var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Avery", "Zac", "James", "Tristen"];
