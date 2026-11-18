@@ -170,7 +170,7 @@
 
     /* ---- the hot game of the day ----
      * The day's hot games pay extra: every winning hand or spin there pays its
-     * profit again, in full (2×) through 17 November and half again (1.5×) after. The table keeps its own stack while you play, so the
+     * profit again, in full (2×). The table keeps its own stack while you play, so the
      * second helping is held beside it, counted toward your day the moment
      * it's won, and lands in your bankroll when you get up.
      * A win's profit is read off the purse: what came back, less what went
@@ -215,7 +215,7 @@
       /** The day's hot games, said out loud. */
       function today(day) { return list(day).join(" & "); }
       /** The share of a win's profit the house adds on top: all of it, then half from 18 November. */
-      function rate(day) { day = day || TT.day || (frame && frame.day) || ""; return day >= "2026-11-18" ? 0.5 : 1; }
+      function rate(day) { day = day || TT.day || (frame && frame.day) || ""; return 1; }
       function tagX(day) { return rate(day) === 1 ? "2×" : "1.5×"; }
       function say(text, ms) {
         if (!tipEl) {
