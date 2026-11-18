@@ -9059,6 +9059,32 @@
       "{who} lost at {game} anyway. \"Good call not backing me.\""
     ];
 
+    /* Settings: who you are, so you never walk up to yourself. */
+    var ME_KEY = "c4tb.walkme";
+    function me() { try { return store.getStr(ME_KEY, ""); } catch (e) { return ""; } }
+    function notMe(face) { return face !== me(); }
+    function paintMe() {
+      var host = document.querySelector("#screen-settings .st-dials");
+      if (!host) return;
+      var box = $("wu-me");
+      if (!box) {
+        box = document.createElement("div"); box.id = "wu-me"; box.className = "st-dial"; box.style.setProperty("--c", "#FFD24D");
+        host.appendChild(box);
+      }
+      var mine = me(), people = Object.keys(FACES);
+      box.innerHTML = '<i class="edge"></i><div class="hd"><span class="nm">WHO ARE YOU?</span><span class="pc">' +
+        (mine ? mine.toUpperCase() : "NOBODY") + '</span></div><span class="sub">YOU WON\'T WALK UP TO YOURSELF AT THE TABLES</span>' +
+        '<div class="wu-grid">' + people.map(function (n) {
+          return '<button type="button" data-me="' + n + '" class="' + (n === mine ? "on" : "") + '"><img alt="" src="' + FACES[n] + '"><b>' + n + "</b></button>";
+        }).join("") + '<button type="button" data-me="" class="' + (mine ? "" : "on") + '"><span class="wu-none">?</span><b>Nobody</b></button></div>';
+      box.querySelectorAll("button[data-me]").forEach(function (b) {
+        b.onclick = function () {
+          try { store.setStr(ME_KEY, b.getAttribute("data-me")); } catch (e) {}
+          deck = [];
+          paintMe();
+        };
+      });
+    }
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
     var hands = 0, gap = 3, pending = [], offer = null, deck = [];
 
@@ -9081,7 +9107,14 @@
         "#wu-card button{flex:1;height:38px;border-radius:10px;font:800 13px/1 system-ui,sans-serif;letter-spacing:.08em;cursor:pointer}" +
         "#wu-card .wu-yes{border:1.5px solid #57E06A;background:rgba(87,224,106,.15);color:#8BF09A}" +
         "#wu-card .wu-no{border:1.5px solid rgba(244,238,220,.35);background:rgba(0,0,0,.3);color:#F4EEDC}" +
-        "#wu-card .wu-yes:disabled{opacity:.4}";
+        "#wu-card .wu-yes:disabled{opacity:.4}" +
+        "#wu-me .wu-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}" +
+        "#wu-me .wu-grid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;border:0;background:none;color:#F4EEDC;cursor:pointer}" +
+        "#wu-me .wu-grid img,#wu-me .wu-none{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(244,238,220,.25);box-sizing:border-box}" +
+        "#wu-me .wu-none{display:flex;align-items:center;justify-content:center;font:800 22px system-ui;color:rgba(244,238,220,.6);background:rgba(0,0,0,.35)}" +
+        "#wu-me .wu-grid b{font:700 10px/1.1 system-ui,sans-serif;letter-spacing:.04em;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
+        "#wu-me .wu-grid button.on img,#wu-me .wu-grid button.on .wu-none{border-color:#FFD24D;box-shadow:0 0 12px rgba(255,210,77,.6)}" +
+        "#wu-me .wu-grid button.on b{color:#FFD24D}";
       document.head.appendChild(s);
     }
     var lastAuto = null;
@@ -9147,7 +9180,7 @@
     function up(t) { return t.replace(/(^|[.!?] |")([a-z])/g, function (_, a, c) { return a + c.toUpperCase(); }); }
 
     function strangerOffer(s) {
-      s = s || pick(STRANGERS); var br = cash();
+      s = s || pick(STRANGERS.filter(function (x) { return notMe(x.face); })); if (!s || !notMe(s.face)) return false; var br = cash();
       var amt = nice(br * rnd(s.cut[0], s.cut[1]));
       if (amt > br) return false;
       var o = { amt: $$(amt) };
@@ -9166,7 +9199,7 @@
     }
     function friendOffer(forced) {
       var busyNames = pending.map(function (p) { return p.name; });
-      var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0; });
+      var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0 && notMe(n); });
       if (!free.length) return false;
       if (forced && free.indexOf(forced) < 0) return false;   // still out playing with your money
       var who = forced || pick(free), game = pick(SPOTS), br = cash();
@@ -9223,8 +9256,8 @@
       if (due) { settle(due); hands = 0; return; }
       if (cash() < 50) return;
       // testing: someone every hand, working through everybody before anyone repeats
-      if (!deck.length) deck = FRIENDS.map(function (n) { return { f: n }; })
-        .concat(STRANGERS.map(function (x) { return { s: x }; })).sort(function () { return Math.random() - 0.5; });
+      if (!deck.length) deck = FRIENDS.filter(notMe).map(function (n) { return { f: n }; })
+        .concat(STRANGERS.filter(function (x) { return notMe(x.face); }).map(function (x) { return { s: x }; })).sort(function () { return Math.random() - 0.5; });
       var nx = deck.shift();
       var ok = nx.f ? friendOffer(nx.f) : strangerOffer(nx.s);
       if (!ok) deck.push(nx);
@@ -9247,6 +9280,7 @@
     var showScreen = Shell.show;
     Shell.show = function (name) {
       var r = showScreen.apply(this, arguments);
+      if (name === "settings") { style(); paintMe(); }
       if (TABLES[name]) sit(name);
       else { clearInterval(poll); table = null; if (offer) { offer = null; } hideCard(); }
       return r;
