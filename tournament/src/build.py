@@ -479,6 +479,20 @@ sub("    function settle(staked) {", "    function settle(staked) {\n      " + W
 sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n      " + WU % '"sicbo", vals.slice(0, 3)')
 sub("      var dealerBj = isBJ(dealer);", "      var dealerBj = isBJ(dealer); " + WU % '"blackjack", total(dealer)')
 
+# ---- no betting more than you can finish: keep enough back for the play bet ----
+def keepBack(old, cost, need, word):
+    sub(old, ("      if (bankroll < %s + %s) {\n"
+              "        setMessage(\"Keep $\" + fmt(%s) + \" back for the %s bet. Bet less.\");\n"
+              "        return;\n      }\n") % (cost, need, need, word) + old)
+keepBack("      if (shoe.length < RESHUFFLE_AT) shoe = buildDjShoe();\n      bankroll -= ante * 2 + trips + badBeat;",
+         "ante * 2 + trips + badBeat", "ante * 2", "play")
+keepBack("      if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);\n      bankroll -= ante * 2 + trips + badBeat;",
+         "ante * 2 + trips + badBeat", "ante", "play")
+keepBack("      // One deck, shuffled fresh every hand.\n      shoe = buildShoe(1);\n      bankroll -= ante * 2 + flushPlus + bonus;",
+         "ante * 2 + flushPlus + bonus", "ante", "play")
+keepBack("      // Fourteen cards off a single deck, shuffled fresh every hand.\n      shoe = buildShoe(1);\n      bankroll -= ante + flushRush + superRush;",
+         "ante + flushRush + superRush", "ante", "raise")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

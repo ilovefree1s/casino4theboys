@@ -13733,6 +13733,10 @@
         setMessage(trips + badBeat > 0 ? "Side bets ride with an ante" : "Place an ante first");
         return;
       }
+      if (bankroll < ante * 2 + trips + badBeat + ante) {
+        setMessage("Keep $" + fmt(ante) + " back for the play bet. Bet less.");
+        return;
+      }
       if (shoe.length < RESHUFFLE_AT) shoe = buildShoe(DECKS);
       bankroll -= ante * 2 + trips + badBeat;
       syncWallet();
@@ -14179,6 +14183,10 @@
       if (ante <= 0) {
         setMessage(trips + badBeat > 0 ? "The side bets ride with an ante"
                                        : "Place an ante first");
+        return;
+      }
+      if (bankroll < ante * 2 + trips + badBeat + ante * 2) {
+        setMessage("Keep $" + fmt(ante * 2) + " back for the play bet. Bet less.");
         return;
       }
       if (shoe.length < RESHUFFLE_AT) shoe = buildDjShoe();
@@ -15101,6 +15109,10 @@
         setMessage(flushPlus + bonus > 0 ? "The side bets ride with an ante" : "Place an ante first");
         return;
       }
+      if (bankroll < ante * 2 + flushPlus + bonus + ante) {
+        setMessage("Keep $" + fmt(ante) + " back for the play bet. Bet less.");
+        return;
+      }
       // One deck, shuffled fresh every hand.
       shoe = buildShoe(1);
       bankroll -= ante * 2 + flushPlus + bonus;
@@ -15545,6 +15557,10 @@
       if (phase !== "betting") return;
       if (ante <= 0) {
         setMessage(flushRush + superRush > 0 ? "Side bets ride with an ante" : "Place an ante first");
+        return;
+      }
+      if (bankroll < ante + flushRush + superRush + ante) {
+        setMessage("Keep $" + fmt(ante) + " back for the raise bet. Bet less.");
         return;
       }
       // Fourteen cards off a single deck, shuffled fresh every hand.
