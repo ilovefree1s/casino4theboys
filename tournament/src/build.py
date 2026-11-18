@@ -477,7 +477,7 @@ sub("    function settleBreakdown(h, placed) {", "    function settleBreakdown(h
 sub("    function settle(text, pay) {", "    function settle(text, pay) {\n      " + WU % '"roulette", pocket2 != null && text.indexOf("&") >= 0 ? [pocket, pocket2] : [pocket]')
 sub("    function settle(staked) {", "    function settle(staked) {\n      " + WU % '"wheel", stop')
 sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n      " + WU % '"sicbo", vals.slice(0, 3)')
-sub("      var dealerBj = isBJ(dealer);", "      var dealerBj = isBJ(dealer); " + WU % '"blackjack", total(dealer)')
+sub("      var dealerBj = isBJ(dealer);", "      var dealerBj = isBJ(dealer); " + WU % '"blackjack", { dealer: total(dealer), trilux: !!triluxWin }')
 
 # ---- no betting more than you can finish: keep enough back for the play bet ----
 def keepBack(old, cost, need, word):
@@ -542,7 +542,7 @@ TIPFN = {
   "DragonTiger": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
   "SicBo": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
   "Wheel": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
-  "Blackjack": tipfn('push22SideBet', 'addChip(spot)'),
+  "Blackjack": tipfn('(spot === "trilux" ? triluxBet : push22SideBet)', 'addChip(spot)'),
   "Roulette": tipfn('(bets[tipRoute(spot).id] || 0)', 'addChip(tipRoute(spot))'),
   # keno: the friend's number gets marked on your ticket
   "Keno": (" tip: function (spot) { if (phase !== \"betting\") return 0; var n = +spot.slice(2);"

@@ -105,6 +105,12 @@
     ];
     /* Lines only one friend says, mixed in with the usual ones. */
     var OWN = {
+      Darin: {
+        ask: ["Bro spot me {amt}. Trilux on the 777s. I can FEEL it.",
+              "{amt}. 777s. Trilux. You know what it is.",
+              "Darin, already walking to the 777s table: \"Front me {amt}, Trilux is about to hit.\"",
+              "You know where I'm going. {amt} for Trilux on the 777s, bro."]
+      },
       Tristen: {
         ask: ["Bro. Bad habits, but good intentions. Spot me {amt} for blackjack.",
               "Listen, I KNOW how this looks. {amt}. Blackjack. Good intentions, bro.",
@@ -391,7 +397,7 @@
       var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0 && notMe(n); });
       if (!free.length) return false;
       if (forced && free.indexOf(forced) < 0) return false;   // still out playing with your money
-      var who = forced || pick(free), game = who === "Tristen" ? "blackjack" : pick(SPOTS), br = cash();
+      var who = forced || pick(free), game = who === "Tristen" ? "blackjack" : who === "Darin" ? "Trilux on the 777s" : pick(SPOTS), br = cash();
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
@@ -463,7 +469,8 @@
       keno: [{ keno: true }],        // a number marked on your ticket
       sicbo: [{ say: "BIG", spot: "big" }, { say: "SMALL", spot: "small" }],
       wheel: [{ say: "RED", spot: "r" }, { say: "GREEN", spot: "g" }, { say: "BLUE", spot: "b" }, { say: "GREY", spot: "s" }],
-      blackjack: [{ say: "PUSH 22", spot: "push22", variant: "freebet" }],
+      blackjack: [{ say: "PUSH 22", spot: "push22", variant: "freebet" },
+                  { say: "TRILUX", spot: "trilux", variant: "blazing", only: "Darin" }],   // Darin lives on Trilux
       holdem: [{ say: "the TRIPS", spot: "trips", poker: true }, { say: "the BAD BEAT", spot: "badbeat", poker: true }],
       djwild: [{ say: "the TRIPS", spot: "trips", poker: true }, { say: "the BAD BEAT", spot: "badbeat", poker: true }],
       miniuth: [{ say: "the FLUSH PLUS", spot: "flushplus", poker: true }, { say: "the 3 CARD BONUS", spot: "bonus", poker: true }]
@@ -472,7 +479,7 @@
     function tipHit(game, spot, what) {
       if (game === "dragontiger") return what === spot;
       if (game === "wheel") return what === spot;
-      if (game === "blackjack") return what === 22;
+      if (game === "blackjack") return spot === "trilux" ? !!what.trilux : what.dealer === 22;
       if (game === "sicbo") {
         var t = what[0] + what[1] + what[2], triple = what[0] === what[1] && what[1] === what[2];
         return !triple && (spot === "big" ? t >= 11 && t <= 17 : t >= 4 && t <= 10);
@@ -519,7 +526,9 @@
       var game = tipGame(), list = TIPS[game];
       if (!list || tip || !table || !table.tip) return false;
       var variant = table.variant ? table.variant() : "";
-      list = list.filter(function (t) { return !t.variant || t.variant === variant; });
+      list = list.filter(function (t) { return (!t.variant || t.variant === variant) && (!t.only || t.only === who); });
+      // Darin at the 777s only ever has one tip
+      if (who === "Darin" && list.some(function (t) { return t.only === "Darin"; })) list = list.filter(function (t) { return t.only === "Darin"; });
       if (!list.length) return false;
       var busyNames = pending.map(function (p) { return p.name; });
       if (!notMe(who) || busyNames.indexOf(who) >= 0) return false;
