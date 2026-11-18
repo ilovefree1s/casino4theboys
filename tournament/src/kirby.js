@@ -443,6 +443,7 @@
     return {
       busy: function () { return phase !== "betting" && phase !== "result"; },
       credit: function (x) { bankroll += x; syncWallet(); renderAll(); },
+      cash: function () { return bankroll; },
       enter: enter
     };
   })();

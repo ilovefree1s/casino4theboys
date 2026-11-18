@@ -466,6 +466,10 @@ sub("""      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", funct
         }, !again || again > bankroll);
       }""")
 
+# ---- walk-ups: friends and strangers asking for money between hands (Play Testing) ----
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "walkups.js").read_text().replace("/*FACES*/{}", (here / "faces.json").read_text()) + "  paintMenu();\n  /* ---------- sound")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
@@ -482,7 +486,7 @@ for name, test in BUSY.items():
     r = body.rindex("\n    return {")
     # credit: the hot game's second helping, put straight onto the table's own stack
     draw = "updateMoney" if name == "Baccarat" else "renderAll"
-    credit = " credit: function (x) { bankroll += x; syncWallet(); try { %s(); } catch (e) {} }," % draw
+    credit = " credit: function (x) { bankroll += x; syncWallet(); try { %s(); } catch (e) {} }, cash: function () { return bankroll; }," % draw
     body = body[:r] + "\n    return { busy: function () { return %s; },%s" % (test or BUSY_DEFAULT, credit) + body[r + len("\n    return {"):]
     h = h[:a] + body + h[b:]
 
