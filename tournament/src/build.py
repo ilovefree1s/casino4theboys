@@ -473,7 +473,7 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- walk-ups: the tables say what they dealt, for a friend's tip ----
 WU = 'if (typeof Walkups !== "undefined") try { Walkups.result(%s); } catch (e) {} '
 sub("      result = outcome(d, t);", "      result = outcome(d, t); " + WU % '"dragontiger", result')
-sub("    function settleBreakdown(h, placed) {", "    function settleBreakdown(h, placed) {\n      " + WU % '"baccarat", h.outcome')
+sub("    function settleBreakdown(h, placed) {", "    function settleBreakdown(h, placed) {\n      " + WU % '"baccarat", winningSpots(h)')
 sub("    function settle(text, pay) {", "    function settle(text, pay) {\n      " + WU % '"roulette", pocket2 != null && text.indexOf("&") >= 0 ? [pocket, pocket2] : [pocket]')
 sub("    function settle(staked) {", "    function settle(staked) {\n      " + WU % '"wheel", stop')
 sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n      " + WU % '"sicbo", vals.slice(0, 3)')
@@ -495,15 +495,13 @@ keepBack("      // Fourteen cards off a single deck, shuffled fresh every hand.\
 
 # ---- walk-ups: the poker tables and keno say what they dealt too ----
 sub("      settlement = s;\n      // A tie can still use a card",
-    "      settlement = s; " + WU % '"holdem", { win: s.outcome === "win", qual: !!s.qualified, cat: s.player ? s.player.cat : -1 }' +
+    "      settlement = s; " + WU % '"holdem", { trips: s.tripsPay > 0, badbeat: !!s.badBeatWin }' +
     "\n      // A tie can still use a card")
 sub("                        tripsStake, badBeatStake, folded);\n      settlement = s;",
     "                        tripsStake, badBeatStake, folded);\n      settlement = s; " +
-    WU % '"djwild", (function () { var ps = DJ.score(player); return { win: !folded && DJ.cmp(ps, DJ.score(dealer)) > 0, cat: ps.cat }; })()')
+    WU % '"djwild", { trips: !!s.tripsWin, badbeat: !!s.badBeatWin }')
 sub("flushPlusStake, bonusStake, folded);\n      settlement = s;",
-    "flushPlusStake, bonusStake, folded);\n      settlement = s; " + WU % '"miniuth", { win: s.outcome === "win", cat: s.player ? s.player.cat : -1 }')
-sub("    function settle() {\n      var h = hits(), p = pays(picks.length, h)",
-    "    function settle() {\n      " + WU % '"keno", drawn.slice()' + "\n      var h = hits(), p = pays(picks.length, h)")
+    "flushPlusStake, bonusStake, folded);\n      settlement = s; " + WU % '"miniuth", { flushplus: s.flushPlusWin >= 0, bonus: s.bonusWin >= 0 }')
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
@@ -524,6 +522,50 @@ for name, test in BUSY.items():
     credit = " credit: function (x) { bankroll += x; syncWallet(); try { %s(); } catch (e) {} }, cash: function () { return bankroll; }," % draw
     body = body[:r] + "\n    return { busy: function () { return %s; },%s" % (test or BUSY_DEFAULT, credit) + body[r + len("\n    return {"):]
     h = h[:a] + body + h[b:]
+
+# ---- walk-ups: a friend's tip goes down as a real bet on the felt ----
+# tip(spot, v): puts v on that spot through the table's own placing (limits and
+# bankroll apply) and says how much went down. phase(): where the hand is.
+def tipfn(get, put, draw="renderAll"):
+    return (" tip: function (spot, v) { if (phase !== \"betting\") return 0; var sc = selectedChip, before = %s; selectedChip = v;"
+            " try { %s; } catch (e) {} finally { selectedChip = sc; } try { %s(); } catch (e) {} return %s - before; },"
+            " phase: function () { return phase; }, variant: function () { return typeof variant === \"undefined\" ? \"\" : variant; },") % (get, put, draw, get)
+TIPFN = {
+  "Holdem": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
+  "DjWild": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
+  "MiniUth": tipfn('(spot === "flushplus" ? flushPlus : bonus)', 'place(spot)'),
+  "Baccarat": tipfn('(bets[spot] || 0)', 'addBet(spot)', "updateMoney"),
+  "DragonTiger": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
+  "SicBo": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
+  "Wheel": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
+  "Blackjack": tipfn('push22SideBet', 'addChip(spot)'),
+  "Roulette": tipfn('(bets[tipRoute(spot).id] || 0)', 'addChip(tipRoute(spot))'),
+}
+for name, fn in TIPFN.items():
+    a = h.index("\n  var %s = (function () {" % name)
+    b = h.index("\n  })();", a)
+    body = h[a:b]
+    r = body.rindex("\n    return { busy:")
+    body = body[:r] + "\n    return {" + fn + body[r + len("\n    return {"):]
+    h = h[:a] + body + h[b:]
+# roulette: where a tip's chips go
+sub("    function routeArt(artX, artY) {", """    function tipRoute(spot) {
+      var i, p;
+      if (spot.indexOf("n:") === 0) {
+        var n = +spot.slice(2), r = Math.floor((n - 1) / 3), c = (n - 1) % 3;
+        p = anchorPx(c + 0.5, r + 1.5);
+        return { id: "s-" + n, bet: straight(n), cx: p.x, cy: p.y };
+      }
+      if (spot.indexOf("dz-") === 0) {
+        i = +spot.slice(3);
+        var dt = A.GRID_TOP + i * 4 * A.ROW_PITCH, db = A.GRID_TOP + (i + 1) * 4 * A.ROW_PITCH;
+        return { id: spot, bet: dozen(i), cx: (A.DOZENS_LEFT + A.DOZENS_RIGHT) / 2, cy: (dt + db) / 2 };
+      }
+      for (i = 0; i < EVENS.length; i++) if (EVENS[i][0] === spot)
+        return { id: spot, bet: EVENS[i][1], cx: (A.EVEN_EDGES[i] + A.EVEN_EDGES[i + 1]) / 2, cy: (A.EVEN_TOP + A.EVEN_BOTTOM) / 2 };
+      return null;
+    }
+    function routeArt(artX, artY) {""")
 
 # ---- free bet blackjack: a pair of 5s splits free, it never doubles ----
 sub("          var freeDbl = live && !h.aceSplit && canFreeDouble(h.cards);",

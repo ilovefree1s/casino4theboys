@@ -452,112 +452,106 @@
       if (back > 0) jingle(); else womp();
     }
 
-    /* ---- Tips: a friend says what to bet on this hand, and you can back it ----
-       The money rides with the friend, not on the felt, and it's settled by
-       what the table actually deals. */
-    var RED = { 1:1,3:1,5:1,7:1,9:1,12:1,14:1,16:1,18:1,19:1,21:1,23:1,25:1,27:1,30:1,32:1,34:1,36:1 };
-    function num(p) { return typeof p === "number" ? p : -1; }   // 0 and 00 lose every outside tip
+    /* ---- Tips: a friend tells you what to bet, and BACK IT puts real chips on
+       that spot for the next hand, paid by the table's own paytable. */
     var TIPS = {
       baccarat: [
-        { say: "BANKER", pays: 1, hit: function (x) { return x === "B"; } },
-        { say: "PLAYER", pays: 1, hit: function (x) { return x === "P"; } },
-        { say: "the TIE", pays: 8, hit: function (x) { return x === "T"; } }],
-      dragontiger: [
-        { say: "DRAGON", pays: 1, hit: function (x) { return x === "dragon"; } },
-        { say: "TIGER", pays: 1, hit: function (x) { return x === "tiger"; } }],
-      roulette: [
-        { say: "RED", pays: 1, hit: function (ps) { return ps.some(function (p) { return !!RED[num(p)]; }); } },
-        { say: "BLACK", pays: 1, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n > 0 && !RED[n]; }); } },
-        { say: "ODD", pays: 1, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n > 0 && n % 2 === 1; }); } },
-        { say: "EVEN", pays: 1, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n > 0 && n % 2 === 0; }); } },
-        { say: "the 1st 12", pays: 2, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n >= 1 && n <= 12; }); } },
-        { say: "the 2nd 12", pays: 2, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n >= 13 && n <= 24; }); } },
-        { say: "the 3rd 12", pays: 2, hit: function (ps) { return ps.some(function (p) { var n = num(p); return n >= 25; }); } },
-        { lucky: true, pays: 35 }],
-      sicbo: [
-        { say: "BIG", pays: 1, hit: function (d) { var t = d[0] + d[1] + d[2]; return t >= 11 && t <= 17 && !(d[0] === d[1] && d[1] === d[2]); } },
-        { say: "SMALL", pays: 1, hit: function (d) { var t = d[0] + d[1] + d[2]; return t >= 4 && t <= 10 && !(d[0] === d[1] && d[1] === d[2]); } }],
-      wheel: [
-        { say: "RED", pays: 1, hit: function (st) { return st === "r"; } },
-        { say: "GREEN", pays: 3, hit: function (st) { return st === "g"; } },
-        { say: "BLUE", pays: 5, hit: function (st) { return st === "b"; } }],
-      blackjack: [
-        { say: "the DEALER BUSTING", pays: 2, hit: function (t) { return t > 21; } }],
-      // the poker tables: you have to play the hand out for "beat the dealer" to count
-      holdem: [
-        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
-        { say: "the dealer NOT qualifying", pays: 4, hit: function (x) { return !x.qual; } },
-        { say: "you hitting TRIPS or better", pays: 5, hit: function (x) { return x.cat >= 3; } }],
-      djwild: [
-        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
-        { say: "you hitting TRIPS or better", pays: 3, hit: function (x) { return x.cat >= 3; } }],
-      miniuth: [
-        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
-        { say: "you making a FLUSH or better", pays: 3, hit: function (x) { return x.cat >= 2; } },
-        { say: "you making a STRAIGHT or better", pays: 8, hit: function (x) { return x.cat >= 3; } }],
-      keno: [{ keno: true, pays: 3 }]
+        { say: "BANKER", spot: "banker" }, { say: "PLAYER", spot: "player" },
+        { say: "the TIE", spot: "tie" }, { say: "PLAYER PAIR", spot: "playerPair" }, { say: "BANKER PAIR", spot: "bankerPair" }],
+      dragontiger: [{ say: "DRAGON", spot: "dragon" }, { say: "TIGER", spot: "tiger" }, { say: "the TIE", spot: "tie" }],
+      roulette: [{ lucky: true }],   // always a number, straight up
+      sicbo: [{ say: "BIG", spot: "big" }, { say: "SMALL", spot: "small" }],
+      wheel: [{ say: "RED", spot: "r" }, { say: "GREEN", spot: "g" }, { say: "BLUE", spot: "b" }, { say: "GREY", spot: "s" }],
+      blackjack: [{ say: "PUSH 22", spot: "push22", variant: "freebet" }],
+      holdem: [{ say: "the TRIPS", spot: "trips", poker: true }, { say: "the BAD BEAT", spot: "badbeat", poker: true }],
+      djwild: [{ say: "the TRIPS", spot: "trips", poker: true }, { say: "the BAD BEAT", spot: "badbeat", poker: true }],
+      miniuth: [{ say: "the FLUSH PLUS", spot: "flushplus", poker: true }, { say: "the 3 CARD BONUS", spot: "bonus", poker: true }]
     };
+    /** Did the tipped spot win, from what the table reports at the settle. */
+    function tipHit(game, spot, what) {
+      if (game === "dragontiger") return what === spot;
+      if (game === "wheel") return what === spot;
+      if (game === "blackjack") return what === 22;
+      if (game === "sicbo") {
+        var t = what[0] + what[1] + what[2], triple = what[0] === what[1] && what[1] === what[2];
+        return !triple && (spot === "big" ? t >= 11 && t <= 17 : t >= 4 && t <= 10);
+      }
+      if (game === "roulette") return what.some(function (p) { return tip.pockets.indexOf(p) >= 0; });
+      return !!(what && what[spot]);   // baccarat's winning spots, the poker tables' side results
+    }
+    var RED = { 1:1,3:1,5:1,7:1,9:1,12:1,14:1,16:1,18:1,19:1,21:1,23:1,25:1,27:1,30:1,32:1,34:1,36:1 };
+    function pocketsFor(spot) {
+      var a = [], n;
+      if (spot.indexOf("n:") === 0) return [+spot.slice(2)];
+      if (spot.indexOf("dz-") === 0) { var s0 = +spot.slice(3) * 12 + 1; for (n = s0; n < s0 + 12; n++) a.push(n); return a; }
+      for (n = 1; n <= 36; n++) if ((spot === "red" && RED[n]) || (spot === "black" && !RED[n]) ||
+        (spot === "odd" && n % 2) || (spot === "even" && !(n % 2))) a.push(n);
+      return a;
+    }
     var TIP_ASK = [
-      "Bro. Put {amt} on {pick} this hand. Trust me.",
-      "I'm telling you, go {amt} on {pick}. Right now.",
+      "Bro. Throw {amt} on {pick} next hand. Trust me.",
+      "I'm telling you, {amt} on {pick}. Right now.",
       "Yo I got a feeling. {amt} on {pick}. Don't overthink it.",
       "I've been watching this table all night. {amt} on {pick}.",
-      "Throw {amt} on {pick} with me. We eat together."
+      "Put {amt} on {pick} with me. We eat together."
     ];
-    var TIP_WIN = ["{who} was RIGHT. {pick} hit! You get {back}.", "{who}: \"WHAT DID I TELL YOU?\" {pick} paid {back}.", "{who} is screaming. {pick}! {back}."];
-    var TIP_LOSE = ["{who}: \"My bad bro… I really felt it.\"", "{who} is already walking away. {pick} missed.", "{who}: \"Rigged. That table's rigged.\" Your {amt} is gone."];
-    var tip = null;   // { who, game, pick, amt, pays, hit }
+    // poker tables: the bet's always the same spot, so it's about the hand coming
+    var TIP_POKER = [
+      "Bro trust me, slam {pick} this next hand! {amt}.",
+      "I can FEEL it. Next hand is the one. Slam {amt} on {pick}.",
+      "Bro. {pick}. {amt}. Next hand. Don't think, just slam it.",
+      "Trust me bro, {pick} is coming next hand. Throw {amt} on it.",
+      "I just watched the dealer shuffle. Slam {pick} next hand, {amt}. Trust."
+    ];
+    var TIP_WIN = ["{who} was RIGHT. {pick} hit!", "{who}: \"WHAT DID I TELL YOU?\" {pick} paid!", "{who} is screaming. {pick}!"];
+    var TIP_LOSE = ["{who}: \"My bad bro… I really felt it.\"", "{who} is already walking away. {pick} missed.", "{who}: \"Rigged. That table's rigged.\""];
+    var tip = null;   // { who, game, spot, pick, amt, placed, pockets }
     function tipGame() { var on = document.querySelector(".screen.on"); return on ? on.id.replace("screen-", "") : ""; }
     function tipOffer(who) {
       var game = tipGame(), list = TIPS[game];
-      if (!list || tip) return false;
+      if (!list || tip || !table || !table.tip) return false;
+      var variant = table.variant ? table.variant() : "";
+      list = list.filter(function (t) { return !t.variant || t.variant === variant; });
+      if (!list.length) return false;
       var busyNames = pending.map(function (p) { return p.name; });
       if (!notMe(who) || busyNames.indexOf(who) >= 0) return false;
       var t = pick(list), br = cash();
-      if (t.keno) {
-        var kn = 1 + Math.floor(Math.random() * 80);
-        t = { say: kn + " coming out", pays: 3, hit: function (d) { return d.indexOf(kn) >= 0; } };
-      }
-      if (t.lucky) {
-        var n = Math.floor(Math.random() * 37);
-        t = { say: "lucky number " + n, pays: 35, hit: function (ps) { return ps.some(function (p) { return p === n; }); } };
-      }
-      var amt = nice(br * rnd(0.02, 0.06));
+      if (t.lucky) { var n = 1 + Math.floor(Math.random() * 36); t = { say: "number " + n, spot: "n:" + n }; }
+      var amt = nice(br * rnd(0.02, 0.05));
       if (amt > br) return false;
-      var o = { amt: $$(amt), pick: t.say };
-      show("friend", who, who, fill(pick(TIP_ASK), o) + "  (pays " + t.pays + " to 1)", {
+      show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
         onYes: function () {
-          if (amt > cash() || !money(-amt)) return;
-          tip = { who: who, game: game, pick: t.say, amt: amt, pays: t.pays, hit: t.hit };
+          tip = { who: who, game: game, spot: t.spot, pick: t.say, amt: amt, placed: 0,
+                  pockets: game === "roulette" ? pocketsFor(t.spot) : null };
+          placeTip();
         },
         onNo: function () {}
       });
       return true;
     }
-    /** The table reports what it dealt; a tip riding on it is settled. */
+    /** The chips go down as soon as the table takes bets again. */
+    function placeTip() {
+      if (!tip || tip.placed || !table || !table.tip || tipGame() !== tip.game) return;
+      if (table.phase && table.phase() !== "betting") return;
+      var got = table.tip(tip.spot, tip.amt);
+      if (got > 0) tip.placed = got;
+      else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + ": \"Table won't take it, bro. Never mind.\""); }
+    }
+    /** The table reports what it dealt; the friend reacts to the tipped spot. */
     function result(game, what) {
-      if (!tip || tip.game !== game) return;
-      var t = tip; tip = null;
+      if (!tip || !tip.placed || tip.game !== game) return;
       var won = false;
-      try { won = !!t.hit(what); } catch (e) {}
+      try { won = tipHit(game, tip.spot, what); } catch (e) {}
+      var t = tip; tip = null;
       setTimeout(function () {
-        var o = { who: t.who, pick: t.pick, amt: $$(t.amt) };
-        if (won) {
-          var back = t.amt * (t.pays + 1);
-          money(back);
-          o.back = $$(back);
-          show("good", t.who, t.who, fill(pick(TIP_WIN), o));
-          jingle();
-        } else { show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
+        var o = { who: t.who, pick: t.pick };
+        if (won) { show("good", t.who, t.who, fill(pick(TIP_WIN), o)); jingle(); }
+        else { show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
       }, 1400);
     }
-    /** Got up before the hand: the friend hands the money back. */
-    function refundTip() {
-      if (!tip) return;
-      var t = tip; tip = null;
-      money(t.amt);
-    }
+    /** Left the table: the tip goes with it (chips not yet dealt come back with the table). */
+    function refundTip() { tip = null; }
 
     /** A hand just finished at this table. */
     function handOver() {
@@ -592,6 +586,7 @@
       poll = setInterval(function () {
         if (!on()) return;
         var b = !!table.busy();
+        if (tip && !tip.placed) placeTip();
         if (wasBusy && !b) setTimeout(handOver, 900);
         wasBusy = b;
       }, 250);
@@ -606,6 +601,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(); },
+    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
