@@ -470,6 +470,15 @@ sub("""      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", funct
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "walkups.js").read_text().replace("/*FACES*/{}", (here / "faces.json").read_text()) + "  paintMenu();\n  /* ---------- sound")
 
+# ---- walk-ups: the tables say what they dealt, for a friend's tip ----
+WU = 'if (typeof Walkups !== "undefined") try { Walkups.result(%s); } catch (e) {} '
+sub("      result = outcome(d, t);", "      result = outcome(d, t); " + WU % '"dragontiger", result')
+sub("    function settleBreakdown(h, placed) {", "    function settleBreakdown(h, placed) {\n      " + WU % '"baccarat", h.outcome')
+sub("    function settle(text, pay) {", "    function settle(text, pay) {\n      " + WU % '"roulette", pocket2 != null && text.indexOf("&") >= 0 ? [pocket, pocket2] : [pocket]')
+sub("    function settle(staked) {", "    function settle(staked) {\n      " + WU % '"wheel", stop')
+sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n      " + WU % '"sicbo", vals.slice(0, 3)')
+sub("      var dealerBj = isBJ(dealer);", "      var dealerBj = isBJ(dealer); " + WU % '"blackjack", total(dealer)')
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
