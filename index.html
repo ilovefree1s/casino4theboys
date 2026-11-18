@@ -9193,6 +9193,7 @@
         "color:#F4EEDC;font:500 14px/1.35 system-ui,sans-serif;transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}" +
         "#wu-card.on{transform:translate(-50%,0)}" +
         "#wu-card.guard{border-color:#FFD24D;background:rgba(16,22,36,.97)}#wu-card.guard .wu-n{color:#FFD24D}#wu-card.guard img{color:#FFD24D}" +
+        "#wu-card.shout{border-color:#FFB238;background:linear-gradient(90deg,rgba(60,24,0,.97),rgba(24,12,4,.97))}#wu-card.shout .wu-n{color:#FFB238}#wu-card.shout img{color:#FFB238}" +
         "#wu-card.friend{border-color:#3FA9FF}#wu-card.good{border-color:#57E06A}#wu-card.bad{border-color:#FF5E5E}" +
         "#wu-card img{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:none;border:2px solid currentColor;color:#FFD24D}" +
         "#wu-card.friend img{color:#3FA9FF}#wu-card.good img{color:#57E06A}#wu-card.bad img{color:#FF5E5E}" +
@@ -9304,6 +9305,28 @@
     }
     // phones only let sound start from a tap: wake it on the first one
     document.addEventListener("pointerdown", function () { audio(); }, { once: true, capture: true });
+    /* ---- shout-outs: another player's big hit, announced wherever you are ---- */
+    var shoutQ = [];
+    function faceOf(name) {
+      var n = String(name || "").toLowerCase();
+      var k = Object.keys(FACES).filter(function (f) { return f.toLowerCase() === n; })[0];
+      return k || "";
+    }
+    function announce(name, game, amount, mult) {
+      shoutQ.push({ name: name, game: game, amount: amount, mult: mult });
+      drainShout();
+    }
+    function drainShout() {
+      if (!shoutQ.length) return;
+      if (card && card.classList.contains("on")) { setTimeout(drainShout, 2500); return; }
+      var x = shoutQ.shift(), face = faceOf(x.name);
+      show("shout", face, "🔥 BIG HIT", String(x.name).toUpperCase() + " just hit " + $$(x.amount) + " on " +
+        String(x.game).toUpperCase() + " — " + fmt(x.mult) + "× the bet!", null, 7000);
+      var img = card.querySelector("img");
+      if (!face) img.style.display = "none";
+      jingle();
+      if (shoutQ.length) setTimeout(drainShout, 7600);
+    }
     /** Board stats (tournament): walk-ups shown, backed, real, scams. */
     function count(f) { try { if (typeof TT !== "undefined" && TT.walkup) TT.walkup(f); } catch (e) {} }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
@@ -9600,7 +9623,10 @@
         if (!on()) return;
         var b = !!table.busy();
         if (tip && !tip.placed) placeTip();
-        if (wasBusy && !b) setTimeout(handOver, 900);
+        if (wasBusy && !b) {
+          try { if (typeof TT !== "undefined" && TT.handDone) TT.handDone(); } catch (e) {}
+          setTimeout(handOver, 900);
+        }
         wasBusy = b;
       }, 250);
     }
@@ -9614,7 +9640,7 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, announce: announce, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
@@ -10039,7 +10065,39 @@
       store.setStr(kw("stats"), JSON.stringify(s));
       statsDirty = true;
       hot.track(delta);
+      shout.track(delta);
     };
+    /* ---- shout-outs: a hit of 50x the bet or more is announced at everybody else's table ----
+     * What went out on the hand is counted until the table goes quiet; a payout
+     * that clears it by 50 times over is sent up, and everyone else's phone
+     * picks it up on its next look. */
+    var shout = (function () {
+      var out = 0, last = 0, polling = 0;
+      function track(delta) {
+        if (delta < 0) { out += -delta; return; }
+        var won = delta - out, bet = out;
+        out = Math.max(0, out - delta);
+        if (bet <= 0 || won < bet * 50) return;
+        rpc("c4tb_shout", { p_name: myName(), p_token: token(), p_game: TT.game || "a table",
+          p_amount: Math.round(won), p_mult: Math.floor(won / bet) }).catch(function () {});
+      }
+      function look() {
+        if (!TT.on || typeof Walkups === "undefined") return;
+        var after = Math.round(store.get("ftt.shout.last", 0));
+        rpc("c4tb_shouts_since", { p_after: after }).then(function (rows) {
+          if (!Array.isArray(rows)) return;
+          var me = (myName() || "").toLowerCase();
+          rows.forEach(function (x) {
+            if (x.id > after) store.set("ftt.shout.last", x.id);
+            if (x.name.toLowerCase() !== me) Walkups.announce(x.name, x.game, x.amount, x.mult);
+          });
+        }, function () {});
+      }
+      polling = setInterval(look, 15000);
+      setTimeout(look, 4000);
+      return { track: track, handDone: function () { out = 0; } };
+    })();
+    TT.handDone = shout.handDone;
     /* ---- walk-up stats: counted on the phone, sent up a moment later ---- */
     var wuT = 0;
     TT.walkup = function (field) {

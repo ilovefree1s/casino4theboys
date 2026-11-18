@@ -241,6 +241,7 @@
         "color:#F4EEDC;font:500 14px/1.35 system-ui,sans-serif;transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}" +
         "#wu-card.on{transform:translate(-50%,0)}" +
         "#wu-card.guard{border-color:#FFD24D;background:rgba(16,22,36,.97)}#wu-card.guard .wu-n{color:#FFD24D}#wu-card.guard img{color:#FFD24D}" +
+        "#wu-card.shout{border-color:#FFB238;background:linear-gradient(90deg,rgba(60,24,0,.97),rgba(24,12,4,.97))}#wu-card.shout .wu-n{color:#FFB238}#wu-card.shout img{color:#FFB238}" +
         "#wu-card.friend{border-color:#3FA9FF}#wu-card.good{border-color:#57E06A}#wu-card.bad{border-color:#FF5E5E}" +
         "#wu-card img{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:none;border:2px solid currentColor;color:#FFD24D}" +
         "#wu-card.friend img{color:#3FA9FF}#wu-card.good img{color:#57E06A}#wu-card.bad img{color:#FF5E5E}" +
@@ -352,6 +353,28 @@
     }
     // phones only let sound start from a tap: wake it on the first one
     document.addEventListener("pointerdown", function () { audio(); }, { once: true, capture: true });
+    /* ---- shout-outs: another player's big hit, announced wherever you are ---- */
+    var shoutQ = [];
+    function faceOf(name) {
+      var n = String(name || "").toLowerCase();
+      var k = Object.keys(FACES).filter(function (f) { return f.toLowerCase() === n; })[0];
+      return k || "";
+    }
+    function announce(name, game, amount, mult) {
+      shoutQ.push({ name: name, game: game, amount: amount, mult: mult });
+      drainShout();
+    }
+    function drainShout() {
+      if (!shoutQ.length) return;
+      if (card && card.classList.contains("on")) { setTimeout(drainShout, 2500); return; }
+      var x = shoutQ.shift(), face = faceOf(x.name);
+      show("shout", face, "🔥 BIG HIT", String(x.name).toUpperCase() + " just hit " + $$(x.amount) + " on " +
+        String(x.game).toUpperCase() + " — " + fmt(x.mult) + "× the bet!", null, 7000);
+      var img = card.querySelector("img");
+      if (!face) img.style.display = "none";
+      jingle();
+      if (shoutQ.length) setTimeout(drainShout, 7600);
+    }
     /** Board stats (tournament): walk-ups shown, backed, real, scams. */
     function count(f) { try { if (typeof TT !== "undefined" && TT.walkup) TT.walkup(f); } catch (e) {} }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
@@ -648,7 +671,10 @@
         if (!on()) return;
         var b = !!table.busy();
         if (tip && !tip.placed) placeTip();
-        if (wasBusy && !b) setTimeout(handOver, 900);
+        if (wasBusy && !b) {
+          try { if (typeof TT !== "undefined" && TT.handDone) TT.handDone(); } catch (e) {}
+          setTimeout(handOver, 900);
+        }
         wasBusy = b;
       }, 250);
     }
@@ -662,6 +688,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, announce: announce, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
