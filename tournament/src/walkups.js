@@ -481,6 +481,21 @@
       djwild: [{ say: "the TRIPS", spot: "trips", poker: true }, { say: "the BAD BEAT", spot: "badbeat", poker: true }],
       miniuth: [{ say: "the FLUSH PLUS", spot: "flushplus", poker: true }, { say: "the 3 CARD BONUS", spot: "bonus", poker: true }]
     };
+    /* Which tipped spots are side bets under the room's limits (the rest go against the table max). */
+    var TIP_SIDE = { trips: 1, flushplus: 1, bonus: 1, playerPair: 1, bankerPair: 1, push22: 1, trilux: 1 };
+    /** The most the table will take on that spot right now: room limits, less what's already on it. */
+    function tipCap(game, spot) {
+      var lim = Shell.limits();
+      if (!lim || !lim.enforced) return Infinity;
+      var cap;
+      if (spot === "badbeat") {
+        // UTH and DJ Wild run their own, doubled Bad Beat caps
+        cap = { 25: 50, 50: 250, 75: 500, 100: 1000, 125: 5000 }[lim.badBeatMax] || lim.badBeatMax;
+      } else cap = TIP_SIDE[spot] ? lim.sideMax : lim.max;
+      var on = 0;
+      try { on = table && table.tipOn ? table.tipOn(spot) || 0 : 0; } catch (e) {}
+      return Math.max(0, cap - on);
+    }
     /** Did the tipped spot win, from what the table reports at the settle. */
     function tipHit(game, spot, what) {
       if (game === "dragontiger") return what === spot;
@@ -551,7 +566,10 @@
         return true;
       }
       var amt = nice(br * rnd(0.02, 0.05));
-      if (amt > br) return false;
+      // never more than the table takes on that spot: round down to a clean number under the cap
+      var capT = tipCap(game, t.spot);
+      if (amt > capT) amt = capT >= 100 ? Math.floor(capT / 25) * 25 : capT;
+      if (amt <= 0 || amt > br) return false;
       count("shown"); count("real");
       show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),

@@ -533,7 +533,8 @@ for name, test in BUSY.items():
 def tipfn(get, put, draw="renderAll"):
     return (" tip: function (spot, v) { if (phase !== \"betting\") return 0; var sc = selectedChip, before = %s; selectedChip = v;"
             " try { %s; } catch (e) {} finally { selectedChip = sc; } try { %s(); } catch (e) {} return %s - before; },"
-            " phase: function () { return phase; }, variant: function () { return typeof variant === \"undefined\" ? \"\" : variant; },") % (get, put, draw, get)
+            " phase: function () { return phase; }, variant: function () { return typeof variant === \"undefined\" ? \"\" : variant; },"
+            " tipOn: function (spot) { try { return %s; } catch (e) { return 0; } },") % (get, put, draw, get, get)
 TIPFN = {
   "Holdem": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
   "DjWild": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
