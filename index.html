@@ -9085,6 +9085,25 @@
         };
       });
     }
+    /* Until you've picked who you are, the menus ask (once per visit, never at a table). */
+    var nagged = false;
+    function nag(screenName) {
+      if (nagged || me() || TABLES[screenName] || screenName === "settings") return;
+      nagged = true;
+      setTimeout(function () {
+        var on = document.querySelector(".screen.on");
+        if (me() || !on || TABLES[on.id.replace("screen-", "")] || on.id === "screen-settings") { nagged = false; return; }
+        var faces = Object.keys(FACES).slice(0, 6).map(function (n) { return '<img alt="" src="' + FACES[n] + '">'; }).join("");
+        show("friend", "", "NEW · WHO ARE YOU?", "", {
+          yes: "PICK ME", onYes: function () { Shell.show("settings"); }, onNo: function () {}
+        }, 60000);
+        card.querySelector("img").remove();
+        card.querySelector(".wu-t").innerHTML = 'The boys now walk up at the tables asking for money. ' +
+          'Lock in who you are in <b>Settings</b> so you never get hustled by yourself.' +
+          '<div class="wu-strip">' + faces + "</div>";
+        card.querySelector(".wu-no").textContent = "LATER";
+      }, 1200);
+    }
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
     var hands = 0, gap = 3, pending = [], offer = null, deck = [];
 
@@ -9108,6 +9127,7 @@
         "#wu-card .wu-yes{border:1.5px solid #57E06A;background:rgba(87,224,106,.15);color:#8BF09A}" +
         "#wu-card .wu-no{border:1.5px solid rgba(244,238,220,.35);background:rgba(0,0,0,.3);color:#F4EEDC}" +
         "#wu-card .wu-yes:disabled{opacity:.4}" +
+        "#wu-card .wu-strip{display:flex;margin-top:8px}#wu-card .wu-strip img{width:30px;height:30px;margin-right:-6px;border-width:1.5px;color:#0C0A16}" +
         "#wu-me .wu-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}" +
         "#wu-me .wu-grid button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 0;border:0;background:none;color:#F4EEDC;cursor:pointer}" +
         "#wu-me .wu-grid img,#wu-me .wu-none{width:52px;height:52px;border-radius:50%;object-fit:cover;border:2px solid rgba(244,238,220,.25);box-sizing:border-box}" +
@@ -9281,10 +9301,12 @@
     Shell.show = function (name) {
       var r = showScreen.apply(this, arguments);
       if (name === "settings") { style(); paintMe(); }
+      nag(name);
       if (TABLES[name]) sit(name);
       else { clearInterval(poll); table = null; if (offer) { offer = null; } hideCard(); }
       return r;
     };
+    setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
     return { _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
