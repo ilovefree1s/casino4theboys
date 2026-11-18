@@ -9363,7 +9363,10 @@
       if (p.guard) {
         show("guard", "", "CASINO SECURITY", "\"Sir, we noticed on the cameras that you loaned " + $$(p.amt) + " to " + p.who +
           ". That was a scam. Please don't give money to strangers, it's usually a scam.\"", null, 9000);
-        card.querySelector("img").src = FACES.Justin;   // security is always Justin
+        // security is Justin, unless Justin ran the scam: then it's somebody else on shift
+        var guard = "Justin";
+        if (p.who === "Justin") guard = pick(FRIENDS.filter(function (n) { return n !== "Justin" && notMe(n); }));
+        card.querySelector("img").src = FACES[guard];
         return;
       }
       if (p.stranger) {
