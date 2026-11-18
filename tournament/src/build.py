@@ -493,6 +493,18 @@ keepBack("      // One deck, shuffled fresh every hand.\n      shoe = buildShoe(
 keepBack("      // Fourteen cards off a single deck, shuffled fresh every hand.\n      shoe = buildShoe(1);\n      bankroll -= ante + flushRush + superRush;",
          "ante + flushRush + superRush", "ante", "raise")
 
+# ---- walk-ups: the poker tables and keno say what they dealt too ----
+sub("      settlement = s;\n      // A tie can still use a card",
+    "      settlement = s; " + WU % '"holdem", { win: s.outcome === "win", qual: !!s.qualified, cat: s.player ? s.player.cat : -1 }' +
+    "\n      // A tie can still use a card")
+sub("                        tripsStake, badBeatStake, folded);\n      settlement = s;",
+    "                        tripsStake, badBeatStake, folded);\n      settlement = s; " +
+    WU % '"djwild", (function () { var ps = DJ.score(player); return { win: !folded && DJ.cmp(ps, DJ.score(dealer)) > 0, cat: ps.cat }; })()')
+sub("flushPlusStake, bonusStake, folded);\n      settlement = s;",
+    "flushPlusStake, bonusStake, folded);\n      settlement = s; " + WU % '"miniuth", { win: s.outcome === "win", cat: s.player ? s.player.cat : -1 }')
+sub("    function settle() {\n      var h = hits(), p = pays(picks.length, h)",
+    "    function settle() {\n      " + WU % '"keno", drawn.slice()' + "\n      var h = hits(), p = pays(picks.length, h)")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

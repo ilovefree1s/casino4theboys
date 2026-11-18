@@ -482,13 +482,26 @@
         { say: "GREEN", pays: 3, hit: function (st) { return st === "g"; } },
         { say: "BLUE", pays: 5, hit: function (st) { return st === "b"; } }],
       blackjack: [
-        { say: "the DEALER BUSTING", pays: 2, hit: function (t) { return t > 21; } }]
+        { say: "the DEALER BUSTING", pays: 2, hit: function (t) { return t > 21; } }],
+      // the poker tables: you have to play the hand out for "beat the dealer" to count
+      holdem: [
+        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
+        { say: "the dealer NOT qualifying", pays: 4, hit: function (x) { return !x.qual; } },
+        { say: "you hitting TRIPS or better", pays: 5, hit: function (x) { return x.cat >= 3; } }],
+      djwild: [
+        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
+        { say: "you hitting TRIPS or better", pays: 3, hit: function (x) { return x.cat >= 3; } }],
+      miniuth: [
+        { say: "YOU beating the dealer", pays: 1, hit: function (x) { return x.win; } },
+        { say: "you making a FLUSH or better", pays: 3, hit: function (x) { return x.cat >= 2; } },
+        { say: "you making a STRAIGHT or better", pays: 8, hit: function (x) { return x.cat >= 3; } }],
+      keno: [{ keno: true, pays: 3 }]
     };
     var TIP_ASK = [
       "Bro. Put {amt} on {pick} this hand. Trust me.",
-      "I'm telling you, {pick}. {amt}. Right now.",
-      "Yo I got a feeling. {pick}, {amt}. Don't overthink it.",
-      "{pick}. {amt}. I've been watching this table all night.",
+      "I'm telling you, go {amt} on {pick}. Right now.",
+      "Yo I got a feeling. {amt} on {pick}. Don't overthink it.",
+      "I've been watching this table all night. {amt} on {pick}.",
       "Throw {amt} on {pick} with me. We eat together."
     ];
     var TIP_WIN = ["{who} was RIGHT. {pick} hit! You get {back}.", "{who}: \"WHAT DID I TELL YOU?\" {pick} paid {back}.", "{who} is screaming. {pick}! {back}."];
@@ -501,6 +514,10 @@
       var busyNames = pending.map(function (p) { return p.name; });
       if (!notMe(who) || busyNames.indexOf(who) >= 0) return false;
       var t = pick(list), br = cash();
+      if (t.keno) {
+        var kn = 1 + Math.floor(Math.random() * 80);
+        t = { say: kn + " coming out", pays: 3, hit: function (d) { return d.indexOf(kn) >= 0; } };
+      }
       if (t.lucky) {
         var n = Math.floor(Math.random() * 37);
         t = { say: "lucky number " + n, pays: 35, hit: function (ps) { return ps.some(function (p) { return p === n; }); } };
