@@ -9491,6 +9491,11 @@
       "Yo put {n} on your ticket. It's due, I've been watching.",
       "Mark {n} bro. Don't ask why. Just mark it."
     ];
+    var FLOOR_OK = [
+      "Already maxed? I talked to the floor, they're letting you go over this hand.",
+      "Don't worry about the max, the floor said it's cool this one time.",
+      "Floor guy owes me one. You can go over the limit this hand."
+    ];
     var TIP_WIN = ["{who} was RIGHT. {pick} hit!", "{who}: \"WHAT DID I TELL YOU?\" {pick} paid!", "{who} is screaming. {pick}!"];
     var TIP_LOSE = ["{who}: \"My bad bro… I really felt it.\"", "{who} is already walking away. {pick} missed.", "{who}: \"Rigged. That table's rigged.\""];
     var tip = null;   // { who, game, spot, pick, amt, placed, pockets }
@@ -9518,16 +9523,16 @@
         return true;
       }
       var amt = nice(br * rnd(0.02, 0.05));
-      // never more than the table takes on that spot: round down to a clean number under the cap
-      var capT = tipCap(game, t.spot);
-      if (amt > capT) amt = capT >= 100 ? Math.floor(capT / 25) * 25 : capT;
       if (amt <= 0 || amt > br) return false;
+      // over what the table takes on that spot: he's squared it with the floor for this one hand
+      var floor = amt > tipCap(game, t.spot);
       count("shown"); count("real");
-      show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
+      show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }) +
+        (floor ? " " + pick(FLOOR_OK) : ""), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           count("backed");
-          tip = { who: who, game: game, spot: t.spot, pick: t.say, amt: amt, placed: 0,
+          tip = { who: who, game: game, spot: t.spot, pick: t.say, amt: amt, placed: 0, floor: floor,
                   pockets: game === "roulette" ? pocketsFor(t.spot) : null };
           placeTip();
         },
@@ -9539,7 +9544,10 @@
     function placeTip() {
       if (!tip || tip.placed || !table || !table.tip || tipGame() !== tip.game) return;
       if (table.phase && table.phase() !== "betting") return;
-      var got = table.tip(tip.spot, tip.amt);
+      // the floor okayed it: this one bet goes down past the room's limit
+      var got = 0, lim = Shell.limits;
+      if (tip.floor) Shell.limits = function () { return { min: 0, max: Infinity, sideMax: Infinity, badBeatMax: Infinity, enforced: false }; };
+      try { got = table.tip(tip.spot, tip.amt); } finally { Shell.limits = lim; }
       if (got > 0) tip.placed = got;
       else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + (t.game === "keno" ? ": \"Your ticket's full, bro. Never mind.\"" : ": \"Table won't take it, bro. Never mind.\"")); }
     }
