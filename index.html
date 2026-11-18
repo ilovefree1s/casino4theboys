@@ -9084,10 +9084,25 @@
         "#wu-card .wu-yes:disabled{opacity:.4}";
       document.head.appendChild(s);
     }
+    var lastAuto = null;
     function hideCard() {
-      clearTimeout(timer);
-      if (card) card.classList.remove("on");
+      clearTimeout(timer); lastAuto = null;
+      if (!card) return;
+      card.classList.remove("on");
+      // gone for good once it has slid away, even if the phone froze the slide
+      var c = card;
+      setTimeout(function () { if (!c.classList.contains("on")) c.style.display = "none"; }, 450);
     }
+    // the phone put the game away: stop the clock, and on the way back
+    // finish whatever the card was doing instead of leaving it half way
+    document.addEventListener("visibilitychange", function () {
+      if (!card) return;
+      if (document.hidden) { clearTimeout(timer); return; }
+      if (!card.classList.contains("on")) { card.style.display = "none"; return; }
+      card.style.transition = "none"; card.style.transform = "translate(-50%,0)";
+      void card.offsetWidth; card.style.transition = ""; card.style.transform = "";
+      if (lastAuto) { clearTimeout(timer); timer = setTimeout(lastAuto.fn, lastAuto.ms); }
+    });
     /** kind: "" stranger ask, "friend" ask, "good" money back, "bad" money gone */
     function show(kind, face, name, text, buttons, ms) {
       style();
@@ -9096,6 +9111,7 @@
         document.body.appendChild(card);
       }
       clearTimeout(timer);
+      card.style.display = "flex";
       card.className = kind;
       card.innerHTML = '<img alt=""><div class="wu-b"><div class="wu-n"></div><div class="wu-t"></div>' +
         (buttons ? '<div class="wu-row"><button class="wu-yes"></button><button class="wu-no">NAH</button></div>' : "") + "</div>";
@@ -9111,7 +9127,9 @@
         card.onclick = null;
       } else card.onclick = hideCard;
       requestAnimationFrame(function () { requestAnimationFrame(function () { card.classList.add("on"); }); });
-      timer = setTimeout(function () { hideCard(); if (buttons) buttons.onNo(true); }, ms || (buttons ? 25000 : 6000));
+      var fn = function () { hideCard(); if (buttons) buttons.onNo(true); };
+      lastAuto = { fn: fn, ms: ms || (buttons ? 25000 : 6000) };
+      timer = setTimeout(fn, lastAuto.ms);
     }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
     function money(x) {
