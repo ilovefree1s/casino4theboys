@@ -9107,6 +9107,14 @@
       store.setStr("ftt.showboard", "1");
       location.reload();
     });
+    // once the day or week has closed, any tap brings the notice back up:
+    // nothing played after that point is saved, so it shouldn't look like it is
+    document.addEventListener("click", function (e) {
+      if (!TT.on || !TT.closed || $("tt-over").classList.contains("on")) return;
+      if (e.target.closest && e.target.closest("#tt-over")) return;
+      e.preventDefault(); e.stopImmediatePropagation();
+      $("tt-over").classList.add("on");
+    }, true);
     setInterval(function () {
       if (frame && frame.status === "live" && TT.on && Date.parse(frame.ends_at) <= now()) weekOver();
       else if (frame && frame.daily && TT.on && TT.day && Date.parse(frame.day_ends_at) <= now()) dayOver();
