@@ -93,19 +93,24 @@
     /* Everyone: each walk-up is anybody, asking for a spot or running a hustle. */
     var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Chris", "Avery", "Zac", "James",
                    "Lyndsi", "Cougar", "Grace", "Zephyrox", "Lucy", "Tristen"];
+    /* Tristen only ever wants two things: blackjack money, or this. */
+    var TRISTEN_SCAM = { odds: 0.35, back: [2, 3], cut: [0.03, 0.07],
+      ask: "Tristen, dead serious: \"Bro. The gift shop has a GIANT dildo. Like, huge. I need it. {amt} and I pay you back tonight, swear.\"",
+      good: "Tristen walks up with the giant dildo under his arm AND your money. \"Worth every penny, bro.\" {back}.",
+      bad: "Tristen bought the giant dildo. You're not getting paid back. He's never been happier." };
     /* Lines only one friend says, mixed in with the usual ones. */
     var OWN = {
       Tristen: {
-        ask: ["Bro. Bad habits, but good intentions. Spot me {amt} for {game}.",
-              "Listen, I KNOW how this looks. {amt}. {game}. Good intentions, bro.",
-              "Tristen, eyes bloodshot: \"I'm locked in, bro. {amt} on {game}, trust.\""],
+        ask: ["Bro. Bad habits, but good intentions. Spot me {amt} for blackjack.",
+              "Listen, I KNOW how this looks. {amt}. Blackjack. Good intentions, bro.",
+              "Tristen, eyes bloodshot: \"I'm locked in, bro. {amt} on blackjack, trust.\""],
         lost: ["Tristen: \"Bad habits, bro. Bad habits.\" Your money's gone.",
                "Tristen's back holding a beer and no chips. \"Good intentions though.\""],
         win: ["Tristen's screaming. \"GOOD INTENTIONS PAY, BRO!\" {back}."]
       }
     };
     function own(who, key, base) { return lines(who, key, base); }
-    function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && Math.random() < 0.6 ? o : base; }
+    function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && (key === "ask" || Math.random() < 0.6) ? o : base; }
     var SPOTS = ["blackjack", "craps", "roulette", "the slots", "baccarat", "Pai Gow", "the Money Wheel", "Ultimate Texas Hold'em"];
     var FRIEND_ASK = [
       "Bro spot me {amt}, I'm feeling {game} right now. I'll bring it back, swear.",
@@ -282,7 +287,7 @@
     function strangerOffer(who) {
       var busyNames = pending.map(function (p) { return p.name; });
       if (!who || !notMe(who) || busyNames.indexOf(who) >= 0) return false;
-      var sc = pick(SCAMS), br = cash();
+      var sc = who === "Tristen" ? TRISTEN_SCAM : pick(SCAMS), br = cash();
       var amt = nice(br * rnd(sc.cut[0], sc.cut[1]));
       if (amt > br) return false;
       offer = who;
@@ -305,7 +310,7 @@
       var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0 && notMe(n); });
       if (!free.length) return false;
       if (forced && free.indexOf(forced) < 0) return false;   // still out playing with your money
-      var who = forced || pick(free), game = pick(SPOTS), br = cash();
+      var who = forced || pick(free), game = who === "Tristen" ? "blackjack" : pick(SPOTS), br = cash();
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
