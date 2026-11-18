@@ -8950,7 +8950,7 @@
   paint();
   return { enter: enter, busy: function () { return busy; } };
 })();
-  /* ---------- walk-ups: people come up to the table asking for money (Play Testing only) ----------
+  /* ---------- walk-ups: people come up to the table asking for money (everywhere, about 1 hand in 10) ----------
    * Between hands someone walks up. Strangers spin a sad story and mostly
    * vanish with the cash. Friends want a spot to go play something else and
    * come back a few hands later up or down.
@@ -9141,7 +9141,36 @@
       }, 1200);
     }
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
-    var hands = 0, gap = 3, pending = [], offer = null, deck = [];
+    var hands = 0, gap = Math.round(rnd(7, 13)), pending = [], offer = null, deck = [];
+    /* Money out with somebody is kept on the phone, one list per wallet
+       (campaign, play testing, each tournament day), so a reload doesn't lose it. */
+    var pkey = "";
+    function walletKey() {
+      if (typeof TT !== "undefined" && TT.on) return "tt." + TT.week + "." + (TT.day || "");
+      return Shell.mode;
+    }
+    function PUSH(p) { pending.push(p); savePending(); }
+    function savePending() {
+      if (!pkey) return;
+      try {
+        store.setStr("c4tb.wu." + pkey, JSON.stringify(pending.map(function (p) {
+          var o = {}; for (var k in p) o[k] = p[k];
+          if (p.sc) { o.sc = p.sc === TRISTEN_SCAM ? -1 : SCAMS.indexOf(p.sc); }
+          return o;
+        })));
+      } catch (e) {}
+    }
+    function loadPending() {
+      var k = walletKey();
+      if (k === pkey) return;
+      pkey = k;
+      try {
+        pending = JSON.parse(store.getStr("c4tb.wu." + k, "[]") || "[]").map(function (p) {
+          if (p.sc != null) p.sc = p.sc === -1 ? TRISTEN_SCAM : SCAMS[p.sc];
+          return p;
+        }).filter(function (p) { return !p.stranger || p.sc; });
+      } catch (e) { pending = []; }
+    }
 
     function style() {
       if ($("wu-style")) return;
@@ -9221,10 +9250,57 @@
       lastAuto = { fn: fn, ms: ms || (buttons ? 25000 : 6000) };
       timer = setTimeout(fn, lastAuto.ms);
     }
+    /* Sounds: a happy little jingle when money comes back with profit, womp womp when it doesn't. */
+    var actx = null;
+    function audio() {
+      try {
+        if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+        if (actx.state === "suspended") actx.resume();
+      } catch (e) { actx = null; }
+      return actx;
+    }
+    function vol() { return typeof SOUND !== "undefined" ? SOUND.sfx : 0.4; }
+    function tone(type, freqs, start, len, gain, slide) {
+      var a = audio(); if (!a || !vol()) return;
+      var t = a.currentTime + start, o = a.createOscillator(), g = a.createGain(), f = a.createBiquadFilter();
+      o.type = type; f.type = "lowpass"; f.frequency.value = type === "sawtooth" ? 900 : 6000;
+      o.frequency.setValueAtTime(freqs, t);
+      if (slide) o.frequency.linearRampToValueAtTime(slide, t + len);
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(gain * vol(), t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+      o.connect(f); f.connect(g); g.connect(a.destination);
+      o.start(t); o.stop(t + len + 0.05);
+      return o;
+    }
+    function jingle() {
+      // C E G C, then a sparkle on top
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) { tone("triangle", f, i * 0.09, 0.22, 0.5); tone("square", f * 2, i * 0.09, 0.08, 0.06); });
+      tone("triangle", 1318.5, 0.38, 0.4, 0.35);
+      tone("triangle", 1567.98, 0.46, 0.5, 0.3);
+    }
+    function womp() {
+      // the sad trombone: three steps down, then the long droop with a wobble
+      [[293.66, 0], [277.18, 0.36], [261.63, 0.72]].forEach(function (n) { tone("sawtooth", n[0], n[1], 0.32, 0.4, n[0] * 0.98); });
+      var o = tone("sawtooth", 246.94, 1.08, 1.1, 0.45, 220);
+      var a = actx;
+      if (o && a) {
+        var lfo = a.createOscillator(), d = a.createGain();
+        lfo.frequency.value = 6; d.gain.value = 7;
+        lfo.connect(d); d.connect(o.frequency);
+        lfo.start(a.currentTime + 1.08); lfo.stop(a.currentTime + 2.25);
+      }
+    }
+    // phones only let sound start from a tap: wake it on the first one
+    document.addEventListener("pointerdown", function () { audio(); }, { once: true, capture: true });
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
     function money(x) {
       if (!table || !table.credit) return false;
-      table.credit(x);
+      var tt = typeof TT !== "undefined" && TT.on;
+      // in the tournament it's the day's money but not a hand: keep it out of the hot-game count
+      if (tt) TT.quiet = true;
+      try { table.credit(x); } finally { if (tt) TT.quiet = false; }
+      if (tt && TT.changed) TT.changed(true);
       return true;
     }
     function fill(t, o) {
@@ -9249,9 +9325,9 @@
           offer = null;
           if (amt > cash() || !money(-amt)) return;
           var legit = Math.random() < sc.odds;
-          pending.push({ in: Math.round(rnd(legit ? 3 : 4, 7)), name: who, sc: sc, amt: amt, legit: legit, stranger: true });
+          PUSH({ in: Math.round(rnd(legit ? 3 : 4, 7)), name: who, sc: sc, amt: amt, legit: legit, stranger: true });
           // the cameras saw it: two hands later security has a word
-          if (!legit) pending.push({ in: 2, name: "", guard: true, who: who, amt: amt });
+          if (!legit) PUSH({ in: 2, name: "", guard: true, who: who, amt: amt });
         },
         onNo: function () { offer = null; }
       });
@@ -9271,13 +9347,13 @@
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
-          pending.push({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: amt });
+          PUSH({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: amt });
         },
         onNo: function (timedOut) {
           offer = null;
           // now and then you hear how it went anyway
           if (!timedOut && Math.random() < 0.35)
-            pending.push({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: 0, snub: true });
+            PUSH({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: 0, snub: true });
         }
       });
       return true;
@@ -9296,7 +9372,8 @@
           var bk = Math.round(p.amt * rnd(sc.back[0], sc.back[1]));
           money(bk);
           show("good", p.name, p.name, fill(sc.good, { back: $$(bk), who: p.name }));
-        } else show("bad", p.name, p.name, fill(sc.bad, { who: p.name }));
+          jingle();
+        } else { show("bad", p.name, p.name, fill(sc.bad, { who: p.name })); womp(); }
         return;
       }
       var o = { who: p.name, game: p.game };
@@ -9310,6 +9387,7 @@
       o.back = $$(back);
       if (back > 0) money(back);
       show(back > 0 ? "good" : "bad", p.name, p.name, fill(pick(lines), o));
+      if (back > p.amt) jingle(); else if (back === 0) womp();
     }
 
     /** A hand just finished at this table. */
@@ -9322,22 +9400,24 @@
       var at = -1;
       for (var i = 0; i < pending.length; i++) if (pending[i].in <= 0 && (at < 0 || (pending[i].guard && !pending[at].guard))) at = i;
       if (at >= 0) due = pending.splice(at, 1)[0];
-      if (due) { settle(due); hands = 0; return; }
-      if (cash() < 50) return;
-      // testing: someone every hand, working through everybody before anyone repeats
+      savePending();
+      if (due) { settle(due); return; }
+      if (cash() < 50 || hands < gap) return;
+      // about one hand in ten, working through everybody before anyone repeats
       if (!deck.length) deck = FRIENDS.filter(notMe).sort(function () { return Math.random() - 0.5; });
       var nx = deck.shift();
       var ok = Math.random() < 0.5 ? friendOffer(nx) : strangerOffer(nx);
       if (!ok) deck.push(nx);
-      if (ok) { hands = 0; gap = Math.round(rnd(3, 6)); }
+      if (ok) { hands = 0; gap = Math.round(rnd(7, 13)); }
     }
-    function on() { return Shell.mode === "testing" && !(typeof TT !== "undefined" && TT.on); }
+    function on() { return !(typeof TT !== "undefined" && TT.on && TT.closed); }
     function sit(screenName) {
       clearInterval(poll); table = null; wasBusy = false;
       if (!on()) return;
       var t = games()[TABLES[screenName]];
       if (!t || !t.busy || !t.credit || !t.cash) return;
       table = t;
+      loadPending();
       poll = setInterval(function () {
         if (!on()) return;
         var b = !!table.busy();
