@@ -61,7 +61,20 @@
         bad: "Security walks Kai out by both arms. Your money stays with the casino." }
     ];
     /* Friends: they borrow to go play something, then come back. */
-    var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Avery", "Zac", "James"];
+    var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Avery", "Zac", "James", "Tristen"];
+    /* Lines only one friend says, mixed in with the usual ones. */
+    var OWN = {
+      Tristen: {
+        ask: ["Bro. Bad habits, but good intentions. Spot me {amt} for {game}.",
+              "Listen, I KNOW how this looks. {amt}. {game}. Good intentions, bro.",
+              "Tristen, eyes bloodshot: \"I'm locked in, bro. {amt} on {game}, trust.\""],
+        lost: ["Tristen: \"Bad habits, bro. Bad habits.\" Your money's gone.",
+               "Tristen's back holding a beer and no chips. \"Good intentions though.\""],
+        win: ["Tristen's screaming. \"GOOD INTENTIONS PAY, BRO!\" {back}."]
+      }
+    };
+    function own(who, key, base) { return lines(who, key, base); }
+    function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && Math.random() < 0.6 ? o : base; }
     var SPOTS = ["blackjack", "craps", "roulette", "the slots", "baccarat", "Pai Gow", "the Money Wheel", "Ultimate Texas Hold'em"];
     var FRIEND_ASK = [
       "Bro spot me {amt}, I'm feeling {game} right now. I'll bring it back, swear.",
@@ -190,7 +203,7 @@
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
-      show("friend", who, who, fill(pick(FRIEND_ASK), { amt: $$(amt), game: game }), {
+      show("friend", who, who, fill(pick(lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
@@ -221,9 +234,9 @@
       if (p.snub) { show("friend", p.name, p.name, fill(pick(FRIEND_SNUB), o)); return; }
       var r = Math.random(), back = 0, lines;
       if (r < 0.08) { back = p.amt * rnd(4, 6); lines = FRIEND_BIG; }
-      else if (r < 0.48) { back = p.amt * rnd(1.5, 2.5); lines = FRIEND_WIN; }
+      else if (r < 0.48) { back = p.amt * rnd(1.5, 2.5); lines = own(p.name, "win", FRIEND_WIN); }
       else if (r < 0.63) { back = p.amt; lines = FRIEND_EVEN; }
-      else lines = FRIEND_LOST;
+      else lines = own(p.name, "lost", FRIEND_LOST);
       back = Math.round(back);
       o.back = $$(back);
       if (back > 0) money(back);
