@@ -9304,6 +9304,8 @@
     }
     // phones only let sound start from a tap: wake it on the first one
     document.addEventListener("pointerdown", function () { audio(); }, { once: true, capture: true });
+    /** Board stats (tournament): walk-ups shown, backed, real, scams. */
+    function count(f) { try { if (typeof TT !== "undefined" && TT.walkup) TT.walkup(f); } catch (e) {} }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
     function money(x) {
       if (!table || !table.credit) return false;
@@ -9329,13 +9331,15 @@
       var sc = who === "Tristen" ? TRISTEN_SCAM : pick(SCAMS), br = cash();
       var amt = nice(br * rnd(sc.cut[0], sc.cut[1]));
       if (amt > br) return false;
+      var legit = Math.random() < sc.odds;
+      count("shown"); count(legit ? "real" : "scams");
       offer = who;
       show("", who, who, fill(sc.ask, { amt: $$(amt), who: who }), {
         yes: "GIVE " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
-          var legit = Math.random() < sc.odds;
+          count("backed");
           PUSH({ in: Math.round(rnd(legit ? 3 : 4, 7)), name: who, sc: sc, amt: amt, legit: legit, stranger: true });
           // the cameras saw it: two hands later security has a word
           if (!legit) PUSH({ in: 2, name: "", guard: true, who: who, amt: amt });
@@ -9353,11 +9357,13 @@
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
+      count("shown"); count("real");
       show("friend", who, who, fill(pick(lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
+          count("backed");
           PUSH({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: amt });
         },
         onNo: function (timedOut) {
@@ -9489,17 +9495,20 @@
       if (t.keno) {
         var k = 1 + Math.floor(Math.random() * 80);
         t = { say: "" + k, spot: "n:" + k, keno: true };
+        count("shown"); count("real");
         show("friend", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
           yes: "MARK " + k, onNo: function () {},
-          onYes: function () { tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
+          onYes: function () { count("backed"); tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
         });
         return true;
       }
       var amt = nice(br * rnd(0.02, 0.05));
       if (amt > br) return false;
+      count("shown"); count("real");
       show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
         onYes: function () {
+          count("backed");
           tip = { who: who, game: game, spot: t.spot, pick: t.say, amt: amt, placed: 0,
                   pockets: game === "roulette" ? pocketsFor(t.spot) : null };
           placeTip();
@@ -9579,7 +9588,7 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(); },
+    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
@@ -10005,6 +10014,21 @@
       statsDirty = true;
       hot.track(delta);
     };
+    /* ---- walk-up stats: counted on the phone, sent up a moment later ---- */
+    var wuT = 0;
+    TT.walkup = function (field) {
+      if (!TT.on || !TT.week || TT.closed) return;
+      var k = kw("walkups"), w;
+      try { w = JSON.parse(store.getStr(k, "{}")) || {}; } catch (e) { w = {}; }
+      w[field] = (w[field] || 0) + 1;
+      store.setStr(k, JSON.stringify(w));
+      clearTimeout(wuT);
+      wuT = setTimeout(function () {
+        var n; try { n = JSON.parse(store.getStr(k, "{}")) || {}; } catch (e) { n = {}; }
+        rpc("c4tb_save_walkups", { p_name: myName(), p_token: token(), p_week: TT.week,
+          p_shown: n.shown || 0, p_backed: n.backed || 0, p_real: n.real || 0, p_scams: n.scams || 0 }).catch(function () {});
+      }, 1500);
+    };
     function pushStats() {
       if (!statsDirty || !TT.week) return;
       statsDirty = false;
@@ -10279,6 +10303,23 @@
       }
       return highsCache[week] && highsCache[week].map;
     }
+    // walk-ups: everyone's, live
+    var wuCache = {};
+    function getWalkups(week) {
+      return rpc("c4tb_walkup_board", { p_week: week })
+        .then(function (j) { wuCache[week] = Array.isArray(j) ? j : []; return j; }, function () { wuCache[week] = []; });
+    }
+    function paintWalkups(list, week) {
+      var rows = wuCache[week] || [];
+      var tot = rows.reduce(function (a, r) { return a + r.shown; }, 0);
+      list.appendChild(heading("WALK-UPS THIS WEEK · " + fmt(tot) + " TOTAL"));
+      if (!rows.length) { list.appendChild(empty("Nobody's walked up to anyone yet.")); return; }
+      var me = (myName() || "").toLowerCase();
+      rows.forEach(function (r) {
+        list.appendChild(row("", r.name, "BACKED " + r.backed + " · REAL " + r.real + " · SCAMS " + r.scams,
+          fmt(r.shown), r.name.toLowerCase() === me));
+      });
+    }
     function getStats(week) {
       return rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: week })
         .then(function (j) { statsCache[week] = j; return j; });
@@ -10292,13 +10333,14 @@
       list.innerHTML = "";
       var prev = b.week_no > 1 ? lastWeekOf(b) : null;
       var want = [b.week].concat(prev ? [prev] : []);
-      var have = want.every(function (w) { return statsCache[w]; });
+      var have = want.every(function (w) { return statsCache[w]; }) && wuCache[b.week];
       if (!have) {
         list.appendChild(empty("Loading stats…"));
-        Promise.all(want.map(getStats)).then(function () { if (tab === "stats") paintStats(b); },
+        Promise.all(want.map(getStats).concat([getWalkups(b.week)])).then(function () { if (tab === "stats") paintStats(b); },
           function () { list.innerHTML = ""; list.appendChild(empty("Can't reach the stats right now.")); });
         return;
       }
+      paintWalkups(list, b.week);
       if (prev) {
         var fin = statsCache[prev].rows;
         list.appendChild(heading("WEEK " + (b.week_no - 1) + " · FINAL STATS"));
@@ -10374,7 +10416,7 @@
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
         tab = x.getAttribute("data-t");
-        if (tab === "stats" && board) delete statsCache[board.week];
+        if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; }
         paintBoard();
       });
     });

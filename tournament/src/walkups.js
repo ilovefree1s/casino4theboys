@@ -352,6 +352,8 @@
     }
     // phones only let sound start from a tap: wake it on the first one
     document.addEventListener("pointerdown", function () { audio(); }, { once: true, capture: true });
+    /** Board stats (tournament): walk-ups shown, backed, real, scams. */
+    function count(f) { try { if (typeof TT !== "undefined" && TT.walkup) TT.walkup(f); } catch (e) {} }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
     function money(x) {
       if (!table || !table.credit) return false;
@@ -377,13 +379,15 @@
       var sc = who === "Tristen" ? TRISTEN_SCAM : pick(SCAMS), br = cash();
       var amt = nice(br * rnd(sc.cut[0], sc.cut[1]));
       if (amt > br) return false;
+      var legit = Math.random() < sc.odds;
+      count("shown"); count(legit ? "real" : "scams");
       offer = who;
       show("", who, who, fill(sc.ask, { amt: $$(amt), who: who }), {
         yes: "GIVE " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
-          var legit = Math.random() < sc.odds;
+          count("backed");
           PUSH({ in: Math.round(rnd(legit ? 3 : 4, 7)), name: who, sc: sc, amt: amt, legit: legit, stranger: true });
           // the cameras saw it: two hands later security has a word
           if (!legit) PUSH({ in: 2, name: "", guard: true, who: who, amt: amt });
@@ -401,11 +405,13 @@
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
+      count("shown"); count("real");
       show("friend", who, who, fill(pick(lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
+          count("backed");
           PUSH({ in: Math.round(rnd(3, 6)), name: who, game: game, amt: amt });
         },
         onNo: function (timedOut) {
@@ -537,17 +543,20 @@
       if (t.keno) {
         var k = 1 + Math.floor(Math.random() * 80);
         t = { say: "" + k, spot: "n:" + k, keno: true };
+        count("shown"); count("real");
         show("friend", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
           yes: "MARK " + k, onNo: function () {},
-          onYes: function () { tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
+          onYes: function () { count("backed"); tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
         });
         return true;
       }
       var amt = nice(br * rnd(0.02, 0.05));
       if (amt > br) return false;
+      count("shown"); count("real");
       show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
         onYes: function () {
+          count("backed");
           tip = { who: who, game: game, spot: t.spot, pick: t.say, amt: amt, placed: 0,
                   pockets: game === "roulette" ? pocketsFor(t.spot) : null };
           placeTip();
@@ -627,6 +636,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(); },
+    return { result: result, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();

@@ -420,6 +420,21 @@
       statsDirty = true;
       hot.track(delta);
     };
+    /* ---- walk-up stats: counted on the phone, sent up a moment later ---- */
+    var wuT = 0;
+    TT.walkup = function (field) {
+      if (!TT.on || !TT.week || TT.closed) return;
+      var k = kw("walkups"), w;
+      try { w = JSON.parse(store.getStr(k, "{}")) || {}; } catch (e) { w = {}; }
+      w[field] = (w[field] || 0) + 1;
+      store.setStr(k, JSON.stringify(w));
+      clearTimeout(wuT);
+      wuT = setTimeout(function () {
+        var n; try { n = JSON.parse(store.getStr(k, "{}")) || {}; } catch (e) { n = {}; }
+        rpc("c4tb_save_walkups", { p_name: myName(), p_token: token(), p_week: TT.week,
+          p_shown: n.shown || 0, p_backed: n.backed || 0, p_real: n.real || 0, p_scams: n.scams || 0 }).catch(function () {});
+      }, 1500);
+    };
     function pushStats() {
       if (!statsDirty || !TT.week) return;
       statsDirty = false;
@@ -694,6 +709,23 @@
       }
       return highsCache[week] && highsCache[week].map;
     }
+    // walk-ups: everyone's, live
+    var wuCache = {};
+    function getWalkups(week) {
+      return rpc("c4tb_walkup_board", { p_week: week })
+        .then(function (j) { wuCache[week] = Array.isArray(j) ? j : []; return j; }, function () { wuCache[week] = []; });
+    }
+    function paintWalkups(list, week) {
+      var rows = wuCache[week] || [];
+      var tot = rows.reduce(function (a, r) { return a + r.shown; }, 0);
+      list.appendChild(heading("WALK-UPS THIS WEEK · " + fmt(tot) + " TOTAL"));
+      if (!rows.length) { list.appendChild(empty("Nobody's walked up to anyone yet.")); return; }
+      var me = (myName() || "").toLowerCase();
+      rows.forEach(function (r) {
+        list.appendChild(row("", r.name, "BACKED " + r.backed + " · REAL " + r.real + " · SCAMS " + r.scams,
+          fmt(r.shown), r.name.toLowerCase() === me));
+      });
+    }
     function getStats(week) {
       return rpc("c4tb_get_stats", { p_name: myName(), p_token: token(), p_week: week })
         .then(function (j) { statsCache[week] = j; return j; });
@@ -707,13 +739,14 @@
       list.innerHTML = "";
       var prev = b.week_no > 1 ? lastWeekOf(b) : null;
       var want = [b.week].concat(prev ? [prev] : []);
-      var have = want.every(function (w) { return statsCache[w]; });
+      var have = want.every(function (w) { return statsCache[w]; }) && wuCache[b.week];
       if (!have) {
         list.appendChild(empty("Loading stats…"));
-        Promise.all(want.map(getStats)).then(function () { if (tab === "stats") paintStats(b); },
+        Promise.all(want.map(getStats).concat([getWalkups(b.week)])).then(function () { if (tab === "stats") paintStats(b); },
           function () { list.innerHTML = ""; list.appendChild(empty("Can't reach the stats right now.")); });
         return;
       }
+      paintWalkups(list, b.week);
       if (prev) {
         var fin = statsCache[prev].rows;
         list.appendChild(heading("WEEK " + (b.week_no - 1) + " · FINAL STATS"));
@@ -789,7 +822,7 @@
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
         tab = x.getAttribute("data-t");
-        if (tab === "stats" && board) delete statsCache[board.week];
+        if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; }
         paintBoard();
       });
     });
