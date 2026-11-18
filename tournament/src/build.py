@@ -503,6 +503,10 @@ sub("                        tripsStake, badBeatStake, folded);\n      settlemen
 sub("flushPlusStake, bonusStake, folded);\n      settlement = s;",
     "flushPlusStake, bonusStake, folded);\n      settlement = s; " + WU % '"miniuth", { flushplus: s.flushPlusWin >= 0, bonus: s.bonusWin >= 0 }')
 
+# ---- walk-ups: keno says what it drew, for a friend's number ----
+sub("    function settle() {\n      var h = hits(), p = pays(picks.length, h)",
+    "    function settle() {\n      " + WU % '"keno", drawn.slice()' + "\n      var h = hits(), p = pays(picks.length, h)")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
@@ -540,6 +544,11 @@ TIPFN = {
   "Wheel": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
   "Blackjack": tipfn('push22SideBet', 'addChip(spot)'),
   "Roulette": tipfn('(bets[tipRoute(spot).id] || 0)', 'addChip(tipRoute(spot))'),
+  # keno: the friend's number gets marked on your ticket
+  "Keno": (" tip: function (spot) { if (phase !== \"betting\") return 0; var n = +spot.slice(2);"
+           " if (picks.indexOf(n) >= 0) return 1; if (picks.length >= MAX) return 0;"
+           " picks.push(n); noteText = \"\"; msgText = picks.length + \" marked\"; renderAll(); return 1; },"
+           " phase: function () { return phase; },"),
 }
 for name, fn in TIPFN.items():
     a = h.index("\n  var %s = (function () {" % name)

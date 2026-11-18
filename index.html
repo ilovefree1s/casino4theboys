@@ -9412,6 +9412,7 @@
         { say: "the TIE", spot: "tie" }, { say: "PLAYER PAIR", spot: "playerPair" }, { say: "BANKER PAIR", spot: "bankerPair" }],
       dragontiger: [{ say: "DRAGON", spot: "dragon" }, { say: "TIGER", spot: "tiger" }, { say: "the TIE", spot: "tie" }],
       roulette: [{ lucky: true }],   // always a number, straight up
+      keno: [{ keno: true }],        // a number marked on your ticket
       sicbo: [{ say: "BIG", spot: "big" }, { say: "SMALL", spot: "small" }],
       wheel: [{ say: "RED", spot: "r" }, { say: "GREEN", spot: "g" }, { say: "BLUE", spot: "b" }, { say: "GREY", spot: "s" }],
       blackjack: [{ say: "PUSH 22", spot: "push22", variant: "freebet" }],
@@ -9428,6 +9429,7 @@
         var t = what[0] + what[1] + what[2], triple = what[0] === what[1] && what[1] === what[2];
         return !triple && (spot === "big" ? t >= 11 && t <= 17 : t >= 4 && t <= 10);
       }
+      if (game === "keno") return what.indexOf(+spot.slice(2)) >= 0;
       if (game === "roulette") return what.some(function (p) { return tip.pockets.indexOf(p) >= 0; });
       return !!(what && what[spot]);   // baccarat's winning spots, the poker tables' side results
     }
@@ -9455,6 +9457,12 @@
       "Trust me bro, {pick} is coming next hand. Throw {amt} on it.",
       "I just watched the dealer shuffle. Slam {pick} next hand, {amt}. Trust."
     ];
+    var KENO_ASK = [
+      "Bro. Mark {n}. Trust me, {n} is coming out next draw.",
+      "{n}. I dreamed about {n} last night. Mark it.",
+      "Yo put {n} on your ticket. It's due, I've been watching.",
+      "Mark {n} bro. Don't ask why. Just mark it."
+    ];
     var TIP_WIN = ["{who} was RIGHT. {pick} hit!", "{who}: \"WHAT DID I TELL YOU?\" {pick} paid!", "{who} is screaming. {pick}!"];
     var TIP_LOSE = ["{who}: \"My bad bro… I really felt it.\"", "{who} is already walking away. {pick} missed.", "{who}: \"Rigged. That table's rigged.\""];
     var tip = null;   // { who, game, spot, pick, amt, placed, pockets }
@@ -9469,6 +9477,15 @@
       if (!notMe(who) || busyNames.indexOf(who) >= 0) return false;
       var t = pick(list), br = cash();
       if (t.lucky) { var n = 1 + Math.floor(Math.random() * 36); t = { say: "number " + n, spot: "n:" + n }; }
+      if (t.keno) {
+        var k = 1 + Math.floor(Math.random() * 80);
+        t = { say: "" + k, spot: "n:" + k, keno: true };
+        show("friend", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
+          yes: "MARK " + k, onNo: function () {},
+          onYes: function () { tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
+        });
+        return true;
+      }
       var amt = nice(br * rnd(0.02, 0.05));
       if (amt > br) return false;
       show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }), {
@@ -9488,7 +9505,7 @@
       if (table.phase && table.phase() !== "betting") return;
       var got = table.tip(tip.spot, tip.amt);
       if (got > 0) tip.placed = got;
-      else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + ": \"Table won't take it, bro. Never mind.\""); }
+      else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + (t.game === "keno" ? ": \"Your ticket's full, bro. Never mind.\"" : ": \"Table won't take it, bro. Never mind.\"")); }
     }
     /** The table reports what it dealt; the friend reacts to the tipped spot. */
     function result(game, what) {
@@ -16550,6 +16567,7 @@
       t(BALL_MS * (DRAWN + 1) + 450, settle);
     }
     function settle() {
+      if (typeof Walkups !== "undefined") try { Walkups.result("keno", drawn.slice()); } catch (e) {} 
       var h = hits(), p = pays(picks.length, h), ret = p > 0 ? stake * (p + 1) : 0;
       bankroll += ret; syncWallet();
       // a losing stake comes off the spot, the house's; a winning one stays, paid
@@ -16585,7 +16603,7 @@
     }
     /** Walking out mid-draw: the balls still to come are dropped. */
     function leave() { clearTimers(); }
-    return { busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter, leave: leave };
+    return { tip: function (spot) { if (phase !== "betting") return 0; var n = +spot.slice(2); if (picks.indexOf(n) >= 0) return 1; if (picks.length >= MAX) return 0; picks.push(n); noteText = ""; msgText = picks.length + " marked"; renderAll(); return 1; }, phase: function () { return phase; }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter, leave: leave };
   })();
 
   var Plinko = (function () {
