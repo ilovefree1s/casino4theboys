@@ -27,41 +27,72 @@
     }
     function $$(s) { return "$" + fmt(Math.round(s)); }
 
-    /* Hustlers: the boys themselves, running the street scams. odds = chance they're legit, back = what legit pays back. */
-    var STRANGERS = [
-      { face: "Grace", name: "Grace", odds: 0.40, back: [2, 3], cut: [0.02, 0.05],
-        ask: ["Sorry to bother you… I lost my wallet and my grandson's in the hospital in Reno. Could you spare {amt} for the bus? I'll pay you back, I swear on my late wife.",
-              "Son, I've been sitting here since noon. My truck got towed with my insulin in it. {amt} gets it out."],
-        good: "Grace found you. \"Grandson's doing fine. A man keeps his word.\" He hands you {back}.",
-        bad: "You see Grace at the craps table blowing on dice with your money. He winks." },
-      { face: "Cougar", name: "Cougar", odds: 0.15, back: [4, 6], cut: [0.05, 0.10],
-        ask: ["Hey, hey, you look like a smart guy. I got a guy with a horse running at Santa Anita, can't lose. Put {amt} in, I triple it by tonight. Trust me.",
-              "Listen. Crypto. My cousin's coin. Gets listed Friday. {amt} now and you're on the ground floor, baby."],
-        good: "Cougar's back, sweating. \"TOLD you. Horse came in at 9 to 1.\" He counts out {back}.",
-        bad: "Cougar's number is disconnected. The horse was named 'Lol Sucker'." },
-      { face: "Zephyrox", name: "Zephyrox", odds: 0.08, back: [3, 4], cut: [0.03, 0.08],
-        ask: ["Bro… my little girl needs surgery and the insurance won't cover it. I just need {amt} more. Please. Anything.",
-              "I'm not proud of this. My kid's sick and I got nothing left. {amt} would save my life."],
-        good: "Zephyrox tracks you down, crying. \"She's okay. Here, I hit a jackpot, half's yours.\" {back}.",
-        bad: "Zephyrox's at the bar ordering bottle service. His 'kid' is a 25-year-old named Brandi." },
-      { face: "Chris", name: "Chris", odds: 0.25, back: [2, 2.5], cut: [0.02, 0.04],
-        ask: ["Hey man, my car ran out of gas in the garage and my phone's dead. {amt} gets me home to Ohio. I'll Venmo you, what's your @?",
-              "Bro I'm locked out of my room and the front desk wants a deposit. {amt}? I'm good for it, I'm in sales."],
-        good: "Chris actually Venmos you. \"Told you I'm in sales.\" {back}.",
-        bad: "Chris's Venmo is 'Chris-Not-Paying-U'. Gone." },
-      { face: "Lyndsi", name: "Lyndsi", odds: 0.20, back: [2, 3], cut: [0.03, 0.06],
-        ask: ["Hi! My friends ditched me and my card got declined. Could you cover {amt} for an Uber? I'll pay you right back, I promise!",
-              "Omg you seem nice. I'm raising money for my sister's medical bills, it's a GoFundMe. {amt}?"],
-        good: "Lyndsi comes back with the cash plus some. \"See? Not everyone's a scammer.\" {back}.",
-        bad: "Lyndsi's 'Uber' was a limo to the club. With 4 other guys' money." },
-      { face: "Lucy", name: "Lucy", odds: 0.30, back: [2.5, 4], cut: [0.03, 0.07],
-        ask: ["Brah, I got a system for roulette. Never loses. Front me {amt} and we split the take, I'm serious.",
-              "Yo, I know the dealer at table 6, she's gonna 'slip' tonight. {amt} gets you in."],
-        good: "Lucy runs up yelling. \"THE SYSTEM WORKS!\" Your cut: {back}.",
-        bad: "Security walks Lucy out by both arms. Your money stays with the casino." }
+    /* Hustles: anyone can run any of these. odds = chance it's legit, back = what legit pays back. */
+    var SCAMS = [
+      { odds: 0.40, back: [2, 3], cut: [0.02, 0.05],
+        ask: "{who} looks rough. \"I lost my wallet and my grandma's in the hospital in Reno. {amt} for the bus? I swear I'll pay you back.\"",
+        good: "{who} found you. \"Grandma's doing fine. I keep my word.\" {back}.",
+        bad: "You spot {who} at the craps table blowing on dice with your money. A wink." },
+      { odds: 0.15, back: [4, 6], cut: [0.05, 0.10],
+        ask: "{who} leans in. \"I got a guy with a horse running at Santa Anita. Can't lose. {amt} in, I triple it by tonight. Trust me.\"",
+        good: "{who}'s back, sweating. \"TOLD you. Came in at 9 to 1.\" {back}.",
+        bad: "{who}'s number is disconnected. The horse was named 'Lol Sucker'." },
+      { odds: 0.10, back: [3, 5], cut: [0.05, 0.10],
+        ask: "\"Listen. Crypto. My cousin's coin, gets listed Friday. {amt} now and you're on the ground floor, baby.\" {who} is dead serious.",
+        good: "{who} runs over. \"IT MOONED.\" {back}.",
+        bad: "{who}'s coin is now worth $0.0000003. \"We're early, bro.\"" },
+      { odds: 0.08, back: [3, 4], cut: [0.03, 0.08],
+        ask: "{who}, teary-eyed: \"My kid needs surgery and insurance won't cover it. I just need {amt} more. Please.\"",
+        good: "{who} tracks you down, crying. \"Kid's okay. Hit a jackpot, half's yours.\" {back}.",
+        bad: "{who}'s at the bar ordering bottle service. There is no kid." },
+      { odds: 0.25, back: [2, 2.5], cut: [0.02, 0.04],
+        ask: "\"Car's out of gas in the garage and my phone's dead. {amt} gets me home. I'll Venmo you, what's your @?\" asks {who}.",
+        good: "{who} actually Venmos you. {back}.",
+        bad: "{who}'s Venmo is '{who}-Not-Paying-U'. Gone." },
+      { odds: 0.30, back: [2, 3], cut: [0.02, 0.05],
+        ask: "{who}: \"Locked out of my room and the front desk wants a deposit. {amt}? I'm good for it.\"",
+        good: "{who} comes back with room service and your money. {back}.",
+        bad: "{who} never had a room. Slept in the sportsbook with your money." },
+      { odds: 0.20, back: [2, 3], cut: [0.03, 0.06],
+        ask: "\"My card got declined and my ride left me. {amt} for an Uber? I'll pay you right back, promise!\" says {who}.",
+        good: "{who} comes back with the cash plus some. \"See? Not everyone's a scammer.\" {back}.",
+        bad: "{who}'s 'Uber' was a limo to the club." },
+      { odds: 0.15, back: [3, 4], cut: [0.03, 0.06],
+        ask: "{who} holds up a phone. \"It's a GoFundMe for my sister's medical bills. {amt}? Every bit helps.\"",
+        good: "{who}: \"We hit the goal! Here's yours back, with interest.\" {back}.",
+        bad: "The GoFundMe was for {who}'s jet ski." },
+      { odds: 0.30, back: [2.5, 4], cut: [0.03, 0.07],
+        ask: "{who}: \"I got a system for roulette. Never loses. Front me {amt} and we split the take.\"",
+        good: "{who} runs up yelling. \"THE SYSTEM WORKS!\" Your cut: {back}.",
+        bad: "Security walks {who} out by both arms. Your money stays with the casino." },
+      { odds: 0.25, back: [3, 4], cut: [0.04, 0.08],
+        ask: "{who} whispers: \"I know the dealer on table 6. They're gonna 'slip' tonight. {amt} gets you in.\"",
+        good: "{who} slides you a fat envelope. {back}. \"You didn't get this from me.\"",
+        bad: "The dealer on table 6 got fired. So did your money." },
+      { odds: 0.05, back: [5, 8], cut: [0.03, 0.06],
+        ask: "{who} has a Rolex in a ziplock bag. \"Real. Swear on my mother. {amt}, it's yours.\"",
+        good: "Holy. It's real. You flip it at the gift shop for {back}.",
+        bad: "The Rolex says 'Rollex'. {who} is gone." },
+      { odds: 0.20, back: [2, 3], cut: [0.02, 0.05],
+        ask: "{who}: \"Bro I got a parking ticket and they're towing my car RIGHT NOW. {amt}, quick!\"",
+        good: "{who} pays you back. \"You saved my life.\" {back}.",
+        bad: "{who} doesn't own a car." },
+      { odds: 0.35, back: [2, 3], cut: [0.03, 0.06],
+        ask: "{who}: \"I got tickets to the fight tonight, front row. Front me {amt} and I'll sell them for double, we split it.\"",
+        good: "{who} sold them to a whale. Your half: {back}.",
+        bad: "The tickets were for a fight last year." },
+      { odds: 0.12, back: [3, 5], cut: [0.04, 0.08],
+        ask: "{who}: \"I'm starting a food truck. Disc golf themed. {amt} and you're a partner.\"",
+        good: "The food truck is a hit. Your dividend from {who}: {back}.",
+        bad: "{who} bought a truck. No food. No permit. It got towed." },
+      { odds: 0.40, back: [1.5, 2.5], cut: [0.01, 0.03],
+        ask: "{who}: \"Hey, I left my wallet in the room and I'm STARVING. {amt} for the buffet? I'll get you back.\"",
+        good: "{who} comes back full and pays you. {back}.",
+        bad: "{who} spent it on a dozen shrimp cocktails and forgot you exist." }
     ];
-    /* Friends: they borrow to go play something, then come back. */
-    var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Avery", "Zac", "James", "Tristen"];
+    /* Everyone: each walk-up is anybody, asking for a spot or running a hustle. */
+    var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Chris", "Avery", "Zac", "James",
+                   "Lyndsi", "Cougar", "Grace", "Zephyrox", "Lucy", "Tristen"];
     /* Lines only one friend says, mixed in with the usual ones. */
     var OWN = {
       Tristen: {
@@ -247,19 +278,19 @@
     // a game name that starts a sentence (or a quote) gets a capital
     function up(t) { return t.replace(/(^|[.!?] |")([a-z])/g, function (_, a, c) { return a + c.toUpperCase(); }); }
 
-    function strangerOffer(s) {
-      s = s || pick(STRANGERS.filter(function (x) { return notMe(x.face); })); if (!s || !notMe(s.face)) return false; var br = cash();
-      var amt = nice(br * rnd(s.cut[0], s.cut[1]));
+    function strangerOffer(who) {
+      var busyNames = pending.map(function (p) { return p.name; });
+      if (!who || !notMe(who) || busyNames.indexOf(who) >= 0) return false;
+      var sc = pick(SCAMS), br = cash();
+      var amt = nice(br * rnd(sc.cut[0], sc.cut[1]));
       if (amt > br) return false;
-      var o = { amt: $$(amt) };
-      offer = s;
-      show("", s.face, s.name, fill(pick(s.ask), o), {
+      offer = who;
+      show("", who, who, fill(sc.ask, { amt: $$(amt), who: who }), {
         yes: "GIVE " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
-          var legit = Math.random() < s.odds;
-          pending.push({ in: Math.round(rnd(3, 7)), who: s, amt: amt, legit: legit, stranger: true });
+          pending.push({ in: Math.round(rnd(3, 7)), name: who, sc: sc, amt: amt, legit: Math.random() < sc.odds, stranger: true });
         },
         onNo: function () { offer = null; }
       });
@@ -293,12 +324,12 @@
     /** Friends: 40% win (1.5–2.5×), 8% big (4–6×), 15% pay it back, 37% lost it. */
     function settle(p) {
       if (p.stranger) {
-        var s = p.who;
+        var sc = p.sc;
         if (p.legit) {
-          var back = Math.round(p.amt * rnd(s.back[0], s.back[1]));
-          money(back);
-          show("good", s.face, s.name, fill(s.good, { back: $$(back) }));
-        } else show("bad", s.face, s.name, s.bad);
+          var bk = Math.round(p.amt * rnd(sc.back[0], sc.back[1]));
+          money(bk);
+          show("good", p.name, p.name, fill(sc.good, { back: $$(bk), who: p.name }));
+        } else show("bad", p.name, p.name, fill(sc.bad, { who: p.name }));
         return;
       }
       var o = { who: p.name, game: p.game };
@@ -324,10 +355,9 @@
       if (due) { settle(due); hands = 0; return; }
       if (cash() < 50) return;
       // testing: someone every hand, working through everybody before anyone repeats
-      if (!deck.length) deck = FRIENDS.filter(notMe).map(function (n) { return { f: n }; })
-        .concat(STRANGERS.filter(function (x) { return notMe(x.face); }).map(function (x) { return { s: x }; })).sort(function () { return Math.random() - 0.5; });
+      if (!deck.length) deck = FRIENDS.filter(notMe).sort(function () { return Math.random() - 0.5; });
       var nx = deck.shift();
-      var ok = nx.f ? friendOffer(nx.f) : strangerOffer(nx.s);
+      var ok = Math.random() < 0.5 ? friendOffer(nx) : strangerOffer(nx);
       if (!ok) deck.push(nx);
       if (ok) { hands = 0; gap = Math.round(rnd(3, 6)); }
     }
