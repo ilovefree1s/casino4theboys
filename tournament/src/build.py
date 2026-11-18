@@ -455,6 +455,17 @@ sub("""    var values = [25, 100, 500, 1000, 5000, 25000];
     var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000];
     var chip = null;""")
 
+# ---- Money Wheel after a spin: NEW BET clears the felt, SPIN AGAIN spins the same bet straight away ----
+sub("""      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", function () { nextSpin(true); }); feltBtn("Spin again", GOLD, function () {}, true); }""",
+"""      else if (phase === "result") {
+        var again = 0; Object.keys(lastBets).forEach(function (k) { again += lastBets[k]; });
+        feltBtn("New bet", "#8A93A6", function () { nextSpin(false); });
+        feltBtn("Spin again", GOLD, function () {
+          nextSpin(true);
+          if (phase === "betting" && totalStaked() > 0) spin();
+        }, !again || again > bankroll);
+      }""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

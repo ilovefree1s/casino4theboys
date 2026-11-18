@@ -15484,7 +15484,14 @@
       if (phase === "betting") { feltBtn("Clear", "#8A93A6", clearBets); feltBtn("Spin", GOLD, spin, totalStaked() <= 0); }
       // after a spin the losers' chips are gone: SAME BET puts the whole last bet back
       // on the felt, and only then is there anything to spin; a new bet is a tap on a spot
-      else if (phase === "result") { feltBtn("Same bet", "#8A93A6", function () { nextSpin(true); }); feltBtn("Spin again", GOLD, function () {}, true); }
+      else if (phase === "result") {
+        var again = 0; Object.keys(lastBets).forEach(function (k) { again += lastBets[k]; });
+        feltBtn("New bet", "#8A93A6", function () { nextSpin(false); });
+        feltBtn("Spin again", GOLD, function () {
+          nextSpin(true);
+          if (phase === "betting" && totalStaked() > 0) spin();
+        }, !again || again > bankroll);
+      }
       else { feltBtn("Clear", "#8A93A6", function () {}, true); feltBtn("Spin", GOLD, function () {}, true); }
     }
     function renderStrip() {
