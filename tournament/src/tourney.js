@@ -452,6 +452,21 @@
       return { track: track, handDone: function () { out = 0; } };
     })();
     TT.handDone = shout.handDone;
+    /* ---- who's online: each open phone checks in every 30 s; the board puts a green dot by them ---- */
+    var online = {};
+    function ping() {
+      if (document.hidden || !myName() || !token()) return;
+      rpc("c4tb_ping", { p_name: myName(), p_token: token() }).then(function (list) {
+        if (!Array.isArray(list)) return;
+        var m = {}; list.forEach(function (n) { m[String(n).toLowerCase()] = 1; });
+        var changed = Object.keys(m).sort().join() !== Object.keys(online).sort().join();
+        online = m;
+        if (changed && $("tt-board").classList.contains("on")) paintBoard();
+      }, function () {});
+    }
+    setInterval(ping, 30000);
+    setTimeout(ping, 2500);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) ping(); });
     /* ---- walk-up stats: counted on the phone, sent up a moment later ---- */
     var wuT = 0;
     TT.walkup = function (field) {
@@ -610,6 +625,7 @@
     function showBoard() {
       $("tt-board").classList.add("on");
       paintBoard();
+      ping();
       refreshLane();
     }
     function paintBoard() {
@@ -842,6 +858,10 @@
       var a = document.createElement("span"); a.className = "rk"; a.textContent = rank;
       var mid = document.createElement("span"); mid.className = "who";
       var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
+      if (online[String(name).toLowerCase()]) {
+        var dot = document.createElement("i"); dot.className = "tt-on"; dot.title = "Online";
+        n.insertBefore(dot, n.firstChild);
+      }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);
       var v = document.createElement("span"); v.className = "val"; v.textContent = value;

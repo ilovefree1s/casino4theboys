@@ -443,16 +443,28 @@ sub("""        "v": 25000,
         "face": "#0e2e2c",
         "ink": "#ffd24d",
         "spotLight": 0.34
+      },
+      {
+        "v": 100000000,
+        "label": "100M",
+        "body": "#111111",
+        "a": "#d4af37",
+        "b": "#ffffff",
+        "face": "#000000",
+        "ink": "#ffd24d",
+        "spotLight": 0.3
       }
     ]""")
 sub("""    var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""",
 """    // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
-    if (limits && limits.enforced && limits.max === Infinity) return [1000, 5000, 25000, 100000, 1000000];
+    if (limits && limits.enforced && limits.max === Infinity)
+      // a billion or more on the stack brings out the 100M chip (the 1K steps off to make room)
+      return bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""")
 sub("""    var values = [25, 100, 500, 1000, 5000, 25000];
-    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000];
+    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000];
     var chip = null;""")
 
 # ---- Money Wheel after a spin: NEW BET clears the felt, SPIN AGAIN spins the same bet straight away ----

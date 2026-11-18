@@ -199,3 +199,6 @@
     background: linear-gradient(90deg, #FF5A1E, #FFB238); color: #1A0A00; font: 900 11px/1 system-ui, sans-serif;
     letter-spacing: .08em; box-shadow: 0 3px 10px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap;
   }
+
+  .tt-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3BE07A;
+           box-shadow: 0 0 6px rgba(59,224,122,.9); margin-right: 6px; vertical-align: middle; }

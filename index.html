@@ -3752,6 +3752,9 @@
     background: linear-gradient(90deg, #FF5A1E, #FFB238); color: #1A0A00; font: 900 11px/1 system-ui, sans-serif;
     letter-spacing: .08em; box-shadow: 0 3px 10px rgba(0,0,0,.5); pointer-events: none; white-space: nowrap;
   }
+
+  .tt-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3BE07A;
+           box-shadow: 0 0 6px rgba(59,224,122,.9); margin-right: 6px; vertical-align: middle; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -6945,6 +6948,16 @@
         "face": "#0e2e2c",
         "ink": "#ffd24d",
         "spotLight": 0.34
+      },
+      {
+        "v": 100000000,
+        "label": "100M",
+        "body": "#111111",
+        "a": "#d4af37",
+        "b": "#ffffff",
+        "face": "#000000",
+        "ink": "#ffd24d",
+        "spotLight": 0.3
       }
     ]
   }
@@ -7298,7 +7311,9 @@
    */
   function chipsFor(bankroll, limits) {
     // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
-    if (limits && limits.enforced && limits.max === Infinity) return [1000, 5000, 25000, 100000, 1000000];
+    if (limits && limits.enforced && limits.max === Infinity)
+      // a billion or more on the stack brings out the 100M chip (the 1K steps off to make room)
+      return bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);
     var out = all.filter(function (v) { return v <= ceiling; });
@@ -7312,7 +7327,7 @@
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
   function chipHtml(amount, size) {
-    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000];
+    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? chipFace(chip) : "";
@@ -10098,6 +10113,21 @@
       return { track: track, handDone: function () { out = 0; } };
     })();
     TT.handDone = shout.handDone;
+    /* ---- who's online: each open phone checks in every 30 s; the board puts a green dot by them ---- */
+    var online = {};
+    function ping() {
+      if (document.hidden || !myName() || !token()) return;
+      rpc("c4tb_ping", { p_name: myName(), p_token: token() }).then(function (list) {
+        if (!Array.isArray(list)) return;
+        var m = {}; list.forEach(function (n) { m[String(n).toLowerCase()] = 1; });
+        var changed = Object.keys(m).sort().join() !== Object.keys(online).sort().join();
+        online = m;
+        if (changed && $("tt-board").classList.contains("on")) paintBoard();
+      }, function () {});
+    }
+    setInterval(ping, 30000);
+    setTimeout(ping, 2500);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) ping(); });
     /* ---- walk-up stats: counted on the phone, sent up a moment later ---- */
     var wuT = 0;
     TT.walkup = function (field) {
@@ -10256,6 +10286,7 @@
     function showBoard() {
       $("tt-board").classList.add("on");
       paintBoard();
+      ping();
       refreshLane();
     }
     function paintBoard() {
@@ -10488,6 +10519,10 @@
       var a = document.createElement("span"); a.className = "rk"; a.textContent = rank;
       var mid = document.createElement("span"); mid.className = "who";
       var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
+      if (online[String(name).toLowerCase()]) {
+        var dot = document.createElement("i"); dot.className = "tt-on"; dot.title = "Online";
+        n.insertBefore(dot, n.firstChild);
+      }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);
       var v = document.createElement("span"); v.className = "val"; v.textContent = value;
