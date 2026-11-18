@@ -195,6 +195,7 @@
         "background:rgba(12,10,22,.96);border:1.5px solid #FFD24D;box-shadow:0 10px 30px rgba(0,0,0,.6);" +
         "color:#F4EEDC;font:500 14px/1.35 system-ui,sans-serif;transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}" +
         "#wu-card.on{transform:translate(-50%,0)}" +
+        "#wu-card.guard{border-color:#FFD24D;background:rgba(16,22,36,.97)}#wu-card.guard .wu-n{color:#FFD24D}#wu-card.guard img{color:#FFD24D}" +
         "#wu-card.friend{border-color:#3FA9FF}#wu-card.good{border-color:#57E06A}#wu-card.bad{border-color:#FF5E5E}" +
         "#wu-card img{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:none;border:2px solid currentColor;color:#FFD24D}" +
         "#wu-card.friend img{color:#3FA9FF}#wu-card.good img{color:#57E06A}#wu-card.bad img{color:#FF5E5E}" +
@@ -290,7 +291,10 @@
         onYes: function () {
           offer = null;
           if (amt > cash() || !money(-amt)) return;
-          pending.push({ in: Math.round(rnd(3, 7)), name: who, sc: sc, amt: amt, legit: Math.random() < sc.odds, stranger: true });
+          var legit = Math.random() < sc.odds;
+          pending.push({ in: Math.round(rnd(legit ? 3 : 4, 7)), name: who, sc: sc, amt: amt, legit: legit, stranger: true });
+          // the cameras saw it: two hands later security has a word
+          if (!legit) pending.push({ in: 2, name: "", guard: true, who: who, amt: amt });
         },
         onNo: function () { offer = null; }
       });
@@ -323,6 +327,12 @@
     }
     /** Friends: 40% win (1.5–2.5×), 8% big (4–6×), 15% pay it back, 37% lost it. */
     function settle(p) {
+      if (p.guard) {
+        show("guard", "", "CASINO SECURITY", "\"Sir, we noticed on the cameras that you loaned " + $$(p.amt) + " to " + p.who +
+          ". That was a scam. Please don't give money to strangers, it's usually a scam.\"", null, 9000);
+        card.querySelector("img").src = FACES.Justin;   // security is always Justin
+        return;
+      }
       if (p.stranger) {
         var sc = p.sc;
         if (p.legit) {
@@ -351,7 +361,10 @@
       if (card && card.classList.contains("on")) return;
       pending.forEach(function (p) { p.in--; });
       var due = null;
-      for (var i = 0; i < pending.length; i++) if (pending[i].in <= 0) { due = pending.splice(i, 1)[0]; break; }
+      // security always gets there before the scam plays out
+      var at = -1;
+      for (var i = 0; i < pending.length; i++) if (pending[i].in <= 0 && (at < 0 || (pending[i].guard && !pending[at].guard))) at = i;
+      if (at >= 0) due = pending.splice(at, 1)[0];
       if (due) { settle(due); hands = 0; return; }
       if (cash() < 50) return;
       // testing: someone every hand, working through everybody before anyone repeats
