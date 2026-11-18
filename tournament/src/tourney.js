@@ -252,8 +252,30 @@
             try { table.credit(profit); } finally { TT.quiet = false; }
             TT.changed(true);
           } else setExtra(extra() + profit);
-          say("🔥 " + tagX() + " PAYOUT · +$" + fmt(profit) + " MORE AT " + game.toUpperCase(), 2600);
+          mark(profit);
         }, 0);
+      }
+      /**
+       * The extra shows as one more result pill under the table's own, where the
+       * table has pills; elsewhere as a small tag under the bankroll that fades.
+       */
+      function mark(profit) {
+        var scr = document.querySelector(".screen.on");
+        var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + fmt(profit);
+        var host = scr && scr.querySelector(".dj-pills, #dd-results");
+        if (host && host.children.length) {
+          host.insertAdjacentHTML("beforeend", '<div class="dj-pill w" style="border-color:#FF8A3D"><span class="nm" style="color:#FFB238">' +
+            x + '</span><span class="amt">' + amt + "</span></div>");
+          return;
+        }
+        var t = document.createElement("div");
+        t.textContent = x + "  " + amt;
+        t.style.cssText = "position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 74px);z-index:9999;" +
+          "padding:4px 12px;border-radius:999px;border:1.5px solid #FF8A3D;background:rgba(20,8,4,.9);color:#FFD24D;" +
+          "font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;transition:opacity .4s;opacity:1";
+        document.body.appendChild(t);
+        setTimeout(function () { t.style.opacity = "0"; }, 2600);
+        setTimeout(function () { t.remove(); }, 3200);
       }
       /** Up from the table: the bonuses won there go into the bankroll. */
       function end() {
