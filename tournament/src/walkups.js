@@ -452,7 +452,7 @@
       var amt = nice(br * rnd(sc.cut[0], sc.cut[1]));
       if (amt > br) return false;
       var legit = Math.random() < sc.odds;
-      count("shown"); count(legit ? "real" : "scams");
+      count("shown");
       offer = who;
       show("", who, who, fill(sc.ask, { amt: $$(amt), who: who }), {
         yes: "GIVE " + $$(amt), cant: amt > cash(),
@@ -478,7 +478,7 @@
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
-      count("shown"); count("real");
+      count("shown");
       show("friend", who, who, fill(pick(game === CONTEST ? CONTEST_ASK : lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
@@ -512,9 +512,10 @@
         if (p.legit) {
           var bk = Math.round(p.amt * rnd(sc.back[0], sc.back[1]));
           money(bk);
+          count("paid");
           show("good", p.name, p.name, fill(sc.good, { back: $$(bk), who: p.name }));
           jingle();
-        } else { show("bad", p.name, p.name, fill(sc.bad, { who: p.name })); womp(); }
+        } else { count("burned"); show("bad", p.name, p.name, fill(sc.bad, { who: p.name })); womp(); }
         return;
       }
       var o = { who: p.name, game: p.game };
@@ -524,9 +525,9 @@
         if (Math.random() < 0.45) {
           var prize = nice(p.amt * rnd(4, 8));
           o.won = $$(prize); o.back = $$(p.amt); o.kept = $$(Math.max(0, prize - p.amt));
-          money(p.amt);
+          money(p.amt); count("paid");
           show("good", p.name, p.name, fill(pick(CONTEST_WIN), o)); jingle();
-        } else { show("bad", p.name, p.name, fill(pick(CONTEST_LOSE), o)); womp(); }
+        } else { count("burned"); show("bad", p.name, p.name, fill(pick(CONTEST_LOSE), o)); womp(); }
         return;
       }
       if (p.snub) { show("friend", p.name, p.name, fill(pick(FRIEND_SNUB), o)); return; }
@@ -544,6 +545,7 @@
       o.won = $$(won); o.kept = $$(Math.max(0, won - p.amt));
       o.back = $$(back);
       if (back > 0) money(back);
+      count(back > 0 ? "paid" : "burned");
       show(back > 0 ? "good" : "bad", p.name, p.name, fill(pick(lines), o));
       if (back > 0) jingle(); else womp();
     }
@@ -647,7 +649,7 @@
       if (t.keno) {
         var k = 1 + Math.floor(Math.random() * 80);
         t = { say: "" + k, spot: "n:" + k, keno: true };
-        count("shown"); count("real");
+        count("shown");
         show("friend", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
           yes: "MARK " + k, onNo: function () {},
           onYes: function () { count("backed"); tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
@@ -658,7 +660,7 @@
       if (amt <= 0 || amt > br) return false;
       // over what the table takes on that spot: he's squared it with the floor for this one hand
       var floor = amt > tipCap(game, t.spot);
-      count("shown"); count("real");
+      count("shown");
       show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }) +
         (floor ? " " + pick(FLOOR_OK) : ""), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
@@ -696,8 +698,8 @@
       try { if (table && table.untip) table.untip(t.spot, t.placed); } catch (e) {}
       setTimeout(function () {
         var o = { who: t.who, pick: t.pick };
-        if (won) { show("good", t.who, t.who, fill(pick(TIP_WIN), o)); jingle(); }
-        else { show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
+        if (won) { count("paid"); show("good", t.who, t.who, fill(pick(TIP_WIN), o)); jingle(); }
+        else { count("burned"); show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
       }, 1400);
     }
     /** A backed tip that [what] misses: the table deals or spins once more (2x the chance on a long shot). */

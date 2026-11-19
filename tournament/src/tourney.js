@@ -681,7 +681,8 @@
       wuT = setTimeout(function () {
         var n; try { n = JSON.parse(store.getStr(k, "{}")) || {}; } catch (e) { n = {}; }
         rpc("c4tb_save_walkups", { p_name: myName(), p_token: token(), p_week: TT.week,
-          p_shown: n.shown || 0, p_backed: n.backed || 0, p_real: n.real || 0, p_scams: n.scams || 0 }).catch(function () {});
+          // the old "real"/"scams" columns now carry paid off / burned
+          p_shown: n.shown || 0, p_backed: n.backed || 0, p_real: n.paid || 0, p_scams: n.burned || 0 }).catch(function () {});
       }, 1500);
     };
     function pushStats() {
@@ -988,7 +989,7 @@
       if (!rows.length) { list.appendChild(empty("Nobody's walked up to anyone yet.")); return; }
       var me = (myName() || "").toLowerCase();
       rows.forEach(function (r) {
-        list.appendChild(row("", r.name, "BACKED " + r.backed + " · REAL " + r.real + " · SCAMS " + r.scams,
+        list.appendChild(row("", r.name, "BACKED " + r.backed + " · PAID OFF " + r.real + " · BURNED " + r.scams,
           fmt(r.shown), r.name.toLowerCase() === me));
       });
     }
