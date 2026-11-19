@@ -9753,7 +9753,7 @@
       var nx = deck.shift();
       var roll = Math.random(), ok = false;
       // hustles (sick kid, horse tip...) are off for now: just tips and friends borrowing to play
-      if (roll < 0.5 && nx !== "Tristen") ok = tipOffer(nx);
+      if (roll < 0.3 && nx !== "Tristen") ok = tipOffer(nx);   // about 1 in 3 is a tip, the rest want a spot
       if (!ok) ok = HUSTLES && roll >= 0.75 ? strangerOffer(nx) : friendOffer(nx);
       if (!ok) deck.push(nx);
       if (ok) { hands = 0; gap = Math.round(rnd(7, 13)); }
