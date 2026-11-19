@@ -103,12 +103,12 @@
       "Bro. There's a dildo taking contest in the back. Entry's {amt}. I can WIN this.",
       "Tristen, stretching: \"Front me {amt} for the dildo taking contest. First place, bro. Easy money.\"",
       "{amt} gets me in the dildo taking contest. I've been training. Don't ask.",
-      "Bad habits, good intentions. {amt} for the dildo taking contest. We split the prize."
+      "Bad habits, good intentions. {amt} for the dildo taking contest. You'll get it back, swear."
     ];
     var CONTEST_WIN = [
-      "Tristen took FIRST PLACE in the dildo taking contest. {won} prize, split 50/50: {back}.",
-      "Tristen's back with a trophy. \"Told you I trained.\" First place, {won}. Your half: {back}.",
-      "Tristen won the dildo taking contest. Nobody's asking how. {back} is yours."
+      "Tristen took FIRST PLACE in the dildo taking contest. {won} prize. He hands you back {back}. Exactly {back}.",
+      "Tristen's back with a trophy. \"Told you I trained.\" First place, {won}. You get your {back} back. The rest? \"That's mine, bro.\"",
+      "Tristen won the dildo taking contest. Nobody's asking how. Here's your {back}. He keeps the {kept}."
     ];
     var CONTEST_LOSE = [
       "Tristen didn't place in the dildo taking contest. Your money's gone. He's walking funny.",
@@ -519,12 +519,12 @@
       }
       var o = { who: p.name, game: p.game };
       if (p.game === CONTEST) {
-        // he places or he doesn't: first place pays out and he splits it with you
+        // he places or he doesn't: first place, and you get your loan back (he keeps the prize)
         if (p.snub) { show("friend", p.name, p.name, fill(pick(CONTEST_SNUB), o)); return; }
         if (Math.random() < 0.45) {
-          var prize = nice(p.amt * rnd(4, 8)), half = Math.round(prize / 2);
-          o.won = $$(prize); o.back = $$(half);
-          money(half);
+          var prize = nice(p.amt * rnd(4, 8));
+          o.won = $$(prize); o.back = $$(p.amt); o.kept = $$(Math.max(0, prize - p.amt));
+          money(p.amt);
           show("good", p.name, p.name, fill(pick(CONTEST_WIN), o)); jingle();
         } else { show("bad", p.name, p.name, fill(pick(CONTEST_LOSE), o)); womp(); }
         return;
