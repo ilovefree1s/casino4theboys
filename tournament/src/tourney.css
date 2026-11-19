@@ -305,3 +305,15 @@
   .tt-rweek button { flex: 1; padding: 10px 0; border-radius: 999px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
                      color: rgba(245,241,232,.65); border: 1px solid rgba(255,122,61,.45); }
   .tt-rweek button.on { color: #120604; background: #FF7A3D; border-color: #FF7A3D; }
+
+  /* giveaways */
+  .tt-prize { margin-top: 10px; }
+  .tt-prize button { width: 100%; padding: 11px 12px; border-radius: 11px; background: #FFD24D; color: #120a02;
+                     font: 800 13px/1.2 system-ui, sans-serif; letter-spacing: .06em; }
+  .tt-prize button:disabled { background: rgba(255,255,255,.07); color: rgba(245,241,232,.55); border: 1px solid rgba(255,255,255,.12); }
+  .tt-prize button.got { background: rgba(87,224,106,.14); color: #8BF09A; border: 1px solid rgba(87,224,106,.5); }
+  .tt-prize .who { margin-top: 6px; font-family: var(--mono); font-size: 8.5px; letter-spacing: .14em; color: rgba(245,241,232,.6); }
+  #tt-x2 { position: fixed; left: 50%; top: 57%; transform: translateX(-50%);
+           z-index: 9990; padding: 11px 18px; border-radius: 999px; border: 2px solid #FFD24D; background: rgba(30,22,4,.96);
+           color: #FFD24D; font: 800 13px system-ui, sans-serif; letter-spacing: .06em; cursor: pointer; white-space: nowrap;
+           box-shadow: 0 6px 20px rgba(0,0,0,.6); }

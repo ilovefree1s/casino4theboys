@@ -401,7 +401,7 @@
         el.style.display = g ? "" : "none";
         if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY " + tagX();
       }
-      return { today: today, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra,
+      return { today: today, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra, tableOf: tableOf,
                banner: function () { paintBanner(); paintBadges(); } };
     })();
 
@@ -486,9 +486,92 @@
       store.setStr(kw("stats"), JSON.stringify(s));
       statsDirty = true;
       hot.track(delta);
+      gifts.track(delta);
       shout.track(delta);
       duel.track(delta);
     };
+    /* ---- giveaway prizes from the message board: free chips, and 2x tokens ----
+       Chips go into your tournament money (at once if you're in, otherwise the next time you are).
+       A 2x token waits in your pocket: after any winning hand a button offers to double that win. */
+    var gifts = (function () {
+      var TOK = "ftt.x2tokens", OWED = "ftt.owedchips";
+      var hand = { out: 0, won: 0, busy: false }, btn = null;
+      function num(key) { return Math.max(0, Math.round(+store.getStr(key, "0") || 0)); }
+      function tokens() { return num(TOK); }
+      function atTable() { return !!document.querySelector(".screen.on .purse"); }
+      function toast(text) {
+        var t = document.createElement("div");
+        t.textContent = text;
+        t.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 74px);z-index:9999;" +
+          "padding:6px 14px;border-radius:999px;border:1.5px solid #FFD24D;background:rgba(20,14,4,.95);color:#FFD24D;" +
+          "font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;transition:opacity .4s;opacity:1;white-space:nowrap";
+        document.body.appendChild(t);
+        setTimeout(function () { t.style.opacity = "0"; }, 3000);
+        setTimeout(function () { t.remove(); }, 3600);
+      }
+      function credit(x) {
+        var w = typeof Walkups !== "undefined" ? Walkups : null;
+        if (atTable() && w && w.give(x)) return;
+        TT.quiet = true;
+        try { Shell.setBankroll(Shell.getBankroll() + x); } finally { TT.quiet = false; }
+        TT.changed(true);
+      }
+      /** Chips won but not yet handed over go in as soon as the tournament money is open. */
+      function deliver() {
+        var owe = num(OWED);
+        if (!owe || !TT.on || TT.closed || !TT.week) return;
+        if (TT.points && !atTable()) return;       // points week: into the game you sit down at
+        store.setStr(OWED, "0");
+        credit(owe);
+        toast("🎁 FREE CHIPS  +$" + fmt(owe));
+      }
+      function award(kind, amount) {
+        if (kind === "chips") { store.setStr(OWED, String(num(OWED) + Math.round(amount))); deliver(); }
+        else if (kind === "x2") { store.setStr(TOK, String(tokens() + Math.round(amount))); toast("🎟 2× TOKEN ADDED · YOU HAVE " + tokens()); }
+      }
+      function button() {
+        if (!btn) {
+          btn = document.createElement("button");
+          btn.type = "button"; btn.id = "tt-x2"; btn.style.display = "none";
+          btn.onclick = use;
+          document.body.appendChild(btn);
+        }
+        return btn;
+      }
+      function paint() {
+        var b = button(), on = hand.won > 0 && tokens() > 0 && TT.on && !TT.closed && atTable();
+        b.style.display = on ? "" : "none";
+        if (on) b.textContent = "🎟 DOUBLE IT  +$" + (typeof pillAmt === "function" ? pillAmt(hand.won) : fmt(hand.won)) + " · " + tokens() + " LEFT";
+      }
+      /** Spend a token: the hand you just won pays again. */
+      function use() {
+        var won = hand.won;
+        if (!(won > 0) || tokens() < 1 || !TT.on || TT.closed) { paint(); return; }
+        hand.won = 0;
+        store.setStr(TOK, String(tokens() - 1));
+        credit(won);
+        toast("🎟 2× TOKEN  +$" + fmt(won));
+        paint();
+      }
+      /** The same sums the hot games use: what came back on a hand, less what went out on it. */
+      function track(delta) {
+        if (delta < 0) { hand.out += -delta; if (hand.won) { hand.won = 0; paint(); } return; }
+        var won = Math.max(0, delta - hand.out);
+        hand.out = Math.max(0, hand.out - delta);
+        if (won > 0) { hand.won += won; paint(); }
+      }
+      setInterval(function () {
+        var t = TT.game ? hot.tableOf(TT.game) : null, b = !!(t && t.busy && t.busy());
+        if (hand.busy && !b) hand.out = 0;     // the hand is over: what's left on it was lost
+        hand.busy = b;
+        if (!atTable() && hand.won) hand.won = 0;
+        paint();
+        deliver();
+      }, 400);
+      return { track: track, award: award, tokens: tokens, deliver: deliver };
+    })();
+    TT.gifts = gifts;
+
     /* ---- shout-outs: a hit of 50x the bet or more is announced at everybody else's table ----
      * What went out on the hand is counted until the table goes quiet; a payout
      * that clears it by 50 times over is sent up, and everyone else's phone
@@ -1494,6 +1577,36 @@
         else if (part) el.appendChild(document.createTextNode(part));
       });
     }
+    /** A giveaway on a post: CLAIM while there are any left, then who got it. */
+    function prizeBox(m) {
+      var pz = m.prize, me = (myName() || "").toLowerCase();
+      var winners = pz.winners || [], mine = me && winners.some(function (w) { return String(w).toLowerCase() === me; });
+      var short = typeof shortAmt === "function" ? shortAmt : fmt;
+      var what = pz.kind === "chips" ? short(pz.amount) + " CHIPS" : (pz.amount > 1 ? pz.amount + " × " : "") + "2× TOKEN";
+      var box = document.createElement("div"); box.className = "tt-prize";
+      var b = document.createElement("button"); b.type = "button";
+      var left = Math.max(0, (pz.max || 1) - winners.length);
+      if (mine) { b.textContent = "✓ YOU GOT IT · " + what; b.disabled = true; b.className = "got"; }
+      else if (!left) { b.textContent = "GONE · " + what; b.disabled = true; b.className = "gone"; }
+      else if (!me) { b.textContent = "🎁 " + what + " · JOIN THE TOURNAMENT TO CLAIM"; b.disabled = true; }
+      else {
+        b.textContent = "🎁 CLAIM · " + what + ((pz.max || 1) > 1 ? " · " + left + " LEFT" : "");
+        b.onclick = function () {
+          b.disabled = true;
+          rpc("c4tb_msg_claim", { p_name: myName(), p_token: token(), p_id: m.id }).then(function (r) {
+            if (r && r.ok) gifts.award(r.kind, r.amount);
+            loadMsgs();
+          }, function () { b.disabled = false; b.textContent = "COULDN'T REACH IT · TAP AGAIN"; });
+        };
+      }
+      box.appendChild(b);
+      if (winners.length) {
+        var w = document.createElement("div"); w.className = "who";
+        w.textContent = (winners.length > 1 ? "WINNERS: " : "WINNER: ") + winners.map(function (x) { return shown(x).toUpperCase(); }).join(", ");
+        box.appendChild(w);
+      }
+      return box;
+    }
     var rulesWeek = "this";
     function paintMsgs(list) {
       if (isJustin()) {
@@ -1527,7 +1640,9 @@
           });
           hd.appendChild(x);
         }
-        el.appendChild(hd); el.appendChild(fmtMsg(m.body)); list.appendChild(el);
+        el.appendChild(hd); el.appendChild(fmtMsg(m.body));
+        if (m.prize) el.appendChild(prizeBox(m));
+        list.appendChild(el);
       });
       // and the rules, always there under the news; while next week plays differently, a button for each
       var wk = board && board.week ? String(board.week) : "";
