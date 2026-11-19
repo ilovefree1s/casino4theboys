@@ -10332,9 +10332,11 @@
       if (TT.game && DUEL_GAMES.indexOf(TT.game) >= 0) ov.querySelector("#tt-duelgame").value = TT.game;
       ov.querySelector(".tt-duelgo").onclick = function () {
         var pot = Math.round(+String(ov.querySelector("#tt-duelpot").value).replace(/[^0-9]/g, "")), msg = ov.querySelector("#tt-duelmsg");
-        if (!TT.on) { msg.textContent = "Tap PLAY to get in the tournament first."; return; }
+        if (!myName()) { msg.textContent = "Join the tournament first."; return; }
         if (!(pot >= 100)) { msg.textContent = "Pick a pot of at least $100."; return; }
-        if (pot > Shell.getBankroll()) { msg.textContent = "You only have $" + fmt(Shell.getBankroll()) + "."; return; }
+        // from the front page the wallet isn't loaded; the board's "you, right now" has it
+        var have = TT.on ? Shell.getBankroll() : (board && board.me ? (board.me.cash != null ? board.me.cash : board.me.net) : null);
+        if (have != null && pot > have) { msg.textContent = "You only have $" + fmt(have) + "."; return; }
         msg.textContent = "Sending…";
         rpc("c4tb_duel_challenge", { p_name: myName(), p_token: token(), p_opponent: name,
           p_game: ov.querySelector("#tt-duelgame").value, p_pot: pot }).then(function (r) {
