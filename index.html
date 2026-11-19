@@ -11,6 +11,7 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
+.screen.on { padding-top: var(--appTop, env(safe-area-inset-top, 0px)); }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -101,8 +102,20 @@
     }
   };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
-  function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
+  // and clear of the camera/status bar on top: in fullscreen the page runs up under it
+  var probe = null;
+  function insetTop() {
+    if (!probe) { probe = document.createElement("div"); probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)"; }
+    if (!probe.parentNode && document.body) document.body.appendChild(probe);
+    return probe.parentNode ? probe.getBoundingClientRect().height : 0;
+  }
+  function appH() {
+    var t = insetTop();
+    document.documentElement.style.setProperty("--appTop", t + "px");
+    document.documentElement.style.setProperty("--appH", Math.max(300, innerHeight - t) + "px");
+  }
   appH();
+  addEventListener("DOMContentLoaded", appH);
   addEventListener("resize", appH);
   document.addEventListener("fullscreenchange", function () { appH(); setTimeout(appH, 300); });
   document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
@@ -4265,7 +4278,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.26</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.27</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">

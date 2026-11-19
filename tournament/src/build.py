@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.26"
+VERSION = "1.27"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -875,6 +875,7 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
+.screen.on { padding-top: var(--appTop, env(safe-area-inset-top, 0px)); }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -965,8 +966,20 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     }
   };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
-  function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
+  // and clear of the camera/status bar on top: in fullscreen the page runs up under it
+  var probe = null;
+  function insetTop() {
+    if (!probe) { probe = document.createElement("div"); probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)"; }
+    if (!probe.parentNode && document.body) document.body.appendChild(probe);
+    return probe.parentNode ? probe.getBoundingClientRect().height : 0;
+  }
+  function appH() {
+    var t = insetTop();
+    document.documentElement.style.setProperty("--appTop", t + "px");
+    document.documentElement.style.setProperty("--appH", Math.max(300, innerHeight - t) + "px");
+  }
   appH();
+  addEventListener("DOMContentLoaded", appH);
   addEventListener("resize", appH);
   document.addEventListener("fullscreenchange", function () { appH(); setTimeout(appH, 300); });
   document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
