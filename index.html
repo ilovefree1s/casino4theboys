@@ -11,7 +11,16 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
-.mu-sidepill { display: flex; justify-content: center; margin-bottom: 4px; }
+.mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+#screen-miniuth #mu-results { display: none; }
+.purse .pw { display: none; }
+.purse.stack.won .pw { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+.purse.stack.won .val.risk, .purse.stack.won .val.staked { display: none !important; }
+.purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
+.purse .pw b.up { color: #57E06A; font-size: 12px; }
+.purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
+/* the 2x window hangs down over the empty corner instead of pushing the table down */
+.purse.stack.won[data-hot] { margin-bottom: -26px; z-index: 6; background: rgba(6,5,11,.96); }
 .mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
@@ -51,6 +60,26 @@
     return t + u[1];
   }
   function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  // the money window's second line after a hand: +what you won, or on a 2x game  400B / ×2 / 800B
+  function pw(el) {
+    if (!el) return null;
+    var b = el.querySelector(".pw");
+    if (!b) { b = document.createElement("span"); b.className = "pw"; el.appendChild(b); }
+    return b;
+  }
+  window.purseWin = {
+    clear: function (el) { if (el) { el.classList.remove("won"); var b = el.querySelector(".pw"); if (b) b.innerHTML = ""; delete el.dataset.hot; } },
+    net: function (el, v) {
+      if (!el || el.dataset.hot) return;
+      if (!(v > 0)) { this.clear(el); return; }
+      el.classList.add("won"); pw(el).innerHTML = '<b class="up">+' + short(v) + "</b>";
+    },
+    hot: function (el, base, x, total) {
+      if (!el) return;
+      el.dataset.hot = "1"; el.classList.add("won");
+      pw(el).innerHTML = '<b>' + short(base) + '</b><i>' + x + '</i><b class="up">' + short(total) + "</b>";
+    }
+  };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
   function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
   appH();
@@ -4216,7 +4245,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.23</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.24</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10311,16 +10340,21 @@
             try { table.credit(profit); } finally { TT.quiet = false; }
             TT.changed(true);
           } else setExtra(extra() + profit);
-          mark(profit);
+          mark(profit, won);
         }, 0);
       }
       /**
        * The extra shows as one more result pill under the table's own, where the
        * table has pills; elsewhere as a small tag under the bankroll that fades.
        */
-      function mark(profit) {
+      function mark(profit, won) {
         var scr = document.querySelector(".screen.on");
         var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + pillAmt(profit);
+        // Mini UTH (trying it there first): the doubling shows in the money window, not as a pill
+        if (scr && scr.id === "screen-miniuth" && window.purseWin) {
+          purseWin.hot(scr.querySelector(".purse"), won, "×" + tagX().replace("×", ""), won + profit);
+          return;
+        }
         var host = scr && scr.querySelector(".dj-pills, #dd-results");
         if (host && host.children.length) {
           host.insertAdjacentHTML("beforeend", '<div class="dj-pill w" style="border-color:#FF8A3D"><span class="nm" style="color:#FFB238">' +
@@ -16213,18 +16247,24 @@
     function renderResults() {
       var host = $("mu-results");
       host.innerHTML = "";
-      if (phase !== "result") return;
+      var purse = document.querySelector("#screen-miniuth .purse");
+      if (phase !== "result") { if (window.purseWin) purseWin.clear(purse); return; }
+      var net = 0; results.forEach(function (r) { net += r.net; });
+      if (window.purseWin) purseWin.net(purse, net);
       results.forEach(function (r) {
         if (muSide(r)) return;   // drawn over its own pay chart instead
         host.insertAdjacentHTML("beforeend", muPill(r));
       });
     }
-    function muSide(r) { return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus" : ""; }
+    function muSide(r) {
+      return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus"
+        : /^Blind/.test(r.label) ? "blind" : "play";
+    }
     function muPill(r) {
       var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
       var txt = r.net > 0 ? "+" + pillAmt(r.net)
         : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
-      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card)( · )?/, "");
+      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card|Blind)( · )?/, "");
       return '<div class="dj-pill ' + cls + '">' + (nm ? '<span class="nm">' + nm + "</span>" : "") +
         '<span class="amt">' + txt + "</span></div>";
     }
@@ -16277,11 +16317,11 @@
           spotHtml("mu-blind", "ring", "BLIND", betting ? ante : blindStake, false, RED) +
         '</div><div></div></div>' +
         '<div class="uth-row top">' +
-          '<div style="padding-right:6px">' + paysHtml("PLAY",
+          '<div style="padding-right:6px">' + muSidePills("play") + paysHtml("PLAY",
             [["Before the flop", "3x"], ["After the flop", "2x"], ["On the river", "1x"]]) + "</div>" +
           '<div class="mid">' + spotHtml("mu-play", "ring", "PLAY", playStake, false, RED) + "</div>" +
           '<div style="padding-left:6px">' +
-            paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "push"]])) + "</div>" +
+            muSidePills("blind") + paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "push"]])) + "</div>" +
         "</div>";
       if (betting) {
         $("mu-flushplus").addEventListener("click", function () { place("flushplus"); });

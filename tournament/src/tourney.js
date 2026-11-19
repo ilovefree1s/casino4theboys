@@ -315,16 +315,21 @@
             try { table.credit(profit); } finally { TT.quiet = false; }
             TT.changed(true);
           } else setExtra(extra() + profit);
-          mark(profit);
+          mark(profit, won);
         }, 0);
       }
       /**
        * The extra shows as one more result pill under the table's own, where the
        * table has pills; elsewhere as a small tag under the bankroll that fades.
        */
-      function mark(profit) {
+      function mark(profit, won) {
         var scr = document.querySelector(".screen.on");
         var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + fmt(profit);
+        // Mini UTH (trying it there first): the doubling shows in the money window, not as a pill
+        if (scr && scr.id === "screen-miniuth" && window.purseWin) {
+          purseWin.hot(scr.querySelector(".purse"), won, "×" + tagX().replace("×", ""), won + profit);
+          return;
+        }
         var host = scr && scr.querySelector(".dj-pills, #dd-results");
         if (host && host.children.length) {
           host.insertAdjacentHTML("beforeend", '<div class="dj-pill w" style="border-color:#FF8A3D"><span class="nm" style="color:#FFB238">' +

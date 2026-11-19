@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.23"
+VERSION = "1.24"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -705,18 +705,24 @@ sub("""      var host = $("mu-results");
     function paysHtml(title, rows) {""",
 """      var host = $("mu-results");
       host.innerHTML = "";
-      if (phase !== "result") return;
+      var purse = document.querySelector("#screen-miniuth .purse");
+      if (phase !== "result") { if (window.purseWin) purseWin.clear(purse); return; }
+      var net = 0; results.forEach(function (r) { net += r.net; });
+      if (window.purseWin) purseWin.net(purse, net);
       results.forEach(function (r) {
         if (muSide(r)) return;   // drawn over its own pay chart instead
         host.insertAdjacentHTML("beforeend", muPill(r));
       });
     }
-    function muSide(r) { return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus" : ""; }
+    function muSide(r) {
+      return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus"
+        : /^Blind/.test(r.label) ? "blind" : "play";
+    }
     function muPill(r) {
       var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
       var txt = r.net > 0 ? "+" + fmt(r.net)
         : r.net < 0 ? "−" + fmt(-r.net) : "push";
-      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card)( · )?/, "");
+      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card|Blind)( · )?/, "");
       return '<div class="dj-pill ' + cls + '">' + (nm ? '<span class="nm">' + nm + "</span>" : "") +
         '<span class="amt">' + txt + "</span></div>";
     }
@@ -728,6 +734,10 @@ sub("""      var host = $("mu-results");
     function paysHtml(title, rows) {""")
 sub("""          '<div style="padding:0 6px 4px 0">' + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +""",
     """          '<div style="padding:0 6px 4px 0">' + muSidePills("fp") + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +""")
+sub("""          '<div style="padding-right:6px">' + paysHtml("PLAY",""",
+    """          '<div style="padding-right:6px">' + muSidePills("play") + paysHtml("PLAY",""")
+sub("""            paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "push"]])) + "</div>" +""",
+    """            muSidePills("blind") + paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "push"]])) + "</div>" +""")
 sub("""          '<div style="padding:0 0 4px 6px">' + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""",
     """          '<div style="padding:0 0 4px 6px">' + muSidePills("bonus") + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""")
 
@@ -865,7 +875,16 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
-.mu-sidepill { display: flex; justify-content: center; margin-bottom: 4px; }
+.mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
+#screen-miniuth #mu-results { display: none; }
+.purse .pw { display: none; }
+.purse.stack.won .pw { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
+.purse.stack.won .val.risk, .purse.stack.won .val.staked { display: none !important; }
+.purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
+.purse .pw b.up { color: #57E06A; font-size: 12px; }
+.purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
+/* the 2x window hangs down over the empty corner instead of pushing the table down */
+.purse.stack.won[data-hot] { margin-bottom: -26px; z-index: 6; background: rgba(6,5,11,.96); }
 .mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
@@ -905,6 +924,26 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     return t + u[1];
   }
   function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  // the money window's second line after a hand: +what you won, or on a 2x game  400B / ×2 / 800B
+  function pw(el) {
+    if (!el) return null;
+    var b = el.querySelector(".pw");
+    if (!b) { b = document.createElement("span"); b.className = "pw"; el.appendChild(b); }
+    return b;
+  }
+  window.purseWin = {
+    clear: function (el) { if (el) { el.classList.remove("won"); var b = el.querySelector(".pw"); if (b) b.innerHTML = ""; delete el.dataset.hot; } },
+    net: function (el, v) {
+      if (!el || el.dataset.hot) return;
+      if (!(v > 0)) { this.clear(el); return; }
+      el.classList.add("won"); pw(el).innerHTML = '<b class="up">+' + short(v) + "</b>";
+    },
+    hot: function (el, base, x, total) {
+      if (!el) return;
+      el.dataset.hot = "1"; el.classList.add("won");
+      pw(el).innerHTML = '<b>' + short(base) + '</b><i>' + x + '</i><b class="up">' + short(total) + "</b>";
+    }
+  };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
   function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
   appH();
