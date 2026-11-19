@@ -229,3 +229,6 @@
                      padding: 6px 2px; border-bottom: 1px solid rgba(255,154,102,.2); }
   .tt-sechead.fold::before { content: "▾"; font-size: 11px; transition: transform .15s; display: inline-block; }
   .tt-sechead.fold.shut::before { transform: rotate(-90deg); }
+  /* the version, tucked up against "Casino Games" on the sign */
+  .mm-ver { font-family: var(--mono, ui-monospace, monospace); font-style: normal; font-size: 11px; letter-spacing: .08em;
+            vertical-align: super; margin-left: 8px; color: rgba(255,210,77,.75); text-shadow: none; }

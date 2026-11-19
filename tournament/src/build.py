@@ -8,6 +8,8 @@ src, out = sys.argv[1], sys.argv[2]
 url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
+# the version on the front-page sign: bump it with each update that goes out
+VERSION = "1.1"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -90,7 +92,7 @@ sub('$("pk-back").addEventListener("click", function () { Plinko.leave(); Shell.
 # ---- the front page: chip rain behind glass, the sign in its own gold box ----
 sub('  <div class="mm-col">\n    <div class="mm-name">Casino Games</div>\n    <div class="mm-casino">4 THE BOYS</div>\n',
     '  <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>\n'
-    '  <div class="mm-col">\n    <div class="mm-sign">\n      <div class="mm-name">Casino Games</div>\n'
+    '  <div class="mm-col">\n    <div class="mm-sign">\n      <div class="mm-name">Casino Games<span class="mm-ver">v' + VERSION + '</span></div>\n'
     '      <div class="mm-casino">4 THE BOYS</div>\n    </div>\n')
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chiprain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
