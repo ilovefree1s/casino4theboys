@@ -657,6 +657,8 @@
       var won = false;
       try { won = tipHit(game, tip.spot, what); } catch (e) {}
       var t = tip; tip = null;
+      // one hand only: take the friend's chips back off the rebet
+      try { if (table && table.untip) table.untip(t.spot, t.placed); } catch (e) {}
       setTimeout(function () {
         var o = { who: t.who, pick: t.pick };
         if (won) { show("good", t.who, t.who, fill(pick(TIP_WIN), o)); jingle(); }

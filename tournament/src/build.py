@@ -627,21 +627,31 @@ def tipfn(get, put, draw="renderAll"):
             " try { %s; } catch (e) {} finally { selectedChip = sc; } try { %s(); } catch (e) {} return %s - before; },"
             " phase: function () { return phase; }, variant: function () { return typeof variant === \"undefined\" ? \"\" : variant; },"
             " tipOn: function (spot) { try { return %s; } catch (e) { return 0; } },") % (get, put, draw, get, get)
+# untip(spot, v): the friend's chips came off the "last bet", so REBET doesn't keep them
+def lastBet(expr): return ' untip: function (spot, v) { try { %s } catch (e) {} },' % expr
+def fromLast(obj, key="spot"):
+    return 'var k = %s; if (%s[k]) { %s[k] = Math.max(0, %s[k] - v); if (!%s[k]) delete %s[k]; }' % (key, obj, obj, obj, obj, obj)
 TIPFN = {
-  "Holdem": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
-  "DjWild": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)'),
-  "MiniUth": tipfn('(spot === "flushplus" ? flushPlus : bonus)', 'place(spot)'),
-  "Baccarat": tipfn('(bets[spot] || 0)', 'addBet(spot)', "updateMoney"),
-  "DragonTiger": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
-  "SicBo": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
-  "Wheel": tipfn('(bets[spot] || 0)', 'addChip(spot)'),
-  "Blackjack": tipfn('(spot === "trilux" ? triluxBet : push22SideBet)', 'addChip(spot)'),
-  "Roulette": tipfn('(bets[tipRoute(spot).id] || 0)', 'addChip(tipRoute(spot))'),
-  # keno: the friend's number gets marked on your ticket
+  "Holdem": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)') +
+    lastBet('if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v);'),
+  "DjWild": tipfn('(spot === "trips" ? trips : badBeat)', 'place(spot)') +
+    lastBet('if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v);'),
+  "MiniUth": tipfn('(spot === "flushplus" ? flushPlus : bonus)', 'place(spot)') +
+    lastBet('if (spot === "flushplus") lastFlushPlus = Math.max(0, lastFlushPlus - v); else lastBonus = Math.max(0, lastBonus - v);'),
+  "Baccarat": tipfn('(bets[spot] || 0)', 'addBet(spot)', "updateMoney") + lastBet(fromLast("lastBets")),
+  "DragonTiger": tipfn('(bets[spot] || 0)', 'addChip(spot)') + lastBet(fromLast("lastBets")),
+  "SicBo": tipfn('(bets[spot] || 0)', 'addChip(spot)') + lastBet(fromLast("lastBets")),
+  "Wheel": tipfn('(bets[spot] || 0)', 'addChip(spot)') + lastBet(fromLast("lastBets")),
+  "Blackjack": tipfn('(spot === "trilux" ? triluxBet : push22SideBet)', 'addChip(spot)') +
+    lastBet('if (spot === "trilux") lastTrilux = Math.max(0, lastTrilux - v); else lastPush22Side = Math.max(0, lastPush22Side - v);'),
+  "Roulette": tipfn('(bets[tipRoute(spot).id] || 0)', 'addChip(tipRoute(spot))') +
+    lastBet('var k = tipRoute(spot).id; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) { delete lastBets[k]; delete lastDefs[k]; delete lastCens[k]; } }'),
+  # keno: the friend's number gets marked on your ticket (2 = it was already yours, so it stays)
   "Keno": (" tip: function (spot) { if (phase !== \"betting\") return 0; var n = +spot.slice(2);"
-           " if (picks.indexOf(n) >= 0) return 1; if (picks.length >= MAX) return 0;"
+           " if (picks.indexOf(n) >= 0) return 2; if (picks.length >= MAX) return 0;"
            " picks.push(n); noteText = \"\"; msgText = picks.length + \" marked\"; renderAll(); return 1; },"
-           " phase: function () { return phase; },"),
+           " phase: function () { return phase; },"
+           " untip: function (spot, v) { if (v !== 1) return; var n = +spot.slice(2), i = lastPicks.indexOf(n); if (i >= 0) lastPicks.splice(i, 1); },"),
 }
 for name, fn in TIPFN.items():
     a = h.index("\n  var %s = (function () {" % name)
