@@ -846,14 +846,49 @@
     $("tt-ruleslink").addEventListener("click", function () { showRules(); });
 
     // ---- joining ----
+    // From the points week on, you join as one of the faces (the ones the walk-ups use), not a typed name.
+    var FACE_FROM = Date.parse("2026-11-22T05:00:00Z");
+    function faceMode() {
+      var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : null;
+      return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
+    }
     function askName(then) {
-      $("tt-name").value = myName();
+      var faces = faceMode(), picked = "";
+      var grid = $("tt-faces"), sub = document.querySelector("#tt-join .sub");
       $("tt-pin").value = "";
       $("tt-join-err").textContent = "";
+      if (faces) {
+        if (Walkups.hideNag) Walkups.hideNag();
+        $("tt-name").style.display = "none";
+        grid.hidden = false; grid.className = ""; grid.innerHTML = "";
+        sub.textContent = "Tap your face, then your 4-digit PIN. New here? Pick a PIN now. Back again? Use the one you picked.";
+        var mine = myName() || store.getStr("c4tb.walkme", "");
+        Object.keys(faces).forEach(function (n) {
+          var bt = document.createElement("button"); bt.type = "button"; bt.setAttribute("data-face", n);
+          var im = document.createElement("img"); im.alt = ""; im.src = faces[n];
+          var b = document.createElement("b"); b.textContent = n;
+          bt.appendChild(im); bt.appendChild(b);
+          bt.onclick = function () {
+            picked = n;
+            grid.className = "chosen";
+            grid.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === bt); });
+            $("tt-join-err").textContent = "";
+            $("tt-pin").focus();
+          };
+          grid.appendChild(bt);
+          if (mine && n.toLowerCase() === mine.toLowerCase()) bt.onclick();
+        });
+      } else {
+        $("tt-name").style.display = "";
+        grid.hidden = true;
+        sub.textContent = "Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.";
+        $("tt-name").value = myName();
+        setTimeout(function () { $("tt-name").focus(); }, 60);
+      }
       $("tt-join").classList.add("on");
-      setTimeout(function () { $("tt-name").focus(); }, 60);
       $("tt-join-go").onclick = function () {
-        var n = $("tt-name").value.trim().replace(/\s+/g, " ");
+        var n = faces ? picked : $("tt-name").value.trim().replace(/\s+/g, " ");
+        if (faces && !n) { $("tt-join-err").textContent = "Tap your face first."; return; }
         if (n.length < 2 || n.length > 16 || !/^[A-Za-z0-9 ._'-]+$/.test(n)) {
           $("tt-join-err").textContent = "2–16 letters or numbers.";
           return;
@@ -865,13 +900,15 @@
           $("tt-join-go").disabled = false;
           if (!j.ok) {
             $("tt-join-err").textContent =
-              j.error === "pin" ? "Wrong PIN for that name." :
+              j.error === "pin" ? (faces ? "Wrong PIN. Someone already took " + n + " — if that's you, use your PIN." : "Wrong PIN for that name.") :
               j.error === "taken" ? "That name is taken, and it has no PIN yet. Ask Justin to free it." :
               j.error === "bad_pin" ? "The PIN is 4 digits." : "2–16 letters or numbers.";
             return;
           }
           store.setStr("ftt.name", j.name);
           store.setStr("ftt.haspin", "1");
+          // you're this face now, so the walk-ups never send you to yourself
+          if (faces) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
           if (then) then(); else refreshLane();
         }, function () {

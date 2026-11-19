@@ -3834,6 +3834,19 @@
   .tt-compose button { align-self: flex-end; padding: 9px 22px; border-radius: 999px; background: #FF7A3D; color: #120604;
                        font-family: var(--display); font-size: 11px; letter-spacing: .2em; }
   .tt-compose button:disabled { opacity: .5; }
+
+  /* joining by face */
+  #tt-join .box { max-height: calc(92vh / var(--pcz, 1)); overflow-y: auto; }
+  #tt-faces { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 4px; margin-top: 16px; }
+  #tt-faces[hidden] { display: none; }
+  #tt-faces button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0; color: var(--bone); }
+  #tt-faces img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; box-sizing: border-box;
+                  border: 2px solid rgba(245,241,232,.22); }
+  #tt-faces b { font: 700 9.5px/1.1 system-ui, sans-serif; letter-spacing: .03em; max-width: 100%;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tt-faces button.on img { border-color: #FF7A3D; box-shadow: 0 0 14px rgba(255,122,61,.7); }
+  #tt-faces button.on b { color: #FF9A66; }
+  #tt-faces.chosen button:not(.on) { opacity: .45; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4137,7 +4150,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.3</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.4</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -5478,6 +5491,7 @@
   <div class="box">
     <div class="big">JOIN THE TOURNAMENT</div>
     <div class="sub">Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.</div>
+    <div id="tt-faces" hidden></div>
     <input id="tt-name" maxlength="16" autocomplete="nickname" autocapitalize="characters" spellcheck="false" placeholder="YOUR NAME">
     <input id="tt-pin" class="tt-pin" maxlength="4" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="PIN" aria-label="4-digit PIN">
     <div id="tt-join-err"></div>
@@ -9291,7 +9305,8 @@
       nagged = true;
       setTimeout(function () {
         var on = document.querySelector(".screen.on");
-        if (me() || !on || TABLES[on.id.replace("screen-", "")] || on.id === "screen-settings") { nagged = false; return; }
+        if (me() || !on || TABLES[on.id.replace("screen-", "")] || on.id === "screen-settings" ||
+            document.querySelector("#tt-join.on")) { nagged = false; return; }
         var faces = Object.keys(FACES).slice(0, 6).map(function (n) { return '<img alt="" src="' + FACES[n] + '">'; }).join("");
         show("friend", "", "NEW · WHO ARE YOU?", "", {
           yes: "PICK ME", onYes: function () { Shell.show("settings"); }, onNo: function () {}
@@ -9891,7 +9906,10 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { stack: function () { return cash(); }, result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { faces: function () { return FACES; },
+      hideNag: function () {
+        if (card && card.classList.contains("on") && /WHO ARE YOU/.test(card.querySelector(".wu-n").textContent)) { hideCard(); nagged = false; }
+      }, stack: function () { return cash(); }, result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
@@ -10743,14 +10761,49 @@
     $("tt-ruleslink").addEventListener("click", function () { showRules(); });
 
     // ---- joining ----
+    // From the points week on, you join as one of the faces (the ones the walk-ups use), not a typed name.
+    var FACE_FROM = Date.parse("2026-11-22T05:00:00Z");
+    function faceMode() {
+      var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : null;
+      return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
+    }
     function askName(then) {
-      $("tt-name").value = myName();
+      var faces = faceMode(), picked = "";
+      var grid = $("tt-faces"), sub = document.querySelector("#tt-join .sub");
       $("tt-pin").value = "";
       $("tt-join-err").textContent = "";
+      if (faces) {
+        if (Walkups.hideNag) Walkups.hideNag();
+        $("tt-name").style.display = "none";
+        grid.hidden = false; grid.className = ""; grid.innerHTML = "";
+        sub.textContent = "Tap your face, then your 4-digit PIN. New here? Pick a PIN now. Back again? Use the one you picked.";
+        var mine = myName() || store.getStr("c4tb.walkme", "");
+        Object.keys(faces).forEach(function (n) {
+          var bt = document.createElement("button"); bt.type = "button"; bt.setAttribute("data-face", n);
+          var im = document.createElement("img"); im.alt = ""; im.src = faces[n];
+          var b = document.createElement("b"); b.textContent = n;
+          bt.appendChild(im); bt.appendChild(b);
+          bt.onclick = function () {
+            picked = n;
+            grid.className = "chosen";
+            grid.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === bt); });
+            $("tt-join-err").textContent = "";
+            $("tt-pin").focus();
+          };
+          grid.appendChild(bt);
+          if (mine && n.toLowerCase() === mine.toLowerCase()) bt.onclick();
+        });
+      } else {
+        $("tt-name").style.display = "";
+        grid.hidden = true;
+        sub.textContent = "Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.";
+        $("tt-name").value = myName();
+        setTimeout(function () { $("tt-name").focus(); }, 60);
+      }
       $("tt-join").classList.add("on");
-      setTimeout(function () { $("tt-name").focus(); }, 60);
       $("tt-join-go").onclick = function () {
-        var n = $("tt-name").value.trim().replace(/\s+/g, " ");
+        var n = faces ? picked : $("tt-name").value.trim().replace(/\s+/g, " ");
+        if (faces && !n) { $("tt-join-err").textContent = "Tap your face first."; return; }
         if (n.length < 2 || n.length > 16 || !/^[A-Za-z0-9 ._'-]+$/.test(n)) {
           $("tt-join-err").textContent = "2–16 letters or numbers.";
           return;
@@ -10762,13 +10815,15 @@
           $("tt-join-go").disabled = false;
           if (!j.ok) {
             $("tt-join-err").textContent =
-              j.error === "pin" ? "Wrong PIN for that name." :
+              j.error === "pin" ? (faces ? "Wrong PIN. Someone already took " + n + " — if that's you, use your PIN." : "Wrong PIN for that name.") :
               j.error === "taken" ? "That name is taken, and it has no PIN yet. Ask Justin to free it." :
               j.error === "bad_pin" ? "The PIN is 4 digits." : "2–16 letters or numbers.";
             return;
           }
           store.setStr("ftt.name", j.name);
           store.setStr("ftt.haspin", "1");
+          // you're this face now, so the walk-ups never send you to yourself
+          if (faces) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
           if (then) then(); else refreshLane();
         }, function () {

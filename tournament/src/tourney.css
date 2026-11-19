@@ -265,3 +265,16 @@
   .tt-compose button { align-self: flex-end; padding: 9px 22px; border-radius: 999px; background: #FF7A3D; color: #120604;
                        font-family: var(--display); font-size: 11px; letter-spacing: .2em; }
   .tt-compose button:disabled { opacity: .5; }
+
+  /* joining by face */
+  #tt-join .box { max-height: 92vh; overflow-y: auto; }
+  #tt-faces { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px 4px; margin-top: 16px; }
+  #tt-faces[hidden] { display: none; }
+  #tt-faces button { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 2px 0; color: var(--bone); }
+  #tt-faces img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; box-sizing: border-box;
+                  border: 2px solid rgba(245,241,232,.22); }
+  #tt-faces b { font: 700 9.5px/1.1 system-ui, sans-serif; letter-spacing: .03em; max-width: 100%;
+                overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #tt-faces button.on img { border-color: #FF7A3D; box-shadow: 0 0 14px rgba(255,122,61,.7); }
+  #tt-faces button.on b { color: #FF9A66; }
+  #tt-faces.chosen button:not(.on) { opacity: .45; }

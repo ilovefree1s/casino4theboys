@@ -208,7 +208,8 @@
       nagged = true;
       setTimeout(function () {
         var on = document.querySelector(".screen.on");
-        if (me() || !on || TABLES[on.id.replace("screen-", "")] || on.id === "screen-settings") { nagged = false; return; }
+        if (me() || !on || TABLES[on.id.replace("screen-", "")] || on.id === "screen-settings" ||
+            document.querySelector("#tt-join.on")) { nagged = false; return; }
         var faces = Object.keys(FACES).slice(0, 6).map(function (n) { return '<img alt="" src="' + FACES[n] + '">'; }).join("");
         show("friend", "", "NEW · WHO ARE YOU?", "", {
           yes: "PICK ME", onYes: function () { Shell.show("settings"); }, onNo: function () {}
@@ -808,6 +809,9 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { stack: function () { return cash(); }, result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { faces: function () { return FACES; },
+      hideNag: function () {
+        if (card && card.classList.contains("on") && /WHO ARE YOU/.test(card.querySelector(".wu-n").textContent)) { hideCard(); nagged = false; }
+      }, stack: function () { return cash(); }, result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
