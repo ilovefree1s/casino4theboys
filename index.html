@@ -11,6 +11,8 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
+.mu-sidepill { display: flex; justify-content: center; margin-bottom: 4px; }
+.mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
 .purse.stack > span:not(.val):not(.lbl):not(.gap) { display: contents !important; }
@@ -49,6 +51,12 @@
     return t + u[1];
   }
   function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
+  function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
+  appH();
+  addEventListener("resize", appH);
+  document.addEventListener("fullscreenchange", function () { appH(); setTimeout(appH, 300); });
+  document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
   addEventListener("DOMContentLoaded", function () {
@@ -117,7 +125,7 @@
   }
   button { font-family: var(--ui); cursor: pointer; border: none; background: none; color: inherit; }
   button:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
-  .screen { display: none; min-height: 100dvh; }
+  .screen { display: none; min-height: var(--appH, 100dvh); }
   .screen.on { display: block; }
 
   .outline {
@@ -217,7 +225,7 @@
     object-fit: cover; pointer-events: none; filter: brightness(.15) saturate(.9);
   }
   .mm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     display: flex; flex-direction: column; align-items: center;
     padding: 14px 18px calc(8px + env(safe-area-inset-bottom));
   }
@@ -392,7 +400,7 @@
   /* ================= LOBBY ================= */
   #screen-lobby { position: relative; background: var(--night); }
   .lb-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -493,7 +501,7 @@
     --w: #E8C169;
   }
   .fl-wrap {
-    position: relative; width: 100%; max-width: 430px; min-height: 100dvh;
+    position: relative; width: 100%; max-width: 430px; min-height: var(--appH, 100dvh);
     display: flex; flex-direction: column; justify-content: center;
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   }
@@ -673,7 +681,7 @@
      the painted sheet because they are worth keeping; the names and the
      blurbs are type, and type is better set live than photographed. */
   .pk-wrap {
-    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     display: flex; flex-direction: column;
     padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
   }
@@ -729,7 +737,7 @@
   /* ============ BLACKJACK VARIANTS PAGE ============ */
   #screen-bjmenu { position: relative; background: var(--night); }
   .bjm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -804,7 +812,7 @@
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
   .st-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     padding: 10px 12px; display: flex; flex-direction: column;
   }
   .st-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -948,7 +956,7 @@
   /* ================= BLACKJACK ================= */
   #screen-blackjack { position: relative; background: var(--night); }
   .bj-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(26px + env(safe-area-inset-bottom));
   }
@@ -1318,7 +1326,7 @@
   }
   .dd-table { z-index: 1; }
   .dd-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1481,7 +1489,7 @@
     filter: hue-rotate(168deg) saturate(1.15);
   }
   .uth-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1658,7 +1666,7 @@
   .b7-luxring.b7-buster.armed { border-color: #fff; box-shadow: 0 0 12px rgba(255, 59, 59, .9), 0 0 0 1px #fff; }
   /* ---- keno, the first of the OTHER GAMES; web/concepts-keno.html is the board it came off ---- */
   .kn-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0E2A3A 0%, #071824 55%, #030A10 100%);
   }
@@ -1715,7 +1723,7 @@
   #screen-keno .ft-btn { font-size: 15px; }
   /* ---- plinko, in OTHER GAMES; web/concepts-plinko.html is the board it came off ---- */
   .pk-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #1A1030 0%, #0C081A 55%, #040308 100%);
   }
@@ -1758,7 +1766,7 @@
   #screen-plinko .ft-btn { font-size: 15px; }
   /* ---- mines, in OTHER GAMES; web/concepts-mines.html is the board it came off ---- */
   .mn-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0C2A26 0%, #06181A 55%, #030A0A 100%);
   }
@@ -2005,7 +2013,7 @@
   #screen-rlmenu { position: relative; background: var(--night); }
   #screen-rlmenu .cm-head .nm { color: #B98CFF; text-shadow: 0 0 30px rgba(185,140,255,.6), 0 2px 0 rgba(4,3,8,.9); }
   .cm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -3160,7 +3168,7 @@
   }
   .wm-layer { display: none; }
   .table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
   }
@@ -3457,7 +3465,7 @@
   /* The Blazing 7s felt: the house mark burning red under a dark scrim. */
   #screen-sicbo { --w: #FF5A4A; --trim: #FF5A4A; position: relative; background: #0C0A0C; }
   .sb-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(10,8,10,.88) 0%, rgba(10,8,10,.55) 44%, rgba(10,8,10,.1) 74%);
   }
@@ -3539,7 +3547,7 @@
   #screen-wheel { --w: #FFD24D; --trim: #FFD24D; position: relative; background: #06060A; }
   #wh-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: .55; filter: hue-rotate(240deg) saturate(1.2); }
   .wh-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(8,10,8,.88) 0%, rgba(8,10,8,.55) 44%, rgba(8,10,8,.1) 74%);
   }
@@ -3996,7 +4004,7 @@
     --red: #FF6B5A;
     --display: Teko, "Arial Narrow", Impact, sans-serif; --body: var(--ui);
     
-    background: var(--night); color: var(--ink); font-family: var(--body); min-height: 100dvh; -webkit-tap-highlight-color: transparent;
+    background: var(--night); color: var(--ink); font-family: var(--body); min-height: var(--appH, 100dvh); -webkit-tap-highlight-color: transparent;
   }
   #screen-chain [hidden] { display: none !important; }
   #screen-chain .ch-wrap {
@@ -4208,7 +4216,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.22</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.23</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -16207,13 +16215,23 @@
       host.innerHTML = "";
       if (phase !== "result") return;
       results.forEach(function (r) {
-        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + pillAmt(r.net)
-          : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
-        host.insertAdjacentHTML("beforeend",
-          '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
-          '</span><span class="amt">' + txt + "</span></div>");
+        if (muSide(r)) return;   // drawn over its own pay chart instead
+        host.insertAdjacentHTML("beforeend", muPill(r));
       });
+    }
+    function muSide(r) { return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus" : ""; }
+    function muPill(r) {
+      var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+      var txt = r.net > 0 ? "+" + pillAmt(r.net)
+        : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
+      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card)( · )?/, "");
+      return '<div class="dj-pill ' + cls + '">' + (nm ? '<span class="nm">' + nm + "</span>" : "") +
+        '<span class="amt">' + txt + "</span></div>";
+    }
+    function muSidePills(which) {
+      if (phase !== "result") return "";
+      var h = results.filter(function (r) { return muSide(r) === which; }).map(muPill).join("");
+      return h ? '<div class="mu-sidepill">' + h + "</div>" : "";
     }
     function paysHtml(title, rows) {
       var html = '<div class="uth-pays"><div class="hd"><span class="bar"></span>' +
@@ -16243,14 +16261,14 @@
       var betting = phase === "betting";
       $("mu-spots").innerHTML =
         '<div class="uth-row mu-side">' +
-          '<div style="padding:0 6px 4px 0">' + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +
+          '<div style="padding:0 6px 4px 0">' + muSidePills("fp") + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +
           '<div class="mid">' +
             spotHtml("mu-flushplus", "dia", "FLUSH<br>PLUS",
               betting ? flushPlus : flushPlusStake, betting, GOLD) +
             spotHtml("mu-bonus", "dia", "3 CARD",
               betting ? bonus : bonusStake, betting, GOLD) +
           "</div>" +
-          '<div style="padding:0 0 4px 6px">' + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +
+          '<div style="padding:0 0 4px 6px">' + muSidePills("bonus") + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +
         "</div>" +
         '<div class="uth-row"><div></div><div class="mid">' +
           spotHtml("mu-ante", "ring", "ANTE", betting ? ante : anteStake, betting, RED) +

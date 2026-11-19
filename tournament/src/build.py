@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.22"
+VERSION = "1.23"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -689,6 +689,48 @@ sub("""  function chipHtml(amount, size) {""",
   }
   function chipHtml(amount, size) {""")
 
+# ---- Mini UTH: the side bets' result pills sit right above their own pay charts ----
+sub("""      var host = $("mu-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+        var txt = r.net > 0 ? "+" + fmt(r.net)
+          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        host.insertAdjacentHTML("beforeend",
+          '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
+          '</span><span class="amt">' + txt + "</span></div>");
+      });
+    }
+    function paysHtml(title, rows) {""",
+"""      var host = $("mu-results");
+      host.innerHTML = "";
+      if (phase !== "result") return;
+      results.forEach(function (r) {
+        if (muSide(r)) return;   // drawn over its own pay chart instead
+        host.insertAdjacentHTML("beforeend", muPill(r));
+      });
+    }
+    function muSide(r) { return /^Flush Plus/.test(r.label) ? "fp" : /^3 Card/.test(r.label) ? "bonus" : ""; }
+    function muPill(r) {
+      var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+      var txt = r.net > 0 ? "+" + fmt(r.net)
+        : r.net < 0 ? "−" + fmt(-r.net) : "push";
+      var nm = r.label.replace(/^(Flush Plus|3 Card Bonus|3 Card)( · )?/, "");
+      return '<div class="dj-pill ' + cls + '">' + (nm ? '<span class="nm">' + nm + "</span>" : "") +
+        '<span class="amt">' + txt + "</span></div>";
+    }
+    function muSidePills(which) {
+      if (phase !== "result") return "";
+      var h = results.filter(function (r) { return muSide(r) === which; }).map(muPill).join("");
+      return h ? '<div class="mu-sidepill">' + h + "</div>" : "";
+    }
+    function paysHtml(title, rows) {""")
+sub("""          '<div style="padding:0 6px 4px 0">' + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +""",
+    """          '<div style="padding:0 6px 4px 0">' + muSidePills("fp") + paysHtml("FLUSH PLUS", odds(MU.FLUSH_PLUS)) + "</div>" +""")
+sub("""          '<div style="padding:0 0 4px 6px">' + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""",
+    """          '<div style="padding:0 0 4px 6px">' + muSidePills("bonus") + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
@@ -823,6 +865,8 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
+.mu-sidepill { display: flex; justify-content: center; margin-bottom: 4px; }
+.mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
 .purse.stack > span:not(.val):not(.lbl):not(.gap) { display: contents !important; }
@@ -861,6 +905,12 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     return t + u[1];
   }
   function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
+  function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); }
+  appH();
+  addEventListener("resize", appH);
+  document.addEventListener("fullscreenchange", function () { appH(); setTimeout(appH, 300); });
+  document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
   addEventListener("DOMContentLoaded", function () {
@@ -871,6 +921,8 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 </script>
 </head>""", 1)
 
+# every "full screen tall" uses the measured visible height
+h = h.replace("min-height: 100dvh", "min-height: var(--appH, 100dvh)")
 # ---- win/loss pills read short once they're in the millions: +1.2B, +14T ----
 _n = h.count('"+" + fmt(') + h.count('"−" + fmt(')
 h = h.replace('"+" + fmt(', '"+" + pillAmt(').replace('"−" + fmt(', '"−" + pillAmt(')
