@@ -9110,6 +9110,27 @@
       ask: "Tristen, dead serious: \"Bro. The gift shop has a GIANT dildo. Like, huge. I need it. {amt} and I pay you back tonight, swear.\"",
       good: "Tristen walks up with the giant dildo under his arm AND your money. \"Worth every penny, bro.\" {back}.",
       bad: "Tristen bought the giant dildo. You're not getting paid back. He's never been happier." };
+    var CONTEST = "the dildo taking contest";
+    var CONTEST_ASK = [
+      "Bro. There's a dildo taking contest in the back. Entry's {amt}. I can WIN this.",
+      "Tristen, stretching: \"Front me {amt} for the dildo taking contest. First place, bro. Easy money.\"",
+      "{amt} gets me in the dildo taking contest. I've been training. Don't ask.",
+      "Bad habits, good intentions. {amt} for the dildo taking contest. We split the prize."
+    ];
+    var CONTEST_WIN = [
+      "Tristen took FIRST PLACE in the dildo taking contest. {won} prize, split 50/50: {back}.",
+      "Tristen's back with a trophy. \"Told you I trained.\" First place, {won}. Your half: {back}.",
+      "Tristen won the dildo taking contest. Nobody's asking how. {back} is yours."
+    ];
+    var CONTEST_LOSE = [
+      "Tristen didn't place in the dildo taking contest. Your money's gone. He's walking funny.",
+      "Tristen lost the dildo taking contest. \"Bad habits, bro.\" Nothing back.",
+      "Tristen got smoked in the dildo taking contest. Entry fee's gone."
+    ];
+    var CONTEST_SNUB = [
+      "Tristen paid his own way into the dildo taking contest and took first. \"Should've backed me.\"",
+      "Tristen entered the dildo taking contest anyway and lost. \"Good call not backing me.\""
+    ];
     var TRISTEN_KEEPS = [
       "Tristen hit for {won} at blackjack. He hands you back {back}. Exactly {back}. \"Good intentions, bro.\"",
       "Tristen's back with a rack of chips. You get your {back} back. The other {kept}? \"That's mine, bro.\"",
@@ -9464,12 +9485,13 @@
       var free = FRIENDS.filter(function (n) { return busyNames.indexOf(n) < 0 && notMe(n); });
       if (!free.length) return false;
       if (forced && free.indexOf(forced) < 0) return false;   // still out playing with your money
-      var who = forced || pick(free), game = who === "Tristen" ? "blackjack" : who === "Darin" ? "Trilux on the 777s" : pick(SPOTS), br = cash();
+      var who = forced || pick(free), br = cash();
+      var game = who === "Tristen" ? (Math.random() < 0.5 ? CONTEST : "blackjack") : who === "Darin" ? "Trilux on the 777s" : pick(SPOTS);
       var amt = nice(br * rnd(0.04, 0.12));
       if (amt > br) return false;
       offer = who;
       count("shown"); count("real");
-      show("friend", who, who, fill(pick(lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
+      show("friend", who, who, fill(pick(game === CONTEST ? CONTEST_ASK : lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
@@ -9508,6 +9530,17 @@
         return;
       }
       var o = { who: p.name, game: p.game };
+      if (p.game === CONTEST) {
+        // he places or he doesn't: first place pays out and he splits it with you
+        if (p.snub) { show("friend", p.name, p.name, fill(pick(CONTEST_SNUB), o)); return; }
+        if (Math.random() < 0.45) {
+          var prize = nice(p.amt * rnd(4, 8)), half = Math.round(prize / 2);
+          o.won = $$(prize); o.back = $$(half);
+          money(half);
+          show("good", p.name, p.name, fill(pick(CONTEST_WIN), o)); jingle();
+        } else { show("bad", p.name, p.name, fill(pick(CONTEST_LOSE), o)); womp(); }
+        return;
+      }
       if (p.snub) { show("friend", p.name, p.name, fill(pick(FRIEND_SNUB), o)); return; }
       var r = Math.random(), back = 0, lines;
       // a friend who wins splits it with you 50/50: half of what your money turned into
@@ -9738,7 +9771,7 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, reroll: reroll, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, reroll: reroll, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
