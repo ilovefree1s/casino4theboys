@@ -3758,7 +3758,7 @@
   #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
   #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
   /* players with no midnight total yet: a row with the money left blank */
-  .tt-row.blank .rk { visibility: hidden; }
+  .tt-row.blank .rk:not(.av) { visibility: hidden; }
   .tt-row.blank .val::before { content: "—"; color: rgba(245,241,232,.3); }
 
   /* the hot game's own button: a lit border and a 🔥 2× tag in the corner */
@@ -3862,6 +3862,11 @@
   .tt-mbody b { color: #FFD9A8; }
   #tt-rows .tt-msgrules { margin: 0; }
   #tt-ruleslink[hidden] { display: none; }
+  /* the board: face when online, grey dot when not, in place of the place number */
+  .tt-row .rk.av { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .tt-row .rk.av .tt-on { margin: 0; width: 10px; height: 10px; }
+  .tt-face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; box-sizing: border-box;
+             border: 2px solid #3BE07A; box-shadow: 0 0 10px rgba(59,224,122,.55); }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4165,7 +4170,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.7</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.8</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -11308,20 +11313,29 @@
     function heading(text) {
       var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
     }
+    function faceOf(lk) {
+      var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
+      for (var k in f) if (k.toLowerCase() === lk) return f[k];
+      return "";
+    }
     function row(rank, name, tags, value, mine) {
       var el = document.createElement("div");
       el.className = "tt-row" + (mine ? " me" : "");
-      var a = document.createElement("span"); a.className = "rk"; a.textContent = rank;
+      // where the place number was: their face if they're on right now, a grey dot if they're not
+      var a = document.createElement("span"); a.className = "rk av";
       var mid = document.createElement("span"); mid.className = "who";
       var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
       if (players()[String(name).toLowerCase()]) el.setAttribute("data-player", name);
-      var lk = String(name).toLowerCase();
-      if (online[lk]) {
-        var dot = document.createElement("i"); dot.className = "tt-on"; dot.title = "Online";
-        n.insertBefore(dot, n.firstChild);
-      } else if (lastSeen[lk]) {
-        var gd = document.createElement("i"); gd.className = "tt-on off"; gd.title = "Last on " + ago(lastSeen[lk]);
-        n.insertBefore(gd, n.firstChild);
+      var lk = String(name).toLowerCase(), face = faceOf(lk);
+      if (online[lk] && face) {
+        var im = document.createElement("img"); im.alt = ""; im.src = face; im.className = "tt-face"; im.title = "Online";
+        a.appendChild(im);
+      } else {
+        var d = document.createElement("i"); d.className = "tt-on" + (online[lk] ? "" : " off");
+        d.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
+        a.appendChild(d);
+      }
+      if (!online[lk] && lastSeen[lk]) {
         var ag = document.createElement("span"); ag.className = "tt-ago"; ag.textContent = " " + ago(lastSeen[lk]);
         n.appendChild(ag);
       }

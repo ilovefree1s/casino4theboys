@@ -1378,20 +1378,29 @@
     function heading(text) {
       var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
     }
+    function faceOf(lk) {
+      var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
+      for (var k in f) if (k.toLowerCase() === lk) return f[k];
+      return "";
+    }
     function row(rank, name, tags, value, mine) {
       var el = document.createElement("div");
       el.className = "tt-row" + (mine ? " me" : "");
-      var a = document.createElement("span"); a.className = "rk"; a.textContent = rank;
+      // where the place number was: their face if they're on right now, a grey dot if they're not
+      var a = document.createElement("span"); a.className = "rk av";
       var mid = document.createElement("span"); mid.className = "who";
       var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
       if (players()[String(name).toLowerCase()]) el.setAttribute("data-player", name);
-      var lk = String(name).toLowerCase();
-      if (online[lk]) {
-        var dot = document.createElement("i"); dot.className = "tt-on"; dot.title = "Online";
-        n.insertBefore(dot, n.firstChild);
-      } else if (lastSeen[lk]) {
-        var gd = document.createElement("i"); gd.className = "tt-on off"; gd.title = "Last on " + ago(lastSeen[lk]);
-        n.insertBefore(gd, n.firstChild);
+      var lk = String(name).toLowerCase(), face = faceOf(lk);
+      if (online[lk] && face) {
+        var im = document.createElement("img"); im.alt = ""; im.src = face; im.className = "tt-face"; im.title = "Online";
+        a.appendChild(im);
+      } else {
+        var d = document.createElement("i"); d.className = "tt-on" + (online[lk] ? "" : " off");
+        d.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
+        a.appendChild(d);
+      }
+      if (!online[lk] && lastSeen[lk]) {
         var ag = document.createElement("span"); ag.className = "tt-ago"; ag.textContent = " " + ago(lastSeen[lk]);
         n.appendChild(ag);
       }

@@ -189,7 +189,7 @@
   #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
   #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
   /* players with no midnight total yet: a row with the money left blank */
-  .tt-row.blank .rk { visibility: hidden; }
+  .tt-row.blank .rk:not(.av) { visibility: hidden; }
   .tt-row.blank .val::before { content: "—"; color: rgba(245,241,232,.3); }
 
   /* the hot game's own button: a lit border and a 🔥 2× tag in the corner */
@@ -293,3 +293,8 @@
   .tt-mbody b { color: #FFD9A8; }
   #tt-rows .tt-msgrules { margin: 0; }
   #tt-ruleslink[hidden] { display: none; }
+  /* the board: face when online, grey dot when not, in place of the place number */
+  .tt-row .rk.av { width: 34px; height: 34px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .tt-row .rk.av .tt-on { margin: 0; width: 10px; height: 10px; }
+  .tt-face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; box-sizing: border-box;
+             border: 2px solid #3BE07A; box-shadow: 0 0 10px rgba(59,224,122,.55); }
