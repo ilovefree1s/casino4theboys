@@ -203,7 +203,6 @@
   .tt-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3BE07A;
            box-shadow: 0 0 6px rgba(59,224,122,.9); margin-right: 6px; vertical-align: middle; }
 
-  .tt-row[data-player] { cursor: pointer; }
   .tt-duelov { position: fixed; inset: 0; z-index: 9996; display: none; align-items: center; justify-content: center;
                background: rgba(0,0,0,.6); padding: 16px; box-sizing: border-box; }
   .tt-duelov.on { display: flex; }

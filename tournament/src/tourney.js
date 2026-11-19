@@ -462,6 +462,9 @@
      * The server keeps the duel; the phone counts its own hands and money at
      * that game, and moves the pot in and out of the wallet when the server
      * says to (once each way). */
+    // duels are switched off for now: no new challenges, nothing on the board.
+    // One already under way still plays out and pays, so no money gets stuck.
+    var DUELS_ON = false;
     var duel = (function () {
       var mine = [], cur = 0, curBet = 0, touched = false, asked = {}, told = {}, claiming = {};
       function prog() { try { return JSON.parse(store.getStr("ftt.duelprog", "{}")) || {}; } catch (e) { return {}; } }
@@ -492,7 +495,7 @@
       function handle(d) {
         var c = isC(d), w = W(), other = them(d);
         if (!w) return;
-        if (d.status === "pending" && !c && !asked[d.id]) {
+        if (d.status === "pending" && !c && !asked[d.id] && DUELS_ON) {
           asked[d.id] = 1;
           w.ask(other, "⚔️ DUEL", other.toUpperCase() + " challenges you: 10 hands of " + String(d.game).toUpperCase() +
             ", $" + fmt(d.pot) + " each. Best return (profit per dollar bet) takes $" + fmt(d.pot * 2) + ".", "ACCEPT", "DECLINE",
@@ -634,7 +637,7 @@
     // tap a player's row on the board to challenge them
     document.addEventListener("click", function (e) {
       var rowEl = e.target.closest && e.target.closest("#tt-rows .tt-row[data-player]");
-      if (!rowEl) return;
+      if (!rowEl || !DUELS_ON) return;
       var n = rowEl.getAttribute("data-player");
       if (!n || n.toLowerCase() === (myName() || "").toLowerCase() || !myName()) return;
       duelSheet(n);
@@ -1009,7 +1012,7 @@
           function () { list.innerHTML = ""; list.appendChild(empty("Can't reach the stats right now.")); });
         return;
       }
-      paintDuels(list);
+      if (DUELS_ON) paintDuels(list);
       paintWalkups(list, b.week);
       if (prev) {
         var fin = statsCache[prev].rows;
