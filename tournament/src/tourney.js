@@ -15,6 +15,12 @@
     var DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
     function money(n) { return (n < 0 ? "-$" : "$") + fmt(Math.abs(n)); }
+    /** A duel score: profit for every dollar bet, as a percent. */
+    function pct(net, bet) {
+      if (!bet) return "+0%";
+      var v = Math.round(net / bet * 100);
+      return (v > 0 ? "+" : "") + v + "%";
+    }
     function signed(n) { return (n > 0 ? "+" : n < 0 ? "-" : "") + "$" + fmt(Math.abs(n)); }
     function now() { return Date.now() + skew; }
     function left(iso) {
@@ -457,7 +463,7 @@
      * that game, and moves the pot in and out of the wallet when the server
      * says to (once each way). */
     var duel = (function () {
-      var mine = [], cur = 0, touched = false, asked = {}, told = {}, claiming = {};
+      var mine = [], cur = 0, curBet = 0, touched = false, asked = {}, told = {}, claiming = {};
       function prog() { try { return JSON.parse(store.getStr("ftt.duelprog", "{}")) || {}; } catch (e) { return {}; } }
       function setProg(p) { store.setStr("ftt.duelprog", JSON.stringify(p)); }
       function me() { return (myName() || "").toLowerCase(); }
@@ -489,7 +495,7 @@
         if (d.status === "pending" && !c && !asked[d.id]) {
           asked[d.id] = 1;
           w.ask(other, "⚔️ DUEL", other.toUpperCase() + " challenges you: 10 hands of " + String(d.game).toUpperCase() +
-            ", $" + fmt(d.pot) + " each. Higher profit takes $" + fmt(d.pot * 2) + ".", "ACCEPT", "DECLINE",
+            ", $" + fmt(d.pot) + " each. Best return (profit per dollar bet) takes $" + fmt(d.pot * 2) + ".", "ACCEPT", "DECLINE",
             function () { answer(d, true); }, function () { answer(d, false); }, function () { delete asked[d.id]; });
         }
         if (d.status === "declined" && c && !told["dec" + d.id]) {
@@ -525,9 +531,9 @@
       }
       function result(d, amount) {
         var w = W(), other = them(d), c = isC(d);
-        var my = c ? d.c_net : d.o_net, his = c ? d.o_net : d.c_net;
+        var my = pct(c ? d.c_net : d.o_net, c ? d.c_bet : d.o_bet), his = pct(c ? d.o_net : d.c_net, c ? d.o_bet : d.c_bet);
         var myH = c ? d.c_hands : d.o_hands, hisH = c ? d.o_hands : d.c_hands;
-        var sc = " (" + signed(my) + " vs " + signed(his) + ")", text, kind = "good", snd = "win";
+        var sc = " (" + my + " vs " + his + " return)", text, kind = "good", snd = "win";
         if (d.status === "expired") { text = "The duel with " + other.toUpperCase() + " ran out at midnight. Pot's back to you."; kind = "friend"; snd = ""; }
         else if (!d.winner) { text = "Tie with " + other.toUpperCase() + sc + ". You get your $" + fmt(d.pot) + " back."; kind = "friend"; snd = ""; }
         else if (String(d.winner).toLowerCase() === me())
@@ -543,19 +549,20 @@
         var p = prog()[d.id];
         if (p && p.hands >= 10) return;
         cur += delta; touched = true;
+        if (delta < 0) curBet += -delta;
       }
       /** A hand just finished: if it was a duel hand, count it. */
       function handDone() {
         var d = live();
-        if (!d || !touched || TT.game !== d.game) { cur = 0; touched = false; return; }
-        var all = prog(), p = all[d.id] || { hands: 0, net: 0 };
-        if (p.hands >= 10) { cur = 0; touched = false; return; }
-        p.hands++; p.net += cur; all[d.id] = p; setProg(all);
-        cur = 0; touched = false;
-        rpc("c4tb_duel_progress", { p_name: myName(), p_token: token(), p_id: d.id, p_hands: p.hands, p_net: p.net })
+        if (!d || !touched || TT.game !== d.game) { cur = 0; curBet = 0; touched = false; return; }
+        var all = prog(), p = all[d.id] || { hands: 0, net: 0, bet: 0 };
+        if (p.hands >= 10) { cur = 0; curBet = 0; touched = false; return; }
+        p.hands++; p.net += cur; p.bet = (p.bet || 0) + curBet; all[d.id] = p; setProg(all);
+        cur = 0; curBet = 0; touched = false;
+        rpc("c4tb_duel_progress2", { p_name: myName(), p_token: token(), p_id: d.id, p_hands: p.hands, p_net: p.net, p_bet: p.bet })
           .then(function (r) { if (r && r.duel) { mine = mine.map(function (x) { return x.id === d.id ? r.duel : x; }); handle(r.duel); } pill(); }, function () {});
-        if (p.hands === 10 && W()) W().notice("friend", them(d), "⚔️ DUEL", "That's your 10 hands: " + signed(p.net) +
-          ". Waiting on " + them(d).toUpperCase() + ".");
+        if (p.hands === 10 && W()) W().notice("friend", them(d), "⚔️ DUEL", "That's your 10 hands: " + pct(p.net, p.bet) +
+          " return. Waiting on " + them(d).toUpperCase() + ".");
         pill();
       }
       var pillEl = null;
@@ -569,10 +576,10 @@
           document.body.appendChild(pillEl);
         }
         if (!d || !TT.on) { pillEl.style.display = "none"; return; }
-        var p = prog()[d.id] || { hands: 0, net: 0 };
+        var p = prog()[d.id] || { hands: 0, net: 0, bet: 0 };
         pillEl.style.display = "";
         pillEl.textContent = "⚔️ vs " + them(d).toUpperCase() + " · " + String(d.game).toUpperCase() + " · " +
-          Math.min(p.hands, 10) + "/10 · " + signed(p.net);
+          Math.min(p.hands, 10) + "/10 · " + pct(p.net, p.bet);
       }
       setInterval(poll, 15000);
       setTimeout(poll, 3000);
@@ -587,7 +594,7 @@
       if (!ov) {
         ov = document.createElement("div"); ov.id = "tt-duel"; ov.className = "tt-duelov";
         ov.innerHTML = '<div class="tt-duelbox"><div class="tt-dueltitle"></div>' +
-          '<div class="tt-duelsub">10 hands of the same game, played whenever. Higher profit takes the pot. Open until midnight.</div>' +
+          '<div class="tt-duelsub">10 hands of the same game, played whenever. Best return wins: profit for every dollar bet, so bet size doesn\'t matter. Winner takes the pot. Open until midnight.</div>' +
           '<label>GAME</label><select id="tt-duelgame"></select>' +
           '<label>POT (EACH)</label><div class="tt-duelpots"></div><input id="tt-duelpot" inputmode="numeric" placeholder="Pot">' +
           '<div class="tt-duelmsg" id="tt-duelmsg"></div>' +
@@ -964,9 +971,9 @@
       if (!rows.length) { list.appendChild(empty("No duels yet. Tap a player on THE WEEK to challenge them.")); return; }
       rows.forEach(function (d) {
         var st = d.status === "pending" ? "WAITING ON " + d.opponent.toUpperCase()
-          : d.status === "active" ? d.c_hands + "/10 vs " + d.o_hands + "/10 · " + signed(d.c_net) + " vs " + signed(d.o_net)
+          : d.status === "active" ? d.c_hands + "/10 vs " + d.o_hands + "/10 · " + pct(d.c_net, d.c_bet) + " vs " + pct(d.o_net, d.o_bet)
           : d.status === "expired" ? "RAN OUT"
-          : d.winner ? d.winner.toUpperCase() + " WON · " + signed(d.c_net) + " vs " + signed(d.o_net) : "TIE";
+          : d.winner ? d.winner.toUpperCase() + " WON · " + pct(d.c_net, d.c_bet) + " vs " + pct(d.o_net, d.o_bet) : "TIE";
         list.appendChild(row("", d.challenger + " vs " + d.opponent, String(d.game).toUpperCase() + " · " + st, "$" + fmt(d.pot), false));
       });
     }
