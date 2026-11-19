@@ -11,7 +11,7 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
-html.noscroll, html.noscroll body { overflow: hidden !important; height: 100%; overscroll-behavior: none; }
+html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--appH, 100%); overscroll-behavior: none; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -107,10 +107,24 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: 100%; o
      It only re-fits from scratch when the screen changes size or you change tables; mid-hand it
      only ever shrinks, so nothing jumps around while you play. */
   var fitFor = null;
+  /* In fullscreen a phone with a camera strip starts the page BELOW the strip but still reports the
+     whole screen as the height, so that much of the bottom is off the glass. The strip's height is
+     the safe-area inset; what you can really see is the reported height minus it. */
+  var probe = null;
+  function insetTop() {
+    if (!document.body) return 0;
+    if (!probe) {
+      probe = document.createElement("div");
+      probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;" +
+        "height:calc(env(safe-area-inset-top, 0px) + var(--fakeInset, 0px))";
+    }
+    if (!probe.parentNode) document.body.appendChild(probe);
+    return Math.ceil(probe.getBoundingClientRect().height) || 0;
+  }
   function viewH() {
     var h = innerHeight;
     if (window.visualViewport && visualViewport.height) h = Math.min(h, Math.round(visualViewport.height));
-    return h;
+    return Math.max(320, h - insetTop());
   }
   function fitTable(fresh) {
     var sc = document.querySelector(".screen.on");
@@ -126,7 +140,8 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: 100%; o
       fitFor = sc;
     }
     for (var n = 0; n < 4; n++) {
-      var h = Math.max(sc.getBoundingClientRect().height, de.scrollHeight, document.body.scrollHeight);
+      // how far down the table reaches (the page itself is never shorter than the reported screen, so it can't be the measure)
+      var r = sc.getBoundingClientRect(), h = Math.max(r.height, r.bottom + (de.scrollTop || document.body.scrollTop || 0));
       if (h <= avail + 1) break;
       var z = (+sc.dataset.fitz || 1) * avail / h;
       z = Math.max(0.6, Math.floor(z * 1000) / 1000);
@@ -142,7 +157,10 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: 100%; o
   appH();
   addEventListener("DOMContentLoaded", appH);
   addEventListener("resize", appH);
-  document.addEventListener("fullscreenchange", function () { appH(); setTimeout(appH, 300); });
+  function again() { appH(); setTimeout(appH, 300); setTimeout(appH, 1000); }
+  document.addEventListener("fullscreenchange", again);
+  document.addEventListener("webkitfullscreenchange", again);
+  addEventListener("orientationchange", again);
   document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
@@ -4303,7 +4321,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: 100%; o
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.29</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.30</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
