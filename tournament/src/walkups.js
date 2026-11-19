@@ -92,7 +92,7 @@
     ];
     /* Everyone: each walk-up is anybody, asking for a spot or running a hustle. */
     var FRIENDS = ["Qtip", "Justin", "Matthew", "Darin", "SJ", "Juice", "Chris", "Avery", "Zac", "James",
-                   "Lyndsi", "Cougar", "Grace", "Zephyrox", "Lucy", "Tristen", "Daneal", "Max", "Ethan", "Tye", "Zach"];
+                   "Cougar", "Grace", "Zephyrox", "Lucy", "Tristen", "Daneal", "Max", "Ethan", "Tye", "Zach"];
     /* Tristen only ever wants two things: blackjack money, or this. */
     var TRISTEN_SCAM = { odds: 0.35, back: [2, 3], cut: [0.03, 0.07],
       ask: "Tristen, dead serious: \"Bro. The gift shop has a GIANT dildo. Like, huge. I need it. {amt} and I pay you back tonight, swear.\"",
