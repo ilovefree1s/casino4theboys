@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.30"
+VERSION = "1.31"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -875,7 +875,6 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
-html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--appH, 100%); overscroll-behavior: none; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -944,7 +943,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     if (d) t = t.replace(/0+$/, "").replace(/\\.$/, "");
     return t + u[1];
   }
-  function soon() { if (!busy) { busy = true; requestAnimationFrame(function () { fit(); fitTable(false); }); } }
+  function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
   // the money window's second line after a hand: +what you won, or on a 2x game  400B / ×2 / 800B
   function pw(el) {
     if (!el) return null;
@@ -965,67 +964,6 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
       pw(el).innerHTML = '<b>+' + short(base) + '</b><i>' + x + '</i><b class="up">+' + short(total) + "</b>";
     }
   };
-  // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
-  function appH() { document.documentElement.style.setProperty("--appH", viewH() + "px"); fitTable(true); }
-  /* A table never scrolls: if it is taller than the screen, the whole table scales down to fit.
-     It only re-fits from scratch when the screen changes size or you change tables; mid-hand it
-     only ever shrinks, so nothing jumps around while you play. */
-  var fitFor = null;
-  /* In fullscreen a phone with a camera strip starts the page BELOW the strip but still reports the
-     whole screen as the height, so that much of the bottom is off the glass. The strip's height is
-     the safe-area inset; what you can really see is the reported height minus it. */
-  var probe = null;
-  function insetTop() {
-    if (!document.body) return 0;
-    if (!probe) {
-      probe = document.createElement("div");
-      probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;" +
-        "height:calc(env(safe-area-inset-top, 0px) + var(--fakeInset, 0px))";
-    }
-    if (!probe.parentNode) document.body.appendChild(probe);
-    return Math.ceil(probe.getBoundingClientRect().height) || 0;
-  }
-  function viewH() {
-    var h = innerHeight;
-    if (window.visualViewport && visualViewport.height) h = Math.min(h, Math.round(visualViewport.height));
-    return Math.max(320, h - insetTop());
-  }
-  function fitTable(fresh) {
-    var sc = document.querySelector(".screen.on");
-    var table = !!(sc && sc.id !== "screen-craps" && sc.querySelector(".purse"));
-    // at a table the page itself never scrolls
-    document.documentElement.classList.toggle("noscroll", table);
-    if (!table) { fitFor = null; return; }
-    var avail = viewH(), de = document.documentElement;
-    if (fresh || fitFor !== sc) {
-      document.querySelectorAll(".screen[data-fitz]").forEach(function (x) {
-        x.style.zoom = ""; x.style.removeProperty("--appH"); delete x.dataset.fitz;
-      });
-      fitFor = sc;
-    }
-    for (var n = 0; n < 4; n++) {
-      // how far down the table reaches (the page itself is never shorter than the reported screen, so it can't be the measure)
-      var r = sc.getBoundingClientRect(), h = Math.max(r.height, r.bottom + (de.scrollTop || document.body.scrollTop || 0));
-      if (h <= avail + 1) break;
-      var z = (+sc.dataset.fitz || 1) * avail / h;
-      z = Math.max(0.6, Math.floor(z * 1000) / 1000);
-      if (z === +sc.dataset.fitz) break;
-      sc.dataset.fitz = String(z);
-      sc.style.zoom = String(z);
-      sc.style.setProperty("--appH", (avail / z) + "px");
-    }
-    if (de.scrollTop) de.scrollTop = 0;
-    if (document.body.scrollTop) document.body.scrollTop = 0;
-  }
-  if (window.visualViewport) visualViewport.addEventListener("resize", function () { appH(); });
-  appH();
-  addEventListener("DOMContentLoaded", appH);
-  addEventListener("resize", appH);
-  function again() { appH(); setTimeout(appH, 300); setTimeout(appH, 1000); }
-  document.addEventListener("fullscreenchange", again);
-  document.addEventListener("webkitfullscreenchange", again);
-  addEventListener("orientationchange", again);
-  document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
   addEventListener("DOMContentLoaded", function () {
@@ -1036,8 +974,6 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
 </script>
 </head>""", 1)
 
-# every "full screen tall" uses the measured visible height
-h = h.replace("min-height: 100dvh", "min-height: var(--appH, 100dvh)")
 # ---- win/loss pills read short once they're in the millions: +1.2B, +14T ----
 _n = h.count('"+" + fmt(') + h.count('"−" + fmt(')
 h = h.replace('"+" + fmt(', '"+" + pillAmt(').replace('"−" + fmt(', '"−" + pillAmt(')

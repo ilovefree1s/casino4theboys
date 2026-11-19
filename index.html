@@ -11,7 +11,6 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
-html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--appH, 100%); overscroll-behavior: none; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -80,7 +79,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     if (d) t = t.replace(/0+$/, "").replace(/\.$/, "");
     return t + u[1];
   }
-  function soon() { if (!busy) { busy = true; requestAnimationFrame(function () { fit(); fitTable(false); }); } }
+  function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
   // the money window's second line after a hand: +what you won, or on a 2x game  400B / ×2 / 800B
   function pw(el) {
     if (!el) return null;
@@ -101,67 +100,6 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
       pw(el).innerHTML = '<b>+' + short(base) + '</b><i>' + x + '</i><b class="up">+' + short(total) + "</b>";
     }
   };
-  // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
-  function appH() { document.documentElement.style.setProperty("--appH", viewH() + "px"); fitTable(true); }
-  /* A table never scrolls: if it is taller than the screen, the whole table scales down to fit.
-     It only re-fits from scratch when the screen changes size or you change tables; mid-hand it
-     only ever shrinks, so nothing jumps around while you play. */
-  var fitFor = null;
-  /* In fullscreen a phone with a camera strip starts the page BELOW the strip but still reports the
-     whole screen as the height, so that much of the bottom is off the glass. The strip's height is
-     the safe-area inset; what you can really see is the reported height minus it. */
-  var probe = null;
-  function insetTop() {
-    if (!document.body) return 0;
-    if (!probe) {
-      probe = document.createElement("div");
-      probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;" +
-        "height:calc(env(safe-area-inset-top, 0px) + var(--fakeInset, 0px))";
-    }
-    if (!probe.parentNode) document.body.appendChild(probe);
-    return Math.ceil(probe.getBoundingClientRect().height) || 0;
-  }
-  function viewH() {
-    var h = innerHeight;
-    if (window.visualViewport && visualViewport.height) h = Math.min(h, Math.round(visualViewport.height));
-    return Math.max(320, h - insetTop());
-  }
-  function fitTable(fresh) {
-    var sc = document.querySelector(".screen.on");
-    var table = !!(sc && sc.id !== "screen-craps" && sc.querySelector(".purse"));
-    // at a table the page itself never scrolls
-    document.documentElement.classList.toggle("noscroll", table);
-    if (!table) { fitFor = null; return; }
-    var avail = viewH(), de = document.documentElement;
-    if (fresh || fitFor !== sc) {
-      document.querySelectorAll(".screen[data-fitz]").forEach(function (x) {
-        x.style.zoom = ""; x.style.removeProperty("--appH"); delete x.dataset.fitz;
-      });
-      fitFor = sc;
-    }
-    for (var n = 0; n < 4; n++) {
-      // how far down the table reaches (the page itself is never shorter than the reported screen, so it can't be the measure)
-      var r = sc.getBoundingClientRect(), h = Math.max(r.height, r.bottom + (de.scrollTop || document.body.scrollTop || 0));
-      if (h <= avail + 1) break;
-      var z = (+sc.dataset.fitz || 1) * avail / h;
-      z = Math.max(0.6, Math.floor(z * 1000) / 1000);
-      if (z === +sc.dataset.fitz) break;
-      sc.dataset.fitz = String(z);
-      sc.style.zoom = String(z);
-      sc.style.setProperty("--appH", (avail / z) + "px");
-    }
-    if (de.scrollTop) de.scrollTop = 0;
-    if (document.body.scrollTop) document.body.scrollTop = 0;
-  }
-  if (window.visualViewport) visualViewport.addEventListener("resize", function () { appH(); });
-  appH();
-  addEventListener("DOMContentLoaded", appH);
-  addEventListener("resize", appH);
-  function again() { appH(); setTimeout(appH, 300); setTimeout(appH, 1000); }
-  document.addEventListener("fullscreenchange", again);
-  document.addEventListener("webkitfullscreenchange", again);
-  addEventListener("orientationchange", again);
-  document.addEventListener("visibilitychange", function () { appH(); setTimeout(appH, 300); });
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
   addEventListener("DOMContentLoaded", function () {
@@ -230,7 +168,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   }
   button { font-family: var(--ui); cursor: pointer; border: none; background: none; color: inherit; }
   button:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
-  .screen { display: none; min-height: var(--appH, 100dvh); }
+  .screen { display: none; min-height: 100dvh; }
   .screen.on { display: block; }
 
   .outline {
@@ -330,7 +268,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     object-fit: cover; pointer-events: none; filter: brightness(.15) saturate(.9);
   }
   .mm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     display: flex; flex-direction: column; align-items: center;
     padding: 14px 18px calc(8px + env(safe-area-inset-bottom));
   }
@@ -505,7 +443,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   /* ================= LOBBY ================= */
   #screen-lobby { position: relative; background: var(--night); }
   .lb-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -606,7 +544,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     --w: #E8C169;
   }
   .fl-wrap {
-    position: relative; width: 100%; max-width: 430px; min-height: var(--appH, 100dvh);
+    position: relative; width: 100%; max-width: 430px; min-height: 100dvh;
     display: flex; flex-direction: column; justify-content: center;
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   }
@@ -786,7 +724,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
      the painted sheet because they are worth keeping; the names and the
      blurbs are type, and type is better set live than photographed. */
   .pk-wrap {
-    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     display: flex; flex-direction: column;
     padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
   }
@@ -842,7 +780,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   /* ============ BLACKJACK VARIANTS PAGE ============ */
   #screen-bjmenu { position: relative; background: var(--night); }
   .bjm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -917,7 +855,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
   .st-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     padding: 10px 12px; display: flex; flex-direction: column;
   }
   .st-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -1061,7 +999,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   /* ================= BLACKJACK ================= */
   #screen-blackjack { position: relative; background: var(--night); }
   .bj-table {
-    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(26px + env(safe-area-inset-bottom));
   }
@@ -1431,7 +1369,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   }
   .dd-table { z-index: 1; }
   .dd-table {
-    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1594,7 +1532,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     filter: hue-rotate(168deg) saturate(1.15);
   }
   .uth-table {
-    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1771,7 +1709,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   .b7-luxring.b7-buster.armed { border-color: #fff; box-shadow: 0 0 12px rgba(255, 59, 59, .9), 0 0 0 1px #fff; }
   /* ---- keno, the first of the OTHER GAMES; web/concepts-keno.html is the board it came off ---- */
   .kn-sheet {
-    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0E2A3A 0%, #071824 55%, #030A10 100%);
   }
@@ -1828,7 +1766,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   #screen-keno .ft-btn { font-size: 15px; }
   /* ---- plinko, in OTHER GAMES; web/concepts-plinko.html is the board it came off ---- */
   .pk-sheet {
-    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #1A1030 0%, #0C081A 55%, #040308 100%);
   }
@@ -1871,7 +1809,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   #screen-plinko .ft-btn { font-size: 15px; }
   /* ---- mines, in OTHER GAMES; web/concepts-mines.html is the board it came off ---- */
   .mn-sheet {
-    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0C2A26 0%, #06181A 55%, #030A0A 100%);
   }
@@ -2118,7 +2056,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   #screen-rlmenu { position: relative; background: var(--night); }
   #screen-rlmenu .cm-head .nm { color: #B98CFF; text-shadow: 0 0 30px rgba(185,140,255,.6), 0 2px 0 rgba(4,3,8,.9); }
   .cm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: var(--appH, 100dvh);
+    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -3273,7 +3211,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   }
   .wm-layer { display: none; }
   .table {
-    position: relative; max-width: 430px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
   }
@@ -3570,7 +3508,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   /* The Blazing 7s felt: the house mark burning red under a dark scrim. */
   #screen-sicbo { --w: #FF5A4A; --trim: #FF5A4A; position: relative; background: #0C0A0C; }
   .sb-sheet {
-    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(10,8,10,.88) 0%, rgba(10,8,10,.55) 44%, rgba(10,8,10,.1) 74%);
   }
@@ -3652,7 +3590,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   #screen-wheel { --w: #FFD24D; --trim: #FFD24D; position: relative; background: #06060A; }
   #wh-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: .55; filter: hue-rotate(240deg) saturate(1.2); }
   .wh-sheet {
-    position: relative; max-width: 440px; min-height: var(--appH, 100dvh); margin: 0 auto;
+    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(8,10,8,.88) 0%, rgba(8,10,8,.55) 44%, rgba(8,10,8,.1) 74%);
   }
@@ -4109,7 +4047,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
     --red: #FF6B5A;
     --display: Teko, "Arial Narrow", Impact, sans-serif; --body: var(--ui);
     
-    background: var(--night); color: var(--ink); font-family: var(--body); min-height: var(--appH, 100dvh); -webkit-tap-highlight-color: transparent;
+    background: var(--night); color: var(--ink); font-family: var(--body); min-height: 100dvh; -webkit-tap-highlight-color: transparent;
   }
   #screen-chain [hidden] { display: none !important; }
   #screen-chain .ch-wrap {
@@ -4321,7 +4259,7 @@ html.noscroll, html.noscroll body { overflow: hidden !important; height: var(--a
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.30</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.31</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
