@@ -10,6 +10,31 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
+<style>html, body { overflow-x: hidden; max-width: 100%; }</style>
+<script>
+(function () {
+  var busy = false;
+  function fit() {
+    busy = false;
+    var pad = 8;
+    document.querySelectorAll(".purse").forEach(function (el) {
+      if (!el.offsetParent) return;
+      el.style.zoom = "";
+      var r = el.getBoundingClientRect();
+      if (r.right <= innerWidth - pad || r.width <= 0) return;
+      var room = innerWidth - pad - r.left;
+      el.style.zoom = String(Math.max(0.55, Math.floor(room / r.width * 100) / 100));
+    });
+  }
+  function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  addEventListener("resize", soon);
+  document.addEventListener("visibilitychange", soon);
+  addEventListener("DOMContentLoaded", function () {
+    new MutationObserver(soon).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class"] });
+    soon();
+  });
+})();
+</script>
 </head><body>
 <!--
   An iPhone has no fullscreen to ask for, so the only way off its bars is to
@@ -4161,7 +4186,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.19</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.20</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">

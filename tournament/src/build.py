@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.19"
+VERSION = "1.20"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -819,6 +819,35 @@ sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
+
+# ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
+# (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
+h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }</style>
+<script>
+(function () {
+  var busy = false;
+  function fit() {
+    busy = false;
+    var pad = 8;
+    document.querySelectorAll(".purse").forEach(function (el) {
+      if (!el.offsetParent) return;
+      el.style.zoom = "";
+      var r = el.getBoundingClientRect();
+      if (r.right <= innerWidth - pad || r.width <= 0) return;
+      var room = innerWidth - pad - r.left;
+      el.style.zoom = String(Math.max(0.55, Math.floor(room / r.width * 100) / 100));
+    });
+  }
+  function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  addEventListener("resize", soon);
+  document.addEventListener("visibilitychange", soon);
+  addEventListener("DOMContentLoaded", function () {
+    new MutationObserver(soon).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class"] });
+    soon();
+  });
+})();
+</script>
+</head>""", 1)
 
 # ---- win/loss pills read short once they're in the millions: +1.2B, +14T ----
 _n = h.count('"+" + fmt(') + h.count('"−" + fmt(')
