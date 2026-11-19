@@ -687,6 +687,7 @@
     }
     /** The table reports what it dealt; the friend reacts to the tipped spot. */
     function result(game, what) {
+      if (game === "blackjack") setTimeout(adviceDone, 0);
       if (!tip || !tip.placed || tip.game !== game) return;
       var won = false;
       try { won = tipHit(game, tip.spot, what); } catch (e) {}
@@ -703,6 +704,50 @@
     function reroll(game, what) {
       if (!tip || !tip.placed || tip.game !== game) return false;
       try { return !tipHit(game, tip.spot, what); } catch (e) { return false; }
+    }
+    /* ---- blackjack: "fuck the book" ---- */
+    var advice = null;
+    var ADV = {
+      hit: ["Bro fuck the book, HIT IT!", "Fuck the book. Hit. Trust me.", "{who} leaning over your shoulder: \"Fuck the book bro, HIT!\"", "HIT IT. I don't care what the book says."],
+      stand: ["Bro fuck the book, DON'T HIT!", "Fuck the book. Stay. I'm serious.", "STAY BRO. Fuck the book.", "{who} grabs your arm: \"Don't you dare hit. Fuck the book.\""]
+    };
+    var ADV_AFTER = {
+      listenWin: ["{who}: \"FUCK THE BOOK! Told you!\"", "{who}: \"Who needs a book when you got me?\""],
+      listenLose: ["{who}: \"…yeah the book was right that time.\"", "{who} is suddenly very interested in his phone."],
+      ignoreWin: ["{who}: \"Fine. The book worked. This time.\""],
+      ignoreLose: ["{who}: \"Should've listened, bro.\"", "{who}: \"I TOLD you. Fuck the book.\""]
+    };
+    /** About 1 hand in 15 with a close call, a friend says the opposite of the book. */
+    function advise(act, net) {
+      advice = null;
+      if (Math.random() >= 1 / 15 || (card && card.classList.contains("on"))) return;
+      var who = pick(FRIENDS.filter(notMe));
+      advice = { who: who, act: act, followed: null, used: false, net: net };
+      show("friend", who, who, fill(pick(ADV[act]), { who: who }), null, 6000);
+    }
+    /** The player's first move after the call: did they listen? A listened-to hit gets its boost. */
+    function listen(act) {
+      if (!advice || advice.followed !== null) return false;
+      advice.followed = advice.act === act;
+      return advice.followed && act === "hit";
+    }
+    /** Stood on his call and the dealer would win: shuffle once (true, once). */
+    function standBoost() {
+      if (!advice || !advice.followed || advice.act !== "stand" || advice.used) return false;
+      advice.used = true;
+      return true;
+    }
+    /** The hand's settled: he has something to say about it. */
+    function adviceDone() {
+      if (!advice || advice.followed === null) { advice = null; return; }
+      var a = advice; advice = null;
+      setTimeout(function () {
+        var net = 0; try { net = a.net(); } catch (e) {}
+        if (!net) return;
+        var key = (a.followed ? "listen" : "ignore") + (net > 0 ? "Win" : "Lose");
+        show(net > 0 ? "good" : "bad", a.who, a.who, fill(pick(ADV_AFTER[key]), { who: a.who }));
+        if (a.followed) { if (net > 0) jingle(); else womp(); }
+      }, 1600);
     }
     /** Left the table: the tip goes with it (chips not yet dealt come back with the table). */
     function refundTip() { tip = null; }
@@ -759,6 +804,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, reroll: reroll, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();

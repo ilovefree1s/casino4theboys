@@ -599,6 +599,54 @@ sub("        var soleBJ = hands.length === 1 && isBJ(hands[0].cards);",
     "          if (WUR(\"blackjack\", { trilux: true, dealer: total(d) })) WUshuffle(shoe);\n"
     "        })();")
 
+# ---- blackjack: a friend leans over and says "fuck the book" - listen and the cards lean your way ----
+sub("""            setMessage("Your move");
+            renderAll();""", """            setMessage("Your move");
+            renderAll();
+            WUadvise(hands[0].cards, dealer[0]);""")
+sub("""      if (!h || h.done || h.aceSplit) return;
+      h.cards.push(draw());""", """      if (!h || h.done || h.aceSplit) return;
+      // took the friend's "hit it": a card that would bust you is swapped for the next one, once
+      var wuc = draw();
+      if (WUlisten("hit") && isBust(h.cards.concat([wuc]))) wuc = draw();
+      h.cards.push(wuc);""")
+sub("""    function stand() {
+      if (phase !== "player") return;
+      hands[active].done = true;""", """    function stand() {
+      if (phase !== "player") return;
+      WUlisten("stand");
+      hands[active].done = true;""")
+sub("""    function triluxOf(cards) {""", """    /** What the book says on a close call (hard 12-17, soft 17-19): "hit" or "stand"; "" when it isn't close. */
+    function WUbook(cards, up) {
+      if (!cards || cards.length !== 2 || !up) return "";
+      var t = total(cards), soft = isSoft(cards), d = up.rank === "A" ? 11 : bjValue(up.rank);
+      if (soft) {
+        if (t < 17 || t > 19) return "";
+        return t >= 19 || (t === 18 && d >= 2 && d <= 8) ? "stand" : "hit";
+      }
+      if (t < 12 || t > 17) return "";
+      if (t === 17) return "stand";
+      if (t >= 13) return d >= 2 && d <= 6 ? "stand" : "hit";
+      return d >= 4 && d <= 6 ? "stand" : "hit";
+    }
+    /** Now and then a friend says the opposite of the book. */
+    function WUadvise(cards, up) {
+      var b = WUbook(cards, up);
+      try { if (b && typeof Walkups !== "undefined") Walkups.advise(b === "hit" ? "stand" : "hit", function () { return results[0] ? results[0].net : 0; }); } catch (e) {}
+    }
+    function WUlisten(act) {
+      try { return typeof Walkups !== "undefined" && Walkups.listen(act); } catch (e) { return false; }
+    }
+    function triluxOf(cards) {""")
+# stood on his say-so: if the dealer's run would beat you, the shoe is shuffled once
+sub("""          if (WUR("blackjack", { trilux: true, dealer: total(d) })) WUshuffle(shoe);""",
+    """          if (WUR("blackjack", { trilux: true, dealer: total(d) })) WUshuffle(shoe);
+          else {
+            var pt = total(hands[0].cards), dt = total(d);
+            var beat = dt <= 21 && dt > pt && !(variant === "freebet" && dt === 22);
+            try { if (beat && typeof Walkups !== "undefined" && Walkups.standBoost()) WUshuffle(shoe); } catch (e) {}
+          }""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
