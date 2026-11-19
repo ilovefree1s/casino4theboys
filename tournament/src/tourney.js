@@ -1379,10 +1379,10 @@
       var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
     }
     // this week's made-up names, and whose face they are (from Sunday everyone joins as their face)
-    var FACE_ALIAS = { "tristy boy": "tristen", "darin wooldridge": "darin", "juiceman": "juice", "ethan j.": "ethan",
-                       "matthew myer": "matthew", "due": "chris", "mjax": "max", "brad": "grace" };
+    var FACE_ALIAS = { tristyboy: "tristen", darinwooldridge: "darin", juiceman: "juice", ethanj: "ethan",
+                       matthewmyer: "matthew", due: "chris", mjax: "max", brad: "grace", bdmarsh: "daneal", maverick: "zach" };
     function faceOf(lk) {
-      lk = FACE_ALIAS[lk] || lk;
+      lk = FACE_ALIAS[String(lk).replace(/[^a-z0-9]/g, "")] || lk;
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
       for (var k in f) if (k.toLowerCase() === lk) return f[k];
       return "";
