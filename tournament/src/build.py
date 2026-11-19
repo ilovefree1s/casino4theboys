@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.18"
+VERSION = "1.19"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -681,7 +681,8 @@ sub("""  function chipHtml(amount, size) {""",
     var u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
     for (var i = 0; i < u.length; i++) if (v >= u[i][0]) {
       var x = v / u[i][0], d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
-      var t = (Math.floor(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace(/\\.?0+$/, "");
+      var t = (Math.floor(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
+      if (d) t = t.replace(/0+$/, "").replace(/\\.$/, "");
       return t + u[i][1];
     }
     return fmt(v);
