@@ -3801,6 +3801,17 @@
   /* the version, tucked up against "Casino Games" on the sign */
   .mm-ver { font-family: var(--mono, ui-monospace, monospace); font-style: normal; font-size: 11px; letter-spacing: .08em;
             vertical-align: super; margin-left: 8px; color: rgba(255,210,77,.75); text-shadow: none; }
+
+  /* points week: who's on top of each game, on its button */
+  .tt-lead { position: absolute; bottom: -9px; right: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px;
+             background: rgba(12,10,20,.95); border: 1.5px solid #FFD24D; color: #FFD24D;
+             font: 900 10px/1 system-ui, sans-serif; letter-spacing: .08em; white-space: nowrap; pointer-events: none;
+             box-shadow: 0 3px 10px rgba(0,0,0,.5); max-width: 80%; overflow: hidden; text-overflow: ellipsis; }
+  .tt-lead.mine { color: #57E06A; border-color: #57E06A; }
+  #tt-rebuy { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%);
+              z-index: 9990; padding: 12px 20px; border-radius: 999px; border: 2px solid #57E06A; background: rgba(8,30,12,.95);
+              color: #8BF09A; font: 800 14px system-ui, sans-serif; letter-spacing: .08em; cursor: pointer;
+              box-shadow: 0 6px 20px rgba(0,0,0,.6); }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4104,7 +4115,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.1</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.2</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -7645,7 +7656,7 @@
     // ---- markers ----
     /** Whether the house will still sign one — the ceiling is on what is owed. */
     canTakeMarker: function () {
-      if (TT.on && (TT.closed || TT.isOut())) return false;
+      if (TT.on && (TT.closed || TT.isOut() || TT.points)) return false;
       return this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST) <= DEBT_CEILING;
     },
     /** The pit offers one unasked once the purse is under the offer line. */
@@ -7792,6 +7803,19 @@
         // Broke in the campaign is a marker, not a free reset — until the
         // credit line is done, and then the campaign is too.
         var owed = self.getDebt(), credit = self.canTakeMarker();
+        if (TT.on && TT.points) {
+          // points week: a busted game is a free rebuy, back to a fresh $10,000
+          $("ov-gameover-sub").textContent = "This game's $10,000 is gone. Rebuy and start this game over. The loss doesn't count.";
+          $("ov-loan").textContent = "REBUY · FRESH $10,000";
+          $("ov-loan-terms").textContent = "free · unlimited · only what you have at midnight counts";
+          $("ov-gameover").classList.add("on");
+          $("ov-loan").onclick = function () {
+            $("ov-gameover").classList.remove("on");
+            TT.rebuy();
+            if (onDone) onDone();
+          };
+          return true;
+        }
         if (TT.on) {
           var unpaid = TT.unpaid(), max = TT.max();
           if (!credit) TT.knockOut();
@@ -9844,7 +9868,7 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { stack: function () { return cash(); }, result: result, reroll: reroll, advise: advise, listen: listen, standBoost: standBoost, adviceDone: adviceDone, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : kind === "tristen" ? friendOffer("Tristen") : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
@@ -9911,7 +9935,32 @@
     }
 
     // ---- the wallet, by week ----
-    function k(name) { return "ftt." + TT.week + (TT.day ? "." + TT.day : "") + "." + name; }
+    /* From the week of 2026-11-22 the tournament is played for points: every
+       game has its own $10,000 wallet per player, fresh every day, with free
+       rebuys, and whoever is on top of a game at midnight takes its 1-3 points. */
+    var POINTS_FROM = "2026-11-22", POINTS_CASH = 10000;
+    function isPoints(week) { return !!week && String(week) >= POINTS_FROM; }
+    TT.points = false;
+    function gslug(g) { return String(g || "lobby").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
+    /** A game's points for a day, 1-3: the same sum the server does. */
+    function gpts(day, game) {
+      var s = String(day) + game, t = 0;
+      for (var i = 0; i < s.length; i++) t += s.charCodeAt(i) * (i + 1);
+      return 1 + t % 3;
+    }
+    TT.gpts = gpts;
+    function k(name) {
+      var base = "ftt." + TT.week + (TT.day ? "." + TT.day : "") + ".";
+      if (TT.points && name === "bankroll") {
+        // the wallet of the game you're at (or last sat down at); a new one starts at $10,000
+        var key = base + "g." + gslug(TT.game) + ".bankroll";
+        if (store.getStr(key, "") === "") store.set(key, POINTS_CASH);
+        return key;
+      }
+      return base + name;
+    }
+    function gameKey(g) { var was = TT.game; TT.game = g; var key = k("bankroll"); TT.game = was; return key; }
+    var dirtyGames = {};
     function kw(name) { return "ftt." + TT.week + "." + name; }
     function readWallet() {
       return {
@@ -9941,12 +9990,34 @@
     /** The purse moved: send it up shortly, or right now. */
     TT.changed = function (soon) {
       if (!ready || !TT.week) return;
+      if (TT.points && TT.game) dirtyGames[TT.game] = 1;
       store.setStr(k("dirty"), "1");
       clearTimeout(timer);
       timer = setTimeout(push, soon ? 0 : 1200);
     };
+    /** Points week: every game wallet that moved goes up on its own. */
+    function pushGames(keepalive) {
+      var games = Object.keys(dirtyGames);
+      dirtyGames = {};
+      if (!games.length) { store.setStr(k("dirty"), ""); return; }
+      var left = games.length;
+      games.forEach(function (g) {
+        rpc("c4tb_game_sync", { p_name: myName(), p_token: token(), p_week: TT.week, p_day: TT.day,
+          p_game: g, p_cash: Math.round(store.get(gameKey(g), POINTS_CASH)) }, keepalive).then(function (j) {
+          if (j.error === "auth") return signedOut();
+          if (j.error === "rollover") return dayOver();
+          if (--left === 0 && !Object.keys(dirtyGames).length) store.setStr(k("dirty"), "");
+        }, function () {
+          dirtyGames[g] = 1;
+          clearTimeout(retry);
+          retry = setTimeout(push, 10000);
+        });
+      });
+      if (statsDirty) pushStats();
+    }
     function push(keepalive) {
       if (!TT.week || TT.closed) return;
+      if (TT.points) return pushGames(keepalive);
       if (inflight) { again = true; return; }
       inflight = true;
       var w = readWallet(), wk = TT.week, daily = !!TT.day;
@@ -10003,7 +10074,9 @@
       if (TT.closed) return;
       TT.closed = true;
       $("tt-over-big").textContent = "A NEW DAY";
-      $("tt-over-sub").textContent = "Midnight. Yesterday's profit is locked in, and today starts fresh at $5,000.";
+      $("tt-over-sub").textContent = TT.points
+        ? "Midnight. Whoever was on top of each game took its points, and every game starts fresh at $10,000."
+        : "Midnight. Yesterday's profit is locked in, and today starts fresh at $5,000.";
       $("tt-over-go").textContent = "SEE THE BOARD";
       $("tt-over").classList.add("on");
     }
@@ -10233,13 +10306,20 @@
       $("tt-tag").textContent = "WEEK " + b.week_no + " · " + (b.day_no === 7 ? "FINAL DAY" : "DAY " + b.day_no + " OF 7") +
         (roster ? " · " + roster.length + " PLAYERS" : "");
       // the first time the app is opened in a new week, the rules come up
-      var seenRules = "ftt.rules" + (b.daily ? "2." : ".") + b.week;
+      var seenRules = "ftt.rules" + (isPoints(b.week) ? "3." : b.daily ? "2." : ".") + b.week;
       if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
       var you = b.me, rank = 0;
       if (!b.final) b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) rank = i + 1; });
       if (!me) return laneSay("ENDS IN " + left(b.ends_at), "JOIN", true);
       if (you && you.out && !b.daily) return laneSay("OUT FOR THE WEEK", "OUT", false);
-      if (!you || you.fresh) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
+      if ((!you || you.fresh) && !isPoints(b.week)) return laneSay("FRESH $" + fmt(b.start_cash) + " WAITING · ENDS IN " + left(b.ends_at), "PLAY", true);
+      if (isPoints(b.week)) {
+        var pb = pointsCache[b.week], mine2 = null, rk = 0;
+        if (!pb) getPoints(b.week).then(paintLane);
+        (pb || []).forEach(function (r, i) { if (r.name.toLowerCase() === me.toLowerCase()) { mine2 = r; rk = i + 1; } });
+        return laneSay("POINTS WEEK · " + (mine2 ? mine2.points + " PTS" + (rk ? " · #" + rk : "") : "0 PTS") +
+                       " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
+      }
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
       if (b.daily) return laneSay("BEST 3 DAYS " + money(you.score || 0) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
@@ -10308,6 +10388,78 @@
       setTimeout(look, 4000);
       return { track: track, handDone: function () { out = 0; } };
     })();
+    /* ---- the points week: leaders on every game button, free rebuys ---- */
+    var points = (function () {
+      var lead = {}, timerL = 0;
+      function leaders() {
+        if (!TT.on || !TT.points || !TT.day) return paint();
+        rpc("c4tb_game_leaders", { p_day: TT.day }).then(function (rows) {
+          lead = {};
+          (rows || []).forEach(function (x) { lead[x.game] = x; });
+          paint();
+        }, function () {});
+      }
+      /** "👑 QTIP $24,500 · 3 PTS" on each game's button, or "3 PTS · NO LEADER YET". */
+      function paint() {
+        Object.keys(GAMES).forEach(function (id) {
+          var btn = $(id);
+          if (!btn) return;
+          var tag = btn.querySelector(".tt-lead");
+          if (!TT.on || !TT.points || !TT.day) { if (tag) tag.remove(); return; }
+          var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
+          if (!tag) { tag = document.createElement("span"); tag.className = "tt-lead"; btn.appendChild(tag); }
+          if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
+          var mine = x && x.name.toLowerCase() === (myName() || "").toLowerCase();
+          tag.textContent = (x ? "👑 " + (mine ? "YOU" : x.name.toUpperCase()) + " $" + fmt(x.cash) : "NO LEADER YET") + " · " + pts + " PT" + (pts > 1 ? "S" : "");
+          tag.classList.toggle("mine", !!mine);
+        });
+      }
+      clearInterval(timerL);
+      timerL = setInterval(function () { if (TT.on && TT.points && !document.hidden) leaders(); }, 30000);
+      document.addEventListener("visibilitychange", function () { if (!document.hidden && TT.on && TT.points) leaders(); });
+      // back at a menu: fresh numbers
+      var showScreen = Shell.show;
+      Shell.show = function (name) {
+        var r = showScreen.apply(this, arguments);
+        if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps)$/.test(name)) leaders();
+        return r;
+      };
+
+      /* Busted at a game: rebuy back to a fresh $10,000, as if the first never happened. */
+      var btn = null;
+      function rebuy() {
+        var w = typeof Walkups !== "undefined" ? Walkups : null;
+        // the table's own stack when you're at one (it's what the rebuy tops up)
+        var have = w && w.stack() ? w.stack() : Shell.getBankroll(), add = POINTS_CASH - have;
+        if (add <= 0) return;
+        if (!(w && w.give(add))) {
+          TT.quiet = true;
+          try { Shell.setBankroll(POINTS_CASH); } finally { TT.quiet = false; }
+          TT.changed(true);
+        }
+      }
+      TT.rebuy = rebuy;
+      function rebuyBtn() {
+        if (!btn) {
+          btn = document.createElement("button");
+          btn.type = "button"; btn.id = "tt-rebuy"; btn.textContent = "💸 REBUY · FRESH $10,000";
+          btn.style.display = "none";
+          btn.onclick = function () { rebuy(); btn.style.display = "none"; };
+          document.body.appendChild(btn);
+        }
+        return btn;
+      }
+      setInterval(function () {
+        var b = rebuyBtn(), on = document.querySelector(".screen.on");
+        var atTable = on && on.id !== "screen-menu" && on.id !== "screen-lobby" && TT.game &&
+          /holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps/.test(on.id);
+        var lim = Shell.limits ? Shell.limits() : null, min = Math.max(25, (lim && lim.min) || 0);
+        var show = TT.on && TT.points && !TT.closed && atTable && Shell.getBankroll() < min;
+        b.style.display = show ? "" : "none";
+      }, 500);
+      return { leaders: leaders, paint: paint };
+    })();
+
     /* ---- duels: 10 hands of the same game against another player, for a pot ----
      * The server keeps the duel; the phone counts its own hands and money at
      * that game, and moves the pot in and out of the wallet when the server
@@ -10543,8 +10695,22 @@
     }
 
     // ---- the rules ----
+    var RULES_DAILY = null;
     function showRules(b) {
       b = b || board;
+      var ol = document.querySelector("#tt-rules .tt-rlist");
+      if (ol && RULES_DAILY === null) RULES_DAILY = { list: ol.innerHTML, sub: $("tt-rules-sub").textContent };
+      if (ol && b && isPoints(b.week)) {
+        $("tt-rules-sub").textContent = "SUNDAY 12:00 AM – SATURDAY 11:59 PM · EASTERN · PLAYED FOR POINTS";
+        ol.innerHTML =
+          "<li><b>Every game has its own $10,000.</b> Each table has a separate wallet, and every one of them resets to $10,000 at midnight.</li>" +
+          "<li><b>Free rebuys.</b> Bust a game and tap REBUY to start that game over at $10,000. The money you lost doesn't count against you.</li>" +
+          "<li><b>Each game is worth 1, 2 or 3 points,</b> and it changes every day. The game's button shows its points and who's on top right now: 👑 NAME $24,500 · 3 PTS.</li>" +
+          "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores.</li>" +
+          "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
+          "<li><b>🔥 Hot games and walk-ups are on.</b> Two games pay 2× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
+          "<li><b>One phone.</b> Your name is locked to this phone, and your PIN gets you back in if it ever forgets you.</li>";
+      } else if (ol && RULES_DAILY) { ol.innerHTML = RULES_DAILY.list; $("tt-rules-sub").textContent = RULES_DAILY.sub; }
       $("tt-rules-head").textContent = b && b.status === "live"
         ? "WEEK " + b.week_no + " · IT'S ON" : "THE TOURNAMENT";
       $("tt-rules").classList.add("on");
@@ -10635,11 +10801,20 @@
         if (s.status === "upcoming") return refreshLane();
         TT.week = s.week;
         TT.day = s.daily ? s.day : "";
+        TT.points = isPoints(s.week);
         var local = store.getStr(k("dirty"), "");
+        if (TT.points) {
+          rpc("c4tb_game_mine", { p_name: myName(), p_token: token() }).then(function (rows) {
+            (rows || []).forEach(function (x) {
+              // what's on this phone wins if it hasn't been sent up yet
+              if (!dirtyGames[x.game] && !local) store.set(gameKey(x.game), x.cash);
+            });
+          }, function () {});
+        }
         // bonuses won at the hot game before a reload: the server's figure has them, a local one gets them now
         if (local && hot.extra()) store.set(k("bankroll"), Math.round(store.get(k("bankroll"), 0)) + hot.extra());
         hot.setExtra(0);
-        if (!local) {
+        if (!local && !TT.points) {
           writeWallet({ cash: s.cash, owed: s.owed, markers: s.markers, out: s.out });
           // the game stats come from the server too, so an old copy on this phone
           // (a name deleted and started over, or played on another phone) isn't sent up again
@@ -10656,11 +10831,12 @@
             store.setStr(kw("stats"), JSON.stringify(m));
           }, function () {});
         }
-        if (s.out) { store.setStr(k("out"), "1"); refreshLane(); return showBoard(); }
+        if (s.out && !TT.points) { store.setStr(k("out"), "1"); refreshLane(); return showBoard(); }
         TT.on = true; TT.closed = false;
         Shell.mode = "campaign";
         Shell.showLobby();
         hot.banner();
+        if (TT.points) points.leaders();
         if (local) push();
       };
       rpc("c4tb_state", { p_name: myName(), p_token: token() }).then(go, function () {
@@ -10676,6 +10852,7 @@
     // ---- the board ----
     var tab = "week";
     function showBoard() {
+      pointsCache = {}; winnersCache = {};
       $("tt-board").classList.add("on");
       paintBoard();
       ping();
@@ -10703,8 +10880,8 @@
       $("tt-bhead").textContent = "WEEK " + b.week_no + " · " + (finalDay ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
       $("tt-bsub").textContent = (finalDay ? "WINNER AT MIDNIGHT · " + left(b.ends_at)
                                            : "STANDINGS UPDATE AT MIDNIGHT · NEXT IN " + left(b.day_ends_at));
-      // you, live - nobody else sees this
-      var you = $("tt-you"), y = b.me;
+      // you, live - nobody else sees this (a points week has no one purse to show)
+      var you = $("tt-you"), y = isPoints(b.week) ? null : b.me;
       you.hidden = !(y && !y.fresh);
       if (y && !y.fresh) {
         $("tt-you-net").textContent = money(y.net);
@@ -10728,7 +10905,18 @@
           $("tt-crown").classList.add("on");
         }
       }
-      b.daily_winners.forEach(function (w) {
+      // last week was played for points: its champion is the top of that board
+      if (b.last_champion && isPoints(b.last_champion.week)) {
+        var lp = pointsCache[b.last_champion.week];
+        if (!lp) getPoints(b.last_champion.week).then(function () { if ($("tt-board").classList.contains("on")) paintBoard(); });
+        else if (lp[0]) {
+          $("tt-champ-name").textContent = lp[0].name.toUpperCase();
+          $("tt-champ-net").textContent = lp[0].points + " PTS";
+          $("tt-crown-name").textContent = lp[0].name.toUpperCase();
+          $("tt-crown-net").textContent = lp[0].points + " PTS";
+        }
+      }
+      if (!isPoints(b.week)) b.daily_winners.forEach(function (w) {
         var c = document.createElement("span");
         c.className = "tt-win";
         var d = document.createElement("b"); d.textContent = dayName(w.day);
@@ -10741,6 +10929,7 @@
       var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
       if (dayBtn) dayBtn.textContent = b.final ? "LAST WEEK" : "YESTERDAY";
       if (tab === "stats") return paintStats(b);
+      if (isPoints(b.week) && !b.final) return paintPoints(b, list, me);
       if (b.final) {
         if (tab === "day") {
           var hiw = highs(lastWeekOf(b));
@@ -10753,7 +10942,7 @@
         } else {
           // a new week: everybody's name, no money until the first midnight
           var all = roster || [];
-          if (all.length) list.appendChild(heading("WEEK " + b.week_no + " · " + all.length + " PLAYERS · MONEY SHOWS AT MIDNIGHT"));
+          if (all.length) list.appendChild(heading("WEEK " + b.week_no + " · " + all.length + " PLAYERS · " + (isPoints(b.week) ? "POINTS COME IN AT MIDNIGHT" : "MONEY SHOWS AT MIDNIGHT")));
           all.forEach(function (p) {
             var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
             el.classList.add("blank");
@@ -10809,6 +10998,48 @@
         }, function () { delete highsCache[week]; });
       }
       return highsCache[week] && highsCache[week].map;
+    }
+    // the points week: standings by points, a game's winners by day
+    var pointsCache = {}, winnersCache = {};
+    function getPoints(week) {
+      return rpc("c4tb_points_board", { p_week: week }).then(function (j) { pointsCache[week] = Array.isArray(j) ? j : []; return pointsCache[week]; },
+        function () { pointsCache[week] = pointsCache[week] || []; return pointsCache[week]; });
+    }
+    function getWinners(day) {
+      return rpc("c4tb_game_leaders", { p_day: day }).then(function (j) { winnersCache[day] = Array.isArray(j) ? j : []; },
+        function () { winnersCache[day] = []; });
+    }
+    function prevDay(day) { var d = new Date(day + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); }
+    function paintPoints(b, list, me) {
+      var dayTab = tab === "day";
+      if (dayTab) {
+        var yd = prevDay(b.day);
+        if (!winnersCache[yd]) { list.appendChild(empty("Loading…")); getWinners(yd).then(function () { if (tab === "day") paintBoard(); }); return; }
+        var ws = winnersCache[yd];
+        list.appendChild(heading(dayName(yd) + " · WHO TOOK EACH GAME"));
+        if (!ws.length) list.appendChild(empty("Nobody played yesterday."));
+        ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
+          list.appendChild(row("", w.game, "👑 " + w.name.toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
+            w.name.toLowerCase() === me));
+        });
+        return;
+      }
+      var pb = pointsCache[b.week];
+      if (!pb) { list.appendChild(empty("Loading…")); getPoints(b.week).then(function () { if (tab === "week") paintBoard(); }); return; }
+      var scored = pb.filter(function (r) { return r.points > 0 || r.money; });
+      list.appendChild(heading("POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT · TIES GO TO MOST MONEY"));
+      var listed = {};
+      scored.forEach(function (r, i) {
+        listed[r.name.toLowerCase()] = 1;
+        list.appendChild(row(i + 1, r.name, r.wins + " WIN" + (r.wins === 1 ? "" : "S") + " · " + signed(r.money),
+          r.points + " PT" + (r.points === 1 ? "" : "S"), r.name.toLowerCase() === me));
+      });
+      (roster || []).filter(function (p) { return !listed[p.name.toLowerCase()]; }).forEach(function (p) {
+        var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
+        el.classList.add("blank");
+        list.appendChild(el);
+      });
+      if (!scored.length && !(roster || []).length) list.appendChild(empty("Points come in at midnight."));
     }
     // walk-ups: everyone's, live
     var wuCache = {};
@@ -11204,6 +11435,14 @@
   function paintRun(id) {
     var bank = Shell.getBankroll(), goal = Shell.getGoal();
     var host = $(id);
+    if (TT.on && TT.points) {
+      var fp = TT.frame() || {};
+      host.querySelector(".k").textContent = "WEEK " + (fp.week_no || 1) + " · " +
+        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1)) + " · POINTS";
+      host.querySelector(".v").textContent = "$10,000 A GAME";
+      host.querySelector(".g").textContent = "MOST MONEY ON A GAME AT MIDNIGHT TAKES ITS POINTS";
+      return;
+    }
     if (TT.on) {
       var f = TT.frame() || {}, owed = Shell.getDebt();
       host.querySelector(".k").textContent = "WEEK " + (f.week_no || 1) + " · " +

@@ -232,3 +232,14 @@
   /* the version, tucked up against "Casino Games" on the sign */
   .mm-ver { font-family: var(--mono, ui-monospace, monospace); font-style: normal; font-size: 11px; letter-spacing: .08em;
             vertical-align: super; margin-left: 8px; color: rgba(255,210,77,.75); text-shadow: none; }
+
+  /* points week: who's on top of each game, on its button */
+  .tt-lead { position: absolute; bottom: -9px; right: 14px; z-index: 2; padding: 4px 10px; border-radius: 999px;
+             background: rgba(12,10,20,.95); border: 1.5px solid #FFD24D; color: #FFD24D;
+             font: 900 10px/1 system-ui, sans-serif; letter-spacing: .08em; white-space: nowrap; pointer-events: none;
+             box-shadow: 0 3px 10px rgba(0,0,0,.5); max-width: 80%; overflow: hidden; text-overflow: ellipsis; }
+  .tt-lead.mine { color: #57E06A; border-color: #57E06A; }
+  #tt-rebuy { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%);
+              z-index: 9990; padding: 12px 20px; border-radius: 999px; border: 2px solid #57E06A; background: rgba(8,30,12,.95);
+              color: #8BF09A; font: 800 14px system-ui, sans-serif; letter-spacing: .08em; cursor: pointer;
+              box-shadow: 0 6px 20px rgba(0,0,0,.6); }

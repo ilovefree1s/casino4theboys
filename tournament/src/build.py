@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.1"
+VERSION = "1.2"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -170,7 +170,7 @@ sub('store.setStr("ftb.room", ROOMS[0].key);', 'store.setStr(wkey("room"), ROOMS
 # markers: three a week in the tournament, counted whether paid back or not
 sub("    canTakeMarker: function () {\n",
     "    canTakeMarker: function () {\n"
-    "      if (TT.on && (TT.closed || TT.isOut())) return false;\n")
+    "      if (TT.on && (TT.closed || TT.isOut() || TT.points)) return false;\n")
 sub("      if (!this.canTakeMarker()) return;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n",
     "      if (!this.canTakeMarker()) return;\n      TT.quiet = true;\n      this.setBankroll(this.getBankroll() + MARKER_AMOUNT);\n      TT.quiet = false;\n")
 sub("      this.setDebt(this.getDebt() + MARKER_AMOUNT * (1 + MARKER_INTEREST));\n    },",
@@ -197,6 +197,19 @@ sub("    Shell.mode = \"campaign\";\n    Shell.showFloor();",
 # busting: a marker while there are any left this week, then out
 sub("""        var owed = self.getDebt(), credit = self.canTakeMarker();
 """, """        var owed = self.getDebt(), credit = self.canTakeMarker();
+        if (TT.on && TT.points) {
+          // points week: a busted game is a free rebuy, back to a fresh $10,000
+          $("ov-gameover-sub").textContent = "This game's $10,000 is gone. Rebuy and start this game over. The loss doesn't count.";
+          $("ov-loan").textContent = "REBUY · FRESH $10,000";
+          $("ov-loan-terms").textContent = "free · unlimited · only what you have at midnight counts";
+          $("ov-gameover").classList.add("on");
+          $("ov-loan").onclick = function () {
+            $("ov-gameover").classList.remove("on");
+            TT.rebuy();
+            if (onDone) onDone();
+          };
+          return true;
+        }
         if (TT.on) {
           var unpaid = TT.unpaid(), max = TT.max();
           if (!credit) TT.knockOut();
@@ -228,6 +241,14 @@ sub("""  function paintRun(id) {
 """, """  function paintRun(id) {
     var bank = Shell.getBankroll(), goal = Shell.getGoal();
     var host = $(id);
+    if (TT.on && TT.points) {
+      var fp = TT.frame() || {};
+      host.querySelector(".k").textContent = "WEEK " + (fp.week_no || 1) + " · " +
+        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1)) + " · POINTS";
+      host.querySelector(".v").textContent = "$10,000 A GAME";
+      host.querySelector(".g").textContent = "MOST MONEY ON A GAME AT MIDNIGHT TAKES ITS POINTS";
+      return;
+    }
     if (TT.on) {
       var f = TT.frame() || {}, owed = Shell.getDebt();
       host.querySelector(".k").textContent = "WEEK " + (f.week_no || 1) + " · " +
