@@ -202,3 +202,26 @@
 
   .tt-on { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #3BE07A;
            box-shadow: 0 0 6px rgba(59,224,122,.9); margin-right: 6px; vertical-align: middle; }
+
+  .tt-row[data-player] { cursor: pointer; }
+  .tt-duelov { position: fixed; inset: 0; z-index: 9996; display: none; align-items: center; justify-content: center;
+               background: rgba(0,0,0,.6); padding: 16px; box-sizing: border-box; }
+  .tt-duelov.on { display: flex; }
+  .tt-duelbox { width: min(92vw, 420px); background: #140B12; border: 1.5px solid #FF5E7A; border-radius: 16px; padding: 16px;
+                display: flex; flex-direction: column; gap: 8px; color: #F4EEDC; font: 500 14px/1.4 system-ui, sans-serif; box-sizing: border-box; }
+  .tt-dueltitle { font: 800 18px/1.2 system-ui, sans-serif; letter-spacing: .08em; color: #FF8FA3; }
+  .tt-duelsub { font-size: 12px; color: rgba(244,238,220,.7); }
+  .tt-duelbox label { font: 800 11px system-ui, sans-serif; letter-spacing: .14em; color: rgba(244,238,220,.6); margin-top: 4px; }
+  .tt-duelbox select, .tt-duelbox input { height: 40px; border-radius: 10px; border: 1px solid rgba(244,238,220,.25);
+                background: #0B0710; color: #F4EEDC; font: 600 15px system-ui, sans-serif; padding: 0 10px; box-sizing: border-box; width: 100%; }
+  .tt-duelpots { display: flex; gap: 6px; flex-wrap: wrap; }
+  .tt-duelpots button { flex: 1; min-width: 60px; height: 34px; border-radius: 10px; border: 1px solid rgba(255,94,122,.5);
+                background: rgba(255,94,122,.1); color: #FFD0DA; font: 800 12px system-ui, sans-serif; cursor: pointer; }
+  .tt-duelmsg { min-height: 18px; font-size: 13px; color: #FFD24D; }
+  .tt-duelrow { display: flex; gap: 8px; }
+  .tt-duelrow button { flex: 1; height: 44px; border-radius: 12px; font: 800 14px system-ui, sans-serif; letter-spacing: .1em; cursor: pointer; }
+  .tt-duelno { border: 1px solid rgba(244,238,220,.3); background: transparent; color: #F4EEDC; }
+  .tt-duelgo { border: 1.5px solid #FF5E7A; background: rgba(255,94,122,.2); color: #FFD0DA; }
+
+  .tt-on.off { background: #6B6F78; box-shadow: none; }
+  .tt-ago { font-weight: 600; font-size: 10px; letter-spacing: .04em; color: rgba(244,238,220,.5); }

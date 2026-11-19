@@ -293,13 +293,15 @@
       card.style.display = "flex";
       card.className = kind;
       card.innerHTML = '<img alt=""><div class="wu-b"><div class="wu-n"></div><div class="wu-t"></div>' +
-        (buttons ? '<div class="wu-row"><button class="wu-yes"></button><button class="wu-no">NAH</button></div>' : "") + "</div>";
+        (buttons ? '<div class="wu-row"><button class="wu-yes"></button><button class="wu-no"></button></div>' : "") + "</div>";
       card.querySelector("img").src = FACES[face] || "";
+      if (!FACES[face]) card.querySelector("img").style.display = "none";
       card.querySelector(".wu-n").textContent = name.toUpperCase();
       card.querySelector(".wu-t").textContent = text;
       if (buttons) {
         var y = card.querySelector(".wu-yes");
         y.textContent = buttons.yes;
+        card.querySelector(".wu-no").textContent = buttons.no || "NAH";
         y.disabled = !!buttons.cant;
         y.onclick = function (e) { e.stopPropagation(); hideCard(); buttons.onYes(); };
         card.querySelector(".wu-no").onclick = function (e) { e.stopPropagation(); hideCard(); buttons.onNo(); };
@@ -375,6 +377,31 @@
       jingle();
       if (shoutQ.length) setTimeout(drainShout, 7600);
     }
+    /* ---- duels: notices and questions from the tournament, in the same card ---- */
+    var noteQ = [];
+    function queue(fn) { noteQ.push(fn); drainNotes(); }
+    function drainNotes() {
+      if (!noteQ.length) return;
+      if (card && card.classList.contains("on")) { setTimeout(drainNotes, 2500); return; }
+      noteQ.shift()();
+      if (noteQ.length) setTimeout(drainNotes, 1500);
+    }
+    /** A notice: kind good/bad/shout/friend, with a sound when asked. */
+    function notice(kind, name, title, text, sound) {
+      queue(function () {
+        show(kind, faceOf(name), title, text, null, 8000);
+        if (sound === "win") jingle(); else if (sound === "lose") womp();
+      });
+    }
+    /** A question with two answers; a timeout counts as no answer at all. */
+    function ask(name, title, text, yes, no, onYes, onNo, onLater) {
+      queue(function () {
+        show("friend", faceOf(name), title, text, { yes: yes, no: no, onYes: onYes,
+          onNo: function (timedOut) { if (timedOut) { if (onLater) onLater(); } else onNo(); } }, 45000);
+      });
+    }
+    /** Money from the tournament onto the table you're at; false when you aren't at one. */
+    function give(x) { if (!table || !table.credit) return false; return money(x); }
     /** Board stats (tournament): walk-ups shown, backed, real, scams. */
     function count(f) { try { if (typeof TT !== "undefined" && TT.walkup) TT.walkup(f); } catch (e) {} }
     function cash() { try { return table && table.cash ? table.cash() : 0; } catch (e) { return 0; } }
@@ -688,6 +715,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, announce: announce, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();

@@ -420,6 +420,7 @@
       statsDirty = true;
       hot.track(delta);
       shout.track(delta);
+      duel.track(delta);
     };
     /* ---- shout-outs: a hit of 50x the bet or more is announced at everybody else's table ----
      * What went out on the hand is counted until the table goes quiet; a payout
@@ -451,16 +452,201 @@
       setTimeout(look, 4000);
       return { track: track, handDone: function () { out = 0; } };
     })();
-    TT.handDone = shout.handDone;
+    /* ---- duels: 10 hands of the same game against another player, for a pot ----
+     * The server keeps the duel; the phone counts its own hands and money at
+     * that game, and moves the pot in and out of the wallet when the server
+     * says to (once each way). */
+    var duel = (function () {
+      var mine = [], cur = 0, touched = false, asked = {}, told = {}, claiming = {};
+      function prog() { try { return JSON.parse(store.getStr("ftt.duelprog", "{}")) || {}; } catch (e) { return {}; } }
+      function setProg(p) { store.setStr("ftt.duelprog", JSON.stringify(p)); }
+      function me() { return (myName() || "").toLowerCase(); }
+      function isC(d) { return String(d.challenger).toLowerCase() === me(); }
+      function them(d) { return isC(d) ? d.opponent : d.challenger; }
+      function live() { return mine.filter(function (d) { return d.status === "active"; })[0] || null; }
+      function W() { return typeof Walkups !== "undefined" ? Walkups : null; }
+      function give(x) {
+        if (!x) return;
+        var w = W();
+        if (w && w.give(x)) return;
+        TT.quiet = true;
+        try { Shell.setBankroll(Math.max(0, Shell.getBankroll() + x)); } finally { TT.quiet = false; }
+        TT.changed(true);
+      }
+      function poll() {
+        if (!TT.on || !myName() || TT.closed) return;
+        rpc("c4tb_duels_mine", { p_name: myName(), p_token: token() }).then(function (list) {
+          if (!Array.isArray(list)) return;
+          mine = list;
+          list.forEach(handle);
+          pill();
+        }, function () {});
+      }
+      function handle(d) {
+        var c = isC(d), w = W(), other = them(d);
+        if (!w) return;
+        if (d.status === "pending" && !c && !asked[d.id]) {
+          asked[d.id] = 1;
+          w.ask(other, "⚔️ DUEL", other.toUpperCase() + " challenges you: 10 hands of " + String(d.game).toUpperCase() +
+            ", $" + fmt(d.pot) + " each. Higher profit takes $" + fmt(d.pot * 2) + ".", "ACCEPT", "DECLINE",
+            function () { answer(d, true); }, function () { answer(d, false); }, function () { delete asked[d.id]; });
+        }
+        if (d.status === "declined" && c && !told["dec" + d.id]) {
+          told["dec" + d.id] = 1;
+          w.notice("bad", other, "⚔️ DUEL", other.toUpperCase() + " turned down your duel.");
+        }
+        if (d.status === "active" && !(c ? d.c_debited : d.o_debited)) {
+          claim(d, "debit", function () {
+            if (c) w.notice("friend", other, "⚔️ DUEL ON", other.toUpperCase() + " accepted! 10 hands of " +
+              String(d.game).toUpperCase() + ". $" + fmt(d.pot) + " is in the pot.");
+          });
+        }
+        if ((d.status === "done" || d.status === "expired") && !(c ? d.c_credited : d.o_credited)) {
+          claim(d, "credit", function (r) { result(r.duel || d, r.amount); });
+        }
+      }
+      function claim(d, kind, then) {
+        var key = d.id + kind;
+        if (claiming[key]) return;
+        claiming[key] = 1;
+        rpc("c4tb_duel_claim", { p_name: myName(), p_token: token(), p_id: d.id, p_kind: kind }).then(function (r) {
+          if (r && r.ok) { give(r.amount); if (then) then(r); }
+        }, function () {}).then(function () { delete claiming[key]; });
+      }
+      function answer(d, yes) {
+        if (yes && Shell.getBankroll() < d.pot) {
+          W().notice("bad", them(d), "⚔️ DUEL", "You need $" + fmt(d.pot) + " to take this duel.");
+          return;
+        }
+        rpc("c4tb_duel_answer", { p_name: myName(), p_token: token(), p_id: d.id, p_accept: yes }).then(function () { poll(); }, function () {});
+      }
+      function result(d, amount) {
+        var w = W(), other = them(d), c = isC(d);
+        var my = c ? d.c_net : d.o_net, his = c ? d.o_net : d.c_net;
+        var myH = c ? d.c_hands : d.o_hands, hisH = c ? d.o_hands : d.c_hands;
+        var sc = " (" + signed(my) + " vs " + signed(his) + ")", text, kind = "good", snd = "win";
+        if (d.status === "expired") { text = "The duel with " + other.toUpperCase() + " ran out at midnight. Pot's back to you."; kind = "friend"; snd = ""; }
+        else if (!d.winner) { text = "Tie with " + other.toUpperCase() + sc + ". You get your $" + fmt(d.pot) + " back."; kind = "friend"; snd = ""; }
+        else if (String(d.winner).toLowerCase() === me())
+          text = (hisH < 10 ? other.toUpperCase() + " never finished their 10 hands. " : "You beat " + other.toUpperCase() + sc + ". ") +
+            "You take $" + fmt(d.pot * 2) + "!";
+        else { text = (myH < 10 ? "You didn't finish your 10 hands. " : other.toUpperCase() + " beat you" + sc + ". ") + "The $" + fmt(d.pot * 2) + " pot is theirs."; kind = "bad"; snd = "lose"; }
+        w.notice(kind, other, "⚔️ DUEL OVER", text, snd);
+      }
+      /** Money moved at the table you're at. */
+      function track(delta) {
+        var d = live();
+        if (!d || TT.game !== d.game) return;
+        var p = prog()[d.id];
+        if (p && p.hands >= 10) return;
+        cur += delta; touched = true;
+      }
+      /** A hand just finished: if it was a duel hand, count it. */
+      function handDone() {
+        var d = live();
+        if (!d || !touched || TT.game !== d.game) { cur = 0; touched = false; return; }
+        var all = prog(), p = all[d.id] || { hands: 0, net: 0 };
+        if (p.hands >= 10) { cur = 0; touched = false; return; }
+        p.hands++; p.net += cur; all[d.id] = p; setProg(all);
+        cur = 0; touched = false;
+        rpc("c4tb_duel_progress", { p_name: myName(), p_token: token(), p_id: d.id, p_hands: p.hands, p_net: p.net })
+          .then(function (r) { if (r && r.duel) { mine = mine.map(function (x) { return x.id === d.id ? r.duel : x; }); handle(r.duel); } pill(); }, function () {});
+        if (p.hands === 10 && W()) W().notice("friend", them(d), "⚔️ DUEL", "That's your 10 hands: " + signed(p.net) +
+          ". Waiting on " + them(d).toUpperCase() + ".");
+        pill();
+      }
+      var pillEl = null;
+      function pill() {
+        var d = live();
+        if (!pillEl) {
+          pillEl = document.createElement("div");
+          pillEl.style.cssText = "position:fixed;left:max(10px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 6px);z-index:9997;" +
+            "padding:4px 10px;border-radius:999px;border:1.5px solid #FF5E7A;background:rgba(30,6,14,.92);color:#FFD0DA;" +
+            "font:800 11px/1.3 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;max-width:70vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";
+          document.body.appendChild(pillEl);
+        }
+        if (!d || !TT.on) { pillEl.style.display = "none"; return; }
+        var p = prog()[d.id] || { hands: 0, net: 0 };
+        pillEl.style.display = "";
+        pillEl.textContent = "⚔️ vs " + them(d).toUpperCase() + " · " + String(d.game).toUpperCase() + " · " +
+          Math.min(p.hands, 10) + "/10 · " + signed(p.net);
+      }
+      setInterval(poll, 15000);
+      setTimeout(poll, 3000);
+      return { poll: poll, track: track, handDone: handDone, busy: function () { return mine.some(function (d) { return d.status === "pending" || d.status === "active"; }); } };
+    })();
+    TT.handDone = function () { shout.handDone(); duel.handDone(); };
+
+    /* ---- the duel sheet: tap a player on the board ---- */
+    var DUEL_GAMES = Object.keys(GAMES).map(function (id) { return GAMES[id]; }).filter(function (g) { return g !== "Crapless Craps"; });
+    function duelSheet(name) {
+      var ov = $("tt-duel");
+      if (!ov) {
+        ov = document.createElement("div"); ov.id = "tt-duel"; ov.className = "tt-duelov";
+        ov.innerHTML = '<div class="tt-duelbox"><div class="tt-dueltitle"></div>' +
+          '<div class="tt-duelsub">10 hands of the same game, played whenever. Higher profit takes the pot. Open until midnight.</div>' +
+          '<label>GAME</label><select id="tt-duelgame"></select>' +
+          '<label>POT (EACH)</label><div class="tt-duelpots"></div><input id="tt-duelpot" inputmode="numeric" placeholder="Pot">' +
+          '<div class="tt-duelmsg" id="tt-duelmsg"></div>' +
+          '<div class="tt-duelrow"><button type="button" class="tt-duelno">CANCEL</button><button type="button" class="tt-duelgo">SEND</button></div></div>';
+        document.body.appendChild(ov);
+        var sel = ov.querySelector("#tt-duelgame");
+        DUEL_GAMES.forEach(function (g) { var o = document.createElement("option"); o.value = g; o.textContent = g; sel.appendChild(o); });
+        [500, 1000, 2500, 5000, 10000].forEach(function (v) {
+          var b = document.createElement("button"); b.type = "button"; b.textContent = "$" + fmt(v);
+          b.onclick = function () { ov.querySelector("#tt-duelpot").value = v; };
+          ov.querySelector(".tt-duelpots").appendChild(b);
+        });
+        ov.querySelector(".tt-duelno").onclick = function () { ov.classList.remove("on"); };
+        ov.addEventListener("click", function (e) { if (e.target === ov) ov.classList.remove("on"); });
+      }
+      ov.querySelector(".tt-dueltitle").textContent = "⚔️ DUEL " + name.toUpperCase();
+      ov.querySelector("#tt-duelmsg").textContent = duel.busy() ? "You already have a duel going." : "";
+      ov.querySelector("#tt-duelpot").value = "";
+      if (TT.game && DUEL_GAMES.indexOf(TT.game) >= 0) ov.querySelector("#tt-duelgame").value = TT.game;
+      ov.querySelector(".tt-duelgo").onclick = function () {
+        var pot = Math.round(+String(ov.querySelector("#tt-duelpot").value).replace(/[^0-9]/g, "")), msg = ov.querySelector("#tt-duelmsg");
+        if (!TT.on) { msg.textContent = "Tap PLAY to get in the tournament first."; return; }
+        if (!(pot >= 100)) { msg.textContent = "Pick a pot of at least $100."; return; }
+        if (pot > Shell.getBankroll()) { msg.textContent = "You only have $" + fmt(Shell.getBankroll()) + "."; return; }
+        msg.textContent = "Sending…";
+        rpc("c4tb_duel_challenge", { p_name: myName(), p_token: token(), p_opponent: name,
+          p_game: ov.querySelector("#tt-duelgame").value, p_pot: pot }).then(function (r) {
+          if (r && r.ok) { msg.textContent = "Challenge sent to " + name.toUpperCase() + "!"; setTimeout(function () { ov.classList.remove("on"); }, 1200); duel.poll(); }
+          else msg.textContent = r && r.error === "busy" ? "One of you already has a duel going today." : "Couldn't send that one.";
+        }, function () { msg.textContent = "Can't reach the server right now."; });
+      };
+      ov.classList.add("on");
+    }
+    // tap a player's row on the board to challenge them
+    document.addEventListener("click", function (e) {
+      var rowEl = e.target.closest && e.target.closest("#tt-rows .tt-row[data-player]");
+      if (!rowEl) return;
+      var n = rowEl.getAttribute("data-player");
+      if (!n || n.toLowerCase() === (myName() || "").toLowerCase() || !myName()) return;
+      duelSheet(n);
+    });
     /* ---- who's online: each open phone checks in every 30 s; the board puts a green dot by them ---- */
-    var online = {};
+    var online = {}, lastSeen = {};
+    /** "5m ago", "3h ago", "2d ago". */
+    function ago(t) {
+      var s = Math.max(0, (Date.now() - t) / 1000);
+      return s < 3600 ? Math.max(1, Math.round(s / 60)) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago";
+    }
     function ping() {
       if (document.hidden || !myName() || !token()) return;
       rpc("c4tb_ping", { p_name: myName(), p_token: token() }).then(function (list) {
         if (!Array.isArray(list)) return;
-        var m = {}; list.forEach(function (n) { m[String(n).toLowerCase()] = 1; });
-        var changed = Object.keys(m).sort().join() !== Object.keys(online).sort().join();
-        online = m;
+        // [{name, s: seconds since last seen}]; an older server sends names only, all online
+        var m = {}, seen = {};
+        list.forEach(function (n) {
+          if (typeof n === "string") { m[n.toLowerCase()] = 1; return; }
+          var k = String(n.name).toLowerCase();
+          if (n.s < 90) m[k] = 1; else seen[k] = Date.now() - n.s * 1000;
+        });
+        var changed = Object.keys(m).sort().join() !== Object.keys(online).sort().join() ||
+          Object.keys(seen).length !== Object.keys(lastSeen).length;
+        online = m; lastSeen = seen;
         if (changed && $("tt-board").classList.contains("on")) paintBoard();
       }, function () {});
     }
@@ -763,6 +949,22 @@
       return rpc("c4tb_walkup_board", { p_week: week })
         .then(function (j) { wuCache[week] = Array.isArray(j) ? j : []; return j; }, function () { wuCache[week] = []; });
     }
+    var duelsCache = null;
+    function getDuels() {
+      return rpc("c4tb_duels_today", {}).then(function (j) { duelsCache = Array.isArray(j) ? j : []; }, function () { duelsCache = []; });
+    }
+    function paintDuels(list) {
+      var rows = duelsCache || [];
+      list.appendChild(heading("⚔️ DUELS TODAY"));
+      if (!rows.length) { list.appendChild(empty("No duels yet. Tap a player on THE WEEK to challenge them.")); return; }
+      rows.forEach(function (d) {
+        var st = d.status === "pending" ? "WAITING ON " + d.opponent.toUpperCase()
+          : d.status === "active" ? d.c_hands + "/10 vs " + d.o_hands + "/10 · " + signed(d.c_net) + " vs " + signed(d.o_net)
+          : d.status === "expired" ? "RAN OUT"
+          : d.winner ? d.winner.toUpperCase() + " WON · " + signed(d.c_net) + " vs " + signed(d.o_net) : "TIE";
+        list.appendChild(row("", d.challenger + " vs " + d.opponent, String(d.game).toUpperCase() + " · " + st, "$" + fmt(d.pot), false));
+      });
+    }
     function paintWalkups(list, week) {
       var rows = wuCache[week] || [];
       var tot = rows.reduce(function (a, r) { return a + r.shown; }, 0);
@@ -787,13 +989,14 @@
       list.innerHTML = "";
       var prev = b.week_no > 1 ? lastWeekOf(b) : null;
       var want = [b.week].concat(prev ? [prev] : []);
-      var have = want.every(function (w) { return statsCache[w]; }) && wuCache[b.week];
+      var have = want.every(function (w) { return statsCache[w]; }) && wuCache[b.week] && duelsCache;
       if (!have) {
         list.appendChild(empty("Loading stats…"));
-        Promise.all(want.map(getStats).concat([getWalkups(b.week)])).then(function () { if (tab === "stats") paintStats(b); },
+        Promise.all(want.map(getStats).concat([getWalkups(b.week), getDuels()])).then(function () { if (tab === "stats") paintStats(b); },
           function () { list.innerHTML = ""; list.appendChild(empty("Can't reach the stats right now.")); });
         return;
       }
+      paintDuels(list);
       paintWalkups(list, b.week);
       if (prev) {
         var fin = statsCache[prev].rows;
@@ -849,6 +1052,13 @@
       });
       list.appendChild(empty("Everyone's stats for this week unlock when it ends at midnight Saturday."));
     }
+    /** Everyone signed up, by lowercase name. */
+    function players() {
+      var m = {};
+      (roster || []).forEach(function (p) { m[String(p.name || p).toLowerCase()] = 1; });
+      ((board && board.rows) || []).forEach(function (p) { m[String(p.name).toLowerCase()] = 1; });
+      return m;
+    }
     function heading(text) {
       var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
     }
@@ -858,9 +1068,16 @@
       var a = document.createElement("span"); a.className = "rk"; a.textContent = rank;
       var mid = document.createElement("span"); mid.className = "who";
       var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
-      if (online[String(name).toLowerCase()]) {
+      if (players()[String(name).toLowerCase()]) el.setAttribute("data-player", name);
+      var lk = String(name).toLowerCase();
+      if (online[lk]) {
         var dot = document.createElement("i"); dot.className = "tt-on"; dot.title = "Online";
         n.insertBefore(dot, n.firstChild);
+      } else if (lastSeen[lk]) {
+        var gd = document.createElement("i"); gd.className = "tt-on off"; gd.title = "Last on " + ago(lastSeen[lk]);
+        n.insertBefore(gd, n.firstChild);
+        var ag = document.createElement("span"); ag.className = "tt-ago"; ag.textContent = " " + ago(lastSeen[lk]);
+        n.appendChild(ag);
       }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);
@@ -874,7 +1091,7 @@
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
         tab = x.getAttribute("data-t");
-        if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; }
+        if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; duelsCache = null; }
         paintBoard();
       });
     });
