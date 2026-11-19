@@ -644,10 +644,12 @@
       if (table.phase && table.phase() !== "betting") return;
       // the floor okayed it: this one bet goes down past the room's limit
       var got = 0, lim = Shell.limits;
-      if (tip.floor) Shell.limits = function () { return { min: 0, max: Infinity, sideMax: Infinity, badBeatMax: Infinity, enforced: false }; };
+      // always: a rebet can max the spot out after he asked, and the floor's okay covers that too
+      Shell.limits = function () { return { min: 0, max: Infinity, sideMax: Infinity, badBeatMax: Infinity, enforced: false }; };
       try { got = table.tip(tip.spot, tip.amt); } finally { Shell.limits = lim; }
       if (got > 0) tip.placed = got;
-      else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + (t.game === "keno" ? ": \"Your ticket's full, bro. Never mind.\"" : ": \"Table won't take it, bro. Never mind.\"")); }
+      else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + (t.game === "keno" ? ": \"Your ticket's full, bro. Never mind.\""
+        : ": \"You don't have the chips left for it, bro. Never mind.\"")); }
     }
     /** The table reports what it dealt; the friend reacts to the tipped spot. */
     function result(game, what) {
