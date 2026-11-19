@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.21"
+VERSION = "1.22"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -822,7 +822,14 @@ sub("  paintMenu();\n  /* ---------- sound",
 
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
-h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }</style>
+h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
+.purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
+.purse.stack .lbl, .purse.stack .gap { display: none !important; }
+.purse.stack > span:not(.val):not(.lbl):not(.gap) { display: contents !important; }
+.purse.stack .val.risk, .purse.stack .val.staked { font-size: 11px !important; color: rgba(245,241,232,.62) !important; font-family: var(--display); }
+/* result pills pair up, two to a line, so the table fits the phone */
+.dj-pills { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; max-width: 380px; margin-left: auto !important; margin-right: auto !important; }
+</style>
 <script>
 (function () {
   var busy = false;
@@ -831,23 +838,27 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     var pad = 8;
     document.querySelectorAll(".purse").forEach(function (el) {
       if (!el.offsetParent) return;
-      // a billion and up reads short up top: 148.5B, 40.47B, 1.15B, 3.2T
-      var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n;
-      while ((n = w.nextNode())) {
-        var m = /^(\\s*)(-?)\\$?([\\d,]+)(\\s*)$/.exec(n.nodeValue);
-        if (!m) continue;
-        var v = +m[3].replace(/,/g, "");
-        if (v < 1e9) continue;
-        var u = v >= 1e12 ? [1e12, "T"] : [1e9, "B"], x = v / u[0], d = x >= 100 ? 1 : 2;
-        var t = (Math.floor(x * Math.pow(10, d) + 1e-6) / Math.pow(10, d)).toFixed(d).replace(/0+$/, "").replace(/\\.$/, "");
-        n.nodeValue = m[1] + m[2] + t + u[1] + m[4];
-      }
+      // money on top in full; right under it, what's at risk, short: −500M
+      el.classList.add("stack");
+      el.querySelectorAll(".val.risk, .val.staked").forEach(function (r) {
+        var m = /^\\s*\\$?([\\d,]+)\\s*$/.exec(r.textContent);
+        if (!m) return;
+        var v = +m[1].replace(/,/g, "");
+        r.textContent = v > 0 ? "−" + short(v) : "\\u00a0";
+      });
       el.style.zoom = "";
       var r = el.getBoundingClientRect();
       if (r.right <= innerWidth - pad || r.width <= 0) return;
       var room = innerWidth - pad - r.left;
       el.style.zoom = String(Math.max(0.55, Math.floor(room / r.width * 100) / 100));
     });
+  }
+  function short(v) {
+    if (v < 1e6) return v.toLocaleString("en-US");
+    var u = v >= 1e12 ? [1e12, "T"] : v >= 1e9 ? [1e9, "B"] : [1e6, "M"], x = v / u[0], d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
+    var t = (Math.floor(x * Math.pow(10, d) + 1e-6) / Math.pow(10, d)).toFixed(d);
+    if (d) t = t.replace(/0+$/, "").replace(/\\.$/, "");
+    return t + u[1];
   }
   function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
   addEventListener("resize", soon);
