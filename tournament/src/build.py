@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.31"
+VERSION = "1.32"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -964,6 +964,29 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
       pw(el).innerHTML = '<b>+' + short(base) + '</b><i>' + x + '</i><b class="up">+' + short(total) + "</b>";
     }
   };
+  /* Fullscreen only. With the phone's bars gone, the page still starts below the camera strip but is
+     sized as if it had the whole screen, so it is one strip too tall and scrolls for no reason.
+     In fullscreen the tables are made one strip shorter. Nothing is scaled or locked, and outside
+     fullscreen nothing changes. */
+  var probe = null;
+  function strip() {
+    if (!document.body) return 0;
+    if (!probe) {
+      probe = document.createElement("div");
+      probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;" +
+        "height:calc(env(safe-area-inset-top, 0px) + var(--fakeInset, 0px))";
+    }
+    if (!probe.parentNode) document.body.appendChild(probe);
+    return Math.ceil(probe.getBoundingClientRect().height) || 0;
+  }
+  function fsCut() {
+    var full = !!(document.fullscreenElement || document.webkitFullscreenElement);
+    document.documentElement.style.setProperty("--fsCut", (full ? strip() : 0) + "px");
+  }
+  function fsSoon() { fsCut(); setTimeout(fsCut, 300); setTimeout(fsCut, 1000); }
+  document.addEventListener("fullscreenchange", fsSoon);
+  document.addEventListener("webkitfullscreenchange", fsSoon);
+  addEventListener("resize", fsCut);
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
   addEventListener("DOMContentLoaded", function () {
@@ -974,6 +997,8 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 </script>
 </head>""", 1)
 
+# in fullscreen, "full screen tall" is one camera strip shorter (see fsCut above)
+h = h.replace("min-height: 100dvh", "min-height: calc(100dvh - var(--fsCut, 0px))")
 # ---- win/loss pills read short once they're in the millions: +1.2B, +14T ----
 _n = h.count('"+" + fmt(') + h.count('"−" + fmt(')
 h = h.replace('"+" + fmt(', '"+" + pillAmt(').replace('"−" + fmt(', '"−" + pillAmt(')
