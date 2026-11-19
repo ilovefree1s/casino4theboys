@@ -503,7 +503,10 @@ sub("      result = outcome(d, t);", "      result = outcome(d, t); " + WU % '"d
 sub("    function settleBreakdown(h, placed) {", "    function settleBreakdown(h, placed) {\n      " + WU % '"baccarat", winningSpots(h)')
 sub("    function settle(text, pay) {", "    function settle(text, pay) {\n      " + WU % '"roulette", pocket2 != null && text.indexOf("&") >= 0 ? [pocket, pocket2] : [pocket]')
 sub("    function settle(staked) {", "    function settle(staked) {\n      " + WU % '"wheel", stop')
-sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n      " + WU % '"sicbo", vals.slice(0, 3)')
+sub("    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;", "    function settleRoll(vals) {\n      if (phase !== \"rolling\") return;\n"
+    "      // a friend's tip that missed gets one more roll; the dice turn over to it\n"
+    "      if (WUR(\"sicbo\", vals.slice(0, 3))) { vals = [1, 2, 3].map(function () { return 1 + Math.floor(Math.random() * 6); }); try { tray.set(vals); } catch (e) {} }\n      "
+    + WU % '"sicbo", vals.slice(0, 3)')
 sub("      var dealerBj = isBJ(dealer);", "      var dealerBj = isBJ(dealer); " + WU % '"blackjack", { dealer: total(dealer), trilux: !!triluxWin }')
 
 # ---- no betting more than you can finish: keep enough back for the play bet ----
@@ -533,6 +536,68 @@ sub("flushPlusStake, bonusStake, folded);\n      settlement = s;",
 # ---- walk-ups: keno says what it drew, for a friend's number ----
 sub("    function settle() {\n      var h = hits(), p = pays(picks.length, h)",
     "    function settle() {\n      " + WU % '"keno", drawn.slice()' + "\n      var h = hits(), p = pays(picks.length, h)")
+
+# ---- walk-ups: a friend's tip gets a boost - if the outcome misses it, it is dealt once more ----
+sub("  // ---------- wallet & shell ----------", """  /** True when a backed tip at [game] misses on [what], so the table should deal/spin again (once). */
+  function WUR(game, what) {
+    try { return typeof Walkups !== "undefined" && Walkups.reroll(game, what); } catch (e) { return false; }
+  }
+  /** Shuffle what's left of a shoe in place: a fresh, fair run of cards. */
+  function WUshuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; }
+  }
+  /** The next [n] cards off a shoe, in the order they'd be drawn (pop takes from the end). */
+  function WUpeek(shoe, n) { var out = []; for (var i = 0; i < n; i++) out.push(shoe[shoe.length - 1 - i]); return out; }
+  // ---------- wallet & shell ----------""")
+# roulette: classic and lightning, then double ball
+sub("var result = spinWheel();", "var result = spinWheel(); if (WUR(\"roulette\", [result])) result = spinWheel();", 2)
+sub("        var first = spinWheel(), second = spinWheel();",
+    "        var first = spinWheel(), second = spinWheel();\n"
+    "        if (WUR(\"roulette\", [first, second])) { first = spinWheel(); second = spinWheel(); }")
+# keno, money wheel
+sub("      var balls = shuffled().slice(0, DRAWN);",
+    "      var balls = shuffled().slice(0, DRAWN);\n      if (WUR(\"keno\", balls)) balls = shuffled().slice(0, DRAWN);")
+sub("      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, within);",
+    "      var i = Math.floor(Math.random() * N);\n      if (WUR(\"wheel\", STOPS[i])) i = Math.floor(Math.random() * N);\n"
+    "      var target = aim(turn, i, STEP, TURNS, within);")
+# baccarat, dragon tiger: deal the hand again
+sub("      hand = playHand(shoe);", "      hand = playHand(shoe);\n      if (WUR(\"baccarat\", winningSpots(hand))) hand = playHand(shoe);")
+sub("      var d = shoe.pop(), t = shoe.pop();",
+    "      var d = shoe.pop(), t = shoe.pop();\n      if (WUR(\"dragontiger\", outcome(d, t))) { d = shoe.pop(); t = shoe.pop(); }")
+# the poker tables: read the hand off the top of the shoe; a miss shuffles the shoe once
+sub("      // Two rounds of hole cards, then the board goes down face down.",
+    "      (function () {\n"
+    "        var c = WUpeek(shoe, 9), x = UTH.settle([c[0], c[2]], [c[1], c[3]], c.slice(4, 9), 1, 1, 0, 1, false, 1);\n"
+    "        if (WUR(\"holdem\", { trips: x.tripsPay > 0, badbeat: !!x.badBeatWin })) WUshuffle(shoe);\n"
+    "      })();\n"
+    "      // Two rounds of hole cards, then the board goes down face down.")
+sub("      // Five each, alternating, the way they come off the deck.",
+    "      (function () {\n"
+    "        var c = WUpeek(shoe, 10), p = [c[0], c[2], c[4], c[6], c[8]], q = [c[1], c[3], c[5], c[7], c[9]];\n"
+    "        var x = DJ.settle(p, q, 1, 1, 0, 1, 1, false);\n"
+    "        if (WUR(\"djwild\", { trips: !!x.tripsWin, badbeat: !!x.badBeatWin })) WUshuffle(shoe);\n"
+    "      })();\n"
+    "      // Five each, alternating, the way they come off the deck.")
+sub("      t(220, function () { player = draw(); renderCards(); });",
+    "      (function () {\n"
+    "        var c = WUpeek(shoe, 5), x = MU.settle(c[0], c[1], c.slice(2, 5), 1, 1, 0, 1, 1, false);\n"
+    "        if (WUR(\"miniuth\", { flushplus: x.flushPlusWin >= 0, bonus: x.bonusWin >= 0 })) WUshuffle(shoe);\n"
+    "      })();\n"
+    "      t(220, function () { player = draw(); renderCards(); });")
+# blackjack: Trilux reads the deal; Push 22 reads the dealer's draws
+sub("      t(350, function () { hands[0].cards.push(draw()); renderHands(); });",
+    "      if (variant === \"blazing\") (function () {\n"
+    "        var c = WUpeek(shoe, 3);\n"
+    "        if (WUR(\"blackjack\", { trilux: !!triluxOf([c[0], c[2], c[1]]), dealer: 22 })) WUshuffle(shoe);\n"
+    "      })();\n"
+    "      t(350, function () { hands[0].cards.push(draw()); renderHands(); });")
+sub("        var soleBJ = hands.length === 1 && isBJ(hands[0].cards);",
+    "        var soleBJ = hands.length === 1 && isBJ(hands[0].cards);\n"
+    "        if (hands.some(function (h) { return !isBust(h.cards); }) && !soleBJ) (function () {\n"
+    "          var d = dealer.slice(), k = 0;\n"
+    "          while (dealerHits(d) && k < 12) { d.push(shoe[shoe.length - 1 - k]); k++; }\n"
+    "          if (WUR(\"blackjack\", { trilux: true, dealer: total(d) })) WUshuffle(shoe);\n"
+    "        })();")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips

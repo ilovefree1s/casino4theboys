@@ -663,6 +663,11 @@
         else { show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
       }, 1400);
     }
+    /** A backed tip that [what] misses: the table deals or spins once more (2x the chance on a long shot). */
+    function reroll(game, what) {
+      if (!tip || !tip.placed || tip.game !== game) return false;
+      try { return !tipHit(game, tip.spot, what); } catch (e) { return false; }
+    }
     /** Left the table: the tip goes with it (chips not yet dealt come back with the table). */
     function refundTip() { tip = null; }
 
@@ -717,6 +722,6 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, reroll: reroll, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();

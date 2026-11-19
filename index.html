@@ -7434,6 +7434,16 @@
     return l;
   }
 
+  /** True when a backed tip at [game] misses on [what], so the table should deal/spin again (once). */
+  function WUR(game, what) {
+    try { return typeof Walkups !== "undefined" && Walkups.reroll(game, what); } catch (e) { return false; }
+  }
+  /** Shuffle what's left of a shoe in place: a fresh, fair run of cards. */
+  function WUshuffle(a) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), x = a[i]; a[i] = a[j]; a[j] = x; }
+  }
+  /** The next [n] cards off a shoe, in the order they'd be drawn (pop takes from the end). */
+  function WUpeek(shoe, n) { var out = []; for (var i = 0; i < n; i++) out.push(shoe[shoe.length - 1 - i]); return out; }
   // ---------- wallet & shell ----------
   var CAMPAIGN_START = 5000, CAMPAIGN_GOAL = 1000000;
   /** Free-play sandbox stake, matching the campaign's starting purse. */
@@ -9665,6 +9675,11 @@
         else { show("bad", t.who, t.who, fill(pick(TIP_LOSE), o)); womp(); }
       }, 1400);
     }
+    /** A backed tip that [what] misses: the table deals or spins once more (2x the chance on a long shot). */
+    function reroll(game, what) {
+      if (!tip || !tip.placed || tip.game !== game) return false;
+      try { return !tipHit(game, tip.spot, what); } catch (e) { return false; }
+    }
     /** Left the table: the tip goes with it (chips not yet dealt come back with the table). */
     function refundTip() { tip = null; }
 
@@ -9719,7 +9734,7 @@
       return r;
     };
     setTimeout(function () { var on = document.querySelector(".screen.on"); if (on) nag(on.id.replace("screen-", "")); }, 800);
-    return { result: result, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
+    return { result: result, reroll: reroll, announce: announce, notice: notice, ask: ask, give: give, _cur: function () { return tip; }, _tip: function (w) { return tipOffer(w || "Zac"); }, _force: function (kind) { return kind === "friend" ? friendOffer() : strangerOffer(pick(FRIENDS.filter(notMe))); },
              _pending: function () { return pending; }, _settleAll: function () { pending.forEach(function (p) { p.in = 0; }); } };
   })();
   paintMenu();
@@ -13066,6 +13081,10 @@
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
+      if (variant === "blazing") (function () {
+        var c = WUpeek(shoe, 3);
+        if (WUR("blackjack", { trilux: !!triluxOf([c[0], c[2], c[1]]), dealer: 22 })) WUshuffle(shoe);
+      })();
       t(350, function () { hands[0].cards.push(draw()); renderHands(); });
       t(750, function () { dealer.push(draw()); renderDealer(); });
       t(1150, function () { hands[0].cards.push(draw()); renderHands(); });
@@ -13210,6 +13229,11 @@
         holeUp = true;
         renderDealer();
         var soleBJ = hands.length === 1 && isBJ(hands[0].cards);
+        if (hands.some(function (h) { return !isBust(h.cards); }) && !soleBJ) (function () {
+          var d = dealer.slice(), k = 0;
+          while (dealerHits(d) && k < 12) { d.push(shoe[shoe.length - 1 - k]); k++; }
+          if (WUR("blackjack", { trilux: true, dealer: total(d) })) WUshuffle(shoe);
+        })();
         var anyLive = hands.some(function (h) { return !isBust(h.cards); });
         var delay = 650;
         function maybeHit() {
@@ -14246,6 +14270,10 @@
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
+      (function () {
+        var c = WUpeek(shoe, 9), x = UTH.settle([c[0], c[2]], [c[1], c[3]], c.slice(4, 9), 1, 1, 0, 1, false, 1);
+        if (WUR("holdem", { trips: x.tripsPay > 0, badbeat: !!x.badBeatWin })) WUshuffle(shoe);
+      })();
       // Two rounds of hole cards, then the board goes down face down.
       t(280, function () { player.push(draw()); renderHands(); });
       t(500, function () { dealer.push(draw()); renderHands(); });
@@ -14699,6 +14727,11 @@
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
+      (function () {
+        var c = WUpeek(shoe, 10), p = [c[0], c[2], c[4], c[6], c[8]], q = [c[1], c[3], c[5], c[7], c[9]];
+        var x = DJ.settle(p, q, 1, 1, 0, 1, 1, false);
+        if (WUR("djwild", { trips: !!x.tripsWin, badbeat: !!x.badBeatWin })) WUshuffle(shoe);
+      })();
       // Five each, alternating, the way they come off the deck.
       for (var i = 0; i < 5; i++) {
         (function (n) {
@@ -15621,6 +15654,10 @@
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
+      (function () {
+        var c = WUpeek(shoe, 5), x = MU.settle(c[0], c[1], c.slice(2, 5), 1, 1, 0, 1, 1, false);
+        if (WUR("miniuth", { flushplus: x.flushPlusWin >= 0, bonus: x.bonusWin >= 0 })) WUshuffle(shoe);
+      })();
       t(220, function () { player = draw(); renderCards(); });
       t(420, function () { dealer = draw(); renderCards(); });
       t(720, function () {
@@ -16751,7 +16788,9 @@
       // The wheel settles just past the last peg, in the first part of the stop,
       // the way a real one does, so that last click comes at the very end of the crawl.
       var within = 0.35 + Math.random() * 0.15;  // clear of the peg it slipped off, and short of the middle
-      var i = Math.floor(Math.random() * N), target = aim(turn, i, STEP, TURNS, within);
+      var i = Math.floor(Math.random() * N);
+      if (WUR("wheel", STOPS[i])) i = Math.floor(Math.random() * N);
+      var target = aim(turn, i, STEP, TURNS, within);
       spinRun = wheelRun(target - turn, within);
       // only the pegs the fin is down for are heard: it is halfway down half a LIFT_MS before FIN_MS
       startWheelSound(crossings(turn, target, N, spinRun.ms, spinRun.curve).filter(function (at) { return at >= (FIN_MS - LIFT_MS / 2) / 1000; }));
@@ -17022,6 +17061,7 @@
       renderAll();
       // twenty balls, a third of a second apart; a hit lands loud, a miss quietly
       var balls = shuffled().slice(0, DRAWN);
+      if (WUR("keno", balls)) balls = shuffled().slice(0, DRAWN);
       balls.forEach(function (n, i) {
         t(BALL_MS * (i + 1), function () {
           drawn.push(n);
@@ -17907,6 +17947,8 @@
     }
     function settleRoll(vals) {
       if (phase !== "rolling") return;
+      // a friend's tip that missed gets one more roll; the dice turn over to it
+      if (WUR("sicbo", vals.slice(0, 3))) { vals = [1, 2, 3].map(function () { return 1 + Math.floor(Math.random() * 6); }); try { tray.set(vals); } catch (e) {} }
       if (typeof Walkups !== "undefined") try { Walkups.result("sicbo", vals.slice(0, 3)); } catch (e) {} 
       dice = vals.slice(0, 3);
       var totalReturn = 0; winners = {};
@@ -19854,6 +19896,7 @@
       phase = "dealing"; noteText = ""; msgText = "No more bets";
       if (shoe.length < 52) shoe = buildShoe(8);
       var d = shoe.pop(), t = shoe.pop();
+      if (WUR("dragontiger", outcome(d, t))) { d = shoe.pop(); t = shoe.pop(); }
       renderAll();
       setTimeout(function () {
         dragon = d; renderSides();
@@ -20448,6 +20491,7 @@
       bankroll -= totalStaked();
       syncWallet();
       hand = playHand(shoe);
+      if (WUR("baccarat", winningSpots(hand))) hand = playHand(shoe);
       phase = "dealing";
       clearWinHighlights();
       $("pills").innerHTML = "";
@@ -21053,7 +21097,7 @@
         renderFelt(); setMessage();
         setTimeout(function () {
           msg("No more bets"); setMessage();
-          var result = spinWheel();
+          var result = spinWheel(); if (WUR("roulette", [result])) result = spinWheel();
           runBelt(result, TURNS, SPIN_MS);
           setTimeout(function () {
             pocket = result;
@@ -21067,6 +21111,7 @@
         // Two belts run at once, the top one left and the bottom one right,
         // and both balls come down together.
         var first = spinWheel(), second = spinWheel();
+        if (WUR("roulette", [first, second])) { first = spinWheel(); second = spinWheel(); }
         var stop1 = aim(reelStop, first, TURNS, false), stop2 = aim(reelStop2, second, TURNS, true);
         animateBelt(reelStop, stop1, SPIN_MS, reelStop2, stop2);
         reelStop = stop1; reelStop2 = stop2;
@@ -21076,7 +21121,7 @@
         }, SPIN_MS + 350);
         return;
       }
-      var result = spinWheel();
+      var result = spinWheel(); if (WUR("roulette", [result])) result = spinWheel();
       runBelt(result, TURNS, SPIN_MS);
       setTimeout(function () {
         pocket = result;
