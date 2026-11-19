@@ -474,7 +474,8 @@
         TT.changed(true);
       }
       function poll() {
-        if (!TT.on || !myName() || TT.closed) return;
+        // challenges reach you anywhere in the game once you've joined; money only moves inside the tournament
+        if (!myName() || (TT.on && TT.closed)) return;
         rpc("c4tb_duels_mine", { p_name: myName(), p_token: token() }).then(function (list) {
           if (!Array.isArray(list)) return;
           mine = list;
@@ -495,6 +496,7 @@
           told["dec" + d.id] = 1;
           w.notice("bad", other, "⚔️ DUEL", other.toUpperCase() + " turned down your duel.");
         }
+        if (!TT.on) return;   // the wallet isn't loaded yet: the pot moves when you tap PLAY
         if (d.status === "active" && !(c ? d.c_debited : d.o_debited)) {
           claim(d, "debit", function () {
             if (c) w.notice("friend", other, "⚔️ DUEL ON", other.toUpperCase() + " accepted! 10 hands of " +
@@ -514,7 +516,8 @@
         }, function () {}).then(function () { delete claiming[key]; });
       }
       function answer(d, yes) {
-        if (yes && Shell.getBankroll() < d.pot) {
+        var have = TT.on ? Shell.getBankroll() : (board && board.me ? (board.me.cash != null ? board.me.cash : board.me.net) : Infinity);
+        if (yes && have < d.pot) {
           W().notice("bad", them(d), "⚔️ DUEL", "You need $" + fmt(d.pot) + " to take this duel.");
           return;
         }
