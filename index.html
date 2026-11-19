@@ -4170,7 +4170,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.10</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.11</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10471,7 +10471,7 @@
           if (!tag) { tag = document.createElement("span"); tag.className = "tt-lead"; btn.appendChild(tag); }
           if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
           var mine = x && x.name.toLowerCase() === (myName() || "").toLowerCase();
-          tag.textContent = (x ? "👑 " + (mine ? "YOU" : x.name.toUpperCase()) + " $" + fmt(x.cash) : "NO LEADER YET") + " · " + pts + " PT" + (pts > 1 ? "S" : "");
+          tag.textContent = (x ? "👑 " + (mine ? "YOU" : shown(x.name).toUpperCase()) + " $" + fmt(x.cash) : "NO LEADER YET") + " · " + pts + " PT" + (pts > 1 ? "S" : "");
           tag.classList.toggle("mine", !!mine);
         });
       }
@@ -11016,13 +11016,13 @@
 
       if (b.last_champion) {
         champ.hidden = false;
-        $("tt-champ-name").textContent = b.last_champion.name.toUpperCase();
+        $("tt-champ-name").textContent = shown(b.last_champion.name).toUpperCase();
         $("tt-champ-net").textContent = money(b.last_champion.net);
         var seen = "ftt.champseen." + b.last_champion.week;
         if (!store.getStr(seen, "")) {
           store.setStr(seen, "1");
           $("tt-crown-wk").textContent = "WEEK " + (b.week_no - 1) + " CHAMPION";
-          $("tt-crown-name").textContent = b.last_champion.name.toUpperCase();
+          $("tt-crown-name").textContent = shown(b.last_champion.name).toUpperCase();
           $("tt-crown-net").textContent = money(b.last_champion.net);
           $("tt-crown").classList.add("on");
         }
@@ -11032,9 +11032,9 @@
         var lp = pointsCache[b.last_champion.week];
         if (!lp) getPoints(b.last_champion.week).then(function () { if ($("tt-board").classList.contains("on")) paintBoard(); });
         else if (lp[0]) {
-          $("tt-champ-name").textContent = lp[0].name.toUpperCase();
+          $("tt-champ-name").textContent = shown(lp[0].name).toUpperCase();
           $("tt-champ-net").textContent = lp[0].points + " PTS";
-          $("tt-crown-name").textContent = lp[0].name.toUpperCase();
+          $("tt-crown-name").textContent = shown(lp[0].name).toUpperCase();
           $("tt-crown-net").textContent = lp[0].points + " PTS";
         }
       }
@@ -11042,7 +11042,7 @@
         var c = document.createElement("span");
         c.className = "tt-win";
         var d = document.createElement("b"); d.textContent = dayName(w.day);
-        var n = document.createElement("span"); n.textContent = w.name.toUpperCase() + " " + signed(w.profit);
+        var n = document.createElement("span"); n.textContent = shown(w.name).toUpperCase() + " " + signed(w.profit);
         c.appendChild(d); c.appendChild(n);
         wins.appendChild(c);
       });
@@ -11143,7 +11143,7 @@
         list.appendChild(heading(dayName(yd) + " · WHO TOOK EACH GAME"));
         if (!ws.length) list.appendChild(empty("Nobody played yesterday."));
         ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
-          list.appendChild(row("", w.game, "👑 " + w.name.toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
+          list.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
             w.name.toLowerCase() === me));
         });
         return;
@@ -11236,10 +11236,10 @@
             return { g: g, rs: rs, tot: tot };
           }).sort(function (a, c) { return Math.abs(c.tot) - Math.abs(a.tot); }).forEach(function (x) {
             var top = x.rs[0], low = x.rs[x.rs.length - 1], bits = [];
-            if (top.net > 0) bits.push("BEST " + top.name.toUpperCase() + " " + signed(top.net));
-            if (low.net < 0) bits.push("WORST " + low.name.toUpperCase() + " " + signed(low.net));
+            if (top.net > 0) bits.push("BEST " + shown(top.name).toUpperCase() + " " + signed(top.net));
+            if (low.net < 0) bits.push("WORST " + shown(low.name).toUpperCase() + " " + signed(low.net));
             var big = x.rs.reduce(function (m, r) { return r.best > m.best ? r : m; }, x.rs[0]);
-            if (big.best > 0) bits.push("BIGGEST HIT " + big.name.toUpperCase() + " $" + fmt(big.best));
+            if (big.best > 0) bits.push("BIGGEST HIT " + shown(big.name).toUpperCase() + " $" + fmt(big.best));
             var el = row("", x.g, bits.join(" · "), signed(x.tot), false);
             el.classList.add(x.tot > 0 ? "up" : x.tot < 0 ? "down" : "flat");
             list.appendChild(el);
@@ -11316,6 +11316,13 @@
     // this week's made-up names, and whose face they are (from Sunday everyone joins as their face)
     var FACE_ALIAS = { tristyboy: "tristen", darinwooldridge: "darin", juiceman: "juice", ethanj: "ethan",
                        matthewmyer: "matthew", due: "chris", mjax: "max", brad: "grace", bdmarsh: "daneal", maverick: "zach" };
+    /** The name the board shows: their face's name when we know whose face they are, else what they typed. */
+    function shown(name) {
+      var lk = String(name || "").toLowerCase(), al = FACE_ALIAS[lk.replace(/[^a-z0-9]/g, "")] || lk;
+      var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
+      for (var k in f) if (k.toLowerCase() === al) return k;
+      return String(name || "");
+    }
     function faceOf(lk) {
       lk = FACE_ALIAS[String(lk).replace(/[^a-z0-9]/g, "")] || lk;
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
@@ -11328,7 +11335,7 @@
       // where the place number was: their face if they're on right now, a grey dot if they're not
       var a = document.createElement("span"); a.className = "rk av";
       var mid = document.createElement("span"); mid.className = "who";
-      var n = document.createElement("b"); n.textContent = name.toUpperCase() + (mine ? " (YOU)" : "");
+      var n = document.createElement("b"); n.textContent = shown(name).toUpperCase() + (mine ? " (YOU)" : "");
       if (players()[String(name).toLowerCase()]) el.setAttribute("data-player", name);
       var lk = String(name).toLowerCase(), face = faceOf(lk);
       if (online[lk] && face) {
