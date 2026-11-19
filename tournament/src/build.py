@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.2"
+VERSION = "1.3"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -52,7 +52,7 @@ sub("      <!-- the run -->\n",
         <div class="tt-line" id="tt-line">CONNECTING…</div>
         <div class="tt-btns">
           <button type="button" id="tt-play">PLAY</button>
-          <button type="button" id="tt-boardbtn">BOARD</button>
+          <button type="button" id="tt-boardbtn">BOARD<i class="tt-dot" hidden></i></button>
         </div>
       </div>
       <!-- the run -->

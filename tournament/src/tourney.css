@@ -243,3 +243,25 @@
               z-index: 9990; padding: 12px 20px; border-radius: 999px; border: 2px solid #57E06A; background: rgba(8,30,12,.95);
               color: #8BF09A; font: 800 14px system-ui, sans-serif; letter-spacing: .08em; cursor: pointer;
               box-shadow: 0 6px 20px rgba(0,0,0,.6); }
+
+  /* the message board */
+  #tt-tabs button, #tt-boardbtn { position: relative; }
+  #tt-tabs button { letter-spacing: .12em; }
+  .tt-dot { position: absolute; top: 4px; right: 6px; width: 8px; height: 8px; border-radius: 50%;
+            background: #FF3B5C; box-shadow: 0 0 8px #FF3B5C; }
+  .tt-dot[hidden] { display: none; }
+  .tt-msg { padding: 12px 14px; border-radius: 12px; background: #110E13; border: 1px solid rgba(255,255,255,.08);
+            position: relative; }
+  .tt-msg.new { border-color: rgba(255,122,61,.75); background: rgba(255,122,61,.09); }
+  .tt-msg .hd { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 8px;
+                letter-spacing: .14em; color: rgba(245,241,232,.5); }
+  .tt-msg .hd b { color: #FF9A66; }
+  .tt-msg .hd button { margin-left: auto; color: rgba(245,241,232,.45); font-size: 14px; padding: 0 4px; }
+  .tt-msg p { margin: 7px 0 0; font-size: 14px; line-height: 1.4; color: var(--bone); white-space: pre-wrap; overflow-wrap: anywhere; }
+  .tt-compose { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
+  .tt-compose textarea { width: 100%; min-height: 70px; padding: 10px 12px; border-radius: 11px; resize: vertical;
+                         background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6); color: var(--bone);
+                         font: 14px/1.4 inherit; outline: none; }
+  .tt-compose button { align-self: flex-end; padding: 9px 22px; border-radius: 999px; background: #FF7A3D; color: #120604;
+                       font-family: var(--display); font-size: 11px; letter-spacing: .2em; }
+  .tt-compose button:disabled { opacity: .5; }

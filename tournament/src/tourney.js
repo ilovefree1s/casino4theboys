@@ -979,6 +979,7 @@
     var tab = "week";
     function showBoard() {
       pointsCache = {}; winnersCache = {};
+      msgSeenAtOpen = msgSeen; loadMsgs();
       $("tt-board").classList.add("on");
       paintBoard();
       ping();
@@ -995,6 +996,7 @@
       var champ = $("tt-champ"), wins = $("tt-wins");
       champ.hidden = true; wins.innerHTML = "";
 
+      if (tab === "msgs") { $("tt-you").hidden = true; $("tt-bhead").textContent = "MESSAGES"; $("tt-bsub").textContent = "FROM JUSTIN"; return paintMsgs(list); }
       if (b.status === "upcoming") {
         $("tt-bhead").textContent = "WEEK 1";
         $("tt-bsub").textContent = "STARTS SUNDAY 12:00 AM · IN " + left(b.starts_at);
@@ -1055,6 +1057,7 @@
       var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
       if (dayBtn) dayBtn.textContent = b.final ? "LAST WEEK" : "YESTERDAY";
       if (tab === "stats") return paintStats(b);
+      if (tab === "msgs") return paintMsgs(list);
       if (isPoints(b.week) && !b.final) return paintPoints(b, list, me);
       if (b.final) {
         if (tab === "day") {
@@ -1338,12 +1341,80 @@
       el.appendChild(a); el.appendChild(mid); el.appendChild(v);
       return el;
     }
+    /* ---- the message board: Justin posts, everyone reads; a red dot until you've seen the newest ---- */
+    var msgs = null, msgSeen = +store.getStr("ftt.msgseen", "0") || 0, msgSeenAtOpen = msgSeen;
+    function isJustin() { return (myName() || "").toLowerCase() === "justin"; }
+    function msgDots() {
+      var top = msgs && msgs[0] ? msgs[0].id : 0, on = top > msgSeen;
+      document.querySelectorAll("#tt-boardbtn .tt-dot, #tt-tabs .tt-dot").forEach(function (d) { d.hidden = !on; });
+    }
+    function loadMsgs() {
+      return rpc("c4tb_msgs", {}).then(function (list) {
+        if (!Array.isArray(list)) return;
+        var got = Date.now();
+        list.forEach(function (m) { m.at = got - m.s * 1000; });
+        msgs = list; msgDots();
+        if ($("tt-board").classList.contains("on") && tab === "msgs") paintBoard();
+      }, function () {});
+    }
+    function markRead() {
+      if (msgs && msgs[0] && msgs[0].id > msgSeen) { msgSeen = msgs[0].id; store.setStr("ftt.msgseen", String(msgSeen)); }
+      msgDots();
+    }
+    function paintMsgs(list) {
+      if (isJustin()) {
+        var box = document.createElement("div"); box.className = "tt-compose";
+        var ta = document.createElement("textarea"); ta.maxLength = 1000; ta.placeholder = "Say something to everybody…";
+        ta.value = store.getStr("ftt.msgdraft", "");
+        ta.addEventListener("input", function () { store.setStr("ftt.msgdraft", ta.value); });
+        var go = document.createElement("button"); go.type = "button"; go.textContent = "POST";
+        go.addEventListener("click", function () {
+          var t = ta.value.trim(); if (!t) return;
+          go.disabled = true;
+          rpc("c4tb_msg_post", { p_name: myName(), p_token: token(), p_body: t }).then(function (r) {
+            go.disabled = false;
+            if (r && r.ok) { store.setStr("ftt.msgdraft", ""); ta.value = ""; loadMsgs().then(markRead); }
+            else go.textContent = "COULDN'T POST";
+          }, function () { go.disabled = false; go.textContent = "TRY AGAIN"; });
+        });
+        box.appendChild(ta); box.appendChild(go); list.appendChild(box);
+      }
+      if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); return; }
+      if (!msgs.length) list.appendChild(empty("No messages yet."));
+      msgs.forEach(function (m) {
+        var el = document.createElement("div"); el.className = "tt-msg" + (m.id > msgSeenAtOpen ? " new" : "");
+        var hd = document.createElement("div"); hd.className = "hd";
+        var who = document.createElement("b"); who.textContent = "JUSTIN";
+        var when = document.createElement("span"); when.textContent = Date.now() - m.at < 60000 ? "JUST NOW" : ago(m.at).toUpperCase();
+        hd.appendChild(who); hd.appendChild(when);
+        if (isJustin()) {
+          var x = document.createElement("button"); x.type = "button"; x.textContent = "✕"; x.setAttribute("aria-label", "Delete message");
+          x.addEventListener("click", function () {
+            rpc("c4tb_msg_delete", { p_name: myName(), p_token: token(), p_id: m.id }).then(loadMsgs, function () {});
+          });
+          hd.appendChild(x);
+        }
+        var p = document.createElement("p"); p.textContent = m.body;
+        el.appendChild(hd); el.appendChild(p); list.appendChild(el);
+      });
+      markRead();
+    }
+    (function () {
+      var mb = document.querySelector('#tt-tabs [data-t="msgs"]');
+      if (mb) { var d = document.createElement("i"); d.className = "tt-dot"; d.hidden = true; mb.appendChild(d); }
+    })();
+    setInterval(function () { if (!document.hidden) loadMsgs(); }, 60000);
+    setTimeout(loadMsgs, 3000);
+    document.addEventListener("visibilitychange", function () { if (!document.hidden) loadMsgs(); });
+
     function empty(text) {
       var el = document.createElement("div"); el.className = "tt-empty"; el.textContent = text; return el;
     }
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
+        var was = tab;
         tab = x.getAttribute("data-t");
+        if (tab === "msgs" && was !== "msgs") msgSeenAtOpen = msgSeen;
         if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; duelsCache = null; }
         paintBoard();
       });
