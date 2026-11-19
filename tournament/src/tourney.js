@@ -843,7 +843,7 @@
           "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores.</li>" +
           "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
           "<li><b>🔥 Hot games and walk-ups are on.</b> Two games pay 2× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
-          "<li><b>You are your face.</b> When you join, tap your picture and pick a 4-digit PIN. Your PIN gets you back in if your phone ever forgets you.</li>";
+          "<li><b>You are your face.</b> When you join, tap your picture and pick a 4-digit PIN. No picture yet? Tap NOT ON HERE and type your name. Your PIN gets you back in if your phone ever forgets you.</li>";
       } else if (ol && RULES_DAILY) { ol.innerHTML = RULES_DAILY.list; $("tt-rules-sub").textContent = RULES_DAILY.sub; }
       return b;
     }
@@ -858,7 +858,7 @@
       return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
     }
     function askName(then) {
-      var faces = faceMode(), picked = "";
+      var faces = faceMode(), picked = "", typing = false;
       var grid = $("tt-faces"), sub = document.querySelector("#tt-join .sub");
       $("tt-pin").value = "";
       $("tt-join-err").textContent = "";
@@ -867,6 +867,20 @@
         $("tt-name").style.display = "none";
         grid.hidden = false; grid.className = ""; grid.innerHTML = "";
         sub.textContent = "Tap your face, then your 4-digit PIN. New here? Pick a PIN now. Back again? Use the one you picked.";
+        // no picture yet: type a name instead
+        var tn = $("tt-typename");
+        tn.hidden = false; tn.textContent = "NOT ON HERE? TYPE YOUR NAME";
+        var setTyping = function (on) {
+          typing = on;
+          grid.hidden = on;
+          $("tt-name").style.display = on ? "" : "none";
+          tn.textContent = on ? "PICK YOUR FACE INSTEAD" : "NOT ON HERE? TYPE YOUR NAME";
+          sub.textContent = on ? "Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in."
+                               : "Tap your face, then your 4-digit PIN. New here? Pick a PIN now. Back again? Use the one you picked.";
+          $("tt-join-err").textContent = "";
+          if (on) { $("tt-name").value = myName(); setTimeout(function () { $("tt-name").focus(); }, 60); }
+        };
+        tn.onclick = function () { setTyping(!typing); };
         var mine = myName() || store.getStr("c4tb.walkme", "");
         Object.keys(faces).forEach(function (n) {
           var bt = document.createElement("button"); bt.type = "button"; bt.setAttribute("data-face", n);
@@ -900,7 +914,10 @@
             x.classList.toggle("taken", !!t[f] && f !== (myName() || "").toLowerCase());
           });
         }, function () {});
+        // signed in before under a typed name: open on the name box
+        if (myName() && !picked) setTyping(true);
       } else {
+        $("tt-typename").hidden = true;
         $("tt-name").style.display = "";
         grid.hidden = true;
         sub.textContent = "Your name, and a 4-digit PIN. If this phone ever forgets you, your name and PIN get you back in with your money.";
@@ -909,8 +926,8 @@
       }
       $("tt-join").classList.add("on");
       $("tt-join-go").onclick = function () {
-        var n = faces ? picked : $("tt-name").value.trim().replace(/\s+/g, " ");
-        if (faces && !n) { $("tt-join-err").textContent = "Tap your face first."; return; }
+        var n = faces && !typing ? picked : $("tt-name").value.trim().replace(/\s+/g, " ");
+        if (faces && !typing && !n) { $("tt-join-err").textContent = "Tap your face first."; return; }
         if (n.length < 2 || n.length > 16 || !/^[A-Za-z0-9 ._'-]+$/.test(n)) {
           $("tt-join-err").textContent = "2–16 letters or numbers.";
           return;
@@ -930,7 +947,7 @@
           store.setStr("ftt.name", j.name);
           store.setStr("ftt.haspin", "1");
           // you're this face now, so the walk-ups never send you to yourself
-          if (faces) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
+          if (faces && !typing) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
           if (then) then(); else refreshLane();
         }, function () {
@@ -1396,8 +1413,9 @@
       lk = FACE_ALIAS[String(lk).replace(/[^a-z0-9]/g, "")] || lk;
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
       for (var k in f) if (k.toLowerCase() === lk) return f[k];
-      return "";
+      return STICK;   // no picture yet: a stick figure
     }
+    var STICK = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiBmaWxsPSIjZjNlZmU0Ii8+PGcgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjMWExYTFhIiBzdHJva2Utd2lkdGg9IjIuNiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMzIgOWMtOSAwLTE1IDYtMTQuNSAxNC41QzE4IDMyIDI0IDM3IDMyLjUgMzYuNSA0MSAzNiA0NiAzMCA0NS41IDIyIDQ1IDE0IDQwIDkgMzIgOXoiLz48cGF0aCBkPSJNMjYuNSAyMC41bDEgLjNNMzcgMjBsLjguNCIvPjxwYXRoIGQ9Ik0yNiAyOWMyLjUgMS44IDYgMi4yIDkuNS41IDEtLjUgMS42LTEuMiAyLTIiLz48cGF0aCBkPSJNMzIgMzYuNWwuNSAxM00zMi41IDQ5LjVMMjUgNjBNMzIuNSA0OS41TDQwIDU5LjVNMzIgNDJsLTEwIDMuNU0zMiA0Mmw5LjUgNC41Ii8+PHBhdGggZD0iTTI5IDguNWMtMS0zIDEtNC41IDItM00zMy41IDguNWMuNS0zIDMtMy41IDMuNS0yIi8+PC9nPjwvc3ZnPgo=";
     function row(rank, name, tags, value, mine) {
       var el = document.createElement("div");
       el.className = "tt-row" + (mine ? " me" : "");
@@ -1471,6 +1489,7 @@
         else if (part) el.appendChild(document.createTextNode(part));
       });
     }
+    var rulesWeek = "this";
     function paintMsgs(list) {
       if (isJustin()) {
         var box = document.createElement("div"); box.className = "tt-compose";
@@ -1505,14 +1524,29 @@
         }
         el.appendChild(hd); el.appendChild(fmtMsg(m.body)); list.appendChild(el);
       });
-      // and the rules, always there under the news
-      setRules();
+      // and the rules, always there under the news; while next week plays differently, a button for each
+      var wk = board && board.week ? String(board.week) : "";
+      var nx = wk ? new Date(Date.parse(wk + "T12:00:00Z") + 7 * 864e5).toISOString().slice(0, 10) : "";
+      var differs = wk && isPoints(wk) !== isPoints(nx);
+      if (!differs) rulesWeek = "this";
+      setRules(rulesWeek === "next" ? { week: nx } : null);
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
         list.appendChild(heading("THE RULES"));
+        if (differs) {
+          var sw = document.createElement("div"); sw.className = "tt-rweek";
+          [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {
+            var bt = document.createElement("button"); bt.type = "button"; bt.textContent = o[1];
+            if (rulesWeek === o[0]) bt.className = "on";
+            bt.onclick = function () { rulesWeek = o[0]; paintBoard(); };
+            sw.appendChild(bt);
+          });
+          list.appendChild(sw);
+        }
         var copy = ol.cloneNode(true); copy.classList.add("tt-msgrules");
         list.appendChild(copy);
       }
+      setRules();   // the rules sheet itself stays on this week
       markRead();
     }
     (function () {

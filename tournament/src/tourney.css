@@ -298,3 +298,10 @@
   .tt-row .rk.av .tt-on { margin: 0; width: 10px; height: 10px; }
   .tt-face { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; box-sizing: border-box;
              border: 2px solid #3BE07A; box-shadow: 0 0 10px rgba(59,224,122,.55); }
+  #tt-typename { display: block; margin: 12px auto 0; padding: 6px 10px; font-family: var(--mono); font-size: 9px;
+                 letter-spacing: .16em; color: #FF9A66; text-decoration: underline; text-underline-offset: 3px; }
+  #tt-typename[hidden] { display: none; }
+  .tt-rweek { display: flex; gap: 8px; }
+  .tt-rweek button { flex: 1; padding: 10px 0; border-radius: 999px; font-family: var(--mono); font-size: 9.5px; letter-spacing: .18em;
+                     color: rgba(245,241,232,.65); border: 1px solid rgba(255,122,61,.45); }
+  .tt-rweek button.on { color: #120604; background: #FF7A3D; border-color: #FF7A3D; }
