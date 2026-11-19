@@ -823,6 +823,14 @@
     // ---- the rules ----
     var RULES_DAILY = null;
     function showRules(b) {
+      b = setRules(b);
+      $("tt-rules-head").textContent = b && b.status === "live"
+        ? "WEEK " + b.week_no + " · IT'S ON" : "THE TOURNAMENT";
+      $("tt-rules").classList.add("on");
+      $("tt-rules").scrollTop = 0;
+    }
+    /** Puts this week's rules (daily or points) into the rules sheet's list. */
+    function setRules(b) {
       b = b || board;
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol && RULES_DAILY === null) RULES_DAILY = { list: ol.innerHTML, sub: $("tt-rules-sub").textContent };
@@ -835,12 +843,9 @@
           "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores.</li>" +
           "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
           "<li><b>🔥 Hot games and walk-ups are on.</b> Two games pay 2× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
-          "<li><b>One phone.</b> Your name is locked to this phone, and your PIN gets you back in if it ever forgets you.</li>";
+          "<li><b>You are your face.</b> When you join, tap your picture and pick a 4-digit PIN. Your PIN gets you back in if your phone ever forgets you.</li>";
       } else if (ol && RULES_DAILY) { ol.innerHTML = RULES_DAILY.list; $("tt-rules-sub").textContent = RULES_DAILY.sub; }
-      $("tt-rules-head").textContent = b && b.status === "live"
-        ? "WEEK " + b.week_no + " · IT'S ON" : "THE TOURNAMENT";
-      $("tt-rules").classList.add("on");
-      $("tt-rules").scrollTop = 0;
+      return b;
     }
     $("tt-rules-ok").addEventListener("click", function () { $("tt-rules").classList.remove("on"); });
     $("tt-ruleslink").addEventListener("click", function () { showRules(); });
@@ -1050,7 +1055,7 @@
       var champ = $("tt-champ"), wins = $("tt-wins");
       champ.hidden = true; wins.innerHTML = "";
 
-      if (tab === "msgs") { $("tt-you").hidden = true; $("tt-bhead").textContent = "MESSAGES"; $("tt-bsub").textContent = "FROM JUSTIN"; return paintMsgs(list); }
+      if (tab === "msgs") { $("tt-you").hidden = true; $("tt-ruleslink").hidden = true; $("tt-bhead").textContent = "NEWS & RULES"; $("tt-bsub").textContent = "FROM JUSTIN"; return paintMsgs(list); }
       if (b.status === "upcoming") {
         $("tt-bhead").textContent = "WEEK 1";
         $("tt-bsub").textContent = "STARTS SUNDAY 12:00 AM · IN " + left(b.starts_at);
@@ -1111,6 +1116,7 @@
       var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
       if (dayBtn) dayBtn.textContent = b.final ? "LAST WEEK" : "YESTERDAY";
       if (tab === "stats") return paintStats(b);
+      $("tt-ruleslink").hidden = tab === "msgs";
       if (tab === "msgs") return paintMsgs(list);
       if (isPoints(b.week) && !b.final) return paintPoints(b, list, me);
       if (b.final) {
@@ -1415,6 +1421,29 @@
       if (msgs && msgs[0] && msgs[0].id > msgSeen) { msgSeen = msgs[0].id; store.setStr("ftt.msgseen", String(msgSeen)); }
       msgDots();
     }
+    /** A post, lightly dressed: "# " a heading, "- " a bullet, **bold**. Everything else is plain text. */
+    function fmtMsg(body) {
+      var box = document.createElement("div"); box.className = "tt-mbody";
+      var ul = null;
+      String(body).split("\n").forEach(function (line) {
+        var t = line.replace(/\s+$/, "");
+        if (/^[-•]\s+/.test(t)) {
+          if (!ul) { ul = document.createElement("ul"); box.appendChild(ul); }
+          var li = document.createElement("li"); inline(li, t.replace(/^[-•]\s+/, "")); ul.appendChild(li); return;
+        }
+        ul = null;
+        if (/^#\s+/.test(t)) { var h = document.createElement("h4"); inline(h, t.replace(/^#\s+/, "")); box.appendChild(h); return; }
+        if (!t) { box.appendChild(document.createElement("br")); return; }
+        var p = document.createElement("p"); inline(p, t); box.appendChild(p);
+      });
+      return box;
+    }
+    function inline(el, t) {
+      t.split(/(\*\*[^*]+\*\*)/).forEach(function (part) {
+        if (/^\*\*[^*]+\*\*$/.test(part)) { var b = document.createElement("b"); b.textContent = part.slice(2, -2); el.appendChild(b); }
+        else if (part) el.appendChild(document.createTextNode(part));
+      });
+    }
     function paintMsgs(list) {
       if (isJustin()) {
         var box = document.createElement("div"); box.className = "tt-compose";
@@ -1434,7 +1463,6 @@
         box.appendChild(ta); box.appendChild(go); list.appendChild(box);
       }
       if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); return; }
-      if (!msgs.length) list.appendChild(empty("No messages yet."));
       msgs.forEach(function (m) {
         var el = document.createElement("div"); el.className = "tt-msg" + (m.id > msgSeenAtOpen ? " new" : "");
         var hd = document.createElement("div"); hd.className = "hd";
@@ -1448,9 +1476,16 @@
           });
           hd.appendChild(x);
         }
-        var p = document.createElement("p"); p.textContent = m.body;
-        el.appendChild(hd); el.appendChild(p); list.appendChild(el);
+        el.appendChild(hd); el.appendChild(fmtMsg(m.body)); list.appendChild(el);
       });
+      // and the rules, always there under the news
+      setRules();
+      var ol = document.querySelector("#tt-rules .tt-rlist");
+      if (ol) {
+        list.appendChild(heading("THE RULES"));
+        var copy = ol.cloneNode(true); copy.classList.add("tt-msgrules");
+        list.appendChild(copy);
+      }
       markRead();
     }
     (function () {

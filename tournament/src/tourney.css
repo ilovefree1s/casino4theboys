@@ -282,3 +282,14 @@
   #tt-faces button.taken b { color: rgba(245,241,232,.4); }
   #tt-faces button.taken::after { content: "TAKEN"; margin-top: -1px; font: 700 7px/1 var(--mono); letter-spacing: .14em; color: rgba(245,241,232,.45); }
   #tt-faces button.taken.on img { filter: grayscale(.3); }
+  .tt-mbody { margin-top: 7px; font-size: 14px; line-height: 1.45; color: var(--bone); overflow-wrap: anywhere; }
+  .tt-mbody p { margin: 0 0 4px; }
+  .tt-mbody br { display: block; content: ""; margin-top: 6px; }
+  .tt-mbody h4 { margin: 8px 0 4px; font-family: var(--display); font-style: italic; font-size: 17px; color: #FF9A66; letter-spacing: .02em; }
+  .tt-mbody h4:first-child { margin-top: 2px; }
+  .tt-mbody ul { margin: 2px 0 6px; padding-left: 18px; }
+  .tt-mbody li { margin: 3px 0; }
+  .tt-mbody li::marker { color: #FF7A3D; }
+  .tt-mbody b { color: #FFD9A8; }
+  #tt-rows .tt-msgrules { margin: 0; }
+  #tt-ruleslink[hidden] { display: none; }
