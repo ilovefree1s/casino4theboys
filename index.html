@@ -9212,6 +9212,7 @@
       }, 1200);
     }
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
+    var HUSTLES = false;
     var hands = 0, gap = Math.round(rnd(7, 13)), pending = [], offer = null, deck = [];
     /* Money out with somebody is kept on the phone, one list per wallet
        (campaign, play testing, each tournament day), so a reload doesn't lose it. */
@@ -9702,8 +9703,9 @@
       if (!deck.length) deck = FRIENDS.filter(notMe).sort(function () { return Math.random() - 0.5; });
       var nx = deck.shift();
       var roll = Math.random(), ok = false;
-      if (roll < 0.35 && nx !== "Tristen") ok = tipOffer(nx);
-      if (!ok) ok = roll < 0.65 ? friendOffer(nx) : strangerOffer(nx);
+      // hustles (sick kid, horse tip...) are off for now: just tips and friends borrowing to play
+      if (roll < 0.5 && nx !== "Tristen") ok = tipOffer(nx);
+      if (!ok) ok = HUSTLES && roll >= 0.75 ? strangerOffer(nx) : friendOffer(nx);
       if (!ok) deck.push(nx);
       if (ok) { hands = 0; gap = Math.round(rnd(7, 13)); }
     }
