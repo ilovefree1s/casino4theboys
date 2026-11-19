@@ -6958,6 +6958,17 @@
         "face": "#0a3d91",
         "ink": "#ffd24d",
         "spotLight": 0.3
+      },
+      {
+        "v": 1000000000,
+        "label": "1B",
+        "body": "#c9c30d",
+        "a": "#525252",
+        "b": "#d11515",
+        "face": "#000000",
+        "faceOwn": true,
+        "ink": "#ffd24d",
+        "spotLight": 0.3
       }
     ]
   }
@@ -7053,7 +7064,7 @@
     // The recessed face and the pressed lettering each either follow the
     // clay — as a moulded chip does — or take a colour of their own, which
     // is how a chip with a printed centre reads.
-    var face = S.faceOwn ? c.face : body;
+    var face = (c.faceOwn != null ? c.faceOwn : S.faceOwn) ? c.face : body;
     var ink = S.inkOwn ? c.ink : body;
     // how much of the light pass lands on this one's spots
     var spotLit = c.spotLight === undefined ? 1 : c.spotLight;
@@ -7313,7 +7324,9 @@
     // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
     if (limits && limits.enforced && limits.max === Infinity)
       // a billion or more on the stack brings out the 100M chip (the 1K steps off to make room)
-      return bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
+      // ten billion and up: just the big three
+      return bankroll >= 10000000000 ? [1000000, 100000000, 1000000000]
+        : bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);
     var out = all.filter(function (v) { return v <= ceiling; });
@@ -7327,7 +7340,7 @@
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
   function chipHtml(amount, size) {
-    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000];
+    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000, 1000000000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? chipFace(chip) : "";

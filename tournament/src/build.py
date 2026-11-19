@@ -453,18 +453,33 @@ sub("""        "v": 25000,
         "face": "#0a3d91",
         "ink": "#ffd24d",
         "spotLight": 0.3
+      },
+      {
+        "v": 1000000000,
+        "label": "1B",
+        "body": "#c9c30d",
+        "a": "#525252",
+        "b": "#d11515",
+        "face": "#000000",
+        "faceOwn": true,
+        "ink": "#ffd24d",
+        "spotLight": 0.3
       }
     ]""")
+# a chip may have its own center color
+sub("    var face = S.faceOwn ? c.face : body;", "    var face = (c.faceOwn != null ? c.faceOwn : S.faceOwn) ? c.face : body;")
 sub("""    var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""",
 """    // the Whale Room has no ceiling: it racks the five big chips, 500 to 100K
     if (limits && limits.enforced && limits.max === Infinity)
       // a billion or more on the stack brings out the 100M chip (the 1K steps off to make room)
-      return bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
+      // ten billion and up: just the big three
+      return bankroll >= 10000000000 ? [1000000, 100000000, 1000000000]
+        : bankroll >= 1000000000 ? [5000, 25000, 100000, 1000000, 100000000] : [1000, 5000, 25000, 100000, 1000000];
     var all = [25, 100, 500, 1000, 5000, 25000];
     var ceiling = limits && limits.enforced ? limits.max : (bankroll >= 100000 ? 25000 : 5000);""")
 sub("""    var values = [25, 100, 500, 1000, 5000, 25000];
-    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000];
+    var chip = null;""", """    var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000, 1000000000];
     var chip = null;""")
 
 # ---- Money Wheel after a spin: NEW BET clears the felt, SPIN AGAIN spins the same bet straight away ----
