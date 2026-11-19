@@ -224,3 +224,8 @@
 
   .tt-on.off { background: #6B6F78; box-shadow: none; }
   .tt-ago { font-weight: 600; font-size: 10px; letter-spacing: .04em; color: rgba(244,238,220,.5); }
+
+  .tt-sechead.fold { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 6px;
+                     padding: 6px 2px; border-bottom: 1px solid rgba(255,154,102,.2); }
+  .tt-sechead.fold::before { content: "▾"; font-size: 11px; transition: transform .15s; display: inline-block; }
+  .tt-sechead.fold.shut::before { transform: rotate(-90deg); }

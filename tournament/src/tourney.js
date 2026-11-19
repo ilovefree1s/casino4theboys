@@ -1068,6 +1068,7 @@
         list.appendChild(el);
       });
       list.appendChild(empty("Everyone's stats for this week unlock when it ends at midnight Saturday."));
+      foldable(list);
     }
     /** Everyone signed up, by lowercase name. */
     function players() {
@@ -1075,6 +1076,34 @@
       (roster || []).forEach(function (p) { m[String(p.name || p).toLowerCase()] = 1; });
       ((board && board.rows) || []).forEach(function (p) { m[String(p.name).toLowerCase()] = 1; });
       return m;
+    }
+    /**
+     * Every section on the stats tab folds: tap its heading to close or open it.
+     * Which ones are closed is kept on the phone, by the heading's words (numbers
+     * left out, so "WEEK 2" and "WEEK 3" are the same section).
+     */
+    function foldKey(text) { return "ftt.fold." + String(text).replace(/[0-9$,.+\-]+/g, "").replace(/\s+/g, " ").trim(); }
+    function foldable(list) {
+      var kids = Array.prototype.slice.call(list.children), cur = null;
+      kids.forEach(function (el) {
+        if (el.classList.contains("tt-sechead")) {
+          var key = foldKey(el.textContent), shut = store.getStr(key, "") === "1";
+          cur = { head: el, rows: [], shut: shut, key: key };
+          el.classList.add("fold");
+          el.classList.toggle("shut", shut);
+          (function (sec) {
+            el.onclick = function () {
+              sec.shut = !sec.shut;
+              store.setStr(sec.key, sec.shut ? "1" : "");
+              el.classList.toggle("shut", sec.shut);
+              sec.rows.forEach(function (x) { x.style.display = sec.shut ? "none" : ""; });
+            };
+          })(cur);
+        } else if (cur) {
+          cur.rows.push(el);
+          if (cur.shut) el.style.display = "none";
+        }
+      });
     }
     function heading(text) {
       var el = document.createElement("div"); el.className = "tt-sechead"; el.textContent = text; return el;
