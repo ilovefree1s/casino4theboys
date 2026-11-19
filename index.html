@@ -10,6 +10,22 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
+<script>
+(function () {
+  /* PC: with a mouse on a landscape screen, everything scales up to fill the height (the game is laid out for ~900px). */
+  function fit() {
+    var de = document.documentElement, z = 1;
+    try {
+      if (matchMedia("(pointer: fine)").matches && innerWidth > innerHeight * 1.1) z = Math.max(1, Math.min(2, innerHeight / 900));
+    } catch (e) {}
+    z = Math.round(z * 100) / 100;
+    de.style.zoom = z === 1 ? "" : String(z);
+    de.style.setProperty("--pcz", String(z));
+  }
+  fit();
+  addEventListener("resize", fit);
+})();
+</script>
 </head><body>
 <!--
   An iPhone has no fullscreen to ask for, so the only way off its bars is to
@@ -70,7 +86,7 @@
   }
   button { font-family: var(--ui); cursor: pointer; border: none; background: none; color: inherit; }
   button:focus-visible { outline: 2px solid var(--glow); outline-offset: 2px; }
-  .screen { display: none; min-height: 100dvh; }
+  .screen { display: none; min-height: calc(100dvh / var(--pcz, 1)); }
   .screen.on { display: block; }
 
   .outline {
@@ -170,7 +186,7 @@
     object-fit: cover; pointer-events: none; filter: brightness(.15) saturate(.9);
   }
   .mm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     display: flex; flex-direction: column; align-items: center;
     padding: 14px 18px calc(8px + env(safe-area-inset-bottom));
   }
@@ -237,7 +253,7 @@
   /* the goal, small after the slash: what the money is measured against */
   .mm-money .goal { font-size: 20px; margin-left: 8px; color: rgba(255,210,77,.6); }
   .mm-lane.campaign .mm-hdr .nm {
-    font-size: clamp(34px, 5.2dvh, 46px); line-height: .95;
+    font-size: clamp(34px, calc(5.2dvh / var(--pcz, 1)), 46px); line-height: .95;
     text-shadow: 0 0 30px rgba(255,210,77,.45), 0 2px 0 rgba(5,3,10,.9);
   }
   .mm-money {
@@ -295,7 +311,7 @@
      for taps that buy nothing. */
   .mm-games { display: flex; gap: 7px; margin-top: 15px; }
   .mm-game {
-    flex: 1; min-width: 0; height: clamp(150px, 21dvh, 176px); border-radius: 11px; padding: 0;
+    flex: 1; min-width: 0; height: clamp(150px, calc(21dvh / var(--pcz, 1)), 176px); border-radius: 11px; padding: 0;
     position: relative; overflow: hidden;
     display: flex; flex-direction: column; align-items: center;
     background: linear-gradient(168deg,
@@ -324,7 +340,7 @@
     display: block; width: 100%; text-align: center; padding: 5px 1px;
     /* five names across a phone: BLACKJACK is the one that decides the size,
        so it is set from the screen rather than pinned and clipped */
-    font-family: var(--display); font-style: italic; font-size: clamp(6.5px, 2.02vw, 10px);
+    font-family: var(--display); font-style: italic; font-size: clamp(6.5px, calc(2.02vw / var(--pcz, 1)), 10px);
     line-height: 1.1; white-space: nowrap;
     color: color-mix(in srgb, var(--g) 58%, #FFFFFF);
   }
@@ -345,7 +361,7 @@
   /* ================= LOBBY ================= */
   #screen-lobby { position: relative; background: var(--night); }
   .lb-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -446,7 +462,7 @@
     --w: #E8C169;
   }
   .fl-wrap {
-    position: relative; width: 100%; max-width: 430px; min-height: 100dvh;
+    position: relative; width: 100%; max-width: 430px; min-height: calc(100dvh / var(--pcz, 1));
     display: flex; flex-direction: column; justify-content: center;
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom));
   }
@@ -465,7 +481,7 @@
   /* one floor */
   .fl-room {
     position: relative; width: 100%; padding: 13px 16px; border-radius: 13px; text-align: left;
-    display: flex; align-items: center; gap: clamp(9px, 3.2vw, 13px);
+    display: flex; align-items: center; gap: clamp(9px, calc(3.2vw / var(--pcz, 1)), 13px);
     background: linear-gradient(104deg,
       color-mix(in srgb, var(--c) 17%, #0A0810),
       color-mix(in srgb, var(--c) 6%, #06050B) 62%,
@@ -493,7 +509,7 @@
   .fl-txt .nm, .fl-txt .lim { overflow: hidden; text-overflow: ellipsis; }
   .fl-txt .nm {
     display: block; font-family: var(--display); font-style: italic;
-    font-size: clamp(14.5px, 4vw, 19px);
+    font-size: clamp(14.5px, calc(4vw / var(--pcz, 1)), 19px);
     color: color-mix(in srgb, var(--c) 78%, #FFFFFF); white-space: nowrap;
     text-shadow: 0 0 20px color-mix(in srgb, var(--c) 55%, transparent);
   }
@@ -502,9 +518,9 @@
     color: rgba(245,241,232,.55); margin-top: 5px; white-space: nowrap;
   }
   .fl-tag {
-    flex: none; font-family: var(--display); font-size: clamp(9px, 2.6vw, 10px);
+    flex: none; font-family: var(--display); font-size: clamp(9px, calc(2.6vw / var(--pcz, 1)), 10px);
     letter-spacing: .08em; border-radius: 999px;
-    padding: 7px clamp(9px, 3vw, 13px); text-align: center; max-width: 124px;
+    padding: 7px clamp(9px, calc(3vw / var(--pcz, 1)), 13px); text-align: center; max-width: 124px;
   }
   .fl-tag.go { background: var(--c); color: #06040A;
                box-shadow: 0 0 22px color-mix(in srgb, var(--c) 65%, transparent); }
@@ -626,7 +642,7 @@
      the painted sheet because they are worth keeping; the names and the
      blurbs are type, and type is better set live than photographed. */
   .pk-wrap {
-    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; width: 100%; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     display: flex; flex-direction: column;
     padding: 12px 16px calc(20px + env(safe-area-inset-bottom));
   }
@@ -682,7 +698,7 @@
   /* ============ BLACKJACK VARIANTS PAGE ============ */
   #screen-bjmenu { position: relative; background: var(--night); }
   .bjm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -721,12 +737,12 @@
   .bjm-plate .txt { flex: 1; min-width: 0; }
   .bjm-plate .nm {
     display: block; font-family: var(--display); font-style: italic;
-    font-size: clamp(14px, 4.2vw, 17px);
+    font-size: clamp(14px, calc(4.2vw / var(--pcz, 1)), 17px);
     color: color-mix(in srgb, var(--c) 76%, #FFFFFF); white-space: nowrap;
     text-shadow: 0 0 20px color-mix(in srgb, var(--c) 55%, transparent);
   }
   .bjm-plate .l1, .bjm-plate .l2 {
-    display: block; font-family: var(--mono); font-size: clamp(6.6px, 2vw, 7.5px);
+    display: block; font-family: var(--mono); font-size: clamp(6.6px, calc(2vw / var(--pcz, 1)), 7.5px);
     letter-spacing: .12em; color: rgba(245,241,232,.58); margin-top: 5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -757,7 +773,7 @@
   /* ================= SETTINGS ================= */
   #screen-settings { background: var(--night); position: relative; }
   .st-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     padding: 10px 12px; display: flex; flex-direction: column;
   }
   .st-center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; }
@@ -901,7 +917,7 @@
   /* ================= BLACKJACK ================= */
   #screen-blackjack { position: relative; background: var(--night); }
   .bj-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(26px + env(safe-area-inset-bottom));
   }
@@ -924,7 +940,7 @@
   /* The two names were a picture each, in two sets — one neon, one red — so
      the table could not be renamed or read at another size. They are type,
      and the variant's colour is a class rather than a second set of art. */
-  .bj-hdr-wrap { position: relative; width: 300px; max-width: 84vw; text-align: center; --bjc: #8B30D9; }
+  .bj-hdr-wrap { position: relative; width: 300px; max-width: calc(84vw / var(--pcz, 1)); text-align: center; --bjc: #8B30D9; }
   .bj-table.blazing .bj-hdr-wrap { --bjc: #C71414; }
   .bj-who {
     display: block; font-family: var(--display); font-style: italic; font-size: 26px;
@@ -1213,7 +1229,7 @@
   }
   .bj-modal.on { display: flex; }
   .bj-modal img {
-    width: min(82vw, 360px); border-radius: 14px;
+    width: min(calc(82vw / var(--pcz, 1)), 360px); border-radius: 14px;
     border: 1.5px solid rgba(255,63,216,.6);
   }
 
@@ -1271,7 +1287,7 @@
   }
   .dd-table { z-index: 1; }
   .dd-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 12px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1434,7 +1450,7 @@
     filter: hue-rotate(168deg) saturate(1.15);
   }
   .uth-table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center;
     padding: 8px 14px calc(18px + env(safe-area-inset-bottom));
   }
@@ -1562,7 +1578,7 @@
      the bottom edge, so neither can shove the other off the screen. */
   .dj-table { justify-content: space-between; }
   .dj-top, .dj-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; }
-  .dj-drop { height: 7vh; max-height: 60px; }
+  .dj-drop { height: calc(7vh / var(--pcz, 1)); max-height: 60px; }
   .dj-hand { gap: 4px; }
   /* Spotting the wilds is the game, so they are ringed in the hand. */
   .dj-hand .card.wild .front { box-shadow: inset 0 0 0 2px #9BE3FB; }
@@ -1611,7 +1627,7 @@
   .b7-luxring.b7-buster.armed { border-color: #fff; box-shadow: 0 0 12px rgba(255, 59, 59, .9), 0 0 0 1px #fff; }
   /* ---- keno, the first of the OTHER GAMES; web/concepts-keno.html is the board it came off ---- */
   .kn-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0E2A3A 0%, #071824 55%, #030A10 100%);
   }
@@ -1668,7 +1684,7 @@
   #screen-keno .ft-btn { font-size: 15px; }
   /* ---- plinko, in OTHER GAMES; web/concepts-plinko.html is the board it came off ---- */
   .pk-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #1A1030 0%, #0C081A 55%, #040308 100%);
   }
@@ -1711,7 +1727,7 @@
   #screen-plinko .ft-btn { font-size: 15px; }
   /* ---- mines, in OTHER GAMES; web/concepts-mines.html is the board it came off ---- */
   .mn-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 30%, #0C2A26 0%, #06181A 55%, #030A0A 100%);
   }
@@ -1791,7 +1807,7 @@
   #screen-shootout .uth-money .val.risk { color: var(--bone); }
   #screen-shootout .uth-label .nm { color: rgba(255,177,61,.85); }
   #screen-shootout .uth-label.brass .nm { color: #FFE0A3; }
-  .so-drop { height: 3vh; max-height: 24px; }
+  .so-drop { height: calc(3vh / var(--pcz, 1)); max-height: 24px; }
   .so-hand { gap: 5px; }
   .so-board { gap: 4px; }
   .so-board .card, .so-board .slot { width: 48px; height: 72px; }
@@ -1858,7 +1874,7 @@
   #screen-miniuth .uth-money .val { color: #FFD24D; }
   #screen-miniuth .uth-money .val.risk { color: var(--bone); }
   #screen-miniuth .uth-label.gold .nm { color: #FFD24D; }
-  .mu-drop { height: 4vh; max-height: 32px; }
+  .mu-drop { height: calc(4vh / var(--pcz, 1)); max-height: 32px; }
   .mu-one .card, .mu-one .slot, .mu-board .card, .mu-board .slot { width: 57px; height: 86px; }
   .mu-one .card .mid, .mu-board .card .mid { font-size: 22px; }
   .mu-board { gap: 5px; }
@@ -1897,7 +1913,7 @@
   #screen-iluvsuits .uth-label.gold .nm { color: #FFD24D; }
   /* With only two rows of cards there is felt to spare, so the hands sit
      lower and the hole in the middle is split between top and bottom. */
-  .is-drop { height: 6vh; max-height: 54px; }
+  .is-drop { height: calc(6vh / var(--pcz, 1)); max-height: 54px; }
   /* Seven cards a side, overlapped into a fan. Laid flat they would run half
      again the width of a phone, and a hand you cannot see whole is no use in a
      game whose only question is how many of one suit you are holding. */
@@ -1949,7 +1965,7 @@
   @media (max-height: 860px) {
     /* Only the drop closes up on a short screen — the cards are sized by the
        width, which a short screen has just as much of. */
-    .is-drop { height: 2vh; max-height: 16px; }
+    .is-drop { height: calc(2vh / var(--pcz, 1)); max-height: 16px; }
   }
 
   /* ============ CRAPS VARIANTS PAGE ============ */
@@ -1958,7 +1974,7 @@
   #screen-rlmenu { position: relative; background: var(--night); }
   #screen-rlmenu .cm-head .nm { color: #B98CFF; text-shadow: 0 0 30px rgba(185,140,255,.6), 0 2px 0 rgba(4,3,8,.9); }
   .cm-col {
-    position: relative; max-width: 430px; margin: 0 auto; min-height: 100dvh;
+    position: relative; max-width: 430px; margin: 0 auto; min-height: calc(100dvh / var(--pcz, 1));
     padding: 12px 18px calc(28px + env(safe-area-inset-bottom));
     display: flex; flex-direction: column; align-items: center;
   }
@@ -1997,12 +2013,12 @@
   .cm-plate .txt { flex: 1; min-width: 0; }
   .cm-plate .nm {
     display: block; font-family: var(--display); font-style: italic;
-    font-size: clamp(14px, 4.2vw, 17px);
+    font-size: clamp(14px, calc(4.2vw / var(--pcz, 1)), 17px);
     color: color-mix(in srgb, var(--c) 76%, #FFFFFF); white-space: nowrap;
     text-shadow: 0 0 20px color-mix(in srgb, var(--c) 55%, transparent);
   }
   .cm-plate .l1, .cm-plate .l2 {
-    display: block; font-family: var(--mono); font-size: clamp(6.6px, 2vw, 7.5px);
+    display: block; font-family: var(--mono); font-size: clamp(6.6px, calc(2vw / var(--pcz, 1)), 7.5px);
     letter-spacing: .12em; color: rgba(245,241,232,.58); margin-top: 5px;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
@@ -2562,7 +2578,7 @@
   }
   .cr-drawer.on { display: flex; }
   .cr-drawer .body {
-    width: 100%; max-width: 360px; max-height: 84dvh; overflow-y: auto;
+    width: 100%; max-width: 360px; max-height: calc(84dvh / var(--pcz, 1)); overflow-y: auto;
     background: rgba(11,52,40,.97); border: 1.5px solid rgba(239,231,210,.5);
     border-radius: 14px; padding: 16px;
   }
@@ -2740,7 +2756,7 @@
   /* ---- roulette: the painted felt, live pieces on measured art marks ---- */
   #screen-roulette { position: relative; background: #080509; }
   .rl-wrap { display: flex; justify-content: center; width: 100%; background: #080509; }
-  .rl-sheet { position: relative; width: min(440px, 100vw, calc(100dvh * 836 / 1722)); --sw: 440px; }
+  .rl-sheet { position: relative; width: min(440px, calc(100vw / var(--pcz, 1)), calc(calc(100dvh / var(--pcz, 1)) * 836 / 1722)); --sw: 440px; }
   .rl-sheet .rl-art { width: 100%; display: block; }
   /* Above the felt layer, which spans the whole sheet and was swallowing the press. */
   /* The way out, the control every table wears, where the painting used to
@@ -2900,7 +2916,7 @@
   /* The table is the screen, exactly: a felt you can scroll by accident is a
      felt with a bet in the wrong place. */
   .bacc-sheet {
-    position: relative; width: min(440px, 100vw); height: 100dvh; overflow: hidden;
+    position: relative; width: min(440px, calc(100vw / var(--pcz, 1))); height: calc(100dvh / var(--pcz, 1)); overflow: hidden;
     display: flex; flex-direction: column;
     background: linear-gradient(180deg, #0B0D14 0%, #11151F 55%, #090B11 100%);
   }
@@ -2936,7 +2952,7 @@
   /* the betting layout: side bets, the pairs and the tie, then the two spots */
   .bc-felt {
     position: relative; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column;
-    justify-content: flex-start; gap: clamp(8px, 2.4vh, 24px); padding: 9px 12px 0;
+    justify-content: flex-start; gap: clamp(8px, calc(2.4vh / var(--pcz, 1)), 24px); padding: 9px 12px 0;
   }
   .bspot {
     position: relative; background: none; border: 0; padding: 0; cursor: pointer;
@@ -3113,7 +3129,7 @@
   }
   .wm-layer { display: none; }
   .table {
-    position: relative; max-width: 430px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 430px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; justify-content: center; align-items: center;
     padding: 8px 12px calc(10px + env(safe-area-inset-bottom));
   }
@@ -3211,7 +3227,7 @@
      the banker's cards. */
   .road-drawer {
     position: fixed; top: calc(env(safe-area-inset-top, 0px) + 52px); z-index: 20;
-    right: max(10px, calc((100vw - min(432px, 100vw)) / 2 + 6px));
+    right: max(10px, calc((calc(100vw / var(--pcz, 1)) - min(432px, calc(100vw / var(--pcz, 1)))) / 2 + 6px));
     display: none; flex-direction: column; align-items: flex-end;
   }
   #screen-baccarat.on .road-drawer { display: flex; }
@@ -3255,7 +3271,7 @@
      drawn as boxes with borders that double up where they meet. */
   .sb-scroll {
     background: #F4F3EC; border: 1px solid #B9BBB2; border-radius: 4px;
-    overflow-x: auto; overflow-y: hidden; max-width: 74vw; min-width: 212px;
+    overflow-x: auto; overflow-y: hidden; max-width: calc(74vw / var(--pcz, 1)); min-width: 212px;
   }
   .sb-grid {
     position: relative; height: 90px; min-width: 100%;
@@ -3330,7 +3346,7 @@
   #screen-dragontiger { --w: #E8C169; --trim: #E8C169; --glow: #FFD24D; position: relative; background: #120709; }
   .dt-wrap { display: flex; flex-direction: column; align-items: center; width: 100%; background: #120709; }
   .dt-sheet {
-    position: relative; width: min(440px, 100vw); height: 100dvh; overflow: hidden;
+    position: relative; width: min(440px, calc(100vw / var(--pcz, 1))); height: calc(100dvh / var(--pcz, 1)); overflow: hidden;
     display: flex; flex-direction: column;
     background: linear-gradient(180deg, #1A0B10 0%, #2A1016 50%, #120709 100%);
   }
@@ -3410,7 +3426,7 @@
   /* The Blazing 7s felt: the house mark burning red under a dark scrim. */
   #screen-sicbo { --w: #FF5A4A; --trim: #FF5A4A; position: relative; background: #0C0A0C; }
   .sb-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(10,8,10,.88) 0%, rgba(10,8,10,.55) 44%, rgba(10,8,10,.1) 74%);
   }
@@ -3492,7 +3508,7 @@
   #screen-wheel { --w: #FFD24D; --trim: #FFD24D; position: relative; background: #06060A; }
   #wh-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; opacity: .55; filter: hue-rotate(240deg) saturate(1.2); }
   .wh-sheet {
-    position: relative; max-width: 440px; min-height: 100dvh; margin: 0 auto;
+    position: relative; max-width: 440px; min-height: calc(100dvh / var(--pcz, 1)); margin: 0 auto;
     display: flex; flex-direction: column; align-items: center; padding: 8px 12px calc(6px + env(safe-area-inset-bottom));
     background: radial-gradient(ellipse at 50% 46%, rgba(8,10,8,.88) 0%, rgba(8,10,8,.55) 44%, rgba(8,10,8,.1) 74%);
   }
@@ -3574,7 +3590,7 @@
   .tt-btns button:active { transform: scale(.985); }
 
   /* the join sheet */
-  #tt-join .box { width: min(340px, 88vw); }
+  #tt-join .box { width: min(340px, calc(88vw / var(--pcz, 1))); }
   #tt-join .big { font-size: 26px; color: #FF7A3D; }
   #tt-name {
     display: block; width: 100%; margin-top: 22px; padding: 14px 16px; border-radius: 12px;
@@ -3650,7 +3666,7 @@
   /* the rules, up once a week the first time the tournament is opened */
   /* above the fullscreen tip, which would otherwise sit on the button */
   #tt-rules { align-items: center; overflow-y: auto; z-index: 10001; background: rgba(5,4,8,.985); }
-  .tt-rwrap { width: min(400px, 92vw); max-height: 100%; overflow-y: auto; text-align: left;
+  .tt-rwrap { width: min(400px, calc(92vw / var(--pcz, 1))); max-height: 100%; overflow-y: auto; text-align: left;
               padding: calc(env(safe-area-inset-top, 0px) + 18px) 4px calc(env(safe-area-inset-bottom, 0px) + 18px); }
   .tt-rtop { font-size: 44px; text-align: center; line-height: 1; }
   .tt-rhead { margin-top: 8px; text-align: center; font-family: var(--display); font-style: italic;
@@ -3677,7 +3693,7 @@
   .mm-lane.tourney { padding: 18px 16px 17px; }
   .mm-lane.tourney .mm-hdr { flex-direction: column; align-items: flex-start; gap: 9px; }
   .mm-lane.tourney .mm-hdr .nm {
-    font-size: clamp(30px, min(5.2dvh, 10.5vw), 46px); line-height: .95;
+    font-size: clamp(30px, min(calc(5.2dvh / var(--pcz, 1)), calc(10.5vw / var(--pcz, 1))), 46px); line-height: .95;
     text-shadow: 0 0 30px rgba(255,122,61,.5), 0 2px 0 rgba(5,3,10,.9);
   }
   .mm-lane.tourney #tt-tag { font-size: 8px; padding: 5px 10px; white-space: nowrap; }
@@ -3708,7 +3724,7 @@
   .mm-lane.testing .mm-hdr { justify-content: flex-start; }
   .mm-lane.testing #mm-buyin { margin-left: auto; }
   /* the house name, big */
-  .mm-casino { font-size: clamp(32px, 11vw, 46px); line-height: 1.1; margin-top: 4px;
+  .mm-casino { font-size: clamp(32px, calc(11vw / var(--pcz, 1)), 46px); line-height: 1.1; margin-top: 4px;
                text-shadow: 0 0 30px rgba(255,210,77,.45), 0 3px 0 rgba(5,3,10,.9); }
   /* ---- the front page: chips falling behind smoked glass ---- */
   #cr-rain { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
@@ -3737,7 +3753,7 @@
   .tt-pin { display: block; width: 100%; margin-top: 10px; padding: 14px 16px; border-radius: 12px;
     background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6); color: var(--bone);
     font: 700 22px var(--mono); letter-spacing: .5em; text-align: center; outline: none; }
-  #tt-setpin .box { width: min(340px, 88vw); }
+  #tt-setpin .box { width: min(340px, calc(88vw / var(--pcz, 1))); }
   #tt-setpin .big { font-size: 26px; color: #FF7A3D; }
   #tt-setpin .gold-btn { margin-top: 12px; background: #FF7A3D; }
   #tt-setpin-err { min-height: 18px; margin-top: 10px; font-size: 12px; color: #FF3B5C; }
@@ -3759,7 +3775,7 @@
   .tt-duelov { position: fixed; inset: 0; z-index: 9996; display: none; align-items: center; justify-content: center;
                background: rgba(0,0,0,.6); padding: 16px; box-sizing: border-box; }
   .tt-duelov.on { display: flex; }
-  .tt-duelbox { width: min(92vw, 420px); background: #140B12; border: 1.5px solid #FF5E7A; border-radius: 16px; padding: 16px;
+  .tt-duelbox { width: min(calc(92vw / var(--pcz, 1)), 420px); background: #140B12; border: 1.5px solid #FF5E7A; border-radius: 16px; padding: 16px;
                 display: flex; flex-direction: column; gap: 8px; color: #F4EEDC; font: 500 14px/1.4 system-ui, sans-serif; box-sizing: border-box; }
   .tt-dueltitle { font: 800 18px/1.2 system-ui, sans-serif; letter-spacing: .08em; color: #FF8FA3; }
   .tt-duelsub { font-size: 12px; color: rgba(244,238,220,.7); }
@@ -3845,7 +3861,7 @@
   }
   .kb-owe.on { display: flex; }
   .kb-owe .box {
-    width: min(330px, 86vw); padding: 20px 18px; border-radius: 16px; text-align: center;
+    width: min(330px, calc(86vw / var(--pcz, 1))); padding: 20px 18px; border-radius: 16px; text-align: center;
     background: #140C06; border: 1.5px solid #FF9A3D; display: flex; flex-direction: column; gap: 10px;
   }
   .kb-owe .ttl { font-family: var(--display); letter-spacing: .1em; color: #FF9A3D; font-size: 15px; }
@@ -3868,7 +3884,7 @@
     --red: #FF6B5A;
     --display: Teko, "Arial Narrow", Impact, sans-serif; --body: var(--ui);
     
-    background: var(--night); color: var(--ink); font-family: var(--body); min-height: 100dvh; -webkit-tap-highlight-color: transparent;
+    background: var(--night); color: var(--ink); font-family: var(--body); min-height: calc(100dvh / var(--pcz, 1)); -webkit-tap-highlight-color: transparent;
   }
   #screen-chain [hidden] { display: none !important; }
   #screen-chain .ch-wrap {
@@ -3928,7 +3944,7 @@
   }
   #screen-chain .ch-reels { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; }
   #screen-chain .ch-reel {
-    position: relative; overflow: hidden; border-radius: 10px; --h: min(86px, 21.5vw);
+    position: relative; overflow: hidden; border-radius: 10px; --h: min(86px, calc(21.5vw / var(--pcz, 1)));
     height: calc(var(--h) * 3);
     background: linear-gradient(90deg, #0C1D14, #163323 50%, #0C1D14);
   }
@@ -4051,7 +4067,7 @@
   #screen-chain .ch-flash .ch-s { font-size: 13px; font-weight: 700; letter-spacing: .24em; color: var(--cream); }
   #screen-chain .ch-flash .ch-n { font-family: var(--display); font-weight: 700; font-size: 48px; line-height: 1; color: var(--cream); font-variant-numeric: tabular-nums; }
   @media (max-height: 740px) {
-    #screen-chain .ch-reel { --h: min(72px, 19vw); }
+    #screen-chain .ch-reel { --h: min(72px, calc(19vw / var(--pcz, 1))); }
     #screen-chain .ch-marquee h1 { font-size: 50px; }
     #screen-chain .ch-spin { width: 88px; height: 88px; }
   }
