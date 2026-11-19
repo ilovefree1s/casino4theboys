@@ -9748,8 +9748,10 @@
       ignoreLose: ["{who}: \"Should've listened, bro.\"", "{who}: \"I TOLD you. Fuck the book.\""]
     };
     /** Close calls are under half of all hands: 9% of them comes to about 1 hand in 25 overall. */
+    var ADVICE_ON = false;   // switched off for now; the code stays
     function advise(act, net) {
       advice = null;
+      if (!ADVICE_ON) return;
       if (Math.random() >= 0.09 || (card && card.classList.contains("on") && card.querySelector(".wu-yes"))) return;
       var who = pick(FRIENDS.filter(notMe));
       advice = { who: who, act: act, followed: null, used: false, net: net };
