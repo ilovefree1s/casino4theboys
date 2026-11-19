@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.16"
+VERSION = "1.17"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -818,30 +818,6 @@ sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
-
-# ---- PC: on a landscape screen with a mouse, scale the whole game up to fill the height ----
-# Viewport units in the styles are divided by the zoom, so a page sized to the
-# screen stays sized to the screen once everything inside it is bigger.
-def unzoom_css(css):
-    return re.sub(r'(?<![\w.-])(\d+(?:\.\d+)?)(dvh|vh|vw|svh|lvh)\b', r'calc(\1\2 / var(--pcz, 1))', css)
-h = re.sub(r'(<style[^>]*>)(.*?)(</style>)', lambda m: m.group(1) + unzoom_css(m.group(2)) + m.group(3), h, flags=re.S)
-sub("</head>", """<script>
-(function () {
-  /* PC: with a mouse on a landscape screen, everything scales up to fill the height (the game is laid out for ~900px). */
-  function fit() {
-    var de = document.documentElement, z = 1;
-    try {
-      if (matchMedia("(pointer: fine)").matches && innerWidth > innerHeight * 1.1) z = Math.max(1, Math.min(2, innerHeight / 900));
-    } catch (e) {}
-    z = Math.round(z * 100) / 100;
-    de.style.zoom = z === 1 ? "" : String(z);
-    de.style.setProperty("--pcz", String(z));
-  }
-  fit();
-  addEventListener("resize", fit);
-})();
-</script>
-</head>""")
 
 open(out, "w", encoding="utf-8").write(h)
 print("built", out, len(h))
