@@ -10224,8 +10224,9 @@
             ", $" + fmt(d.pot) + " each. Best return (profit per dollar bet) takes $" + fmt(d.pot * 2) + ".", "ACCEPT", "DECLINE",
             function () { answer(d, true); }, function () { answer(d, false); }, function () { delete asked[d.id]; });
         }
-        if (d.status === "declined" && c && !told["dec" + d.id]) {
+        if (d.status === "declined" && c && !told["dec" + d.id] && !store.getStr("ftt.duel.dec." + d.id, "")) {
           told["dec" + d.id] = 1;
+          store.setStr("ftt.duel.dec." + d.id, "1");   // once, ever, not once a visit
           w.notice("bad", other, "⚔️ DUEL", other.toUpperCase() + " turned down your duel.");
         }
         if (!TT.on) return;   // the wallet isn't loaded yet: the pot moves when you tap PLAY
