@@ -869,6 +869,14 @@
           var b = document.createElement("b"); b.textContent = n;
           bt.appendChild(im); bt.appendChild(b);
           bt.onclick = function () {
+            if (bt.classList.contains("taken")) {
+              picked = n;
+              grid.className = "chosen";
+              grid.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === bt); });
+              $("tt-join-err").textContent = n + " is taken. If this is you, enter your PIN to get back in.";
+              $("tt-pin").focus();
+              return;
+            }
             picked = n;
             grid.className = "chosen";
             grid.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === bt); });
@@ -878,6 +886,15 @@
           grid.appendChild(bt);
           if (mine && n.toLowerCase() === mine.toLowerCase()) bt.onclick();
         });
+        // faces somebody already has are greyed out (still tappable, so the owner can get back in with the PIN)
+        rpc("c4tb_names", {}).then(function (names) {
+          if (!Array.isArray(names)) return;
+          var t = {}; names.forEach(function (x) { t[String(x).toLowerCase()] = 1; });
+          grid.querySelectorAll("button[data-face]").forEach(function (x) {
+            var f = x.getAttribute("data-face").toLowerCase();
+            x.classList.toggle("taken", !!t[f] && f !== (myName() || "").toLowerCase());
+          });
+        }, function () {});
       } else {
         $("tt-name").style.display = "";
         grid.hidden = true;

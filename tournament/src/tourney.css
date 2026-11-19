@@ -278,3 +278,7 @@
   #tt-faces button.on img { border-color: #FF7A3D; box-shadow: 0 0 14px rgba(255,122,61,.7); }
   #tt-faces button.on b { color: #FF9A66; }
   #tt-faces.chosen button:not(.on) { opacity: .45; }
+  #tt-faces button.taken img { filter: grayscale(1) brightness(.55); }
+  #tt-faces button.taken b { color: rgba(245,241,232,.4); }
+  #tt-faces button.taken::after { content: "TAKEN"; margin-top: -1px; font: 700 7px/1 var(--mono); letter-spacing: .14em; color: rgba(245,241,232,.45); }
+  #tt-faces button.taken.on img { filter: grayscale(.3); }
