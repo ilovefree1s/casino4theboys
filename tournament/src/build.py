@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.24"
+VERSION = "1.25"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -883,6 +883,9 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 .purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
 .purse .pw b.up { color: #57E06A; font-size: 12px; }
 .purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
+/* Mini UTH: the dealer's hand name sits beside the dealer's card, clear of the money window */
+#mu-dealer-label { position: relative; }
+#mu-dealer-label .badge { position: absolute; left: calc(50% + 38px); top: calc(100% + 32px); margin: 0; white-space: nowrap; }
 /* the 2x window hangs down over the empty corner instead of pushing the table down */
 .purse.stack.won[data-hot] { margin-bottom: -26px; z-index: 6; background: rgba(6,5,11,.96); }
 .mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
@@ -941,7 +944,7 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     hot: function (el, base, x, total) {
       if (!el) return;
       el.dataset.hot = "1"; el.classList.add("won");
-      pw(el).innerHTML = '<b>' + short(base) + '</b><i>' + x + '</i><b class="up">' + short(total) + "</b>";
+      pw(el).innerHTML = '<b>+' + short(base) + '</b><i>' + x + '</i><b class="up">+' + short(total) + "</b>";
     }
   };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
