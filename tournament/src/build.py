@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.20"
+VERSION = "1.21"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -681,7 +681,7 @@ sub("""  function chipHtml(amount, size) {""",
     var u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
     for (var i = 0; i < u.length; i++) if (v >= u[i][0]) {
       var x = v / u[i][0], d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
-      var t = (Math.floor(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d);
+      var t = (Math.floor(x * Math.pow(10, d) + 1e-6) / Math.pow(10, d)).toFixed(d);
       if (d) t = t.replace(/0+$/, "").replace(/\\.$/, "");
       return t + u[i][1];
     }
@@ -831,6 +831,17 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     var pad = 8;
     document.querySelectorAll(".purse").forEach(function (el) {
       if (!el.offsetParent) return;
+      // a billion and up reads short up top: 148.5B, 40.47B, 1.15B, 3.2T
+      var w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n;
+      while ((n = w.nextNode())) {
+        var m = /^(\\s*)(-?)\\$?([\\d,]+)(\\s*)$/.exec(n.nodeValue);
+        if (!m) continue;
+        var v = +m[3].replace(/,/g, "");
+        if (v < 1e9) continue;
+        var u = v >= 1e12 ? [1e12, "T"] : [1e9, "B"], x = v / u[0], d = x >= 100 ? 1 : 2;
+        var t = (Math.floor(x * Math.pow(10, d) + 1e-6) / Math.pow(10, d)).toFixed(d).replace(/0+$/, "").replace(/\\.$/, "");
+        n.nodeValue = m[1] + m[2] + t + u[1] + m[4];
+      }
       el.style.zoom = "";
       var r = el.getBoundingClientRect();
       if (r.right <= innerWidth - pad || r.width <= 0) return;
