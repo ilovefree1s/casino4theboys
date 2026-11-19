@@ -4177,7 +4177,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.15</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.16</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -7461,13 +7461,23 @@
     return rack.indexOf(selected) >= 0 ? selected : rack[rack.length - 1];
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
+  /** 85,000,000 -> 85M, 3,111,470,150 -> 3.11B, 17,000,000,000,000 -> 17T. */
+  function shortAmt(v) {
+    var u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
+    for (var i = 0; i < u.length; i++) if (v >= u[i][0]) {
+      var x = v / u[i][0], d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
+      var t = (Math.floor(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace(/\.?0+$/, "");
+      return t + u[i][1];
+    }
+    return fmt(v);
+  }
   function chipHtml(amount, size) {
     var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000, 1000000000];
     var chip = null;
     for (var i = values.length - 1; i >= 0; i--) if (values[i] <= amount) { chip = values[i]; break; }
     var html = chip ? chipFace(chip) : "";
     if (!chip || chip !== amount) {
-      var label = fmt(amount);
+      var label = amount >= 10000 ? shortAmt(amount) : fmt(amount);
       var base = label.length <= 3 ? 17 : label.length <= 5 ? 13 : 10;
       var px = Math.round(base * ((size || 50) / 50));
       html += '<div class="scrim" style="font-size:' + px + 'px">' + label + "</div>";
@@ -9809,6 +9819,8 @@
       // always: a rebet can max the spot out after he asked, and the floor's okay covers that too
       Shell.limits = function () { return { min: 0, max: Infinity, sideMax: Infinity, badBeatMax: Infinity, enforced: false }; };
       try { got = table.tip(tip.spot, tip.amt); } finally { Shell.limits = lim; }
+      // the table drew itself while the limits were lifted: draw it again under the room's own (or the rack shows the wrong chips)
+      try { if (table.redraw) table.redraw(); } catch (e) {}
       if (got > 0) tip.placed = got;
       else { var t = tip; tip = null; show("bad", t.who, t.who, t.who + (t.game === "keno" ? ": \"Your ticket's full, bro. Never mind.\""
         : ": \"You don't have the chips left for it, bro. Never mind.\"")); }
@@ -14094,7 +14106,7 @@
     })();
     $("bj-ptmodal").addEventListener("click", function () { $("bj-ptmodal").classList.remove("on"); });
     $("bj-sidepays").addEventListener("click", function () { $("bj-sidepays").classList.remove("on"); });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trilux" ? triluxBet : push22SideBet); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trilux" ? triluxBet : push22SideBet) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trilux" ? triluxBet : push22SideBet); } catch (e) { return 0; } }, untip: function (spot, v) { try { if (spot === "trilux") lastTrilux = Math.max(0, lastTrilux - v); else lastPush22Side = Math.max(0, lastPush22Side - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trilux" ? triluxBet : push22SideBet); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trilux" ? triluxBet : push22SideBet) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trilux" ? triluxBet : push22SideBet); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { if (spot === "trilux") lastTrilux = Math.max(0, lastTrilux - v); else lastPush22Side = Math.max(0, lastPush22Side - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   /* ============================================================
@@ -15137,7 +15149,7 @@
       if (phase !== "betting" || ante !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trips" ? trips : badBeat); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trips" ? trips : badBeat) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trips" ? trips : badBeat); } catch (e) { return 0; } }, untip: function (spot, v) { try { if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trips" ? trips : badBeat); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trips" ? trips : badBeat) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trips" ? trips : badBeat); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   /* ============================================================
@@ -15558,7 +15570,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trips" ? trips : badBeat); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trips" ? trips : badBeat) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trips" ? trips : badBeat); } catch (e) { return 0; } }, untip: function (spot, v) { try { if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "trips" ? trips : badBeat); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "trips" ? trips : badBeat) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "trips" ? trips : badBeat); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { if (spot === "trips") lastTrips = Math.max(0, lastTrips - v); else lastBadBeat = Math.max(0, lastBadBeat - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   /* ============================================================
@@ -16507,7 +16519,7 @@
       if (phase !== "betting" || atRisk() !== 0 || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your ante"); renderAll(); });
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "flushplus" ? flushPlus : bonus); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "flushplus" ? flushPlus : bonus) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "flushplus" ? flushPlus : bonus); } catch (e) { return 0; } }, untip: function (spot, v) { try { if (spot === "flushplus") lastFlushPlus = Math.max(0, lastFlushPlus - v); else lastBonus = Math.max(0, lastBonus - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (spot === "flushplus" ? flushPlus : bonus); selectedChip = v; try { place(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (spot === "flushplus" ? flushPlus : bonus) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (spot === "flushplus" ? flushPlus : bonus); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { if (spot === "flushplus") lastFlushPlus = Math.max(0, lastFlushPlus - v); else lastBonus = Math.max(0, lastBonus - v); } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   /* ============================================================
@@ -17580,7 +17592,7 @@
         g.gain.value = Math.min(1, volume); src.connect(g); g.connect(wheelCtx.destination); src.start();
       } catch (e) { /* nothing to do */ }
     }
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter, leave: leave, prime: primeWheelSound, tick: playClick };
   })();
 
   var Keno = (function () {
@@ -18728,7 +18740,7 @@
       if (phase === "result") nextRoll(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   var Craps = (function () {
@@ -20654,7 +20666,7 @@
       if (phase === "result") nextHand(false);
       freshStack(function (v) { bankroll = v; noteText = ""; msgText = "Place your bets"; renderAll(); });
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addChip(spot); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   var Baccarat = (function () {
@@ -21319,7 +21331,7 @@
       $("roadDrawer").classList.remove("open");
       $("roadTab").classList.remove("open");
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addBet(spot); } catch (e) {} finally { selectedChip = sc; } try { updateMoney(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { updateMoney(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[spot] || 0); selectedChip = v; try { addBet(spot); } catch (e) {} finally { selectedChip = sc; } try { updateMoney(); } catch (e) {} return (bets[spot] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[spot] || 0); } catch (e) { return 0; } }, redraw: function () { try { updateMoney(); } catch (e) {} }, untip: function (spot, v) { try { var k = spot; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) delete lastBets[k]; } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { updateMoney(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   /* ============================================================
@@ -22015,7 +22027,7 @@
     window.addEventListener("resize", function () {
       if ($("screen-roulette").classList.contains("on")) { setSheetVar(); layBelts(); }
     });
-    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[tipRoute(spot).id] || 0); selectedChip = v; try { addChip(tipRoute(spot)); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[tipRoute(spot).id] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[tipRoute(spot).id] || 0); } catch (e) { return 0; } }, untip: function (spot, v) { try { var k = tipRoute(spot).id; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) { delete lastBets[k]; delete lastDefs[k]; delete lastCens[k]; } } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
+    return { tip: function (spot, v) { if (phase !== "betting") return 0; var sc = selectedChip, before = (bets[tipRoute(spot).id] || 0); selectedChip = v; try { addChip(tipRoute(spot)); } catch (e) {} finally { selectedChip = sc; } try { renderAll(); } catch (e) {} return (bets[tipRoute(spot).id] || 0) - before; }, phase: function () { return phase; }, variant: function () { return typeof variant === "undefined" ? "" : variant; }, tipOn: function (spot) { try { return (bets[tipRoute(spot).id] || 0); } catch (e) { return 0; } }, redraw: function () { try { renderAll(); } catch (e) {} }, untip: function (spot, v) { try { var k = tipRoute(spot).id; if (lastBets[k]) { lastBets[k] = Math.max(0, lastBets[k] - v); if (!lastBets[k]) { delete lastBets[k]; delete lastDefs[k]; delete lastCens[k]; } } } catch (e) {} }, busy: function () { return phase !== "betting" && phase !== "result"; }, credit: function (x) { bankroll += x; syncWallet(); try { renderAll(); } catch (e) {} }, cash: function () { return bankroll; }, enter: enter };
   })();
 
   $("roadDrawer").style.display = "none";

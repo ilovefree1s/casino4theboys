@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.15"
+VERSION = "1.16"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -670,6 +670,24 @@ sub("""          if (WUR("blackjack", { trilux: true, dealer: total(d) })) WUshu
             try { if (beat && typeof Walkups !== "undefined" && Walkups.standBoost()) WUshuffle(shoe); } catch (e) {}
           }""")
 
+# ---- a bet bigger than one chip reads short on the felt: 85M, 6B, 17T ----
+sub("""      var label = fmt(amount);
+      var base = label.length <= 3 ? 17 : label.length <= 5 ? 13 : 10;""",
+"""      var label = amount >= 10000 ? shortAmt(amount) : fmt(amount);
+      var base = label.length <= 3 ? 17 : label.length <= 5 ? 13 : 10;""")
+sub("""  function chipHtml(amount, size) {""",
+"""  /** 85,000,000 -> 85M, 3,111,470,150 -> 3.11B, 17,000,000,000,000 -> 17T. */
+  function shortAmt(v) {
+    var u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
+    for (var i = 0; i < u.length; i++) if (v >= u[i][0]) {
+      var x = v / u[i][0], d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
+      var t = (Math.floor(x * Math.pow(10, d)) / Math.pow(10, d)).toFixed(d).replace(/\\.?0+$/, "");
+      return t + u[i][1];
+    }
+    return fmt(v);
+  }
+  function chipHtml(amount, size) {""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
@@ -697,7 +715,8 @@ def tipfn(get, put, draw="renderAll"):
     return (" tip: function (spot, v) { if (phase !== \"betting\") return 0; var sc = selectedChip, before = %s; selectedChip = v;"
             " try { %s; } catch (e) {} finally { selectedChip = sc; } try { %s(); } catch (e) {} return %s - before; },"
             " phase: function () { return phase; }, variant: function () { return typeof variant === \"undefined\" ? \"\" : variant; },"
-            " tipOn: function (spot) { try { return %s; } catch (e) { return 0; } },") % (get, put, draw, get, get)
+            " tipOn: function (spot) { try { return %s; } catch (e) { return 0; } },"
+            " redraw: function () { try { %s(); } catch (e) {} },") % (get, put, draw, get, get, draw)
 # untip(spot, v): the friend's chips came off the "last bet", so REBET doesn't keep them
 def lastBet(expr): return ' untip: function (spot, v) { try { %s } catch (e) {} },' % expr
 def fromLast(obj, key="spot"):
