@@ -1410,12 +1410,15 @@
     }
     function loadMsgs() {
       return rpc("c4tb_msgs", {}).then(function (list) {
-        if (!Array.isArray(list)) return;
+        // no board on the server (yet), or it hiccupped: show no posts, never a stuck "Loading…"
+        if (!Array.isArray(list)) { if (!msgs) { msgs = []; if ($("tt-board").classList.contains("on") && tab === "msgs") paintBoard(); } return; }
         var got = Date.now();
         list.forEach(function (m) { m.at = got - m.s * 1000; });
         msgs = list; msgDots();
         if ($("tt-board").classList.contains("on") && tab === "msgs") paintBoard();
-      }, function () {});
+      }, function () {
+        if (!msgs) { msgs = []; if ($("tt-board").classList.contains("on") && tab === "msgs") paintBoard(); }
+      });
     }
     function markRead() {
       if (msgs && msgs[0] && msgs[0].id > msgSeen) { msgSeen = msgs[0].id; store.setStr("ftt.msgseen", String(msgSeen)); }
@@ -1462,8 +1465,8 @@
         });
         box.appendChild(ta); box.appendChild(go); list.appendChild(box);
       }
-      if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); return; }
-      msgs.forEach(function (m) {
+      if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); }
+      (msgs || []).forEach(function (m) {
         var el = document.createElement("div"); el.className = "tt-msg" + (m.id > msgSeenAtOpen ? " new" : "");
         var hd = document.createElement("div"); hd.className = "hd";
         var who = document.createElement("b"); who.textContent = "JUSTIN";
