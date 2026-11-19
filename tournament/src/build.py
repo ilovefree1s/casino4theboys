@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.27"
+VERSION = "1.28"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -875,7 +875,6 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
-.screen.on { padding-top: var(--appTop, env(safe-area-inset-top, 0px)); }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 .purse .pw { display: none; }
@@ -944,7 +943,7 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     if (d) t = t.replace(/0+$/, "").replace(/\\.$/, "");
     return t + u[1];
   }
-  function soon() { if (!busy) { busy = true; requestAnimationFrame(fit); } }
+  function soon() { if (!busy) { busy = true; requestAnimationFrame(function () { fit(); fitTable(false); }); } }
   // the money window's second line after a hand: +what you won, or on a 2x game  400B / ×2 / 800B
   function pw(el) {
     if (!el) return null;
@@ -966,17 +965,28 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
     }
   };
   // the screen's real visible height (100dvh can run past it in fullscreen, under the status/nav bars)
-  // and clear of the camera/status bar on top: in fullscreen the page runs up under it
-  var probe = null;
-  function insetTop() {
-    if (!probe) { probe = document.createElement("div"); probe.style.cssText = "position:fixed;top:0;left:0;width:0;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top,0px)"; }
-    if (!probe.parentNode && document.body) document.body.appendChild(probe);
-    return probe.parentNode ? probe.getBoundingClientRect().height : 0;
-  }
-  function appH() {
-    var t = insetTop();
-    document.documentElement.style.setProperty("--appTop", t + "px");
-    document.documentElement.style.setProperty("--appH", Math.max(300, innerHeight - t) + "px");
+  function appH() { document.documentElement.style.setProperty("--appH", innerHeight + "px"); fitTable(true); }
+  /* A table never scrolls: if it is taller than the screen, the whole table scales down to fit.
+     It only re-fits from scratch when the screen changes size or you change tables; mid-hand it
+     only ever shrinks, so nothing jumps around while you play. */
+  var fitFor = null;
+  function fitTable(fresh) {
+    var sc = document.querySelector(".screen.on");
+    if (!sc || sc.id === "screen-craps" || !sc.querySelector(".purse")) return;
+    var avail = innerHeight;
+    if (fresh || fitFor !== sc) {
+      document.querySelectorAll(".screen[data-fitz]").forEach(function (x) {
+        x.style.zoom = ""; x.style.removeProperty("--appH"); delete x.dataset.fitz;
+      });
+      fitFor = sc;
+    }
+    var h = sc.getBoundingClientRect().height;
+    if (h <= avail + 1) return;
+    var z = (+sc.dataset.fitz || 1) * avail / h;
+    z = Math.max(0.6, Math.floor(z * 1000) / 1000);
+    sc.dataset.fitz = String(z);
+    sc.style.zoom = String(z);
+    sc.style.setProperty("--appH", (avail / z) + "px");
   }
   appH();
   addEventListener("DOMContentLoaded", appH);
