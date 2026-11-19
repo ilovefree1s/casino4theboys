@@ -4161,7 +4161,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.17</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.18</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -7446,6 +7446,7 @@
   }
   /** [size] is the spot.s diameter; the printed total scales with the chip. */
   /** 85,000,000 -> 85M, 3,111,470,150 -> 3.11B, 17,000,000,000,000 -> 17T. */
+  function pillAmt(v) { return v >= 1e6 ? shortAmt(v) : fmt(v); }
   function shortAmt(v) {
     var u = [[1e12, "T"], [1e9, "B"], [1e6, "M"], [1e3, "K"]];
     for (var i = 0; i < u.length; i++) if (v >= u[i][0]) {
@@ -8416,7 +8417,7 @@
           if (hold[seat]) { cls += " hold"; tag = "HOLD"; } else { cls += " drop"; tag = "DROP"; }
         }
         if (outcome && outcome.net[seat]) {
-          if (outcome.net[seat] > 0) { cls += " win"; tag = "+" + fmt(outcome.net[seat]); }
+          if (outcome.net[seat] > 0) { cls += " win"; tag = "+" + pillAmt(outcome.net[seat]); }
           else { cls += " lose"; tag = "PAYS " + fmt(-outcome.net[seat]); }
         }
         el.className = cls;
@@ -10263,7 +10264,7 @@
        */
       function mark(profit) {
         var scr = document.querySelector(".screen.on");
-        var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + fmt(profit);
+        var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + pillAmt(profit);
         var host = scr && scr.querySelector(".dj-pills, #dd-results");
         if (host && host.children.length) {
           host.insertAdjacentHTML("beforeend", '<div class="dj-pill w" style="border-color:#FF8A3D"><span class="nm" style="color:#FFB238">' +
@@ -13416,8 +13417,8 @@
         if (phase === "result" && results[i]) {
           var r = results[i];
           var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-          var txt = r.net > 0 ? "+" + fmt(r.net)
-            : r.net < 0 ? "−" + fmt(-r.net)
+          var txt = r.net > 0 ? "+" + pillAmt(r.net)
+            : r.net < 0 ? "−" + pillAmt(-r.net)
             : r.freeLoss ? "free" : "push";
           var pill = document.createElement("div");
           pill.className = "bj-result-pill" + (r.net > 0 ? " win" : "");
@@ -13460,7 +13461,7 @@
         var pill = document.createElement("span");
         pill.className = "pill" + (won ? "" : " push");
         pill.innerHTML = "<span>" + r.label + '</span><span class="amt">' +
-          (won ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push") + "</span>";
+          (won ? "+" + pillAmt(r.net) : r.net < 0 ? "−" + pillAmt(-r.net) : "push") + "</span>";
         p.appendChild(pill);
       });
     }
@@ -14289,7 +14290,7 @@
     }
     /** settle() files the hand first and the side bet after it, if it rode. */
     function pillHtml(r) {
-      var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
+      var txt = r.net > 0 ? "+" + pillAmt(r.net) : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
       return '<div class="dd-pill' + (r.net > 0 ? " win" : "") + '"><span>' + r.label +
         '</span><span class="amt">' + txt + "</span></div>";
     }
@@ -14773,7 +14774,7 @@
         labels.insertAdjacentHTML("beforeend",
           '<span class="lbl">' + r.label.split(" ·")[0] + "</span>");
         var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net >= 0 ? "+" + fmt(r.net) : "−" + fmt(-r.net);
+        var txt = r.net >= 0 ? "+" + pillAmt(r.net) : "−" + pillAmt(-r.net);
         amounts.insertAdjacentHTML("beforeend",
           '<span class="' + cls + '">' + txt + "</span>");
       });
@@ -15215,8 +15216,8 @@
       if (phase !== "result") return;
       results.forEach(function (r) {
         var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + fmt(r.net)
-          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        var txt = r.net > 0 ? "+" + pillAmt(r.net)
+          : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
         host.insertAdjacentHTML("beforeend",
           '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
           '</span><span class="amt">' + txt + "</span></div>");
@@ -15688,8 +15689,8 @@
       if (phase !== "result") return;
       results.forEach(function (r) {
         var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + fmt(r.net)
-          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        var txt = r.net > 0 ? "+" + pillAmt(r.net)
+          : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
         host.insertAdjacentHTML("beforeend",
           '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
           '</span><span class="amt">' + txt + "</span></div>");
@@ -16159,8 +16160,8 @@
       if (phase !== "result") return;
       results.forEach(function (r) {
         var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + fmt(r.net)
-          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        var txt = r.net > 0 ? "+" + pillAmt(r.net)
+          : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
         host.insertAdjacentHTML("beforeend",
           '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
           '</span><span class="amt">' + txt + "</span></div>");
@@ -16612,8 +16613,8 @@
       if (phase !== "result") return;
       results.forEach(function (r) {
         var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
-        var txt = r.net > 0 ? "+" + fmt(r.net)
-          : r.net < 0 ? "−" + fmt(-r.net) : "push";
+        var txt = r.net > 0 ? "+" + pillAmt(r.net)
+          : r.net < 0 ? "−" + pillAmt(-r.net) : "push";
         host.insertAdjacentHTML("beforeend",
           '<div class="dj-pill ' + cls + '"><span class="nm">' + r.label +
           '</span><span class="amt">' + txt + "</span></div>");
@@ -18089,10 +18090,10 @@
       if (m >= 1) Wheel.tick(1);
       var net = ret - ball.stake, bl = label(base).toUpperCase();
       msgText = Shell.mode === "campaign" && bankroll >= Shell.getGoal() ? "🏆 GOAL REACHED!"
-        : rained ? bl + " × " + ball.rain + "X — " + (net >= 0 ? "+" + fmt(net) : "−" + fmt(-net))
-        : m > 1 ? bl + " — +" + fmt(net)
+        : rained ? bl + " × " + ball.rain + "X — " + (net >= 0 ? "+" + pillAmt(net) : "−" + pillAmt(-net))
+        : m > 1 ? bl + " — +" + pillAmt(net)
         : m === 1 ? "1X — the bet back"
-        : bl + " — −" + fmt(-net);
+        : bl + " — −" + pillAmt(-net);
       // the bet stays on the spot while it can still be covered
       if (!inFlight() && bet > bankroll) { bet = 0; noteText = "Not enough for that bet"; }
       renderAll();
@@ -18816,7 +18817,7 @@
     }
     /** A settled line's money, signed, with the minus the felt uses. */
     function money(net) {
-      return net > 0 ? "+" + fmt(net) : net < 0 ? "−" + fmt(-net) : "·";
+      return net > 0 ? "+" + pillAmt(net) : net < 0 ? "−" + pillAmt(-net) : "·";
     }
     function moneyClass(net) { return net > 0 ? "w" : net < 0 ? "l" : "p"; }
     /**
@@ -21085,7 +21086,7 @@
         var row = document.createElement("div");
         row.className = "log-row";
         var cls = rec.net > 0 ? "win" : rec.net < 0 ? "loss" : "even";
-        var txt = rec.net > 0 ? "+" + fmt(rec.net) : rec.net < 0 ? "−" + fmt(-rec.net) : "even";
+        var txt = rec.net > 0 ? "+" + pillAmt(rec.net) : rec.net < 0 ? "−" + pillAmt(-rec.net) : "even";
         // the fortune events this hand hit, as short tags
         var s = rec.sides || {}, tags = [];
         if (s.fortune7) tags.push("F7");
@@ -21110,7 +21111,7 @@
         var won = e[1] > 0;
         var pill = document.createElement("span");
         pill.className = "pill" + (won ? "" : " push");
-        pill.innerHTML = "<span>" + BET_NAMES[e[0]] + '</span><span class="amt">' + (won ? "+" + fmt(e[1]) : "push") + "</span>";
+        pill.innerHTML = "<span>" + BET_NAMES[e[0]] + '</span><span class="amt">' + (won ? "+" + pillAmt(e[1]) : "push") + "</span>";
         p.appendChild(pill);
       });
     }

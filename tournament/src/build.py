@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.17"
+VERSION = "1.18"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -819,5 +819,11 @@ sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand
 sub("  paintMenu();\n  /* ---------- sound",
     "  paintMenu();\n" + (here / "tourney.js").read_text() + "  /* ---------- sound")
 
+# ---- win/loss pills read short once they're in the millions: +1.2B, +14T ----
+_n = h.count('"+" + fmt(') + h.count('"−" + fmt(')
+h = h.replace('"+" + fmt(', '"+" + pillAmt(').replace('"−" + fmt(', '"−" + pillAmt(')
+h = h.replace('" — +" + fmt(net)', '" — +" + pillAmt(net)').replace('" — −" + fmt(-net)', '" — −" + pillAmt(-net)')
+h = h.replace("  function shortAmt(v) {", "  function pillAmt(v) { return v >= 1e6 ? shortAmt(v) : fmt(v); }\n  function shortAmt(v) {", 1)
+print("pills shortened:", _n)
 open(out, "w", encoding="utf-8").write(h)
 print("built", out, len(h))
