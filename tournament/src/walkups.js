@@ -717,10 +717,10 @@
       ignoreWin: ["{who}: \"Fine. The book worked. This time.\""],
       ignoreLose: ["{who}: \"Should've listened, bro.\"", "{who}: \"I TOLD you. Fuck the book.\""]
     };
-    /** About 1 hand in 15 with a close call, a friend says the opposite of the book. */
+    /** Close calls are under half of all hands: 15% of them comes to about 1 hand in 15 overall. */
     function advise(act, net) {
       advice = null;
-      if (Math.random() >= 1 / 15 || (card && card.classList.contains("on"))) return;
+      if (Math.random() >= 0.15 || (card && card.classList.contains("on") && card.querySelector(".wu-yes"))) return;
       var who = pick(FRIENDS.filter(notMe));
       advice = { who: who, act: act, followed: null, used: false, net: net };
       show("friend", who, who, fill(pick(ADV[act]), { who: who }), null, 6000);
