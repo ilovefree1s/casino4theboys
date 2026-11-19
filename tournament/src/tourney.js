@@ -1381,9 +1381,13 @@
     // this week's made-up names, and whose face they are (from Sunday everyone joins as their face)
     var FACE_ALIAS = { tristyboy: "tristen", darinwooldridge: "darin", juiceman: "juice", ethanj: "ethan",
                        matthewmyer: "matthew", due: "chris", mjax: "max", brad: "grace", bdmarsh: "daneal", maverick: "zach" };
+    // these keep the name they typed on the board (they still get their face)
+    var KEEP_NAME = { ethanj: 1 };
     /** The name the board shows: their face's name when we know whose face they are, else what they typed. */
     function shown(name) {
-      var lk = String(name || "").toLowerCase(), al = FACE_ALIAS[lk.replace(/[^a-z0-9]/g, "")] || lk;
+      var lk = String(name || "").toLowerCase(), key = lk.replace(/[^a-z0-9]/g, "");
+      if (KEEP_NAME[key]) return String(name);
+      var al = FACE_ALIAS[key] || lk;
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
       for (var k in f) if (k.toLowerCase() === al) return k;
       return String(name || "");
