@@ -1382,7 +1382,7 @@
     var FACE_ALIAS = { tristyboy: "tristen", darinwooldridge: "darin", juiceman: "juice", ethanj: "ethan",
                        matthewmyer: "matthew", due: "chris", mjax: "max", brad: "grace", bdmarsh: "daneal", maverick: "zach" };
     // these keep the name they typed on the board (they still get their face)
-    var KEEP_NAME = { ethanj: 1 };
+    var KEEP_NAME = {};
     /** The name the board shows: their face's name when we know whose face they are, else what they typed. */
     function shown(name) {
       var lk = String(name || "").toLowerCase(), key = lk.replace(/[^a-z0-9]/g, "");
