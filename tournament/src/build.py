@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.25"
+VERSION = "1.26"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -891,7 +891,11 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 .mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
-.purse.stack > span:not(.val):not(.lbl):not(.gap) { display: contents !important; }
+.purse.stack > span:not(.val):not(.lbl):not(.gap):not(.pr) { display: contents !important; }
+.purse.stack .pr { display: flex !important; align-items: baseline; justify-content: flex-end; gap: 5px; }
+.purse.stack .pr .lbl { display: inline !important; font-size: 8px !important; letter-spacing: .12em; color: rgba(245,241,232,.5) !important; }
+.purse.stack .pr.empty .lbl { visibility: hidden; }
+.purse.stack.won .pr { display: none !important; }
 .purse.stack .val.risk, .purse.stack .val.staked { font-size: 11px !important; color: rgba(245,241,232,.62) !important; font-family: var(--display); }
 /* result pills pair up, two to a line, so the table fits the phone */
 .dj-pills { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; max-width: 380px; margin-left: auto !important; margin-right: auto !important; }
@@ -911,6 +915,19 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
         if (!m) return;
         var v = +m[1].replace(/,/g, "");
         r.textContent = v > 0 ? "−" + short(v) : "\\u00a0";
+      });
+      // AT RISK sits on the left of its amount
+      el.querySelectorAll(".val.risk, .val.staked").forEach(function (r) {
+        var row = r.parentElement;
+        if (row === el) {
+          var lb = r.previousElementSibling;
+          row = document.createElement("span");
+          el.insertBefore(row, lb && lb.classList.contains("lbl") ? lb : r);
+          if (lb && lb.classList.contains("lbl")) row.appendChild(lb);
+          row.appendChild(r);
+        }
+        row.classList.add("pr");
+        row.classList.toggle("empty", !/\\d/.test(r.textContent));
       });
       el.style.zoom = "";
       var r = el.getBoundingClientRect();
