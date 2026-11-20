@@ -4424,7 +4424,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.46</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.47</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10506,6 +10506,23 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         if (!day) return [];
         var n = Math.round((Date.parse(day + "T12:00:00Z") - Date.parse("2026-01-01T12:00:00Z")) / 86400000);
         if (PICKED[day]) return PICKED[day].slice();
+        // from the points week on: each week the games are shuffled once and dealt out two a day,
+        // so no game is hot twice in the same week
+        if (day >= "2026-11-22") {
+          var t = Date.parse(day + "T12:00:00Z"), dow = new Date(t).getUTCDay();
+          var wk = new Date(t - dow * 86400000).toISOString().slice(0, 10);
+          var seed = 0, c;
+          for (c = 0; c < wk.length; c++) seed = (seed * 31 + wk.charCodeAt(c)) >>> 0;
+          var rnd = function () {
+            seed = (seed + 0x6D2B79F5) >>> 0;
+            var x = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+            x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
+            return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
+          };
+          var deck = pool();
+          for (c = deck.length - 1; c > 0; c--) { var j = Math.floor(rnd() * (c + 1)), tmp = deck[c]; deck[c] = deck[j]; deck[j] = tmp; }
+          return [deck[dow * 2], deck[dow * 2 + 1]];
+        }
         var p = pool(), m = p.length, i = ((n * 2) % m + m) % m;
         return day >= "2026-11-17" ? [p[i], p[(i + 10) % m]] : [p[i]];
       }
