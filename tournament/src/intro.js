@@ -481,8 +481,8 @@
           "#tt-demo .gd-card{position:relative;width:100%;max-width:400px;text-align:center;margin:auto 0;display:flex;flex-direction:column;align-items:center}" +
           "#tt-demo .gd-sign{width:100%;max-width:340px;box-sizing:border-box;padding:24px 12px 28px;border:3px solid var(--c);border-radius:28px;display:flex;flex-direction:column;align-items:center;gap:6px;" +
             "box-shadow:0 0 10px var(--g),0 0 34px var(--g),inset 0 0 10px var(--g),inset 0 0 30px var(--g);background:rgba(5,5,10,.55)}" +
-          "#tt-demo .gd-card.in .gd-sign{animation:gdOn .7s steps(1) both}" +
-          "@keyframes gdOn{0%{opacity:.15}12%{opacity:1}20%{opacity:.25}30%{opacity:1}38%{opacity:.5}46%,100%{opacity:1}}" +
+          "#tt-demo .gd-card.in .gd-sign{animation:gdOn .5s ease-out both}" +
+          "@keyframes gdOn{0%{opacity:.2}45%{opacity:1}60%{opacity:.75}100%{opacity:1}}" +
           "#tt-demo .gd-card.in .gd-body{animation:gdUp .4s .3s ease both}@keyframes gdUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}" +
           "#tt-demo .gd-tag{font:400 14px " + NE + ";letter-spacing:.3em;color:#e8f3ff;text-shadow:0 0 8px var(--g)}" +
           "#tt-demo h2{margin:0 0 8px;font:400 50px/1.02 " + NE + ";color:var(--hc);text-shadow:0 0 6px var(--hg),0 0 18px var(--hg),0 0 44px var(--hg)}" +
