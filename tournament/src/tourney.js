@@ -69,10 +69,24 @@
     TT.points = false;
     function gslug(g) { return String(g || "lobby").toLowerCase().replace(/[^a-z0-9]+/g, ""); }
     /** A game's points for a day, 1-3: the same sum the server does. */
+    function ghash(day, game) {
+      // a proper scramble of the day and the game's name
+      var s = String(day) + "|" + game, h = 2166136261;
+      for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+      h ^= h >>> 15; h = Math.imul(h, 739982445) >>> 0;
+      h ^= h >>> 12; h = Math.imul(h, 695872825) >>> 0;
+      h ^= h >>> 15;
+      return h >>> 0;
+    }
     function gpts(day, game) {
-      var s = String(day) + game, t = 0;
-      for (var i = 0; i < s.length; i++) t += s.charCodeAt(i) * (i + 1);
-      return 1 + t % 3;
+      // the day's shuffle: where this game falls among all 21 decides its points, so each day
+      // exactly 3 games are worth 3, 5 are worth 2, and the rest are worth 1
+      var mine = ghash(day, game), below = 0;
+      Object.keys(GAMES).forEach(function (id) {
+        var g = GAMES[id];
+        if (g !== game && ghash(day, g) < mine) below++;
+      });
+      return below < 3 ? 3 : below < 8 ? 2 : 1;
     }
     TT.gpts = gpts;
     function k(name) {
