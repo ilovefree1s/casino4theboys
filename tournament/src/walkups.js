@@ -143,7 +143,11 @@
     };
     function own(who, key, base) { return lines(who, key, base); }
     function lines(who, key, base) { var o = OWN[who] && OWN[who][key]; return o && o.length && (key === "ask" || Math.random() < 0.6) ? o : base; }
-    var SPOTS = ["blackjack", "craps", "roulette", "the slots", "baccarat", "Pai Gow", "the Money Wheel", "Ultimate Texas Hold'em"];
+    // the games a friend borrows for: every table in this casino, each as likely as the next
+    var SPOTS = ["Punto Banco", "Dragon Tiger", "Free Bet Blackjack", "Blazing 777", "Double Down Madness",
+      "Ultimate Texas Hold'em", "DJ Wild", "Shootout", "Mini UTH", "I Luv Suits", "Kirby",
+      "Double Zero Roulette", "Lightning Roulette", "Double Ball Roulette", "Crapless Craps", "Destroyer",
+      "Keno", "the Money Wheel", "Sic Bo", "Plinko", "Mines"];
     var FRIEND_ASK = [
       "Bro spot me {amt}, I'm feeling {game} right now. I'll bring it back, swear.",
       "Yo let me get {amt}. {game} is HOT, I can feel it.",
