@@ -4097,6 +4097,17 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
            z-index: 9990; padding: 11px 18px; border-radius: 999px; border: 2px solid #FFD24D; background: rgba(30,22,4,.96);
            color: #FFD24D; font: 800 13px system-ui, sans-serif; letter-spacing: .06em; cursor: pointer; white-space: nowrap;
            box-shadow: 0 6px 20px rgba(0,0,0,.6); }
+
+  /* huge numbers must never make the board wider than the phone */
+  .tt-wrap { min-width: 0; max-width: min(480px, 100%); overflow-x: hidden; box-sizing: border-box; }
+  .tt-you { min-width: 0; }
+  .tt-you .v { flex-wrap: wrap; gap: 2px 12px; min-width: 0; }
+  .tt-you .v b, .tt-you .v span, .tt-you small { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
+  .tt-row { min-width: 0; }
+  .tt-row .who { min-width: 0; }
+  .tt-row .val { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; text-align: right; }
+  #tt-winners, #tt-champ { min-width: 0; max-width: 100%; }
+  #tt-winners { flex-wrap: wrap; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4400,7 +4411,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.41</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.42</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
