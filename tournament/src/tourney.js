@@ -965,8 +965,8 @@
         ol.innerHTML =
           "<li><b>Every game has its own $10,000.</b> Each table has a separate wallet, and every one of them resets to $10,000 at midnight.</li>" +
           "<li><b>Free rebuys.</b> Bust a game and tap REBUY to start that game over at $10,000. The money you lost doesn't count against you.</li>" +
-          "<li><b>Each game is worth 1, 2 or 3 points,</b> and it changes every day. The game's button shows its points and who's on top right now: 👑 NAME $24,500 · 3 PTS.</li>" +
-          "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores.</li>" +
+          "<li><b>Each game is worth 1, 2 or 3 points,</b> shuffled every day: 3 games are worth 3, 5 are worth 2, and the rest are worth 1. The game's button shows its points and who's on top right now: 👑 NAME $24,500 · 3 PTS.</li>" +
+          "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores, and you have to be up at least $5,000 on that game ($15,000 or more).</li>" +
           "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
           "<li><b>🔥 Hot games and walk-ups are on.</b> Two random games pay 1.5× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
           "<li><b>You are your face.</b> When you join, tap your picture and pick a 4-digit PIN. No picture yet? Tap NOT ON HERE and type your name. Your PIN gets you back in if your phone ever forgets you.</li>";
