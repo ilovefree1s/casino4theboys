@@ -866,8 +866,9 @@
       return s < 3600 ? Math.max(1, Math.round(s / 60)) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago";
     }
     function ping() {
-      if (document.hidden || !myName() || !token()) return;
-      rpc("c4tb_ping", { p_name: myName(), p_token: token() }).then(function (list) {
+      if (document.hidden) return;
+      // not signed in (just looking at the board): still ask who's on, it just doesn't mark anyone as here
+      rpc("c4tb_ping", { p_name: myName() || "", p_token: token() || "" }).then(function (list) {
         if (!Array.isArray(list)) return;
         // [{name, s: seconds since last seen}]; an older server sends names only, all online
         var m = {}, seen = {};
@@ -1143,7 +1144,7 @@
     var tab = "week";
     function showBoard() {
       pointsCache = {}; winnersCache = {};
-      msgSeenAtOpen = msgSeen; loadMsgs();
+      msgSeenAtOpen = msgSeen; loadMsgs(); ping();
       $("tt-board").classList.add("on");
       paintBoard();
       ping();
