@@ -367,19 +367,33 @@
 
     /* ---- the how-it-works cards: four taps, same wall, same paint ---- */
     var CARDS = [
-      { tag: "1 OF 4", head: "HOW YOU SCORE", color: "#3D8BFF",
+      { head: "HOW YOU SCORE", color: "#3D8BFF",
         art: '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">➜</span><span class="gd-cash gd-up">$15,000+</span></div><div class="gd-crown">👑 TAKES THE POINTS</div>',
         body: "<b>Every game starts you at $10,000.</b> Whoever has the most money on a game at midnight takes that game's points. You have to be up at least $5,000 — that's <b>$15,000 or more</b>." },
-      { tag: "2 OF 4", head: "3 · 2 · 1", color: "#FF4FA3",
+      { head: "3 · 2 · 1", color: "#FF4FA3",
         art: '<div class="gd-pts"><div><b>3</b><i>PTS</i><span>3 GAMES</span></div><div><b>2</b><i>PTS</i><span>5 GAMES</span></div><div><b>1</b><i>PT</i><span>THE REST</span></div></div>',
         body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
-      { tag: "3 OF 4", head: "HOT GAMES", color: "#FF7A3D",
+      { head: "WHO'S ON TOP", color: "#5CFF9D", top: true,
+        body: "<b>Every game's button shows who's leading it,</b> how much they have, and what the game is worth today. Beat their number to take the points from them." },
+      { head: "HOT GAMES", color: "#FF7A3D",
         art: '<div class="gd-hot">🔥 <b>1.5×</b></div>',
         body: "<b>Two games a day pay 1.5× on every win.</b> Different games each day. Look for the 🔥 on the menu." },
-      { tag: "4 OF 4", head: "MOST POINTS WINS", color: "#FFD24D",
+      { head: "MOST POINTS WINS", color: "#FFD24D",
         art: '<div class="gd-trophy">🏆</div>',
         body: "<b>Points add up all week,</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
     ];
+    /* three made-up leaders on three game buttons, with real faces off the wall */
+    function topArt() {
+      var f = {}; try { f = (typeof Walkups !== "undefined" && Walkups.faces && Walkups.faces()) || {}; } catch (e) {}
+      var names = Object.keys(f).sort(function () { return Math.random() - 0.5; });
+      var rows = [["BLACKJACK", "$41,250", 3], ["CRAPS", "$27,800", 2], ["ROULETTE", "$18,400", 1]];
+      return '<div class="gd-top">' + rows.map(function (r, i) {
+        var n = names[i] || ["QTIP", "JUICE", "COUGAR"][i];
+        var pic = f[n] ? '<img src="' + f[n] + '" alt="">' : '<span class="gd-noface">🙂</span>';
+        return '<div class="gd-tile">' + pic + '<div class="gd-who"><b>' + r[0] + '</b><span>👑 ' + String(n).toUpperCase() + '</span></div>' +
+          '<div class="gd-amt"><b>' + r[1] + '</b><span>' + r[2] + ' PT' + (r[2] > 1 ? 'S' : '') + '</span></div></div>';
+      }).join("") + '<div class="gd-eg">EXAMPLE</div></div>';
+    }
     var demoing = false;
     function demo(done) {
       if (demoing) { if (done) done(); return; }
@@ -414,6 +428,17 @@
           "#tt-demo .gd-pts i{font:800 11px system-ui,sans-serif;letter-spacing:.18em;font-style:normal}" +
           "#tt-demo .gd-pts span{margin-top:8px;font:700 10px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;color:#fff;opacity:.85}" +
           "#tt-demo .gd-hot{font-size:60px;line-height:1}#tt-demo .gd-hot b{font:900 italic 76px/1 Impact,'Arial Black',sans-serif;color:#FF7A3D;-webkit-text-stroke:2px #0a0a0f;paint-order:stroke fill;text-shadow:3px 4px 0 #0a0a0f,0 0 30px #FF7A3D}" +
+          "#tt-demo .gd-top{width:100%;max-width:340px;display:flex;flex-direction:column;gap:8px}" +
+          "#tt-demo .gd-tile{display:flex;align-items:center;gap:11px;padding:8px 12px 8px 8px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.16);text-align:left}" +
+          "#tt-demo .gd-tile:first-child{border-color:#FFD24D;box-shadow:0 0 18px rgba(255,210,77,.25)}" +
+          "#tt-demo .gd-tile img,#tt-demo .gd-noface{width:50px;height:50px;border-radius:50%;object-fit:cover;border:2px solid #FFD24D;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;background:#222}" +
+          "#tt-demo .gd-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}" +
+          "#tt-demo .gd-who b{font:900 italic 19px Impact,'Arial Black',sans-serif;letter-spacing:.04em}" +
+          "#tt-demo .gd-who span{font:700 10.5px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;color:#FFD24D;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
+          "#tt-demo .gd-amt{display:flex;flex-direction:column;align-items:flex-end;gap:3px}" +
+          "#tt-demo .gd-amt b{font:800 17px system-ui,sans-serif;color:#5CFF9D}" +
+          "#tt-demo .gd-amt span{font:800 10px system-ui,sans-serif;letter-spacing:.14em;padding:2px 7px;border-radius:999px;background:#FF7A3D;color:#120604}" +
+          "#tt-demo .gd-eg{font:700 9px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;opacity:.45;margin-top:2px}" +
           "#tt-demo .gd-trophy{font-size:92px;line-height:1;filter:drop-shadow(0 0 22px rgba(255,210,77,.6))}" +
           "#tt-demo p{position:relative;margin:0 auto;max-width:330px;font-size:16px;line-height:1.45;color:rgba(255,255,255,.82)}#tt-demo p b{color:#fff}" +
           "#tt-demo .gd-foot{position:relative;margin:0 0 26px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}" +
@@ -441,8 +466,8 @@
       function show() {
         var c = CARDS[at];
         card.className = "gd-card";
-        card.innerHTML = '<div class="gd-splat" style="background:' + c.color + '"></div><div class="gd-tag">' + c.tag + '</div>' +
-          '<h2 style="color:' + c.color + '">' + c.head + '</h2><div class="gd-art">' + c.art + '</div><p>' + c.body + '</p>';
+        card.innerHTML = '<div class="gd-splat" style="background:' + c.color + '"></div><div class="gd-tag">' + (at + 1) + ' OF ' + CARDS.length + '</div>' +
+          '<h2 style="color:' + c.color + '">' + c.head + '</h2><div class="gd-art">' + (c.top ? topArt() : c.art) + '</div><p>' + c.body + '</p>';
         void card.offsetWidth; card.className = "gd-card in";
         dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
         next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT ›";
