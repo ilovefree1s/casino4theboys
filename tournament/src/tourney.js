@@ -1076,7 +1076,7 @@
           if (faces && !typing) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
           // you're in: the piece goes up on the wall while the tournament loads behind it
-          if (faces && typeof Intro !== "undefined") { try { Intro.play(); } catch (e) {} }
+          if (faces && typeof Intro !== "undefined") { try { Intro.play(function () { try { Intro.demo(); } catch (e) {} }); } catch (e) {} }
           if (then) then(); else refreshLane();
         }, function () {
           $("tt-join-go").disabled = false;
@@ -1701,6 +1701,12 @@
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
         list.appendChild(heading("THE RULES"));
+        if ((isPoints(wk) || isPoints(nx)) && typeof Intro !== "undefined" && Intro.demo) {
+          var hw = document.createElement("div"); hw.className = "tt-rweek";
+          var hb = document.createElement("button"); hb.type = "button"; hb.className = "on"; hb.textContent = "▶ HOW IT WORKS";
+          hb.onclick = function () { Intro.demo(); };
+          hw.appendChild(hb); list.appendChild(hw);
+        }
         if (differs) {
           var sw = document.createElement("div"); sw.className = "tt-rweek";
           [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {

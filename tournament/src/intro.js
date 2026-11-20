@@ -365,7 +365,96 @@
       setTimeout(function () { finish(); }, LEN + 3000);
     }
 
-    return { play: play, isPlaying: function () { return playing; } };
+    /* ---- the how-it-works cards: four taps, same wall, same paint ---- */
+    var CARDS = [
+      { tag: "1 OF 4", head: "HOW YOU SCORE", color: "#3D8BFF",
+        art: '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">➜</span><span class="gd-cash gd-up">$15,000+</span></div><div class="gd-crown">👑 TAKES THE POINTS</div>',
+        body: "<b>Every game starts you at $10,000.</b> Whoever has the most money on a game at midnight takes that game's points. You have to be up at least $5,000 — that's <b>$15,000 or more</b>." },
+      { tag: "2 OF 4", head: "3 · 2 · 1", color: "#FF4FA3",
+        art: '<div class="gd-pts"><div><b>3</b><i>PTS</i><span>3 GAMES</span></div><div><b>2</b><i>PTS</i><span>5 GAMES</span></div><div><b>1</b><i>PT</i><span>THE REST</span></div></div>',
+        body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
+      { tag: "3 OF 4", head: "HOT GAMES", color: "#FF7A3D",
+        art: '<div class="gd-hot">🔥 <b>1.5×</b></div>',
+        body: "<b>Two games a day pay 1.5× on every win.</b> Different games each day. Look for the 🔥 on the menu." },
+      { tag: "4 OF 4", head: "MOST POINTS WINS", color: "#FFD24D",
+        art: '<div class="gd-trophy">🏆</div>',
+        body: "<b>Points add up all week,</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
+    ];
+    var demoing = false;
+    function demo(done) {
+      if (demoing) { if (done) done(); return; }
+      demoing = true;
+      if (!document.getElementById("gd-style")) {
+        var st = document.createElement("style"); st.id = "gd-style";
+        st.textContent =
+          "#tt-demo{position:fixed;inset:0;z-index:10050;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;" +
+            "padding:calc(env(safe-area-inset-top,0px) + 54px) 22px calc(env(safe-area-inset-bottom,0px) + 22px);box-sizing:border-box;" +
+            "background:radial-gradient(120% 70% at 50% 30%,#16161f 0%,#0b0b10 55%,#060609 100%);transition:opacity .35s ease;color:#fff;font-family:system-ui,sans-serif}" +
+          "#tt-demo:before{content:'';position:absolute;inset:0;opacity:.5;background:" +
+            "repeating-linear-gradient(0deg,transparent 0 63px,rgba(255,255,255,.035) 63px 64px),repeating-linear-gradient(90deg,transparent 0 127px,rgba(255,255,255,.03) 127px 128px)}" +
+          "#tt-demo .gd-skip{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);" +
+            "background:rgba(0,0,0,.45);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em}" +
+          "#tt-demo .gd-card{position:relative;width:100%;max-width:400px;text-align:center;margin:auto 0}" +
+          "#tt-demo .gd-card.in{animation:gdIn .42s cubic-bezier(.2,1.3,.4,1) both}" +
+          "@keyframes gdIn{from{opacity:0;transform:translateY(18px) scale(.94)}to{opacity:1;transform:none}}" +
+          "#tt-demo .gd-splat{position:absolute;left:50%;top:38%;width:340px;height:340px;margin:-170px 0 0 -170px;border-radius:50%;filter:blur(38px);opacity:.34;pointer-events:none}" +
+          "#tt-demo .gd-tag{position:relative;font:700 10px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.22em;opacity:.6;margin-bottom:10px}" +
+          "#tt-demo h2{position:relative;margin:0 0 20px;font:900 italic 46px/1 Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.01em;" +
+            "transform:rotate(-4deg);-webkit-text-stroke:2px #0a0a0f;paint-order:stroke fill;text-shadow:3px 4px 0 #0a0a0f,0 0 26px currentColor}" +
+          "#tt-demo .gd-art{position:relative;min-height:128px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:18px}" +
+          "#tt-demo .gd-row{display:flex;align-items:center;gap:10px}" +
+          "#tt-demo .gd-cash{font:900 italic 27px Impact,'Arial Black',sans-serif;padding:8px 12px;border-radius:10px;background:rgba(255,255,255,.08);border:2px dashed rgba(255,255,255,.3)}" +
+          "#tt-demo .gd-cash.gd-up{color:#5CFF9D;border-color:#5CFF9D;background:rgba(92,255,157,.1);text-shadow:0 0 16px rgba(92,255,157,.7)}" +
+          "#tt-demo .gd-arrow{font-size:24px;color:#FFD24D}" +
+          "#tt-demo .gd-crown{margin-top:14px;font:800 14px system-ui,sans-serif;letter-spacing:.14em;color:#FFD24D}" +
+          "#tt-demo .gd-pts{display:flex;gap:10px;width:100%;justify-content:center}" +
+          "#tt-demo .gd-pts>div{flex:1;max-width:108px;padding:12px 4px 10px;border-radius:14px;background:rgba(255,255,255,.07);border:2px solid currentColor;display:flex;flex-direction:column;align-items:center}" +
+          "#tt-demo .gd-pts>div:nth-child(1){color:#FFD24D;transform:rotate(-3deg)}#tt-demo .gd-pts>div:nth-child(2){color:#FF4FA3;transform:rotate(2deg)}#tt-demo .gd-pts>div:nth-child(3){color:#3D8BFF;transform:rotate(-2deg)}" +
+          "#tt-demo .gd-pts b{font:900 italic 54px/1 Impact,'Arial Black',sans-serif;text-shadow:0 0 18px currentColor}" +
+          "#tt-demo .gd-pts i{font:800 11px system-ui,sans-serif;letter-spacing:.18em;font-style:normal}" +
+          "#tt-demo .gd-pts span{margin-top:8px;font:700 10px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;color:#fff;opacity:.85}" +
+          "#tt-demo .gd-hot{font-size:60px;line-height:1}#tt-demo .gd-hot b{font:900 italic 76px/1 Impact,'Arial Black',sans-serif;color:#FF7A3D;-webkit-text-stroke:2px #0a0a0f;paint-order:stroke fill;text-shadow:3px 4px 0 #0a0a0f,0 0 30px #FF7A3D}" +
+          "#tt-demo .gd-trophy{font-size:92px;line-height:1;filter:drop-shadow(0 0 22px rgba(255,210,77,.6))}" +
+          "#tt-demo p{position:relative;margin:0 auto;max-width:330px;font-size:16px;line-height:1.45;color:rgba(255,255,255,.82)}#tt-demo p b{color:#fff}" +
+          "#tt-demo .gd-foot{position:relative;margin:0 0 26px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}" +
+          "#tt-demo .gd-dots{display:flex;gap:7px}#tt-demo .gd-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25)}#tt-demo .gd-dots i.on{background:#fff}" +
+          "#tt-demo .gd-next{width:100%;max-width:300px;padding:15px 0;border:0;border-radius:999px;font:900 italic 20px Impact,'Arial Black',sans-serif;letter-spacing:.08em;color:#0a0a0f;box-shadow:0 6px 0 rgba(0,0,0,.5)}";
+        document.head.appendChild(st);
+      }
+      var wrap = document.createElement("div"); wrap.id = "tt-demo";
+      var skip = document.createElement("button"); skip.type = "button"; skip.className = "gd-skip"; skip.textContent = "SKIP ›";
+      var card = document.createElement("div"); card.className = "gd-card";
+      var foot = document.createElement("div"); foot.className = "gd-foot";
+      var dots = document.createElement("div"); dots.className = "gd-dots";
+      var next = document.createElement("button"); next.type = "button"; next.className = "gd-next";
+      foot.appendChild(dots); foot.appendChild(next);
+      wrap.appendChild(skip); wrap.appendChild(card); wrap.appendChild(foot);
+      document.body.appendChild(wrap);
+      var snd = Sound(), at = 0, closed = false;
+      function close() {
+        if (closed) return; closed = true;
+        try { snd.stop(); } catch (e) {}
+        wrap.style.opacity = "0";
+        setTimeout(function () { wrap.remove(); demoing = false; }, 360);
+        if (done) done();
+      }
+      function show() {
+        var c = CARDS[at];
+        card.className = "gd-card";
+        card.innerHTML = '<div class="gd-splat" style="background:' + c.color + '"></div><div class="gd-tag">' + c.tag + '</div>' +
+          '<h2 style="color:' + c.color + '">' + c.head + '</h2><div class="gd-art">' + c.art + '</div><p>' + c.body + '</p>';
+        void card.offsetWidth; card.className = "gd-card in";
+        dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
+        next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT ›";
+        next.style.background = c.color;
+        try { snd.hiss(true); setTimeout(function () { try { snd.hiss(false); } catch (e) {} }, 260); } catch (e) {}
+      }
+      next.onclick = function () { if (at < CARDS.length - 1) { at++; show(); } else close(); };
+      skip.onclick = close;
+      show();
+    }
+
+    return { play: play, demo: demo, isPlaying: function () { return playing || demoing; } };
   })();
   if (/(^|[#&])intro\b/.test(location.hash)) {
     addEventListener("load", function () {
@@ -374,7 +463,7 @@
       tip.textContent = "TAP TO PLAY THE INTRO";
       tip.style.cssText = "position:fixed;inset:0;z-index:10049;display:flex;align-items:center;justify-content:center;" +
         "background:rgba(0,0,0,.85);color:#FFD24D;font:800 16px system-ui,sans-serif;letter-spacing:.14em";
-      tip.onclick = function () { tip.remove(); Intro.play(); };
+      tip.onclick = function () { tip.remove(); Intro.play(function () { Intro.demo(); }); };
       document.body.appendChild(tip);
     });
   }
