@@ -325,8 +325,8 @@
       function mark(profit, won) {
         var scr = document.querySelector(".screen.on");
         var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + fmt(profit);
-        // Mini UTH (trying it there first): the doubling shows in the money window, not as a pill
-        if (scr && scr.id === "screen-miniuth" && window.purseWin) {
+        // Mini UTH, DJ Wild and UTH: the doubling shows in the money window, not as a pill
+        if (scr && /^screen-(miniuth|djwild|holdem)$/.test(scr.id) && window.purseWin) {
           purseWin.hot(scr.querySelector(".purse"), won, "×" + tagX().replace("×", ""), won + profit);
           return;
         }

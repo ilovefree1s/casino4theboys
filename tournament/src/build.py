@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.39"
+VERSION = "1.40"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -741,6 +741,75 @@ sub("""            paysHtml("BLIND", odds(MU.BLIND).concat([["Other hands", "pus
 sub("""          '<div style="padding:0 0 4px 6px">' + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""",
     """          '<div style="padding:0 0 4px 6px">' + muSidePills("bonus") + paysHtml("3 CARD BONUS", odds(MU.BONUS)) + "</div>" +""")
 
+# ---- DJ Wild and Ultimate Texas Hold'em: every result pill sits over its own pay chart (like Mini UTH) ----
+sub("""  function chipHtml(amount, size) {""",
+"""  /** Which pay chart a result belongs over. */
+  function pillSide(r) {
+    if (r.side) return r.side;
+    var l = r.label;
+    return /^Blind/.test(l) ? "blind" : /^Trips/.test(l) ? "trips" : /^Bad Beat/.test(l) ? "badbeat" : "main";
+  }
+  /** The result pills for one chart, to print right above it. */
+  function pillsOver(phase, results, which) {
+    if (phase !== "result" || !results) return "";
+    var h = results.filter(function (r) { return pillSide(r) === which; }).map(function (r) {
+      var cls = r.net > 0 ? "w" : r.net < 0 ? "l" : "p";
+      var txt = r.net > 0 ? "+" + fmt(r.net) : r.net < 0 ? "−" + fmt(-r.net) : "push";
+      var nm = r.label.replace(/^(Blind|Trips|Bad Beat)( · )?/, "");
+      return '<div class="dj-pill ' + cls + '">' + (nm ? '<span class="nm">' + nm + "</span>" : "") +
+        '<span class="amt">' + txt + "</span></div>";
+    }).join("");
+    return h ? '<div class="mu-sidepill">' + h + "</div>" : "";
+  }
+  /** The money window: +what the hand won, cleared when the next one starts. */
+  function pillsPurse(scr, phase, results) {
+    if (!window.purseWin) return;
+    var purse = document.querySelector("#screen-" + scr + " .purse");
+    if (phase !== "result") { purseWin.clear(purse); return; }
+    var net = 0; (results || []).forEach(function (r) { net += r.net; });
+    purseWin.net(purse, net);
+  }
+  function chipHtml(amount, size) {""")
+# DJ Wild
+sub("""          label: s.tripsWin ? DJ.tripsLabel(s.tripsWin) : "Trips",""",
+    """          side: "trips", label: s.tripsWin ? DJ.tripsLabel(s.tripsWin) : "Trips",""")
+sub("""          label: s.badBeatWin ? DJ.badBeatLabel(s.badBeatWin) : "Bad Beat",""",
+    """          side: "badbeat", label: s.badBeatWin ? DJ.badBeatLabel(s.badBeatWin) : "Bad Beat",""")
+sub("""      var betting = phase === "betting";
+      $("dj-spots").innerHTML =""",
+    """      var betting = phase === "betting";
+      pillsPurse("djwild", phase, results);
+      $("dj-spots").innerHTML =""")
+sub("""paysHtml("BAD BEAT", odds(DJ.BAD_BEAT)) + "</div>" +""", """pillsOver(phase, results, "badbeat") + paysHtml("BAD BEAT", odds(DJ.BAD_BEAT)) + "</div>" +""")
+sub("""paysHtml("TRIPS", tripsOdds()) + "</div>" +""", """pillsOver(phase, results, "trips") + paysHtml("TRIPS", tripsOdds()) + "</div>" +""")
+sub("""paysHtml("BLIND", odds(DJ.BLIND)) + "</div>" +""", """pillsOver(phase, results, "blind") + paysHtml("BLIND", odds(DJ.BLIND)) + "</div>" +""")
+sub("""          "<div></div>" +
+          '<div class="mid" style="flex-direction:column">' +
+            spotHtml("dj-play", "ring", "PLAY", playStake, false, NEON) +""",
+    """          '<div class="mu-mainpill">' + pillsOver(phase, results, "main") + "</div>" +
+          '<div class="mid" style="flex-direction:column">' +
+            spotHtml("dj-play", "ring", "PLAY", playStake, false, NEON) +""")
+# Ultimate Texas Hold'em
+sub("""      var host = $("uth-spots");
+      host.innerHTML =""",
+    """      var host = $("uth-spots");
+      pillsPurse("holdem", phase, results);
+      host.innerHTML =""")
+sub("""paysHtml("BAD BEAT", UTH.BAD_BEAT.slice(1).map(function (r) {""", """pillsOver(phase, results, "badbeat") + paysHtml("BAD BEAT", UTH.BAD_BEAT.slice(1).map(function (r) {""")
+sub("""paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +""", """pillsOver(phase, results, "trips") + paysHtml("TRIPS", odds(UTH.TRIPS)) + "</div>" +""")
+sub("""paysHtml("PLAY BET", [""", """pillsOver(phase, results, "main") + paysHtml("PLAY BET", [""")
+sub("""paysHtml("BLIND", odds(UTH.BLIND)) + "</div>" +""", """pillsOver(phase, results, "blind") + paysHtml("BLIND", odds(UTH.BLIND)) + "</div>" +""")
+
+# ---- every chip stack carries its exact amount, so the hold-to-pour bubble can show what's on THAT spot ----
+sub("""    return html;
+  }
+
+  // ---------- the floor ----------""",
+"""    return html + '<i class="amt-raw" data-amt="' + amount + '" hidden></i>';
+  }
+
+  // ---------- the floor ----------""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
@@ -884,6 +953,8 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left: 50%; margin-left: -17px; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
+#screen-djwild #dj-results, #screen-holdem #uth-res-labels, #screen-holdem #uth-res-amounts { display: none; }
+.mu-mainpill { display: flex; align-items: flex-end; justify-content: center; }
 .purse .pw { display: none; }
 .purse.stack.won .pw { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
 .purse.stack.won .val.risk, .purse.stack.won .val.staked { display: none !important; }
@@ -1025,8 +1096,14 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       var h = hold;
       if (!h || !h.fired) return;
       if (!bub) { bub = document.createElement("div"); bub.id = "pour-bub"; document.body.appendChild(bub); }
+      // what is on the spot under your finger (just that spot, not a bet that rides along with it)
+      var on = NaN, n = document.elementFromPoint(h.x, h.y);
+      for (var up = 0; n && up < 4 && isNaN(on); up++, n = n.parentElement) {
+        var raw = n.querySelector ? n.querySelector(".amt-raw") : null;
+        if (raw) on = +raw.getAttribute("data-amt");
+      }
       var now = bank(), put = isNaN(now) || isNaN(h.bank) ? 0 : now - h.bank;
-      bub.innerHTML = "<i></i><b>" + (put > 0 ? "+" + short(put) : "×" + h.fired) + "</b>";
+      bub.innerHTML = "<i></i><b>" + (on > 0 ? short(on) : put > 0 ? "+" + short(put) : "×" + h.fired) + "</b>";
       var left = h.x > innerWidth / 2;          // on whichever side has the room
       bub.style.left = left ? "" : Math.min(innerWidth - 8, h.x + 46) + "px";
       bub.style.right = left ? Math.min(innerWidth - 8, innerWidth - h.x + 46) + "px" : "";
