@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.50"
+VERSION = "1.51"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -1133,26 +1133,60 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       if (fired) { swallow = Date.now() + 400; }
     }
     var swallow = 0;
-    function tick() {
-      if (!hold) return;
-      var h = hold;
-      if (!document.body.contains(h.el) || !h.el.closest(".screen.on")) { stop(); return; }
-      var before = purseText();
+    /** The thing to tap for a spot: the spot itself (it usually has an id and stays put) rather than
+        the chip drawn inside it, which is thrown away and redrawn on every chip. */
+    function steady(el) {
+      for (var n = el, up = 0; n && up < 4; n = n.parentElement, up++) {
+        if (n.id && !n.classList.contains("screen")) {
+          var r = n.getBoundingClientRect();
+          if (r.width <= 240 && r.height <= 240) return n;
+          break;
+        }
+      }
+      return el;
+    }
+    /** One chip onto the spot under the finger. False when the pour should end. */
+    function drop(h) {
+      if (!document.body.contains(h.el)) {
+        // redrawn out from under us: the same spot by its id if it has one (quick), else whatever is under the finger now
+        var now = h.sid ? document.getElementById(h.sid) : null;
+        if (!now) { now = document.elementFromPoint(h.x, h.y); if (now) now = steady(now); }
+        if (!now || now.closest(NO) || !now.closest(".screen.on")) return false;
+        h.el = now; h.sid = now.id || "";
+      }
       h.pouring = true;
       try { h.el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: h.x, clientY: h.y })); }
-      catch (err) { h.pouring = false; stop(); return; }
+      catch (err) { h.pouring = false; return false; }
       h.pouring = false;
       h.fired++;
-      // spots are often redrawn on every chip: carry on with whatever is under the finger now
-      var now = document.elementFromPoint(h.x, h.y);
-      if (now && now !== h.el) {
-        if (now.closest(NO) || !now.closest(".screen.on")) { stop(); return; }
-        h.el = now;
+      return true;
+    }
+    /* The pour speeds up the whole time you hold: a few chips a second at first, about 33 a second
+       after one second, and it keeps climbing to about 330 a second (ten times that) at ten seconds. */
+    function tick() {
+      if (!hold) return;
+      var h = hold, t = Date.now();
+      if (!h.began) {
+        h.began = t; h.last = t; h.owed = 1;
+        if (document.body.contains(h.el)) { h.el = steady(h.el); h.sid = h.el.id || ""; }
       }
-      if (purseText() === before) { if (++h.dry >= 2) { stop(); return; } } else h.dry = 0;
+      if (!document.querySelector(MONEY)) { stop(); return; }       // left the table
+      var held = (t - h.began) / 1000;
+      var rate = held < 0.5 ? 11 : held < 1 ? 18 : 33 * (1 + 9 * Math.pow(Math.min(1, (held - 1) / 9), 2));
+      h.owed += Math.min(rate * (t - h.last) / 1000, 40);
+      h.last = t;
+      var n = Math.floor(h.owed);
+      h.owed -= n;
+      var before = purseText(), spent = Date.now();
+      for (var c = 0; c < n; c++) {
+        if (hold !== h) return;
+        if (!drop(h)) { stop(); return; }
+        if (Date.now() - spent > 45) { h.owed = 0; break; }     // a slow phone: don't freeze, just pour what it can
+      }
+      // the chips have stopped going down (table max, or out of money): that's the end of the pour
+      if (n > 0) { if (purseText() === before) { if (++h.dry >= 2) { stop(); return; } } else h.dry = 0; }
       bubble();
-      var gap = h.fired < 6 ? 90 : h.fired < 20 ? 55 : 30;
-      h.t = setTimeout(tick, gap);
+      h.t = setTimeout(tick, 25);
     }
     document.addEventListener("pointerdown", function (e) {
       stop();
