@@ -4424,7 +4424,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.49</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.50</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -11423,7 +11423,15 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
     var tab = "week";
     function showBoard() {
       pointsCache = {}; winnersCache = {};
-      msgSeenAtOpen = msgSeen; loadMsgs(); ping();
+      msgSeenAtOpen = msgSeen; ping();
+      // a message you haven't read yet: the board opens straight onto it
+      boardFresh = true;
+      var unread = function () { return !!(msgs && msgs[0] && msgs[0].id > msgSeen); };
+      if (unread()) { tab = "msgs"; autoMsgs = true; }
+      else if (autoMsgs) { tab = "week"; autoMsgs = false; }   // it only jumped there for the message: back to the standings
+      loadMsgs().then(function () {
+        if (boardFresh && tab !== "msgs" && unread() && $("tt-board").classList.contains("on")) { tab = "msgs"; autoMsgs = true; msgSeenAtOpen = msgSeen; paintBoard(); }
+      });
       $("tt-board").classList.add("on");
       paintBoard();
       ping();
@@ -11887,7 +11895,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       }
       return box;
     }
-    var rulesWeek = "this";
+    var rulesWeek = "this", boardFresh = false, autoMsgs = false;
     function paintMsgs(list) {
       if (isJustin()) {
         var box = document.createElement("div"); box.className = "tt-compose";
@@ -11963,6 +11971,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
         var was = tab;
+        boardFresh = false; autoMsgs = false;
         tab = x.getAttribute("data-t");
         if (tab === "msgs" && was !== "msgs") msgSeenAtOpen = msgSeen;
         if (tab === "stats" && board) { delete statsCache[board.week]; delete wuCache[board.week]; duelsCache = null; }
