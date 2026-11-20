@@ -11,6 +11,11 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
+#pour-bub { position: fixed; z-index: 9997; display: none; align-items: center; gap: 6px; padding: 6px 12px 6px 7px; border-radius: 999px;
+  background: rgba(14,11,4,.96); border: 1.5px solid #FFD24D; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; white-space: nowrap; }
+#pour-bub i { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #FFD24D 55%, #b8860b);
+  border: 2px dashed rgba(0,0,0,.45); box-sizing: border-box; }
+#pour-bub b { font: 800 16px/1 system-ui, sans-serif; color: #FFD24D; letter-spacing: .02em; }
 /* at a table the fullscreen button sits up top in the middle, between the back button and the money */
 body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left: 50%; margin-left: -17px; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
@@ -52,6 +57,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         var m = /^\s*\$?([\d,]+)\s*$/.exec(r.textContent);
         if (!m) return;
         var v = +m[1].replace(/,/g, "");
+        r.dataset.raw = String(v);      // the exact figure, for anything that needs it after it's shortened
         r.textContent = v > 0 ? "−" + short(v) : "\u00a0";
       });
       // AT RISK sits on the left of its amount
@@ -140,7 +146,31 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       document.querySelectorAll(MONEY).forEach(function (e) { t += e.textContent + "|"; });
       return t;
     }
+    // your finger is on the spot, so a little bubble beside it shows what you've poured so far
+    var bub = null;
+    function bank() {      // what's on the table right now
+      var e = document.querySelector('.screen.on [id$="risk"], .screen.on [id$="staked"]');
+      if (!e) return NaN;
+      var t = e.textContent;
+      if (/^[\s$\d,]*\d[\s$\d,]*$/.test(t)) return +t.replace(/[^0-9]/g, "");   // freshly written, in full
+      if (e.dataset.raw != null) return +e.dataset.raw;
+      var d = t.replace(/[^0-9]/g, "");
+      return d ? +d : 0;
+    }
+    function bubble() {
+      var h = hold;
+      if (!h || !h.fired) return;
+      if (!bub) { bub = document.createElement("div"); bub.id = "pour-bub"; document.body.appendChild(bub); }
+      var now = bank(), put = isNaN(now) || isNaN(h.bank) ? 0 : now - h.bank;
+      bub.innerHTML = "<i></i><b>" + (put > 0 ? "+" + short(put) : "×" + h.fired) + "</b>";
+      var left = h.x > innerWidth / 2;          // on whichever side has the room
+      bub.style.left = left ? "" : Math.min(innerWidth - 8, h.x + 46) + "px";
+      bub.style.right = left ? Math.min(innerWidth - 8, innerWidth - h.x + 46) + "px" : "";
+      bub.style.top = Math.max(8, h.y - 22) + "px";
+      bub.style.display = "flex";
+    }
     function stop() {
+      if (bub) bub.style.display = "none";
       if (!hold) return;
       clearTimeout(hold.t);
       var fired = hold.fired;
@@ -166,6 +196,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         h.el = now;
       }
       if (purseText() === before) { if (++h.dry >= 2) { stop(); return; } } else h.dry = 0;
+      bubble();
       var gap = h.fired < 6 ? 90 : h.fired < 20 ? 55 : 30;
       h.t = setTimeout(tick, gap);
     }
@@ -175,7 +206,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       var el = e.target;
       if (!el || !el.closest || !el.closest(".screen.on") || !document.querySelector(MONEY)) return;
       if (el.closest(NO)) return;
-      hold = { el: el, x: e.clientX, y: e.clientY, fired: 0, dry: 0, id: e.pointerId, t: setTimeout(tick, 380) };
+      hold = { el: el, x: e.clientX, y: e.clientY, fired: 0, dry: 0, id: e.pointerId, bank: bank(), t: setTimeout(tick, 380) };
     }, true);
     document.addEventListener("pointermove", function (e) {
       if (hold && e.pointerId === hold.id && Math.abs(e.clientX - hold.x) + Math.abs(e.clientY - hold.y) > 24) stop();
@@ -4361,7 +4392,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.38</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.39</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
