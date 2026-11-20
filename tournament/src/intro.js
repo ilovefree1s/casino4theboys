@@ -179,13 +179,38 @@
         g.drawImage(tmp, 0, 0);
       }
 
-      // the can's path over the piece: side to side, working down, with a wobble
+      // the can's path over the piece: it draws the thing — round the ring, then the 4 stroke by stroke,
+      // then a swipe each for THE and BOYS. Points are fractions of the logo's box; "up" legs are the hand moving.
+      var ART = (function () {
+        var segs = [], ring = [], i, a;
+        for (i = 0; i <= 44; i++) { a = (-200 + i * (385 / 44)) * Math.PI / 180; ring.push([0.505 + Math.cos(a) * 0.415, 0.553 + Math.sin(a) * 0.361]); }
+        segs.push({ pts: ring, down: true });
+        [ [[0.59, 0.238], [0.208, 0.589]],                      // the 4: the slant
+          [[0.208, 0.589], [0.683, 0.589]],                     //        the bar
+          [[0.612, 0.238], [0.503, 0.814]],                     //        the stem
+          [[0.631, 0.499], [0.917, 0.459]],                     // THE
+          [[0.437, 0.712], [0.909, 0.632]],                     // BOYS, over
+          [[0.895, 0.69], [0.46, 0.765]]                        // and back under
+        ].forEach(function (st) {
+          var prev = segs[segs.length - 1].pts; prev = prev[prev.length - 1];
+          segs.push({ pts: [prev, st[0]], down: false });
+          segs.push({ pts: st, down: true });
+        });
+        var legs = [], total = 0;
+        segs.forEach(function (sg) {
+          for (var k = 1; k < sg.pts.length; k++) {
+            var dx = sg.pts[k][0] - sg.pts[k - 1][0], dy = (sg.pts[k][1] - sg.pts[k - 1][1]) * 1.15;
+            var len = Math.sqrt(dx * dx + dy * dy) * (sg.down ? 1 : 0.4);      // the hand moves quicker than it paints
+            legs.push({ a: sg.pts[k - 1], b: sg.pts[k], at: total, len: len, down: sg.down }); total += len;
+          }
+        });
+        return { legs: legs, total: total };
+      })();
       function artPos(p) {
-        var rows = 7, f = p * rows, row = Math.min(rows - 1, Math.floor(f)), u = f - row;
-        var e = u < 0.5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
-        var x = box.x + box.w * (row % 2 ? 1 - e : e);
-        var y = box.y + box.h * ((row + 0.5) / rows) + Math.sin(p * 40) * box.h * 0.035;
-        return { x: x, y: y };
+        var d = Math.max(0, Math.min(1, p)) * ART.total, L = ART.legs[ART.legs.length - 1];
+        for (var i = 0; i < ART.legs.length; i++) { if (d <= ART.legs[i].at + ART.legs[i].len) { L = ART.legs[i]; break; } }
+        var u = L.len ? Math.min(1, (d - L.at) / L.len) : 1;
+        return { x: box.x + box.w * (L.a[0] + (L.b[0] - L.a[0]) * u), y: box.y + box.h * (L.a[1] + (L.b[1] - L.a[1]) * u), down: L.down };
       }
       function txtPos(p) {
         return { x: tBox.x + tBox.w * p, y: tBox.cy + Math.sin(p * 22) * tBox.h * 0.22 };
@@ -269,12 +294,12 @@
         var nozzle = null;
         if (t >= A0) {
           var pa = Math.min(1, (t - A0) / (A1 - A0));
-          for (var q = prevA; q <= pa; q += 0.004) {
+          for (var q = prevA; q <= pa; q += 0.003) {
             var pt = artPos(q);
-            blob(artMask, pt.x, pt.y, box.w * 0.19, 0.5);
+            if (pt.down) blob(artMask, pt.x, pt.y, box.w * 0.125, 0.6);
           }
           prevA = pa;
-          if (pa < 1) { nozzle = artPos(pa); puff(nozzle.x, nozzle.y, "120,170,255"); }
+          if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
           else {
             // last pass: the gaps fill in and the whole wall around it takes the glow
             var c2 = artMask.getContext("2d");
