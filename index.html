@@ -4458,7 +4458,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.57</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.58</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10396,9 +10396,9 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         var c = art.getContext("2d"), w = art.width, h = art.height;
         var sc = Math.max(w / img.width, h / img.height) * 1.0, iw = img.width * sc, ih = img.height * sc;
         c.globalCompositeOperation = "lighter";       // the art is on black: only its light goes onto the wall
-        c.drawImage(img, (w - iw) / 2, (h - ih) / 2 - h * 0.05, iw, ih);
+        c.drawImage(img, (w - iw) / 2, (h - ih) / 2 + h * 0.07, iw, ih);
         // where the logo sits inside the art (measured from the picture)
-        box = { x: w / 2 - iw * 0.47, y: (h - ih) / 2 - h * 0.05 + ih * 0.2, w: iw * 0.94, h: ih * 0.5 };
+        box = { x: w / 2 - iw * 0.47, y: (h - ih) / 2 + h * 0.07 + ih * 0.2, w: iw * 0.94, h: ih * 0.5 };
         ready = true;
       };
       img.src = src;
@@ -10412,7 +10412,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         c.font = "900 italic " + size + "px Impact, Haettenschweiler, 'Arial Narrow Bold', 'Arial Black', sans-serif";
         while (c.measureText(line1).width > w * 0.86 && size > 20) { size -= 2; c.font = c.font.replace(/[\d.]+px/, size + "px"); }
         c.textAlign = "center"; c.textBaseline = "middle";
-        var cx = w / 2, cy = h * 0.765;
+        var cx = w / 2, cy = h * 0.15;
         c.save(); c.translate(cx, cy); c.rotate(-0.055); c.transform(1, 0, -0.08, 1, 0, 0);
         // fat dark outline, then the fill, then a hot highlight: the way a throw-up is built
         c.lineJoin = "round"; c.lineWidth = 15 * S; c.strokeStyle = "#07060b"; c.strokeText(line1, 0, 0);
