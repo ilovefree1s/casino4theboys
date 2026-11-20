@@ -25,25 +25,25 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
 #screen-miniuth #mu-results { display: none; }
 #screen-djwild #dj-results, #screen-holdem #uth-res-labels, #screen-holdem #uth-res-amounts { display: none; }
 .mu-mainpill { display: flex; align-items: flex-end; justify-content: center; }
-.purse .pw { display: none; }
-.purse.stack.won .pw { display: flex; flex-direction: column; align-items: flex-end; line-height: 1.1; }
-.purse.stack.won .val.risk, .purse.stack.won .val.staked { display: none !important; }
+.purse { position: relative; overflow: visible !important; }
+.purse > .pw { display: none !important; }
+.purse[data-won] > .pw { display: flex !important; flex-direction: column; align-items: flex-end; line-height: 1.1;
+  position: absolute; right: 0; left: 0; top: 21px; padding: 0 14px 3px; box-sizing: border-box; z-index: 6; pointer-events: none; }
+.purse[data-hot] > .pw { background: rgba(8,6,12,.97); border: 1px solid rgba(255,255,255,.2); border-top: 0; border-radius: 0 0 11px 11px; padding-bottom: 5px; }
+.purse[data-won] .pr { visibility: hidden; }
 .purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
 .purse .pw b.up { color: #57E06A; font-size: 12px; }
 .purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
 /* Mini UTH: the dealer's hand name sits beside the dealer's card, clear of the money window */
 #mu-dealer-label { position: relative; }
 #mu-dealer-label .badge { position: absolute; left: calc(50% + 38px); top: calc(100% + 32px); margin: 0; white-space: nowrap; }
-/* the 2x window hangs down over the empty corner instead of pushing the table down */
-.purse.stack.won[data-hot] { margin-bottom: -26px; z-index: 6; background: rgba(6,5,11,.96); }
 .mu-sidepill .dj-pill { font-size: 10px; padding: 2px 9px; }
 .purse.stack { flex-direction: column !important; align-items: flex-end !important; justify-content: center !important; gap: 0 !important; height: auto !important; min-height: 34px; padding: 3px 14px !important; line-height: 1.1; }
 .purse.stack .lbl, .purse.stack .gap { display: none !important; }
-.purse.stack > span:not(.val):not(.lbl):not(.gap):not(.pr) { display: contents !important; }
+.purse.stack > span:not(.val):not(.lbl):not(.gap):not(.pr):not(.pw) { display: contents !important; }
 .purse.stack .pr { display: flex !important; align-items: baseline; justify-content: flex-end; gap: 5px; }
 .purse.stack .pr .lbl { display: inline !important; font-size: 8px !important; letter-spacing: .12em; color: rgba(245,241,232,.5) !important; }
 .purse.stack .pr.empty .lbl { visibility: hidden; }
-.purse.stack.won .pr { display: none !important; }
 .purse.stack .val.risk, .purse.stack .val.staked { font-size: 11px !important; color: rgba(245,241,232,.62) !important; font-family: var(--display); }
 /* result pills pair up, two to a line, so the table fits the phone */
 .dj-pills { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; max-width: 380px; margin-left: auto !important; margin-right: auto !important; }
@@ -100,17 +100,27 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
     if (!b) { b = document.createElement("span"); b.className = "pw"; el.appendChild(b); }
     return b;
   }
+  /* It is laid OVER the at-risk line and hangs below the window: it never changes the window's
+     size, so nothing on the table moves when it shows. Marked with data-won (a table that rewrites
+     the window's classes can't knock it off), and it takes itself down after a few seconds. */
+  var pwTimer = 0;
   window.purseWin = {
-    clear: function (el) { if (el) { el.classList.remove("won"); var b = el.querySelector(".pw"); if (b) b.innerHTML = ""; delete el.dataset.hot; } },
+    clear: function (el) {
+      if (!el) return;
+      delete el.dataset.won; delete el.dataset.hot;
+      var b = el.querySelector(".pw"); if (b) b.innerHTML = "";
+    },
     net: function (el, v) {
       if (!el || el.dataset.hot) return;
       if (!(v > 0)) { this.clear(el); return; }
-      el.classList.add("won"); pw(el).innerHTML = '<b class="up">+' + short(v) + "</b>";
+      el.dataset.won = "1"; pw(el).innerHTML = '<b class="up">+' + short(v) + "</b>";
     },
     hot: function (el, base, x, total) {
       if (!el) return;
-      el.dataset.hot = "1"; el.classList.add("won");
+      el.dataset.hot = "1"; el.dataset.won = "1";
       pw(el).innerHTML = '<b>+' + short(base) + '</b><i>' + x + '</i><b class="up">+' + short(total) + "</b>";
+      var self = this, mine = ++pwTimer;
+      setTimeout(function () { if (mine === pwTimer && el.dataset.hot) self.clear(el); }, 8000);
     }
   };
   /* Fullscreen only. With the phone's bars gone, the page still starts below the camera strip but is
@@ -4414,7 +4424,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.43</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.44</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
