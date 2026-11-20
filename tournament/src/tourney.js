@@ -1075,6 +1075,8 @@
           // you're this face now, so the walk-ups never send you to yourself
           if (faces && !typing) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
+          // you're in: the piece goes up on the wall while the tournament loads behind it
+          if (faces && typeof Intro !== "undefined") { try { Intro.play(); } catch (e) {} }
           if (then) then(); else refreshLane();
         }, function () {
           $("tt-join-go").disabled = false;
