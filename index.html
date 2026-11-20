@@ -4296,7 +4296,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.36</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.37</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -9514,21 +9514,29 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       if ($("wu-style")) return;
       var s = document.createElement("style"); s.id = "wu-style";
       s.textContent =
-        "#wu-card{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translate(-50%,-140%);z-index:9998;" +
-        "width:min(94vw,460px);box-sizing:border-box;display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:16px;" +
+        // sits in the open felt between the cards and the bets, and fades in there
+        "#wu-card{position:fixed;left:50%;top:59%;transform:translate(-50%,14px);opacity:0;pointer-events:none;z-index:9998;" +
+        "width:min(90vw,400px);box-sizing:border-box;display:flex;gap:9px;align-items:flex-start;padding:9px 10px;border-radius:14px;" +
         "background:rgba(12,10,22,.96);border:1.5px solid #FFD24D;box-shadow:0 10px 30px rgba(0,0,0,.6);" +
-        "color:#F4EEDC;font:500 14px/1.35 system-ui,sans-serif;transition:transform .35s cubic-bezier(.2,.9,.3,1.2)}" +
-        "#wu-card.on{transform:translate(-50%,0)}" +
+        "color:#F4EEDC;font:500 12.5px/1.3 system-ui,sans-serif;transition:transform .3s ease,opacity .3s ease}" +
+        "#wu-card.on{transform:translate(-50%,0);opacity:1;pointer-events:auto}" +
+        // a tip (bet this for me) is gold and loud; a loan (spot me) is the calm blue card
+        "#wu-card.tip{border:2px dashed #FFB238;background:linear-gradient(135deg,rgba(58,34,0,.97),rgba(20,12,4,.97))}" +
+        "#wu-card.tip img{color:#FFB238}#wu-card.tip .wu-n{color:#FFC65C}" +
+        "#wu-card.tip .wu-n::after{content:'  ·  🎯 HOT TIP';color:#FFB238}" +
+        "#wu-card.tip .wu-yes{border-color:#FFB238;background:#FFB238;color:#1c1000}" +
+        "#wu-card.loan{border-color:#3FA9FF}#wu-card.loan img{color:#3FA9FF}#wu-card.loan .wu-n{color:#7CC4FF}" +
+        "#wu-card.loan .wu-n::after{content:'  ·  💵 WANTS A LOAN';color:#7CC4FF}" +
         "#wu-card.guard{border-color:#FFD24D;background:rgba(16,22,36,.97)}#wu-card.guard .wu-n{color:#FFD24D}#wu-card.guard img{color:#FFD24D}" +
         "#wu-card.shout{border-color:#FFB238;background:linear-gradient(90deg,rgba(60,24,0,.97),rgba(24,12,4,.97))}#wu-card.shout .wu-n{color:#FFB238}#wu-card.shout img{color:#FFB238}" +
         "#wu-card.friend{border-color:#3FA9FF}#wu-card.good{border-color:#57E06A}#wu-card.bad{border-color:#FF5E5E}" +
-        "#wu-card img{width:58px;height:58px;border-radius:50%;object-fit:cover;flex:none;border:2px solid currentColor;color:#FFD24D}" +
+        "#wu-card img{width:44px;height:44px;border-radius:50%;object-fit:cover;flex:none;border:2px solid currentColor;color:#FFD24D}" +
         "#wu-card.friend img{color:#3FA9FF}#wu-card.good img{color:#57E06A}#wu-card.bad img{color:#FF5E5E}" +
         "#wu-card .wu-b{flex:1;min-width:0}" +
-        "#wu-card .wu-n{font:800 13px/1.2 system-ui,sans-serif;letter-spacing:.1em;color:#FFD24D;margin-bottom:3px}" +
+        "#wu-card .wu-n{font:800 11.5px/1.2 system-ui,sans-serif;letter-spacing:.1em;color:#FFD24D;margin-bottom:2px}" +
         "#wu-card.friend .wu-n{color:#7CC4FF}#wu-card.good .wu-n{color:#57E06A}#wu-card.bad .wu-n{color:#FF8080}" +
-        "#wu-card .wu-row{display:flex;gap:8px;margin-top:10px}" +
-        "#wu-card button{flex:1;height:38px;border-radius:10px;font:800 13px/1 system-ui,sans-serif;letter-spacing:.08em;cursor:pointer}" +
+        "#wu-card .wu-row{display:flex;gap:7px;margin-top:7px}" +
+        "#wu-card button{flex:1;min-height:32px;padding:3px 6px;border-radius:9px;font:800 11.5px/1.1 system-ui,sans-serif;letter-spacing:.06em;cursor:pointer}" +
         "#wu-card .wu-yes{border:1.5px solid #57E06A;background:rgba(87,224,106,.15);color:#8BF09A}" +
         "#wu-card .wu-no{border:1.5px solid rgba(244,238,220,.35);background:rgba(0,0,0,.3);color:#F4EEDC}" +
         "#wu-card .wu-yes:disabled{opacity:.4}" +
@@ -9736,7 +9744,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       if (amt > br) return false;
       offer = who;
       count("shown");
-      show("friend", who, who, fill(pick(game === CONTEST ? CONTEST_ASK : lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
+      show("loan", who, who, fill(pick(game === CONTEST ? CONTEST_ASK : lines(who, "ask", FRIEND_ASK)), { amt: $$(amt), game: game }), {
         yes: "SPOT " + $$(amt), cant: amt > cash(),
         onYes: function () {
           offer = null;
@@ -9907,7 +9915,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         var k = 1 + Math.floor(Math.random() * 80);
         t = { say: "" + k, spot: "n:" + k, keno: true };
         count("shown");
-        show("friend", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
+        show("tip", who, who, pick(KENO_ASK).replace(/\{n\}/g, k), {
           yes: "MARK " + k, onNo: function () {},
           onYes: function () { count("backed"); tip = { who: who, game: game, spot: t.spot, pick: "number " + k, amt: 0, placed: 0 }; placeTip(); }
         });
@@ -9918,7 +9926,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       // over what the table takes on that spot: he's squared it with the floor for this one hand
       var floor = amt > tipCap(game, t.spot);
       count("shown");
-      show("friend", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }) +
+      show("tip", who, who, fill(pick(t.poker ? TIP_POKER : TIP_ASK), { amt: $$(amt), pick: t.say }) +
         (floor ? " " + pick(FLOOR_OK) : ""), {
         yes: "BACK IT " + $$(amt), cant: amt > cash(),
         onYes: function () {
