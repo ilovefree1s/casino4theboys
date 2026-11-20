@@ -223,7 +223,7 @@
     }
     var card = null, timer = 0, poll = 0, table = null, wasBusy = false;
     var HUSTLES = false;
-    var hands = 0, gap = Math.round(rnd(7, 13)), pending = [], offer = null, deck = [];
+    var hands = 0, gap = Math.round(rnd(22, 33)), pending = [], offer = null, deck = [];
     /* Money out with somebody is kept on the phone, one list per wallet
        (campaign, play testing, each tournament day), so a reload doesn't lose it. */
     var pkey = "";
@@ -780,7 +780,7 @@
       if (roll < 0.3 && nx !== "Tristen") ok = tipOffer(nx);   // about 1 in 3 is a tip, the rest want a spot
       if (!ok) ok = HUSTLES && roll >= 0.75 ? strangerOffer(nx) : friendOffer(nx);
       if (!ok) deck.push(nx);
-      if (ok) { hands = 0; gap = Math.round(rnd(7, 13)); }
+      if (ok) { hands = 0; gap = Math.round(rnd(22, 33)); }
     }
     function on() { return !(typeof TT !== "undefined" && TT.on && TT.closed); }
     function sit(screenName) {
