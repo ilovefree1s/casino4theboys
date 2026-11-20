@@ -4458,7 +4458,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.56</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.57</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10641,6 +10641,67 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       setTimeout(function () { finish(); }, LEN + 3000);
     }
 
+    /* ---- lounge music for the how-it-works cards: walking bass, a soft piano comp, brushes ---- */
+    function Music() {
+      var v = vol(), none = { stop: function () {}, wake: function () {} }, ctx;
+      if (!(v > 0)) return none;
+      try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return none; }
+      var out = ctx.createGain(); out.gain.value = 0.0001; out.connect(ctx.destination);
+      out.gain.setTargetAtTime(0.5 * v, ctx.currentTime, 0.25);
+      var nb = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate), nd = nb.getChannelData(0);
+      for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+      function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+      function tone(type, m, t, len, vol_, cut) {
+        var o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = type; o.frequency.value = hz(m); f.type = "lowpass"; f.frequency.value = cut;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol_, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + len + 0.03);
+      }
+      function brush(t, vol_, len) {
+        var n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+        n.buffer = nb; f.type = "highpass"; f.frequency.value = 6500;
+        g.gain.setValueAtTime(vol_, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + len + 0.02);
+      }
+      // Dm7  G7  Cmaj7  A7 — one bar each, bass walks four to the bar
+      var BARS = [
+        { bass: [38, 41, 45, 44], ch: [60, 65, 69, 72] },
+        { bass: [43, 47, 50, 49], ch: [59, 65, 69, 71] },
+        { bass: [36, 40, 43, 45], ch: [59, 64, 67, 71] },
+        { bass: [45, 49, 52, 39], ch: [61, 64, 67, 70] }
+      ];
+      var LICK = [[0, 76], [1.67, 74], [2, 72], [3.67, 69], [4, 71], [6, 74], [7.67, 72], [8, 67], [10, 71], [11.67, 72], [12, 73], [14, 76]];
+      var beat = 60 / 132, bar = 0, nextAt = ctx.currentTime + 0.12, stopped = false;
+      function sched() {
+        if (stopped) return;
+        while (nextAt < ctx.currentTime + 0.6) {
+          var b = BARS[bar % 4], t = nextAt, k;
+          for (k = 0; k < 4; k++) {
+            tone("triangle", b.bass[k], t + k * beat, beat * 0.95, 0.5, 420);
+            brush(t + k * beat, k % 2 ? 0.14 : 0.07, 0.07);
+            if (k % 2) brush(t + (k + 0.67) * beat, 0.06, 0.04);          // the swung skip
+          }
+          [0.67, 2.67].forEach(function (at) {                            // comp on the off-beats
+            b.ch.forEach(function (m) { tone("triangle", m, t + at * beat, beat * 1.1, 0.085, 1800); });
+          });
+          LICK.forEach(function (n) {                                     // a little vibes line over the top
+            if (Math.floor(n[0] / 4) === bar % 4) tone("sine", n[1] + 12, t + (n[0] % 4) * beat, beat * 1.4, 0.07, 5000);
+          });
+          bar++; nextAt += beat * 4;
+        }
+      }
+      var iv = setInterval(sched, 120); sched();
+      return {
+        wake: function () { try { if (ctx.state === "suspended") { ctx.resume(); nextAt = Math.max(nextAt, ctx.currentTime + 0.1); } } catch (e) {} },
+        stop: function () {
+          if (stopped) return; stopped = true; clearInterval(iv);
+          try { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.12); } catch (e) {}
+          setTimeout(function () { try { ctx.close(); } catch (e) {} }, 700);
+        }
+      };
+    }
+
     /* ---- the how-it-works cards: four taps, same wall, same paint ---- */
     var CARDS = [
       { head: "HOW YOU SCORE", color: "#3D8BFF",
@@ -10731,10 +10792,11 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       foot.appendChild(dots); foot.appendChild(next);
       wrap.appendChild(skip); wrap.appendChild(card); wrap.appendChild(foot);
       document.body.appendChild(wrap);
-      var snd = Sound(), at = 0, closed = false;
+      var at = 0, closed = false, mus = Music();
+      wrap.addEventListener("pointerdown", function () { mus.wake(); });
       function close() {
         if (closed) return; closed = true;
-        try { snd.stop(); } catch (e) {}
+        mus.stop();
         wrap.style.opacity = "0";
         setTimeout(function () { wrap.remove(); demoing = false; }, 360);
         if (done) done();
@@ -10748,7 +10810,6 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
         next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT ›";
         next.style.background = c.color;
-        try { snd.hiss(true); setTimeout(function () { try { snd.hiss(false); } catch (e) {} }, 260); } catch (e) {}
       }
       next.onclick = function () { if (at < CARDS.length - 1) { at++; show(); } else close(); };
       skip.onclick = close;
