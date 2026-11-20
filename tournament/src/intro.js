@@ -426,22 +426,28 @@
       };
     }
 
-    /* ---- the how-it-works cards: a brick wall, a fresh piece on it for every tap ---- */
+    /* ---- the how-it-works cards: neon signs on a dark wall, one per tap ---- */
+    var FLAME = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1 4 5.5 6 5.5 11.5a5.5 5.5 0 0 1-11 0c0-2.2 1-3.8 2.2-5 0 2.2 1 3.2 2 3.2 0-3.2-1-6 1.3-9.7z"/></svg>';
+    var CROWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18V7l4.5 5L12 5l4.5 7L21 7v11z"/></svg>';
+    var CUP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v6a5 5 0 0 1-10 0zM7 5H3.5v1.5A3.5 3.5 0 0 0 7 10M17 5h3.5v1.5A3.5 3.5 0 0 1 17 10M12 14v4M8 21h8M9.5 18h5"/></svg>';
+    var ARROW = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h17M14 6l6 6-6 6"/></svg>';
+    // frame = the tube round the sign, head = the lettering, each [bright core, glow]
     var CARDS = [
-      { head: ["HOW YOU", "SCORE"], color: "#2F8CFF", hi: "#9AD4FF", second: "#FF4FA3",
-        art: '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">➜</span><span class="gd-cash gd-up">$15,000+</span></div><div class="gd-crown">👑 TAKES THE POINTS</div>',
+      { head: "HOW YOU<br>SCORE", frame: ["#7fc4ff", "#2f8cff"], lit: ["#ffe9f4", "#ff3d9a"],
+        art: '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">' + ARROW + '</span><span class="gd-cash gd-up">$15,000+</span></div>' +
+          '<div class="gd-crown">' + CROWN + '<span>TAKES THE POINTS</span></div>',
         body: "<b>Every game starts you at $10,000.</b> Whoever has the most money on a game at midnight takes that game's points. You have to be up at least $5,000 — that's <b>$15,000 or more</b>." },
-      { head: ["3 · 2 · 1"], color: "#FF3D9A", hi: "#FFB3DA", second: "#FFD24D",
+      { head: "POINTS", frame: ["#ffb3da", "#ff3d9a"], lit: ["#fff3d6", "#ffb02e"],
         art: '<div class="gd-pts"><div><b>3</b><i>PTS</i><span>3 GAMES</span></div><div><b>2</b><i>PTS</i><span>5 GAMES</span></div><div><b>1</b><i>PT</i><span>THE REST</span></div></div>',
         body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
-      { head: ["WHO'S", "ON TOP"], color: "#35E08A", hi: "#C9FFE0", second: "#2F8CFF", top: true,
-        body: "<b>Every game's button shows who's leading it,</b> how much they have, and what the game is worth today. Beat their number to take the points from them." },
-      { head: ["HOT", "GAMES"], color: "#FF6A2B", hi: "#FFD24D", second: "#FF2B4F",
-        art: '<div class="gd-hot"><span>🔥</span><b>1.5×</b><span>🔥</span></div>',
+      { head: "WHO'S ON TOP", frame: ["#b6ffd6", "#22d37a"], lit: ["#e3f2ff", "#2f8cff"], top: true,
+        body: "<b>Every game's button shows who's on top.</b> It shows how much they have and what the game is worth today. Beat their number to take the points from them." },
+      { head: "HOT GAMES", frame: ["#7fc4ff", "#2f8cff"], lit: ["#ffe9f4", "#ff3d9a"],
+        art: '<div class="gd-hot">' + FLAME + '<b>1.5×</b></div>',
         body: "<b>Two games a day pay 1.5× on every win.</b> Different games each day. Look for the 🔥 on the menu." },
-      { head: ["MOST POINTS", "WINS"], color: "#FFC62B", hi: "#FFF3B0", second: "#35E08A",
-        art: '<div class="gd-trophy">🏆</div>',
-        body: "<b>Points add up all week,</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
+      { head: "MOST POINTS<br>WINS", frame: ["#ffe7a0", "#ffb02e"], lit: ["#ffe9f4", "#ff3d9a"],
+        art: '<div class="gd-trophy">' + CUP + '</div>',
+        body: "<b>Points add up all week.</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
     ];
     /* three made-up leaders on three game buttons, with real faces off the wall */
     function topArt() {
@@ -451,226 +457,87 @@
       return '<div class="gd-top">' + rows.map(function (r, i) {
         var n = names[i] || ["QTIP", "JUICE", "COUGAR"][i];
         var pic = f[n] ? '<img src="' + f[n] + '" alt="">' : '<span class="gd-noface">🙂</span>';
-        return '<div class="gd-tile">' + pic + '<div class="gd-who"><b>' + r[0] + '</b><span>👑 ' + String(n).toUpperCase() + '</span></div>' +
+        return '<div class="gd-tile">' + pic + '<div class="gd-who"><b>' + r[0] + '</b><span>' + CROWN + String(n).toUpperCase() + '</span></div>' +
           '<div class="gd-amt"><b>' + r[1] + '</b><span>' + r[2] + ' PT' + (r[2] > 1 ? 'S' : '') + '</span></div></div>';
       }).join("") + '<div class="gd-eg">EXAMPLE</div></div>';
-    }
-    function rgba(hex, a) {
-      var n = parseInt(hex.slice(1), 16);
-      return "rgba(" + (n >> 16) + "," + ((n >> 8) & 255) + "," + (n & 255) + "," + a + ")";
-    }
-    var R = Math.random;
-    /* a dark brick wall, drawn once */
-    function brickWall(w, h, S) {
-      var cv = document.createElement("canvas"); cv.width = w; cv.height = h;
-      var c = cv.getContext("2d"), bh = 30 * S, bw = 74 * S, m = 2.5 * S, row = 0, x, y;
-      c.fillStyle = "#050507"; c.fillRect(0, 0, w, h);
-      for (y = 0; y < h; y += bh, row++) {
-        for (x = (row % 2 ? -bw / 2 : 0); x < w; x += bw) {
-          var l = 15 + R() * 9, warm = R() * 7;
-          c.fillStyle = "rgb(" + Math.round(l + warm) + "," + Math.round(l) + "," + Math.round(l + 3) + ")";
-          c.fillRect(x + m / 2, y + m / 2, bw - m, bh - m);
-          c.fillStyle = "rgba(255,255,255,.035)"; c.fillRect(x + m / 2, y + m / 2, bw - m, 1.5 * S);
-        }
-      }
-      for (var i = 0; i < 3500; i++) {
-        c.fillStyle = "rgba(" + (R() < 0.5 ? "255,255,255," : "0,0,0,") + (R() * 0.06).toFixed(3) + ")";
-        var r = (0.5 + R() * 1.8) * S; c.fillRect(R() * w, R() * h, r, r);
-      }
-      var g = c.createRadialGradient(w / 2, h * 0.42, h * 0.15, w / 2, h * 0.42, h * 0.8);
-      g.addColorStop(0, "rgba(0,0,0,0)"); g.addColorStop(1, "rgba(0,0,0,.72)");
-      c.fillStyle = g; c.fillRect(0, 0, w, h);
-      return cv;
-    }
-    /* one burst from a can: soft middle, overspray, flung spatter, runs */
-    function splat(c, x, y, rad, color, S, strong) {
-      var i, a, d, r;
-      for (i = 0; i < 46; i++) {
-        a = R() * 6.283; d = R() * rad * 0.55; r = rad * (0.18 + R() * 0.34);
-        var px = x + Math.cos(a) * d * 1.25, py = y + Math.sin(a) * d * 0.8;
-        var g = c.createRadialGradient(px, py, 0, px, py, r);
-        g.addColorStop(0, rgba(color, 0.11 * strong)); g.addColorStop(1, rgba(color, 0));
-        c.fillStyle = g; c.beginPath(); c.arc(px, py, r, 0, 6.283); c.fill();
-      }
-      c.fillStyle = rgba(color, 0.55 * strong);
-      for (i = 0; i < 520; i++) {
-        a = R() * 6.283; d = rad * (0.25 + Math.pow(R(), 0.7) * 1.15);
-        r = (0.4 + R() * R() * 2.6) * S;
-        c.beginPath(); c.arc(x + Math.cos(a) * d * 1.2, y + Math.sin(a) * d * 0.85, r, 0, 6.283); c.fill();
-      }
-      c.fillStyle = rgba(color, 0.8 * strong);
-      for (i = 0; i < 13; i++) {
-        a = R() * 6.283; d = rad * (0.6 + R() * 0.25); r = (3 + R() * 6) * S;
-        for (var k = 0; k < 7; k++) {
-          c.beginPath(); c.arc(x + Math.cos(a) * d * 1.2, y + Math.sin(a) * d * 0.85, r, 0, 6.283); c.fill();
-          d += r * 2.4 + R() * 8 * S; r *= 0.68;
-        }
-      }
-      for (i = 0; i < 6; i++) {
-        var dx = x + (R() - 0.5) * rad * 1.6, dy = y + rad * (0.15 + R() * 0.3), len = (40 + R() * 150) * S, wd = (2.5 + R() * 4) * S;
-        c.fillStyle = rgba(color, 0.6 * strong);
-        c.fillRect(dx - wd / 2, dy, wd, len);
-        c.beginPath(); c.arc(dx, dy + len, wd * 0.95, 0, 6.283); c.fill();
-      }
-    }
-    /* scribbles a tagger leaves around a piece */
-    function doodle(c, kind, x, y, sz, color, rot) {
-      c.save(); c.translate(x, y); c.rotate(rot); c.strokeStyle = color; c.fillStyle = color;
-      c.lineWidth = sz * 0.11; c.lineCap = "round"; c.lineJoin = "round"; c.shadowColor = color; c.shadowBlur = sz * 0.22;
-      c.beginPath();
-      if (kind === "crown") {
-        c.moveTo(-sz / 2, sz * 0.3); c.lineTo(-sz / 2, -sz * 0.25); c.lineTo(-sz * 0.22, sz * 0.05); c.lineTo(0, -sz * 0.4);
-        c.lineTo(sz * 0.22, sz * 0.05); c.lineTo(sz / 2, -sz * 0.25); c.lineTo(sz / 2, sz * 0.3); c.closePath();
-      } else if (kind === "arrow") {
-        c.moveTo(-sz / 2, sz * 0.1); c.quadraticCurveTo(0, -sz * 0.35, sz / 2, 0);
-        c.moveTo(sz * 0.22, -sz * 0.26); c.lineTo(sz / 2, 0); c.lineTo(sz * 0.2, sz * 0.24);
-      } else if (kind === "star") {
-        for (var i = 0; i < 6; i++) { var a = -1.571 + i * 2.513; c[i ? "lineTo" : "moveTo"](Math.cos(a) * sz / 2, Math.sin(a) * sz / 2); }
-      } else if (kind === "x") {
-        c.moveTo(-sz / 3, -sz / 3); c.lineTo(sz / 3, sz / 3); c.moveTo(sz / 3, -sz / 3); c.lineTo(-sz / 3, sz / 3);
-      } else if (kind === "swirl") {
-        for (var t = 0; t < 14; t += 0.3) c[t ? "lineTo" : "moveTo"](Math.cos(t) * t * sz * 0.035, Math.sin(t) * t * sz * 0.035);
-      } else {
-        c.font = "900 italic " + sz * 0.7 + "px Impact, 'Arial Black', sans-serif"; c.textAlign = "center"; c.textBaseline = "middle";
-        c.strokeText(kind, 0, 0);
-      }
-      c.stroke(); c.restore();
-    }
-    /* the heading as a piece: fat tilted letters, outline, drop, shine and runs */
-    function piece(cv, lines, color, hi, cssW) {
-      var d = Math.min(2, window.devicePixelRatio || 1), size = 74, pad = 26, FONT = "px Impact, Haettenschweiler, 'Arial Narrow Bold', 'Arial Black', sans-serif";
-      var c = cv.getContext("2d");
-      c.font = "900 italic " + size + FONT;
-      var widest = Math.max.apply(null, lines.map(function (l) { return c.measureText(l).width * 0.93; }));
-      if (widest > cssW - pad * 2) size = Math.max(34, Math.floor(size * (cssW - pad * 2) / widest));
-      var lh = size * 0.98, cssH = Math.round(lines.length * lh + size * 0.2 + 64);
-      cv.width = Math.round(cssW * d); cv.height = Math.round(cssH * d);
-      cv.style.width = cssW + "px"; cv.style.height = cssH + "px";
-      c.setTransform(d, 0, 0, d, 0, 0);
-      c.font = "900 italic " + size + FONT; c.textBaseline = "alphabetic"; c.lineJoin = "round";
-      var glyphs = [];
-      lines.forEach(function (line, li) {
-        var chars = line.split(""), ws = chars.map(function (ch) { return c.measureText(ch).width * 0.93; });
-        var tot = ws.reduce(function (a, b) { return a + b; }, 0), x = (cssW - tot) / 2 + (li % 2 ? 10 : -6);
-        chars.forEach(function (ch, i) {
-          var p = chars.length > 1 ? i / (chars.length - 1) : 0.5;
-          glyphs.push({ ch: ch, x: x + ws[i] / 2, y: size * 1.02 + li * lh - Math.sin(p * 3.14) * size * 0.09 + (R() - 0.5) * size * 0.1 - p * size * 0.1,
-            rot: (R() - 0.5) * 0.2 - 0.05, sc: 0.94 + R() * 0.16, w: ws[i] });
-          x += ws[i];
-        });
-      });
-      function each(fn) {
-        glyphs.forEach(function (g) {
-          if (g.ch === " ") return;
-          c.save(); c.translate(g.x, g.y); c.rotate(g.rot); c.scale(g.sc, g.sc); c.textAlign = "center"; fn(g); c.restore();
-        });
-      }
-      // glow thrown on the wall, then the drop, then outlines out to in, then the fill
-      c.shadowColor = color; c.shadowBlur = 26; c.fillStyle = rgba(color, 0.55); each(function (g) { c.fillText(g.ch, 0, 0); }); c.shadowBlur = 0;
-      for (var k = 9; k > 0; k--) { c.strokeStyle = c.fillStyle = "#050507"; c.lineWidth = size * 0.2; each(function (g) { c.strokeText(g.ch, k, k); }); }
-      c.strokeStyle = "#fff"; c.lineWidth = size * 0.22; each(function (g) { c.strokeText(g.ch, 0, 0); });
-      c.strokeStyle = "#08080c"; c.lineWidth = size * 0.13; each(function (g) { c.strokeText(g.ch, 0, 0); });
-      each(function (g) {
-        var gr = c.createLinearGradient(0, -size * 0.74, 0, 0);
-        gr.addColorStop(0, "#fff"); gr.addColorStop(0.22, hi); gr.addColorStop(0.62, color); gr.addColorStop(1, color);
-        c.fillStyle = gr; c.fillText(g.ch, 0, 0);
-      });
-      // shine ticks and a few runs off the bottom of the letters
-      c.fillStyle = "#fff";
-      glyphs.forEach(function (g, i) {
-        if (g.ch === " " || i % 2) return;
-        c.save(); c.translate(g.x - g.w * 0.16, g.y - size * 0.56); c.rotate(-0.5);
-        c.beginPath(); c.ellipse(0, 0, size * 0.035, size * 0.1, 0, 0, 6.283); c.fill(); c.restore();
-      });
-      var last = (lines.length - 1) * lh + size * 1.02;
-      glyphs.forEach(function (g) {
-        if (g.ch === " " || g.y < last - size * 0.4 || R() < 0.45) return;
-        var dx = g.x + (R() - 0.5) * g.w * 0.4, len = 14 + R() * 38, wd = 3 + R() * 3;
-        c.fillStyle = "#08080c"; c.fillRect(dx - wd / 2 - 1.5, g.y - 4, wd + 3, len + 4); c.beginPath(); c.arc(dx, g.y + len, wd * 0.9 + 1.5, 0, 6.283); c.fill();
-        c.fillStyle = color; c.fillRect(dx - wd / 2, g.y - 6, wd, len + 4); c.beginPath(); c.arc(dx, g.y + len, wd * 0.9, 0, 6.283); c.fill();
-      });
-      c.fillStyle = color;
-      for (var i = 0; i < 60; i++) { c.globalAlpha = 0.5 + R() * 0.5; c.beginPath(); c.arc(R() * cssW, R() * cssH, 0.6 + R() * R() * 3, 0, 6.283); c.fill(); }
-      c.globalAlpha = 1;
     }
     var demoing = false;
     function demo(done) {
       if (demoing) { if (done) done(); return; }
       demoing = true;
       if (!document.getElementById("gd-style")) {
-        var IMP = "Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif";
+        var NE = "'Tilt Neon',system-ui,sans-serif";
+        function tube(core, glow) { return "color:" + core + ";text-shadow:0 0 6px " + glow + ",0 0 18px " + glow + ",0 0 44px " + glow; }
         var st = document.createElement("style"); st.id = "gd-style";
         st.textContent =
-          "#tt-demo{position:fixed;inset:0;z-index:10050;overflow:hidden;display:flex;flex-direction:column;align-items:center;" +
-            "padding:calc(env(safe-area-inset-top,0px) + 50px) 20px calc(env(safe-area-inset-bottom,0px) + 20px);box-sizing:border-box;" +
-            "background:#07070a;transition:opacity .35s ease;color:#fff;font-family:system-ui,sans-serif}" +
-          "#tt-demo .gd-wall{position:absolute;inset:0;width:100%;height:100%}" +
-          "#tt-demo .gd-wall.in{animation:gdWall .5s ease both}@keyframes gdWall{from{opacity:.25}to{opacity:1}}" +
-          "#tt-demo .gd-skip{position:absolute;z-index:2;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.35);" +
-            "background:rgba(0,0,0,.6);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em}" +
+          "@font-face{font-family:'Tilt Neon';font-display:block;src:url(data:font/woff2;base64,/*NEONFONT*/) format('woff2')}" +
+          "#tt-demo{--c:#7fc4ff;--g:#2f8cff;--hc:#ffe9f4;--hg:#ff3d9a;position:fixed;inset:0;z-index:10050;overflow:hidden;display:flex;flex-direction:column;align-items:center;" +
+            "padding:calc(env(safe-area-inset-top,0px) + 56px) 24px calc(env(safe-area-inset-bottom,0px) + 20px);box-sizing:border-box;" +
+            "background:#05050a;transition:opacity .35s ease;color:#fff;font-family:system-ui,sans-serif}" +
+          "#tt-demo:before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);background-size:78px 32px}" +
+          "#tt-demo .gd-halo{position:absolute;left:50%;top:36%;width:470px;height:440px;margin:-220px 0 0 -235px;border-radius:50%;background:radial-gradient(closest-side,var(--g),transparent);opacity:.3;transition:background .3s}" +
+          "#tt-demo .gd-skip{position:absolute;z-index:2;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);padding:8px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.4);" +
+            "background:rgba(0,0,0,.5);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em}" +
           "#tt-demo .gd-card{position:relative;width:100%;max-width:400px;text-align:center;margin:auto 0;display:flex;flex-direction:column;align-items:center}" +
-          "#tt-demo .gd-piece{display:block;margin:0 0 -8px;transform:rotate(-5deg)}" +
-          "#tt-demo .gd-card.in .gd-piece{animation:gdSpray .5s cubic-bezier(.3,.7,.3,1) both}" +
-          "@keyframes gdSpray{from{clip-path:inset(0 100% 0 0);opacity:.4}to{clip-path:inset(0 0 0 0);opacity:1}}" +
-          "#tt-demo .gd-card.in .gd-art{animation:gdPop .45s .22s cubic-bezier(.2,1.5,.4,1) both}" +
-          "#tt-demo .gd-card.in .gd-note{animation:gdSlap .4s .4s cubic-bezier(.2,1.4,.4,1) both}" +
-          "@keyframes gdPop{from{opacity:0;transform:scale(.7) rotate(4deg)}to{opacity:1;transform:none}}" +
-          "@keyframes gdSlap{from{opacity:0;transform:rotate(-7deg) scale(1.25)}to{opacity:1;transform:rotate(-1.4deg)}}" +
-          "#tt-demo .gd-art{position:relative;min-height:120px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:20px}" +
-          // 1: stencilled cash
+          "#tt-demo .gd-sign{width:100%;max-width:340px;box-sizing:border-box;padding:24px 12px 28px;border:3px solid var(--c);border-radius:28px;display:flex;flex-direction:column;align-items:center;gap:6px;" +
+            "box-shadow:0 0 10px var(--g),0 0 34px var(--g),inset 0 0 10px var(--g),inset 0 0 30px var(--g);background:rgba(5,5,10,.55)}" +
+          "#tt-demo .gd-card.in .gd-sign{animation:gdOn .7s steps(1) both}" +
+          "@keyframes gdOn{0%{opacity:.15}12%{opacity:1}20%{opacity:.25}30%{opacity:1}38%{opacity:.5}46%,100%{opacity:1}}" +
+          "#tt-demo .gd-card.in .gd-body{animation:gdUp .4s .3s ease both}@keyframes gdUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}" +
+          "#tt-demo .gd-tag{font:400 14px " + NE + ";letter-spacing:.3em;color:#e8f3ff;text-shadow:0 0 8px var(--g)}" +
+          "#tt-demo h2{margin:0 0 8px;font:400 50px/1.02 " + NE + ";color:var(--hc);text-shadow:0 0 6px var(--hg),0 0 18px var(--hg),0 0 44px var(--hg)}" +
+          "#tt-demo svg{fill:none;stroke:currentColor;stroke-width:1.4;stroke-linejoin:round;stroke-linecap:round}" +
+          "#tt-demo .gd-art{min-height:112px;width:100%;display:flex;flex-direction:column;align-items:center;justify-content:center}" +
+          // 1
           "#tt-demo .gd-row{display:flex;align-items:center;gap:8px}" +
-          "#tt-demo .gd-cash{font:900 italic 27px " + IMP + ";padding:7px 12px 5px;background:#f2efe6;color:#0a0a0f;border:3px solid #0a0a0f;box-shadow:4px 5px 0 rgba(0,0,0,.7);transform:rotate(-4deg)}" +
-          "#tt-demo .gd-cash.gd-up{background:#35E08A;transform:rotate(3deg) scale(1.08)}" +
-          "#tt-demo .gd-arrow{font-size:28px;color:#FFD24D;text-shadow:2px 3px 0 #000}" +
-          "#tt-demo .gd-crown{margin-top:16px;font:900 italic 19px " + IMP + ";letter-spacing:.08em;color:#FFD24D;-webkit-text-stroke:5px #0a0a0f;paint-order:stroke fill;transform:rotate(-2deg)}" +
-          // 2: three throw-ups
-          "#tt-demo .gd-pts{display:flex;gap:6px;width:100%;justify-content:center;align-items:flex-end}" +
-          "#tt-demo .gd-pts>div{flex:1;max-width:116px;display:flex;flex-direction:column;align-items:center}" +
-          "#tt-demo .gd-pts>div:nth-child(1){color:#FFD24D;transform:rotate(-7deg)}#tt-demo .gd-pts>div:nth-child(2){color:#FF4FA3;transform:rotate(4deg) translateY(8px)}#tt-demo .gd-pts>div:nth-child(3){color:#3D9BFF;transform:rotate(-3deg)}" +
-          "#tt-demo .gd-pts b{font:900 italic 96px/0.9 " + IMP + ";-webkit-text-stroke:12px #08080c;paint-order:stroke fill;filter:drop-shadow(5px 6px 0 #08080c) drop-shadow(0 0 14px currentColor)}" +
-          "#tt-demo .gd-pts>div:nth-child(2) b{font-size:84px}#tt-demo .gd-pts>div:nth-child(3) b{font-size:72px}" +
-          "#tt-demo .gd-pts i{font:900 italic 17px " + IMP + ";letter-spacing:.14em;margin-top:8px;position:relative;z-index:1;-webkit-text-stroke:5px #08080c;paint-order:stroke fill}" +
-          "#tt-demo .gd-pts span{margin-top:7px;padding:3px 8px 2px;background:#f2efe6;color:#0a0a0f;font:800 10px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.1em;box-shadow:2px 3px 0 rgba(0,0,0,.7)}" +
-          // 3: leaders, slapped up like stickers
-          "#tt-demo .gd-top{width:100%;max-width:340px;display:flex;flex-direction:column;gap:9px}" +
-          "#tt-demo .gd-tile{display:flex;align-items:center;gap:11px;padding:7px 12px 7px 7px;border-radius:6px;background:#f2efe6;color:#0a0a0f;border:3px solid #0a0a0f;box-shadow:5px 6px 0 rgba(0,0,0,.7);text-align:left}" +
-          "#tt-demo .gd-tile:nth-child(1){transform:rotate(-2.2deg)}#tt-demo .gd-tile:nth-child(2){transform:rotate(1.6deg) translateX(6px)}#tt-demo .gd-tile:nth-child(3){transform:rotate(-1deg) translateX(-4px)}" +
-          "#tt-demo .gd-tile img,#tt-demo .gd-noface{width:50px;height:50px;border-radius:50%;object-fit:cover;border:3px solid #0a0a0f;flex:none;display:flex;align-items:center;justify-content:center;font-size:26px;background:#222}" +
+          "#tt-demo .gd-cash{font:400 26px " + NE + ";padding:7px 10px 5px;border-radius:12px;border:2px solid #cfd6e6;color:#f1f4fa;text-shadow:0 0 8px rgba(255,255,255,.6);box-shadow:0 0 8px rgba(255,255,255,.35),inset 0 0 8px rgba(255,255,255,.2)}" +
+          "#tt-demo .gd-cash.gd-up{border-color:#b6ffd6;" + tube("#e6fff0", "#22d37a") + ";box-shadow:0 0 10px #22d37a,0 0 24px #22d37a,inset 0 0 10px #22d37a}" +
+          "#tt-demo .gd-arrow svg{width:26px;height:26px;display:block;color:#fff3d6;filter:drop-shadow(0 0 5px #ffb02e)}" +
+          "#tt-demo .gd-crown{margin-top:16px;display:flex;align-items:center;gap:8px;font:400 18px " + NE + ";letter-spacing:.12em;" + tube("#fff3d6", "#ffb02e") + "}" +
+          "#tt-demo .gd-crown svg{width:26px;height:26px;filter:drop-shadow(0 0 5px #ffb02e)}" +
+          // 2
+          "#tt-demo .gd-pts{display:flex;width:100%;justify-content:space-around;align-items:flex-end}" +
+          "#tt-demo .gd-pts>div{display:flex;flex-direction:column;align-items:center}" +
+          "#tt-demo .gd-pts b{font:400 92px/0.95 " + NE + "}#tt-demo .gd-pts i{font:400 15px " + NE + ";letter-spacing:.2em;font-style:normal}" +
+          "#tt-demo .gd-pts>div:nth-child(1){" + tube("#fff3d6", "#ffb02e") + "}#tt-demo .gd-pts>div:nth-child(2){" + tube("#ffe9f4", "#ff3d9a") + "}#tt-demo .gd-pts>div:nth-child(3){" + tube("#e3f2ff", "#2f8cff") + "}" +
+          "#tt-demo .gd-pts span{margin-top:8px;font:700 10px system-ui,sans-serif;letter-spacing:.14em;color:#dfe6f2;text-shadow:none}" +
+          // 3
+          "#tt-demo .gd-top{width:100%;display:flex;flex-direction:column;gap:9px;padding:0 4px;box-sizing:border-box}" +
+          "#tt-demo .gd-tile{display:flex;align-items:center;gap:10px;padding:7px 12px 7px 7px;border-radius:999px;border:2px solid #b9c6dc;background:rgba(255,255,255,.04);box-shadow:0 0 8px rgba(160,190,255,.35),inset 0 0 8px rgba(160,190,255,.18);text-align:left}" +
+          "#tt-demo .gd-tile:first-child{border-color:#ffe7a0;box-shadow:0 0 10px #ffb02e,0 0 22px rgba(255,176,46,.6),inset 0 0 10px rgba(255,176,46,.5)}" +
+          "#tt-demo .gd-tile img,#tt-demo .gd-noface{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #ffe7a0;box-shadow:0 0 10px #ffb02e;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;background:#222}" +
           "#tt-demo .gd-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}" +
-          "#tt-demo .gd-who b{font:900 italic 20px " + IMP + ";letter-spacing:.04em}" +
-          "#tt-demo .gd-who span{font:800 10.5px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}" +
-          "#tt-demo .gd-amt{display:flex;flex-direction:column;align-items:flex-end;gap:3px}" +
-          "#tt-demo .gd-amt b{font:900 italic 20px " + IMP + ";color:#0c8a45}" +
-          "#tt-demo .gd-amt span{font:800 10px system-ui,sans-serif;letter-spacing:.14em;padding:2px 7px;background:#FF4FA3;color:#0a0a0f;border:2px solid #0a0a0f;transform:rotate(-4deg)}" +
-          "#tt-demo .gd-eg{font:700 9px ui-monospace,Menlo,Consolas,monospace;letter-spacing:.24em;opacity:.6;margin-top:3px}" +
-          // 4 and 5
-          "#tt-demo .gd-hot{display:flex;align-items:center;gap:4px;transform:rotate(-4deg)}#tt-demo .gd-hot span{font-size:46px;line-height:1}#tt-demo .gd-hot span:last-child{transform:scaleX(-1)}" +
-          "#tt-demo .gd-hot b{font:900 italic 104px/1 " + IMP + ";color:#FFD24D;-webkit-text-stroke:13px #08080c;paint-order:stroke fill;filter:drop-shadow(6px 7px 0 #08080c) drop-shadow(0 0 22px #FF6A2B)}" +
-          "#tt-demo .gd-trophy{font-size:104px;line-height:1;transform:rotate(6deg);filter:drop-shadow(6px 7px 0 #08080c) drop-shadow(0 0 24px rgba(255,198,43,.7))}" +
-          // the words, on a pasted-up note
-          "#tt-demo .gd-note{position:relative;max-width:336px;padding:15px 16px 14px;background:rgba(9,9,13,.9);border:3px solid;box-shadow:6px 7px 0 rgba(0,0,0,.65);transform:rotate(-1.4deg)}" +
-          "#tt-demo .gd-note:before,#tt-demo .gd-note:after{content:'';position:absolute;top:-11px;width:54px;height:19px;background:rgba(242,239,230,.82);box-shadow:0 2px 3px rgba(0,0,0,.4)}" +
-          "#tt-demo .gd-note:before{left:-16px;transform:rotate(-32deg)}#tt-demo .gd-note:after{right:-16px;transform:rotate(30deg)}" +
-          "#tt-demo .gd-note p{margin:0;font-size:15.5px;line-height:1.45;color:rgba(255,255,255,.86)}#tt-demo .gd-note b{color:#fff}" +
-          "#tt-demo .gd-foot{position:relative;margin:0 0 22px;display:flex;flex-direction:column;align-items:center;gap:14px;width:100%}" +
-          "#tt-demo .gd-dots{display:flex;gap:8px;align-items:center}#tt-demo .gd-dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.3);box-shadow:0 0 0 2px #08080c}#tt-demo .gd-dots i.on{width:12px;height:12px}" +
-          "#tt-demo .gd-next{width:100%;max-width:290px;padding:14px 0 12px;border:3px solid #08080c;border-radius:4px;font:900 italic 24px " + IMP + ";letter-spacing:.08em;color:#08080c;" +
-            "transform:skewX(-9deg) rotate(-1.5deg);box-shadow:6px 7px 0 #f2efe6}" +
-          "#tt-demo .gd-next:active{transform:skewX(-9deg) rotate(-1.5deg) translate(4px,5px);box-shadow:2px 2px 0 #f2efe6}";
+          "#tt-demo .gd-who b{font:400 19px " + NE + ";letter-spacing:.06em;color:#fff}" +
+          "#tt-demo .gd-who span{display:flex;align-items:center;gap:4px;font:700 10px system-ui,sans-serif;letter-spacing:.12em;color:#ffe7a0;white-space:nowrap;overflow:hidden}" +
+          "#tt-demo .gd-who svg{width:12px;height:12px;flex:none}" +
+          "#tt-demo .gd-amt{display:flex;flex-direction:column;align-items:flex-end;gap:1px}" +
+          "#tt-demo .gd-amt b{font:400 19px " + NE + ";" + tube("#e6fff0", "#22d37a") + "}" +
+          "#tt-demo .gd-amt span{font:400 12px " + NE + ";letter-spacing:.14em;" + tube("#ffe9f4", "#ff3d9a") + "}" +
+          "#tt-demo .gd-eg{font:700 9px system-ui,sans-serif;letter-spacing:.24em;color:#aeb8cc;margin-top:2px}" +
+          // 4, 5
+          "#tt-demo .gd-hot{display:flex;align-items:center;gap:4px;" + tube("#fff3d6", "#ff8a2b") + "}" +
+          "#tt-demo .gd-hot svg{width:66px;height:66px;filter:drop-shadow(0 0 5px #ff8a2b) drop-shadow(0 0 14px #ff8a2b)}" +
+          "#tt-demo .gd-hot b{font:400 112px/1 " + NE + "}" +
+          "#tt-demo .gd-trophy svg{width:128px;height:128px;stroke-width:1.1;color:#fff3d6;filter:drop-shadow(0 0 5px #ffb02e) drop-shadow(0 0 16px #ffb02e)}" +
+          "#tt-demo .gd-body{margin:26px auto 0;max-width:336px;font-size:16px;line-height:1.45;color:#c9d3e6}" +
+          "#tt-demo .gd-body b{display:block;margin-bottom:8px;font-size:20px;line-height:1.25;color:#fff}#tt-demo .gd-body b+b,#tt-demo .gd-body b:not(:first-child){display:inline;margin:0;font-size:inherit}" +
+          "#tt-demo .gd-foot{position:relative;margin:0 0 22px;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}" +
+          "#tt-demo .gd-dots{display:flex;gap:8px;align-items:center}#tt-demo .gd-dots i{width:8px;height:8px;border-radius:50%;background:#5f6b85}" +
+          "#tt-demo .gd-dots i.on{background:var(--hc);box-shadow:0 0 10px var(--hg),0 0 20px var(--hg)}" +
+          "#tt-demo .gd-next{width:100%;max-width:300px;height:58px;border:3px solid var(--hc);border-radius:999px;background:rgba(255,255,255,.05);font:400 25px " + NE + ";letter-spacing:.16em;" +
+            "color:var(--hc);text-shadow:0 0 10px var(--hg);box-shadow:0 0 12px var(--hg),0 0 34px var(--hg),inset 0 0 14px var(--hg)}" +
+          "#tt-demo .gd-next:active{transform:scale(.97)}";
         document.head.appendChild(st);
       }
-      var W = innerWidth, H = innerHeight, dpr = Math.min(2, window.devicePixelRatio || 1);
       var wrap = document.createElement("div"); wrap.id = "tt-demo";
-      var wall = document.createElement("canvas"); wall.className = "gd-wall";
-      wall.width = Math.round(W * dpr); wall.height = Math.round(H * dpr);
-      var bricks = brickWall(wall.width, wall.height, dpr);
+      var halo = document.createElement("div"); halo.className = "gd-halo";
       var skip = document.createElement("button"); skip.type = "button"; skip.className = "gd-skip"; skip.textContent = "SKIP ›";
       var card = document.createElement("div"); card.className = "gd-card";
       var foot = document.createElement("div"); foot.className = "gd-foot";
       var dots = document.createElement("div"); dots.className = "gd-dots";
       var next = document.createElement("button"); next.type = "button"; next.className = "gd-next";
       foot.appendChild(dots); foot.appendChild(next);
-      wrap.appendChild(wall); wrap.appendChild(skip); wrap.appendChild(card); wrap.appendChild(foot);
+      wrap.appendChild(halo); wrap.appendChild(skip); wrap.appendChild(card); wrap.appendChild(foot);
       document.body.appendChild(wrap);
       var at = 0, closed = false, mus = Music();
       wrap.addEventListener("pointerdown", function () { mus.wake(); });
@@ -681,32 +548,16 @@
         setTimeout(function () { wrap.remove(); demoing = false; }, 360);
         if (done) done();
       }
-      var KINDS = ["crown", "arrow", "star", "x", "swirl", "4TB", "$"];
-      function paintWall(c) {
-        var g = wall.getContext("2d"), w = wall.width, h = wall.height, S = dpr;
-        g.clearRect(0, 0, w, h); g.drawImage(bricks, 0, 0);
-        splat(g, w * (0.12 + R() * 0.12), h * (0.74 + R() * 0.1), w * 0.3, c.second, S, 0.75);
-        splat(g, w * (0.82 + R() * 0.1), h * (0.1 + R() * 0.08), w * 0.26, c.second, S, 0.6);
-        splat(g, w * 0.5, h * 0.3, w * 0.5, c.color, S, 1);
-        var spots = [[0.13, 0.11], [0.88, 0.34], [0.1, 0.44], [0.9, 0.7], [0.14, 0.9], [0.84, 0.92]];
-        g.globalAlpha = 0.55;
-        spots.forEach(function (p, i) {
-          doodle(g, KINDS[Math.floor(R() * KINDS.length)], w * p[0] + (R() - 0.5) * 16 * S, h * p[1] + (R() - 0.5) * 22 * S,
-            (38 + R() * 22) * S, i % 2 ? c.second : "#f2efe6", (R() - 0.5) * 0.9);
-        });
-        g.globalAlpha = 1;
-      }
       function show() {
         var c = CARDS[at];
-        paintWall(c);
-        wall.className = "gd-wall"; card.className = "gd-card";
-        card.innerHTML = '<canvas class="gd-piece"></canvas><div class="gd-art">' + (c.top ? topArt() : c.art) + '</div>' +
-          '<div class="gd-note" style="border-color:' + c.color + '"><p>' + c.body + '</p></div>';
-        piece(card.firstChild, c.head, c.color, c.hi, Math.min(400, W - 40));
-        void card.offsetWidth; card.className = "gd-card in"; wall.className = "gd-wall in";
-        dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on" style="background:' + c.color + '"' : '') + '></i>'; }).join("");
-        next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT ›";
-        next.style.background = c.color;
+        wrap.style.setProperty("--c", c.frame[0]); wrap.style.setProperty("--g", c.frame[1]);
+        wrap.style.setProperty("--hc", c.lit[0]); wrap.style.setProperty("--hg", c.lit[1]);
+        card.className = "gd-card";
+        card.innerHTML = '<div class="gd-sign"><div class="gd-tag">' + (at + 1) + ' OF ' + CARDS.length + '</div><h2>' + c.head + '</h2>' +
+          '<div class="gd-art">' + (c.top ? topArt() : c.art) + '</div></div><div class="gd-body">' + c.body + '</div>';
+        void card.offsetWidth; card.className = "gd-card in";
+        dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
+        next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT";
       }
       next.onclick = function () { if (at < CARDS.length - 1) { at++; show(); } else close(); };
       skip.onclick = close;
