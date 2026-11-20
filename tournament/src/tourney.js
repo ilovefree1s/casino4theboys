@@ -269,8 +269,8 @@
       }
       /** The day's hot games, said out loud. */
       function today(day) { return list(day).join(" & "); }
-      /** The share of a win's profit the house adds on top: all of it, then half from 18 November. */
-      function rate(day) { day = day || TT.day || (frame && frame.day) || ""; return 1; }
+      /** The share of a win's profit the house adds on top: all of it (2×) this week, half (1.5×) from the points week on. */
+      function rate(day) { day = day || TT.day || (frame && frame.day) || ""; return day >= "2026-11-22" ? 0.5 : 1; }
       function tagX(day) { return rate(day) === 1 ? "2×" : "1.5×"; }
       function say(text, ms) {
         if (!tipEl) {
@@ -937,7 +937,7 @@
           "<li><b>Each game is worth 1, 2 or 3 points,</b> and it changes every day. The game's button shows its points and who's on top right now: 👑 NAME $24,500 · 3 PTS.</li>" +
           "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores.</li>" +
           "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
-          "<li><b>🔥 Hot games and walk-ups are on.</b> Two games pay 2× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
+          "<li><b>🔥 Hot games and walk-ups are on.</b> Two random games pay 1.5× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
           "<li><b>You are your face.</b> When you join, tap your picture and pick a 4-digit PIN. No picture yet? Tap NOT ON HERE and type your name. Your PIN gets you back in if your phone ever forgets you.</li>";
       } else if (ol && RULES_DAILY) { ol.innerHTML = RULES_DAILY.list; $("tt-rules-sub").textContent = RULES_DAILY.sub; }
       return b;
