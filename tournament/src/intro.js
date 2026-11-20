@@ -128,7 +128,7 @@
       img.src = src;
 
       /* the words that go on after the piece */
-      var line1 = opts.title || "POINTS WEEK", line2 = opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS";
+      var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS";
       var tBox = null;
       (function () {
         var c = txt.getContext("2d"), w = txt.width, h = txt.height;
@@ -198,6 +198,50 @@
                        len: 0, max: (10 + Math.random() * 26) * S, w: (2.2 + Math.random() * 2.2) * S, col: cols[i], sp: (0.5 + Math.random() * 0.9) * S });
         }
       }
+
+      /* A spray can, drawn with its nozzle at (x, y) and leaning by `tilt`. */
+      function drawCan(x, y, tilt, paint, pressed) {
+        var bw = 46 * S, bh = 112 * S, c1 = paint === "blue" ? "#2f7bff" : "#ff8a1f", c2 = paint === "blue" ? "#0b2f8f" : "#b33a00";
+        g.save();
+        g.translate(x, y); g.rotate(tilt);
+        g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 14 * S; g.shadowOffsetY = 6 * S;
+        // body
+        var body = g.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+        body.addColorStop(0, "#3d4049"); body.addColorStop(0.18, "#c9ced8"); body.addColorStop(0.4, "#8b909b");
+        body.addColorStop(0.75, "#4a4d57"); body.addColorStop(1, "#23252b");
+        g.fillStyle = body;
+        rr(-bw / 2, 30 * S, bw, bh, 7 * S); g.fill();
+        g.shadowColor = "transparent";
+        // the paint-colored label, with a gloss stripe
+        var lab = g.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+        lab.addColorStop(0, c2); lab.addColorStop(0.22, c1); lab.addColorStop(0.5, c1); lab.addColorStop(1, c2);
+        g.fillStyle = lab; g.fillRect(-bw / 2, 52 * S, bw, 66 * S);
+        g.fillStyle = "rgba(255,255,255,.28)"; g.fillRect(-bw / 2 + 6 * S, 52 * S, 5 * S, 66 * S);
+        g.fillStyle = "rgba(0,0,0,.35)"; g.fillRect(-bw / 2, 52 * S, bw, 2 * S); g.fillRect(-bw / 2, 116 * S, bw, 2 * S);
+        g.fillStyle = "#fff"; g.font = "900 italic " + (17 * S) + "px Impact, 'Arial Black', sans-serif";
+        g.textAlign = "center"; g.textBaseline = "middle";
+        g.fillText("4TB", 0, 86 * S);
+        // shoulder and collar
+        var dome = g.createLinearGradient(-bw / 2, 0, bw / 2, 0);
+        dome.addColorStop(0, "#4a4d57"); dome.addColorStop(0.25, "#e2e6ee"); dome.addColorStop(0.6, "#8b909b"); dome.addColorStop(1, "#2b2d34");
+        g.fillStyle = dome;
+        g.beginPath(); g.moveTo(-bw / 2, 34 * S); g.quadraticCurveTo(-bw / 2, 16 * S, -9 * S, 13 * S);
+        g.lineTo(9 * S, 13 * S); g.quadraticCurveTo(bw / 2, 16 * S, bw / 2, 34 * S); g.closePath(); g.fill();
+        g.fillStyle = "#b9bec9"; g.fillRect(-9 * S, 9 * S, 18 * S, 5 * S);
+        // the cap you press, with the nozzle hole facing the wall
+        var dn = pressed ? 2 * S : 0;
+        g.fillStyle = "#f2f2f2"; rr(-8 * S, -6 * S + dn, 16 * S, 16 * S, 3 * S); g.fill();
+        g.fillStyle = "#16161a"; g.beginPath(); g.arc(-6 * S, 1 * S + dn, 2 * S, 0, 6.283); g.fill();
+        // bottom rim
+        g.fillStyle = "#17181c"; rr(-bw / 2, 30 * S + bh - 6 * S, bw, 6 * S, 3 * S); g.fill();
+        g.restore();
+      }
+      function rr(x, y, w, h, r) {
+        g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+        g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h); g.lineTo(x + r, y + h);
+        g.quadraticCurveTo(x, y + h, x, y + h - r); g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y); g.closePath();
+      }
+      var can = null;
 
       var snd = Sound(), t0 = 0, last = 0, raf = 0, over = false, hissing = false, thumped = false, dripped = false, prevA = 0, prevT = 0;
       function hiss(on) { if (on !== hissing) { hissing = on; snd.hiss(on); } }
@@ -282,11 +326,28 @@
 
         // the mist coming off the can, and the can's cone of spray
         hiss(!!nozzle);
+        // the can itself: shaken first, then held off the wall and worked across it, then pulled away
+        var want, paint = t < T0 - 150 ? "blue" : "orange";
+        if (t < A0) want = { x: cv.width * 0.5, y: cv.height * 0.5 + Math.sin(t / 26) * 16 * S, tilt: -0.5 + Math.sin(t / 26) * 0.12 };
+        else if (nozzle) want = { x: nozzle.x + 46 * S, y: nozzle.y + 40 * S, tilt: -0.62 };
+        else if (t < T0) { var st = txtPos(0); want = { x: st.x + 46 * S, y: st.y + 40 * S, tilt: -0.62 }; }
+        else want = { x: cv.width * 1.25, y: cv.height * 1.05, tilt: 0.2 };
+        if (!can) can = { x: want.x, y: want.y, tilt: want.tilt };
+        var k = nozzle ? 1 : Math.min(1, (now - last) / 110);
+        can.x += (want.x - can.x) * k; can.y += (want.y - can.y) * k; can.tilt += (want.tilt - can.tilt) * Math.min(1, (now - last) / 80);
         if (nozzle) {
-          var cone = g.createRadialGradient(nozzle.x, nozzle.y, 0, nozzle.x, nozzle.y, 26 * S);
-          cone.addColorStop(0, "rgba(255,255,255,.5)"); cone.addColorStop(1, "rgba(255,255,255,0)");
-          g.fillStyle = cone; g.fillRect(nozzle.x - 26 * S, nozzle.y - 26 * S, 52 * S, 52 * S);
+          // the fan of paint from the nozzle to the wall
+          var ang = Math.atan2(nozzle.y - can.y, nozzle.x - can.x), dist = Math.hypot(nozzle.x - can.x, nozzle.y - can.y), sprd = 0.42;
+          var fan = g.createRadialGradient(can.x, can.y, 2 * S, can.x, can.y, dist * 1.25);
+          var rgb = paint === "blue" ? "150,200,255" : "255,205,90";
+          fan.addColorStop(0, "rgba(" + rgb + ",.75)"); fan.addColorStop(0.7, "rgba(" + rgb + ",.28)"); fan.addColorStop(1, "rgba(" + rgb + ",0)");
+          g.fillStyle = fan;
+          g.beginPath(); g.moveTo(can.x, can.y); g.arc(can.x, can.y, dist * 1.25, ang - sprd, ang + sprd); g.closePath(); g.fill();
+          var cone = g.createRadialGradient(nozzle.x, nozzle.y, 0, nozzle.x, nozzle.y, 24 * S);
+          cone.addColorStop(0, "rgba(255,255,255,.45)"); cone.addColorStop(1, "rgba(255,255,255,0)");
+          g.fillStyle = cone; g.fillRect(nozzle.x - 24 * S, nozzle.y - 24 * S, 48 * S, 48 * S);
         }
+        drawCan(can.x, can.y, can.tilt, paint, !!nozzle);
         for (var i = mist.length - 1; i >= 0; i--) {
           var m = mist[i];
           m.x += m.vx; m.y += m.vy; m.life -= 0.035;
