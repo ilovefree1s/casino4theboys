@@ -127,6 +127,71 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   addEventListener("resize", fsCut);
   addEventListener("resize", soon);
   document.addEventListener("visibilitychange", soon);
+
+  /* Press and hold a bet spot to pour chips on it. After a short hold the spot is tapped for you,
+     faster and faster, until you let go, slide off, or the chips stop going down (table max, or
+     you're out of money). The deal/action buttons, the chip rack and the back button never repeat. */
+  (function () {
+    var NO = '[id$="actions"], .actions, .uth-actions, .bj-actions, .chip-btn, .wayout, .fs-btn, #wu-card, #tt-x2, #tt-rebuy, a, input, textarea, select';
+    var hold = null;
+    var MONEY = '.screen.on [id$="bankroll"], .screen.on [id$="staked"], .screen.on [id$="risk"]';
+    function purseText() {
+      var t = "";
+      document.querySelectorAll(MONEY).forEach(function (e) { t += e.textContent + "|"; });
+      return t;
+    }
+    function stop() {
+      if (!hold) return;
+      clearTimeout(hold.t);
+      var fired = hold.fired;
+      hold = null;
+      // the finger coming up would be one more tap: swallow it if we were already pouring
+      if (fired) { swallow = Date.now() + 400; }
+    }
+    var swallow = 0;
+    function tick() {
+      if (!hold) return;
+      var h = hold;
+      if (!document.body.contains(h.el) || !h.el.closest(".screen.on")) { stop(); return; }
+      var before = purseText();
+      h.pouring = true;
+      try { h.el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, clientX: h.x, clientY: h.y })); }
+      catch (err) { h.pouring = false; stop(); return; }
+      h.pouring = false;
+      h.fired++;
+      // spots are often redrawn on every chip: carry on with whatever is under the finger now
+      var now = document.elementFromPoint(h.x, h.y);
+      if (now && now !== h.el) {
+        if (now.closest(NO) || !now.closest(".screen.on")) { stop(); return; }
+        h.el = now;
+      }
+      if (purseText() === before) { if (++h.dry >= 2) { stop(); return; } } else h.dry = 0;
+      var gap = h.fired < 6 ? 90 : h.fired < 20 ? 55 : 30;
+      h.t = setTimeout(tick, gap);
+    }
+    document.addEventListener("pointerdown", function (e) {
+      stop();
+      if (e.button) return;
+      var el = e.target;
+      if (!el || !el.closest || !el.closest(".screen.on") || !document.querySelector(MONEY)) return;
+      if (el.closest(NO)) return;
+      hold = { el: el, x: e.clientX, y: e.clientY, fired: 0, dry: 0, id: e.pointerId, t: setTimeout(tick, 380) };
+    }, true);
+    document.addEventListener("pointermove", function (e) {
+      if (hold && e.pointerId === hold.id && Math.abs(e.clientX - hold.x) + Math.abs(e.clientY - hold.y) > 24) stop();
+    }, true);
+    ["pointerup", "pointercancel"].forEach(function (n) {
+      document.addEventListener(n, function (e) { if (hold && e.pointerId === hold.id) stop(); }, true);
+    });
+    addEventListener("blur", stop);
+    document.addEventListener("visibilitychange", stop);
+    document.addEventListener("click", function (e) {
+      if (hold && hold.pouring) return;            // our own taps go through
+      if (Date.now() < swallow && e.isTrusted) { swallow = 0; e.stopPropagation(); e.preventDefault(); }
+    }, true);
+    // a long press must not pop the phone's copy/save menu while pouring
+    document.addEventListener("contextmenu", function (e) { if (hold || Date.now() < swallow) e.preventDefault(); }, true);
+  })();
   addEventListener("DOMContentLoaded", function () {
     new MutationObserver(soon).observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: ["class"] });
     soon();
@@ -4296,7 +4361,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.37</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.38</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
