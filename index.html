@@ -11,6 +11,9 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
+/* baccarat: the result pills float in the gap above the chips, so the table doesn't shift when they show */
+#screen-baccarat #pills { height: 0; margin: 0; overflow: visible; align-items: flex-end; align-content: flex-end;
+  position: relative; z-index: 3; transform: translateY(-3px); }
 #pour-bub { position: fixed; z-index: 9997; display: none; align-items: center; gap: 6px; padding: 6px 12px 6px 7px; border-radius: 999px;
   background: rgba(14,11,4,.96); border: 1.5px solid #FFD24D; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; white-space: nowrap; }
 #pour-bub i { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #FFD24D 55%, #b8860b);
@@ -4411,7 +4414,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.42</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.43</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10526,7 +10529,13 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       }
       function track(delta) {
         if (!sess || TT.game !== sess.game) return;
-        if (delta < 0) { sess.out += -delta; return; }
+        if (delta < 0) {
+          sess.out += -delta;
+          // a new bet going down: the last hand's 2x sum comes off the money window
+          var pw = document.querySelector(".screen.on .purse[data-hot]");
+          if (pw && window.purseWin) purseWin.clear(pw);
+          return;
+        }
         var won = Math.max(0, delta - sess.out);
         sess.out = Math.max(0, sess.out - delta);
         var profit = Math.floor(won * rate());
@@ -10550,8 +10559,8 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       function mark(profit, won) {
         var scr = document.querySelector(".screen.on");
         var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + pillAmt(profit);
-        // Mini UTH, DJ Wild and UTH: the doubling shows in the money window, not as a pill
-        if (scr && /^screen-(miniuth|djwild|holdem)$/.test(scr.id) && window.purseWin) {
+        // any table with a money window: the doubling shows up there (a pill in the felt pushes the bets down)
+        if (scr && scr.querySelector(".purse") && window.purseWin) {
           purseWin.hot(scr.querySelector(".purse"), won, "×" + tagX().replace("×", ""), won + profit);
           return;
         }

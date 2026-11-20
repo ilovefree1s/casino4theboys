@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.42"
+VERSION = "1.43"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -944,6 +944,9 @@ sub("  paintMenu();\n  /* ---------- sound",
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
+/* baccarat: the result pills float in the gap above the chips, so the table doesn't shift when they show */
+#screen-baccarat #pills { height: 0; margin: 0; overflow: visible; align-items: flex-end; align-content: flex-end;
+  position: relative; z-index: 3; transform: translateY(-3px); }
 #pour-bub { position: fixed; z-index: 9997; display: none; align-items: center; gap: 6px; padding: 6px 12px 6px 7px; border-radius: 999px;
   background: rgba(14,11,4,.96); border: 1.5px solid #FFD24D; box-shadow: 0 6px 18px rgba(0,0,0,.6); pointer-events: none; white-space: nowrap; }
 #pour-bub i { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #FFD24D 55%, #b8860b);

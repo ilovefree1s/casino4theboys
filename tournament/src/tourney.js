@@ -301,7 +301,13 @@
       }
       function track(delta) {
         if (!sess || TT.game !== sess.game) return;
-        if (delta < 0) { sess.out += -delta; return; }
+        if (delta < 0) {
+          sess.out += -delta;
+          // a new bet going down: the last hand's 2x sum comes off the money window
+          var pw = document.querySelector(".screen.on .purse[data-hot]");
+          if (pw && window.purseWin) purseWin.clear(pw);
+          return;
+        }
         var won = Math.max(0, delta - sess.out);
         sess.out = Math.max(0, sess.out - delta);
         var profit = Math.floor(won * rate());
@@ -325,8 +331,8 @@
       function mark(profit, won) {
         var scr = document.querySelector(".screen.on");
         var x = "🔥 ×" + tagX().replace("×", ""), amt = "+" + fmt(profit);
-        // Mini UTH, DJ Wild and UTH: the doubling shows in the money window, not as a pill
-        if (scr && /^screen-(miniuth|djwild|holdem)$/.test(scr.id) && window.purseWin) {
+        // any table with a money window: the doubling shows up there (a pill in the felt pushes the bets down)
+        if (scr && scr.querySelector(".purse") && window.purseWin) {
           purseWin.hot(scr.querySelector(".purse"), won, "×" + tagX().replace("×", ""), won + profit);
           return;
         }
