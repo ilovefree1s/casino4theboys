@@ -273,7 +273,8 @@
         } catch (e) { return null; }
       }
       // days the house picked by hand
-      var PICKED = { "2026-11-17": ["Ultimate Texas Hold'em", "Blazing 777"], "2026-11-19": ["Free Bet Blackjack", "Mini UTH"], "2026-11-20": ["Punto Banco", "Mines"] };
+      var PICKED = { "2026-11-17": ["Ultimate Texas Hold'em", "Blazing 777"], "2026-11-19": ["Free Bet Blackjack", "Mini UTH"], "2026-11-20": ["Punto Banco", "Mines"],
+                     "2026-11-21": ["Blazing 777", "Lightning Roulette"] };   // Justin swapped Free Bet for the 777s
       function pool() {
         return Object.keys(GAMES).map(function (id) { return GAMES[id]; }).filter(function (g) { return !SKIP[g]; });
       }

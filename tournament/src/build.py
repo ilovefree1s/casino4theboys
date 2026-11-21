@@ -9,8 +9,9 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.84"
+VERSION = "1.85"
 h = open(src, encoding="utf-8").read()
+SEAT = bool(__import__("os").environ.get("SEAT"))      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
 def sub(old, new, count=1):
     global h
@@ -882,6 +883,9 @@ for name, test in BUSY.items():
     # credit: the hot game's second helping, put straight onto the table's own stack
     draw = "updateMoney" if name == "Baccarat" else "renderAll"
     credit = " credit: function (x) { bankroll += x; syncWallet(); try { %s(); } catch (e) {} }, cash: function () { return bankroll; }," % draw
+    # seatOk: nothing is in motion, so the table can be left as it lies and picked up again
+    still = {"Craps": 'phase === "rolling"', "Plinko": "inFlight()"}.get(name, test or BUSY_DEFAULT)
+    credit += " seatOk: function () { return !(%s); }," % still
     body = body[:r] + "\n    return { busy: function () { return %s; },%s" % (test or BUSY_DEFAULT, credit) + body[r + len("\n    return {"):]
     h = h[:a] + body + h[b:]
 
@@ -994,10 +998,12 @@ sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand
 
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
-    "  paintMenu();\n" + (here / "intro.js").read_text().replace("/*NEONFONT*/", __import__("base64").b64encode((here / "tilt-neon.woff2").read_bytes()).decode()).replace("/*CHIPCLACK*/", __import__("base64").b64encode((here / "chip-clack.mp3").read_bytes()).decode()).replace("/*TIPSLOOP*/", __import__("base64").b64encode((here / "tips-loop.mp3").read_bytes()).decode()) + (here / "tourney.js").read_text() + "  /* ---------- sound")
+    "  paintMenu();\n" + ((here / "seat.js").read_text() if SEAT else "") + (here / "intro.js").read_text().replace("/*NEONFONT*/", __import__("base64").b64encode((here / "tilt-neon.woff2").read_bytes()).decode()).replace("/*CHIPCLACK*/", __import__("base64").b64encode((here / "chip-clack.mp3").read_bytes()).decode()).replace("/*TIPSLOOP*/", __import__("base64").b64encode((here / "tips-loop.mp3").read_bytes()).decode()) + (here / "tourney.js").read_text() + "  /* ---------- sound")
 
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)
+_OLDFS = """/* at a table the fullscreen button sits up top in the middle, between the back button and the money */
+body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left: 50%; margin-left: -17px; }"""
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
 /* baccarat: the result pills float in the gap above the chips, so the table doesn't shift when they show */
 #screen-baccarat #pills { height: 0; margin: 0; overflow: visible; align-items: flex-end; align-content: flex-end;
@@ -1007,8 +1013,17 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 #pour-bub i { width: 18px; height: 18px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff3b0, #FFD24D 55%, #b8860b);
   border: 2px dashed rgba(0,0,0,.45); box-sizing: border-box; }
 #pour-bub b { font: 800 16px/1 system-ui, sans-serif; color: #FFD24D; letter-spacing: .02em; }
-/* at a table the fullscreen button sits up top in the middle, between the back button and the money */
-body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left: 50%; margin-left: -17px; }
+/*SEATCSS*/
+#seat-btn { position: fixed; z-index: 9998; width: 44px; height: 34px; padding: 0; border-radius: 10px; background: rgba(8,6,14,.78);
+  border: 1px solid rgba(255,210,77,.55); color: #FFD24D; font: 800 8.5px/1.15 system-ui, sans-serif; letter-spacing: .08em; text-align: center; }
+#seat-btn[hidden] { display: none; }
+#seat-btn:active { transform: scale(.94); }
+#seat-note { position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 56px); transform: translateX(-50%); z-index: 10020; max-width: 88vw;
+  padding: 9px 14px; border-radius: 999px; background: rgba(14,11,4,.96); border: 1.5px solid #FFD24D; color: #FFD24D;
+  font: 800 11px/1.2 system-ui, sans-serif; letter-spacing: .08em; text-align: center; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+#seat-note.on { opacity: 1; }
+.seat-tag { position: absolute; left: 12px; bottom: -8px; z-index: 2; padding: 3px 8px; border-radius: 999px; background: #14101c; border: 1.5px solid #FFD24D;
+  color: #FFD24D; font: 900 9px/1 system-ui, sans-serif; letter-spacing: .08em; white-space: nowrap; pointer-events: none; }
 .mu-sidepill { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; margin-bottom: 4px; }
 #screen-miniuth #mu-results { display: none; }
 #screen-djwild #dj-results, #screen-holdem #uth-res-labels, #screen-holdem #uth-res-amounts { display: none; }
@@ -1282,5 +1297,7 @@ h = h.replace('"+" + fmt(', '"+" + pillAmt(').replace('"−" + fmt(', '"−" + p
 h = h.replace('" — +" + fmt(net)', '" — +" + pillAmt(net)').replace('" — −" + fmt(-net)', '" — −" + pillAmt(-net)')
 h = h.replace("  function shortAmt(v) {", "  function pillAmt(v) { return v >= 1e6 ? shortAmt(v) : fmt(v); }\n  function shortAmt(v) {", 1)
 print("pills shortened:", _n)
+assert h.count("/*SEATCSS*/") == 1
+h = h.replace("/*SEATCSS*/", (here / "seat-fs.css").read_text() if SEAT else _OLDFS)
 open(out, "w", encoding="utf-8").write(h)
 print("built", out, len(h))
