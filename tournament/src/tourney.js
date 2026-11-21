@@ -650,19 +650,27 @@
           paint();
         }, function () {});
       }
-      /** "👑 QTIP $24,500 · 3 PTS" on each game's button, or "3 PTS · NO LEADER YET". */
+      /** The leader's face in each game's PLAY circle, their money under it, the game's points on the corner. */
       function paint() {
         Object.keys(GAMES).forEach(function (id) {
           var btn = $(id);
           if (!btn) return;
-          var tag = btn.querySelector(".tt-lead");
-          if (!TT.on || !TT.points || !TT.day) { if (tag) tag.remove(); return; }
+          var old = btn.querySelector(".tt-lead"); if (old) old.remove();          // the tag builds before 1.64 hung here
+          var pl = btn.querySelector(".pk-play, .play");
+          if (!pl) return;
+          var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = pl.querySelector(".tt-lp");
+          if (!TT.on || !TT.points || !TT.day) { [face, amt, pt].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
-          if (!tag) { tag = document.createElement("span"); tag.className = "tt-lead"; btn.appendChild(tag); }
-          if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
-          var mine = x && x.name.toLowerCase() === (myName() || "").toLowerCase();
-          tag.textContent = (x ? "👑 " + (mine ? "YOU" : shown(x.name).toUpperCase()) + " $" + fmt(x.cash) : "NO LEADER YET") + " · " + pts + " PT" + (pts > 1 ? "S" : "");
-          tag.classList.toggle("mine", !!mine);
+          if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; pl.appendChild(pt); }
+          pt.textContent = pts + " PT" + (pts > 1 ? "S" : "");
+          pl.classList.toggle("tt-led", !!x);
+          if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
+          var src = faceOf(String(x.name).toLowerCase());
+          if (!face) { face = document.createElement("img"); face.className = "tt-lf"; face.alt = ""; pl.appendChild(face); }
+          if (face.getAttribute("src") !== src) face.src = src;
+          if (!amt) { amt = document.createElement("span"); amt.className = "tt-la"; pl.appendChild(amt); }
+          amt.textContent = "$" + (x.cash >= 1e6 && typeof shortAmt === "function" ? shortAmt(x.cash) : fmt(x.cash));
+          btn.title = shown(x.name);
         });
       }
       clearInterval(timerL);
@@ -965,7 +973,7 @@
         ol.innerHTML =
           "<li><b>Every game has its own $10,000.</b> Each table has a separate wallet, and every one of them resets to $10,000 at midnight.</li>" +
           "<li><b>Free rebuys.</b> Bust a game and tap REBUY to start that game over at $10,000. The money you lost doesn't count against you.</li>" +
-          "<li><b>Each game is worth 1, 2 or 3 points,</b> shuffled every day: 3 games are worth 3, 5 are worth 2, and the rest are worth 1. The game's button shows its points and who's on top right now: 👑 NAME $24,500 · 3 PTS.</li>" +
+          "<li><b>Each game is worth 1, 2 or 3 points,</b> shuffled every day: 3 games are worth 3, 5 are worth 2, and the rest are worth 1. The game's button shows its points and who's on top right now: their face in the PLAY circle with their money under it.</li>" +
           "<li><b>At midnight, whoever has the most money on a game takes its points.</b> Only first place scores, and you have to be up at least $5,000 on that game ($15,000 or more).</li>" +
           "<li><b>Most points at the end of the week wins.</b> A tie goes to whoever earned the most money that week.</li>" +
           "<li><b>🔥 Hot games and walk-ups are on.</b> Two random games pay 1.5× on wins every day, and whatever you win or lend comes out of the wallet of the game you're at.</li>" +
