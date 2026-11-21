@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.90"
+VERSION = "1.91"
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -998,7 +998,7 @@ sub('results.push({ label: playerBj ? "Blackjack" : "Hand", net: returned - hand
 
 # the tournament itself, once the menu is painted
 sub("  paintMenu();\n  /* ---------- sound",
-    "  paintMenu();\n" + ((here / "seat.js").read_text() if SEAT else "") + (here / "intro.js").read_text().replace("/*NEONFONT*/", __import__("base64").b64encode((here / "tilt-neon.woff2").read_bytes()).decode()).replace("/*CHIPCLACK*/", __import__("base64").b64encode((here / "chip-clack.mp3").read_bytes()).decode()).replace("/*TIPSLOOP*/", __import__("base64").b64encode((here / "tips-loop.mp3").read_bytes()).decode()) + (here / "tourney.js").read_text() + "  /* ---------- sound")
+    "  paintMenu();\n" + ((here / "seat.js").read_text() if SEAT else "") + (here / "intro.js").read_text().replace("/*NEONFONT*/", __import__("base64").b64encode((here / "tilt-neon.woff2").read_bytes()).decode()).replace("/*CHIPCLACK*/", __import__("base64").b64encode((here / "chip-clack.mp3").read_bytes()).decode()).replace("/*CANSHAKE*/", __import__("base64").b64encode((here / "can-shake.mp3").read_bytes()).decode()).replace("/*TIPSLOOP*/", __import__("base64").b64encode((here / "tips-loop.mp3").read_bytes()).decode()) + (here / "tourney.js").read_text() + "  /* ---------- sound")
 
 # ---- big bankrolls: the money bar shrinks to fit the screen instead of pushing the page wider ----
 # (a page wider than the phone makes the browser zoom out, and it comes back from texting the wrong size)

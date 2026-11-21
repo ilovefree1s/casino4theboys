@@ -3,7 +3,7 @@
      who they are and goes into the tournament. Tap SKIP (or anywhere) to cut it short.
      Open the game with #intro on the end of the address to watch it any time. */
   var Intro = (function () {
-    var LEN = 5000, playing = false;
+    var LEN = 5600, playing = false;
 
     function artSrc() {
       var im = document.querySelector("#screen-menu .mm-art");
@@ -20,29 +20,44 @@
       var len = ctx.sampleRate * 1, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       function noise() { var s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; return s; }
-      // the rattle: a handful of dull clacks, a little uneven, each with the can ringing after it
-      // (a few high, out-of-tune partials that die away over a tenth of a second: the metal in it)
-      [0, 0.07, 0.15, 0.21, 0.30].forEach(function (at, n) {
-        var t = ctx.currentTime + 0.02 + at;
-        var s = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-        f.type = "bandpass"; f.frequency.value = 2200 + (n % 2) * 700; f.Q.value = 5;
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55 * v, t + 0.004);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
-        s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.06);
-        var o = ctx.createOscillator(), og = ctx.createGain();
-        o.type = "triangle"; o.frequency.setValueAtTime(760 + (n % 3) * 90, t);
-        og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.22 * v, t + 0.003);
-        og.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-        o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + 0.05);
-        var base = 1850 + (n % 3) * 140, hit = (n % 2 ? 0.8 : 1) * v;
-        [[1, 0.2, 0.13], [1.59, 0.16, 0.11], [2.31, 0.13, 0.09], [3.42, 0.09, 0.07], [4.87, 0.06, 0.05]].forEach(function (pt) {
-          var r = ctx.createOscillator(), rg = ctx.createGain();
-          r.type = "sine"; r.frequency.value = base * pt[0] * (1 + (Math.random() - 0.5) * 0.02);
-          rg.gain.setValueAtTime(0.0001, t); rg.gain.exponentialRampToValueAtTime(pt[1] * hit, t + 0.002);
-          rg.gain.exponentialRampToValueAtTime(0.0001, t + pt[2]);
-          r.connect(rg); rg.connect(ctx.destination); r.start(t); r.stop(t + pt[2] + 0.02);
+      // the rattle: Justin's own can, recorded. If the phone can't decode it, the made-up one below stands in.
+      function rattle() {
+        // the rattle: a handful of dull clacks, a little uneven, each with the can ringing after it
+        // (a few high, out-of-tune partials that die away over a tenth of a second: the metal in it)
+        [0, 0.07, 0.15, 0.21, 0.30].forEach(function (at, n) {
+          var t = ctx.currentTime + 0.02 + at;
+          var s = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+          f.type = "bandpass"; f.frequency.value = 2200 + (n % 2) * 700; f.Q.value = 5;
+          g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55 * v, t + 0.004);
+          g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+          s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.06);
+          var o = ctx.createOscillator(), og = ctx.createGain();
+          o.type = "triangle"; o.frequency.setValueAtTime(760 + (n % 3) * 90, t);
+          og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.22 * v, t + 0.003);
+          og.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
+          o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + 0.05);
+          var base = 1850 + (n % 3) * 140, hit = (n % 2 ? 0.8 : 1) * v;
+          [[1, 0.2, 0.13], [1.59, 0.16, 0.11], [2.31, 0.13, 0.09], [3.42, 0.09, 0.07], [4.87, 0.06, 0.05]].forEach(function (pt) {
+            var r = ctx.createOscillator(), rg = ctx.createGain();
+            r.type = "sine"; r.frequency.value = base * pt[0] * (1 + (Math.random() - 0.5) * 0.02);
+            rg.gain.setValueAtTime(0.0001, t); rg.gain.exponentialRampToValueAtTime(pt[1] * hit, t + 0.002);
+            rg.gain.exponentialRampToValueAtTime(0.0001, t + pt[2]);
+            r.connect(rg); rg.connect(ctx.destination); r.start(t); r.stop(t + pt[2] + 0.02);
+          });
         });
-      });
+      }
+      try {
+        var bin = atob("/*CANSHAKE*/"), bytes = new Uint8Array(bin.length);
+        for (var bi = 0; bi < bin.length; bi++) bytes[bi] = bin.charCodeAt(bi);
+        var played = false, playIt = function (buf) {
+          if (played) return; played = true;
+          var cs = ctx.createBufferSource(), cg = ctx.createGain();
+          cs.buffer = buf; cg.gain.value = Math.min(1.8, v * 2.6);
+          cs.connect(cg); cg.connect(ctx.destination); cs.start();
+        }, miss = function () { if (!played) { played = true; rattle(); } };
+        var pr = ctx.decodeAudioData(bytes.buffer, playIt, miss);
+        if (pr && pr.catch) pr.catch(miss);
+      } catch (e) { rattle(); }
       // the hiss: bright filtered noise, faded up and down as the can is pressed
       var src = noise(), hp = ctx.createBiquadFilter(), bp = ctx.createBiquadFilter(), hg = ctx.createGain();
       hp.type = "highpass"; hp.frequency.value = 3200;
@@ -290,7 +305,8 @@
       wrap.onclick = finish;
 
       // timings, in ms
-      var A0 = 420, A1 = 2450, T0 = 2750, T1 = 3500, SUB = 3650, len = LEN;
+      // the can is shaken for a second first (as long as the recording of it runs), then the paint goes on
+      var A0 = 1000, A1 = 3030, T0 = 3330, T1 = 4080, SUB = 4230, len = LEN;
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
