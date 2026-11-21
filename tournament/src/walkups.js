@@ -198,6 +198,16 @@
         '<div class="wu-grid">' + people.map(function (n) {
           return '<button type="button" data-me="' + n + '" class="' + (n === mine ? "on" : "") + '"><img alt="" src="' + FACES[n] + '"><b>' + n + "</b></button>";
         }).join("") + '<button type="button" data-me="" class="' + (mine ? "" : "on") + '"><span class="wu-none">?</span><b>Not on here</b></button></div>';
+      // faces somebody has already signed in to the tournament with are greyed (still tappable: the owner picks theirs here)
+      if (typeof TT !== "undefined" && TT.takenFaces) {
+        TT.takenFaces().then(function (t) {
+          var own = (mine || typed || "").toLowerCase();
+          box.querySelectorAll("button[data-me]").forEach(function (b) {
+            var f = (b.getAttribute("data-me") || "").toLowerCase();
+            b.classList.toggle("taken", !!f && !!t[f] && f !== own);
+          });
+        }, function () {});
+      }
       box.querySelectorAll("button[data-me]").forEach(function (b) {
         b.onclick = function () {
           try { store.setStr(ME_KEY, b.getAttribute("data-me")); } catch (e) {}

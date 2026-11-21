@@ -436,3 +436,7 @@
   /* folded, Campaign and Play Testing are the same height as Settings */
   .mm-lane.campaign:not(.open), .mm-lane.testing:not(.open) { padding: 18px 16px; min-height: 63px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
   .mm-lane.campaign.open .mm-hdr .chev { margin-left: auto; }
+  /* Settings' who-are-you grid: faces already signed in to the tournament */
+  #wu-me .wu-grid button.taken img { filter: grayscale(1) brightness(.5); }
+  #wu-me .wu-grid button.taken b { color: rgba(245,241,232,.4); }
+  #wu-me .wu-grid button.taken::after { content: "TAKEN"; display: block; margin-top: 1px; font: 700 8px/1 var(--mono); letter-spacing: .14em; color: rgba(245,241,232,.5); }

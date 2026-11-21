@@ -4291,6 +4291,10 @@
   /* folded, Campaign and Play Testing are the same height as Settings */
   .mm-lane.campaign:not(.open), .mm-lane.testing:not(.open) { padding: 18px 16px; min-height: 63px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
   .mm-lane.campaign.open .mm-hdr .chev { margin-left: auto; }
+  /* Settings' who-are-you grid: faces already signed in to the tournament */
+  #wu-me .wu-grid button.taken img { filter: grayscale(1) brightness(.5); }
+  #wu-me .wu-grid button.taken b { color: rgba(245,241,232,.4); }
+  #wu-me .wu-grid button.taken::after { content: "TAKEN"; display: block; margin-top: 1px; font: 700 8px/1 var(--mono); letter-spacing: .14em; color: rgba(245,241,232,.5); }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4594,7 +4598,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.99</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v2.00</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -9805,6 +9809,16 @@
         '<div class="wu-grid">' + people.map(function (n) {
           return '<button type="button" data-me="' + n + '" class="' + (n === mine ? "on" : "") + '"><img alt="" src="' + FACES[n] + '"><b>' + n + "</b></button>";
         }).join("") + '<button type="button" data-me="" class="' + (mine ? "" : "on") + '"><span class="wu-none">?</span><b>Not on here</b></button></div>';
+      // faces somebody has already signed in to the tournament with are greyed (still tappable: the owner picks theirs here)
+      if (typeof TT !== "undefined" && TT.takenFaces) {
+        TT.takenFaces().then(function (t) {
+          var own = (mine || typed || "").toLowerCase();
+          box.querySelectorAll("button[data-me]").forEach(function (b) {
+            var f = (b.getAttribute("data-me") || "").toLowerCase();
+            b.classList.toggle("taken", !!f && !!t[f] && f !== own);
+          });
+        }, function () {});
+      }
       box.querySelectorAll("button[data-me]").forEach(function (b) {
         b.onclick = function () {
           try { store.setStr(ME_KEY, b.getAttribute("data-me")); } catch (e) {}
@@ -12393,6 +12407,20 @@
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : null;
       return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
     }
+    /** Which faces are spoken for: everyone who has ever signed in to the tournament, by lower-case face name. */
+    var takenAt = 0, takenMap = null;
+    TT.takenFaces = function () {
+      if (!ready) return Promise.resolve({});
+      if (takenMap && Date.now() - takenAt < 60000) return Promise.resolve(takenMap);
+      return rpc("c4tb_names", {}).then(function (names) {
+        var t = {};
+        (Array.isArray(names) ? names : []).forEach(function (x) {
+          var lk = String(x).toLowerCase(); t[lk] = 1;
+          var al = FACE_ALIAS[lk.replace(/[^a-z0-9]/g, "")]; if (al) t[al] = 1;
+        });
+        takenMap = t; takenAt = Date.now(); return t;
+      }, function () { return takenMap || {}; });
+    };
     /** From Settings, for someone with no picture: straight to the name box. */
     TT.signUp = function () { if (ready) askName(function () { refreshLane(); }, true); };
     function askName(then, typeIt) {

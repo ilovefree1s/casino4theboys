@@ -1106,6 +1106,20 @@
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : null;
       return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
     }
+    /** Which faces are spoken for: everyone who has ever signed in to the tournament, by lower-case face name. */
+    var takenAt = 0, takenMap = null;
+    TT.takenFaces = function () {
+      if (!ready) return Promise.resolve({});
+      if (takenMap && Date.now() - takenAt < 60000) return Promise.resolve(takenMap);
+      return rpc("c4tb_names", {}).then(function (names) {
+        var t = {};
+        (Array.isArray(names) ? names : []).forEach(function (x) {
+          var lk = String(x).toLowerCase(); t[lk] = 1;
+          var al = FACE_ALIAS[lk.replace(/[^a-z0-9]/g, "")]; if (al) t[al] = 1;
+        });
+        takenMap = t; takenAt = Date.now(); return t;
+      }, function () { return takenMap || {}; });
+    };
     /** From Settings, for someone with no picture: straight to the name box. */
     TT.signUp = function () { if (ready) askName(function () { refreshLane(); }, true); };
     function askName(then, typeIt) {
