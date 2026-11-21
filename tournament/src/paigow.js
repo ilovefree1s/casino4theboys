@@ -311,10 +311,6 @@
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
-      var info = document.createElement("button");
-      info.type = "button"; info.className = "pg-info"; info.textContent = "?"; info.setAttribute("aria-label", "What the bonus bet pays");
-      info.addEventListener("click", function () { $("pg-pays").classList.add("on"); });
-      host.appendChild(info);
     }
     function renderRack() {
       var host = $("pg-rack"); host.innerHTML = "";
@@ -362,7 +358,7 @@
       var broke = Shell.mode === "testing" && bankroll < 25 && phase === "betting";
       $("pg-rebuy").classList.toggle("on", broke);
     }
-    function renderAll() { renderTop(); renderCards(); renderSpots(); renderRack(); renderActions(); renderBonusLine(); renderRebuy(); }
+    function renderAll() { renderTop(); renderCards(); renderSpots(); renderRack(); renderActions(); renderBonusLine(); renderPays(); renderRebuy(); }
 
     // ---------- betting ----------
     function place(which) {
@@ -473,7 +469,6 @@
     }
     function enter() {
       clearTimers();
-      $("pg-pays").classList.remove("on");
       phase = "betting";
       mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; outcome = null; sideHit = null;
       bet = 0; side = 0; lastBet = 0; lastSide = 0;
@@ -482,16 +477,23 @@
       renderAll();
       Shell.gate(refresh);
     }
+    // what the bonus pays, on the felt the whole time; the line that hit lights up
+    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
+                     quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
     (function () {
       var rows = $("pg-pays-rows");
       PGE.BONUS.forEach(function (b) {
         var d = document.createElement("div");
-        d.innerHTML = "<span>" + b.name + "</span><b>" + fmt(b.pays) + " to 1</b>";
+        d.setAttribute("data-k", b.key);
+        d.innerHTML = "<span>" + SHORTPAY[b.key] + "</span><b>" + fmt(b.pays) + "</b>";
         rows.appendChild(d);
       });
     })();
-    $("pg-pays-x").addEventListener("click", function () { $("pg-pays").classList.remove("on"); });
-    $("pg-pays").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("on"); });
+    function renderPays() {
+      var hit = phase === "result" && paid.sideBet > 0 && sideHit ? sideHit.key : null;
+      [].forEach.call($("pg-pays-rows").children, function (d) { d.classList.toggle("hit", d.getAttribute("data-k") === hit); });
+      $("pg-pays").classList.toggle("live", side > 0 || (phase !== "betting" && paid.sideBet > 0));
+    }
     $("pg-buyin").addEventListener("click", function () {
       if (phase !== "betting" || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });

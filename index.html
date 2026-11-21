@@ -4442,26 +4442,26 @@
   .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.8); }
   .pg-spot .amt { font-family: var(--display); font-size: 11px; color: #FFD24D; min-height: 13px; }
   .pg-spot[disabled] { opacity: .75; }
-  .pg-info { align-self: center; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(255,210,77,.6); color: #FFD24D;
-             font-family: var(--display); font-size: 14px; margin-left: -14px; }
+  #pg-rack { min-height: 50px; }   /* the rack leaves, its room stays: nothing on the table moves between betting and the hand */
   #screen-paigow .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
   #screen-paigow .uth-btn[disabled] { opacity: .4; }
   #screen-paigow .uth-actions { width: 100%; display: flex; gap: 10px; margin-top: 8px; }
-  .pg-pays { position: absolute; inset: 0; z-index: 30; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,.78); }
-  .pg-pays.on { display: flex; }
-  .pg-pays .box { width: min(320px, 86vw); padding: 18px 18px 16px; border-radius: 16px; background: #16070B; border: 1.5px solid #FFD24D;
-                  display: flex; flex-direction: column; gap: 8px; }
-  .pg-pays .ttl { font-family: var(--display); letter-spacing: .12em; color: #FFD24D; font-size: 15px; text-align: center; }
-  .pg-pays .sub { font-size: 11px; color: rgba(245,241,232,.65); text-align: center; margin-bottom: 4px; }
-  .pg-pays .rows { display: flex; flex-direction: column; gap: 5px; }
-  .pg-pays .rows div { display: flex; justify-content: space-between; font-size: 13px; color: var(--bone); }
-  .pg-pays .rows div b { color: #FFD24D; font-family: var(--display); font-weight: 400; }
-  .pg-pays .uth-btn { flex: none; width: 100%; margin-top: 8px; color: #FFD24D; border-color: #FFD24D; }
+  .pg-pays { width: 100%; margin-bottom: 10px; opacity: .7; transition: opacity .2s; }
+  .pg-pays.live { opacity: 1; }
+  .pg-pays .hd { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: #FFD24D; margin-bottom: 5px; }
+  .pg-pays .hd i { flex: 1; height: 1px; background: rgba(255,210,77,.35); }
+  .pg-pays .rows { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(5, auto); gap: 2px 18px; }
+  .pg-pays .rows div { display: flex; justify-content: space-between; align-items: baseline; padding: 1px 5px; border-radius: 4px;
+                       font-family: var(--display); font-size: 10px; letter-spacing: .04em; color: rgba(245,241,232,.82); white-space: nowrap; }
+  .pg-pays .rows div b { color: #FFD24D; font-weight: 400; }
+  .pg-pays .rows div.hit { background: #FFD24D; color: #16070B; }
+  .pg-pays .rows div.hit b { color: #16070B; }
   @media (max-height: 700px) {
     .pg-row .card, .pg-row .slot { width: 38px; height: 57px; }
     .pg-row { min-height: 68px; } .pg-row.you { min-height: 72px; }
     .pg-spot .ring { width: 52px; height: 52px; } .pg-spot .ring .placed { width: 42px; height: 42px; }
     .pg-sign span { display: none; }
+    .pg-pays { margin-bottom: 6px; } .pg-pays .rows div { font-size: 9px; padding: 0 5px; }
   }
   /* ========== CHAIN REACTION (play testing only) ========== */
   #screen-chain {
@@ -4945,17 +4945,13 @@
       <div class="pg-bonusline" id="pg-bonusline"></div>
     </div>
     <div class="dj-bottom">
+      <div class="pg-pays" id="pg-pays">
+        <div class="hd"><i></i><span>BONUS PAYS · BEST HAND IN YOUR SEVEN</span><i></i></div>
+        <div class="rows" id="pg-pays-rows"></div>
+      </div>
       <div class="pg-spots" id="pg-spots"></div>
       <div id="pg-rack"></div>
       <div class="uth-actions" id="pg-actions"></div>
-    </div>
-  </div>
-  <div class="pg-pays" id="pg-pays">
-    <div class="box">
-      <div class="ttl">BONUS BET PAYS</div>
-      <div class="sub">On the best hand in your seven cards, win or lose</div>
-      <div class="rows" id="pg-pays-rows"></div>
-      <button class="uth-btn" id="pg-pays-x">GOT IT</button>
     </div>
   </div>
   <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
@@ -9641,10 +9637,6 @@
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
-      var info = document.createElement("button");
-      info.type = "button"; info.className = "pg-info"; info.textContent = "?"; info.setAttribute("aria-label", "What the bonus bet pays");
-      info.addEventListener("click", function () { $("pg-pays").classList.add("on"); });
-      host.appendChild(info);
     }
     function renderRack() {
       var host = $("pg-rack"); host.innerHTML = "";
@@ -9692,7 +9684,7 @@
       var broke = Shell.mode === "testing" && bankroll < 25 && phase === "betting";
       $("pg-rebuy").classList.toggle("on", broke);
     }
-    function renderAll() { renderTop(); renderCards(); renderSpots(); renderRack(); renderActions(); renderBonusLine(); renderRebuy(); }
+    function renderAll() { renderTop(); renderCards(); renderSpots(); renderRack(); renderActions(); renderBonusLine(); renderPays(); renderRebuy(); }
 
     // ---------- betting ----------
     function place(which) {
@@ -9803,7 +9795,6 @@
     }
     function enter() {
       clearTimers();
-      $("pg-pays").classList.remove("on");
       phase = "betting";
       mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; outcome = null; sideHit = null;
       bet = 0; side = 0; lastBet = 0; lastSide = 0;
@@ -9812,16 +9803,23 @@
       renderAll();
       Shell.gate(refresh);
     }
+    // what the bonus pays, on the felt the whole time; the line that hit lights up
+    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
+                     quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
     (function () {
       var rows = $("pg-pays-rows");
       PGE.BONUS.forEach(function (b) {
         var d = document.createElement("div");
-        d.innerHTML = "<span>" + b.name + "</span><b>" + fmt(b.pays) + " to 1</b>";
+        d.setAttribute("data-k", b.key);
+        d.innerHTML = "<span>" + SHORTPAY[b.key] + "</span><b>" + fmt(b.pays) + "</b>";
         rows.appendChild(d);
       });
     })();
-    $("pg-pays-x").addEventListener("click", function () { $("pg-pays").classList.remove("on"); });
-    $("pg-pays").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("on"); });
+    function renderPays() {
+      var hit = phase === "result" && paid.sideBet > 0 && sideHit ? sideHit.key : null;
+      [].forEach.call($("pg-pays-rows").children, function (d) { d.classList.toggle("hit", d.getAttribute("data-k") === hit); });
+      $("pg-pays").classList.toggle("live", side > 0 || (phase !== "betting" && paid.sideBet > 0));
+    }
     $("pg-buyin").addEventListener("click", function () {
       if (phase !== "betting" || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });
