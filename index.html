@@ -4288,6 +4288,9 @@
   .mm-lane.campaign.open .mm-hdr .tag { display: none; }
   .mm-lane.campaign:not(.open) > :not(.mm-hdr):not(.edge) { display: none; }
   .mm-lane.campaign:not(.open) .mm-hdr:active { opacity: .8; }
+  /* folded, Campaign and Play Testing are the same height as Settings */
+  .mm-lane.campaign:not(.open), .mm-lane.testing:not(.open) { padding: 18px 16px; min-height: 63px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+  .mm-lane.campaign.open .mm-hdr .chev { margin-left: auto; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4591,7 +4594,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.97</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.98</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">

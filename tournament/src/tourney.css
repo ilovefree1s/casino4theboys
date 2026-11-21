@@ -433,3 +433,6 @@
   .mm-lane.campaign.open .mm-hdr .tag { display: none; }
   .mm-lane.campaign:not(.open) > :not(.mm-hdr):not(.edge) { display: none; }
   .mm-lane.campaign:not(.open) .mm-hdr:active { opacity: .8; }
+  /* folded, Campaign and Play Testing are the same height as Settings */
+  .mm-lane.campaign:not(.open), .mm-lane.testing:not(.open) { padding: 18px 16px; min-height: 63px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; }
+  .mm-lane.campaign.open .mm-hdr .chev { margin-left: auto; }
