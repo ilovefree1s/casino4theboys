@@ -559,6 +559,8 @@
       if (phase !== "betting" || bankroll >= 25) return;
       freshStack(function (v) { bankroll = v; setMessage("Place your bet"); renderAll(); });
     });
+    // the 4 The Boys piece behind the felt, the same picture the other poker tables use, turned red
+    (function () { var from = document.querySelector("#screen-miniuth .mu-bg"); if (from) $("pg-bg").src = from.src; })();
     $("pg-back").addEventListener("click", function () { Shell.show("poker"); });
     $("pk-paigow").addEventListener("click", function () { PaiGow.enter(); Shell.show("paigow"); });
     // The tournament doesn't list this table (yet): the poker page shows it for Campaign and Play Testing only.

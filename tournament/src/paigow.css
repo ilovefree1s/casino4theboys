@@ -4,6 +4,8 @@
     position: relative; --uth-green: #E24B5B; --uth-dim: rgba(226,75,91,.35);
     background: radial-gradient(120% 70% at 50% 40%, #3A0B14 0%, #170509 55%, #070203 100%);
   }
+  .pg-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; pointer-events: none;
+           filter: grayscale(1) sepia(1) hue-rotate(-42deg) saturate(3.2) brightness(.8); }
   #screen-paigow .uth-money .val { color: #FFD24D; }
   .pg-sign { font-family: var(--display); font-size: 13px; letter-spacing: .14em; color: #FFD24D; text-align: center; margin: 2px 0 8px; }
   .pg-sign span { display: block; margin-top: 3px; font-family: var(--mono); font-size: 8px; letter-spacing: .14em; color: rgba(245,241,232,.55); }
@@ -40,30 +42,32 @@
   /* the felt: each side bet's circle sits against the box that says what it pays */
   .pg-felt { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.28fr); gap: 8px; align-items: stretch; margin-bottom: 8px; }
   .pg-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-  .pg-col.l { justify-content: space-between; gap: 6px; }
+  .pg-col.l { justify-content: flex-end; gap: 5px; }   /* the circle sits right on top of its own pay box */
   .pg-col.c { justify-content: space-between; gap: 6px; padding-top: 2px; }
   .pg-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--bone); }
   .pg-spot .ring { position: relative; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #E24B5B; background: rgba(0,0,0,.35);
                    display: grid; place-items: center; }
-  .pg-spot.bonus .ring { border-color: #FFD24D; }
+  .pg-spot[data-spot="bet"] { --k: #35C8FF; } .pg-spot[data-spot="bonus"] { --k: #FFD24D; } .pg-spot[data-spot="ace"] { --k: #FF5468; }
+  .pg-spot .ring { border-color: var(--k); box-shadow: 0 0 10px color-mix(in srgb, var(--k) 45%, transparent); }
   .pg-spot .ring .placed { display: block; width: 46px; height: 46px; }
   .pg-spot .ring .empty { font-family: var(--display); font-size: 9px; letter-spacing: .1em; color: rgba(245,241,232,.45); }
-  .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.8); white-space: nowrap; }
+  .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: var(--k); white-space: nowrap; }
   .pg-spot[disabled] { opacity: .8; }
   #pg-rack { min-height: 50px; }   /* the rack leaves, its room stays: nothing on the table moves between betting and the hand */
   #screen-paigow .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
   #screen-paigow .uth-btn[disabled] { opacity: .4; }
   #screen-paigow .uth-actions { width: 100%; display: flex; gap: 10px; margin-top: 8px; }
-  .pg-pays { width: 100%; box-sizing: border-box; padding: 5px 6px 6px; border-radius: 10px; border: 1.5px solid rgba(255,210,77,.38); background: rgba(0,0,0,.28);
+  .pg-pays { width: 100%; box-sizing: border-box; padding: 5px 6px 6px; border-radius: 10px; border: 1.5px solid color-mix(in srgb, var(--k) 45%, transparent); background: rgba(0,0,0,.5);
              transition: border-color .2s; }
-  .pg-pays.live { border-color: #FFD24D; }
-  .pg-pays .hd { font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: #FFD24D; text-align: center; margin-bottom: 4px; }
+  #pg-pays { --k: #FFD24D; } #pg-acepays { --k: #FF5468; }
+  .pg-pays.live { border-color: var(--k); box-shadow: 0 0 10px color-mix(in srgb, var(--k) 40%, transparent); }
+  .pg-pays .hd { font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: var(--k); text-align: center; margin-bottom: 4px; }
   .pg-pays .ft { font-family: var(--mono); font-size: 7px; letter-spacing: .1em; color: rgba(245,241,232,.5); text-align: center; margin-top: 4px; }
   .pg-pays .rows { display: flex; flex-direction: column; gap: 1px; }
   .pg-pays .rows div { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 1px 4px; border-radius: 4px;
                        font-family: var(--display); font-size: 9.5px; line-height: 12px; letter-spacing: 0; color: rgba(245,241,232,.85); white-space: nowrap; }
-  .pg-pays .rows div b { color: #FFD24D; font-weight: 400; }
-  .pg-pays .rows div.hit { background: #FFD24D; color: #16070B; }
+  .pg-pays .rows div b { color: var(--k); font-weight: 400; }
+  .pg-pays .rows div.hit { background: var(--k); color: #16070B; }
   .pg-pays .rows div.hit b { color: #16070B; }
   .pg-col.r .pg-pays { height: 100%; }
   /* shorter phones: the same table, packed tighter, so it never has to scroll */
