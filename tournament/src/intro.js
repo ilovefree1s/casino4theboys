@@ -512,9 +512,6 @@
         body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
       { head: '<span style="font-size:38px;white-space:nowrap">WHO\'S ON TOP</span>', frame: ["#b6ffd6", "#22d37a"], lit: ["#e3f2ff", "#2f8cff"], top: true,
         body: "<b>Every game's button shows who's on top.</b> Their face is in the PLAY circle with their money under it. The gold tag is the game's points. Beat their number to take them." },
-      { head: "HOT GAMES", frame: ["#7fc4ff", "#2f8cff"], lit: ["#ffe9f4", "#ff3d9a"],
-        art: '<div class="gd-hot">' + FLAME + '<b>1.5×</b></div>',
-        body: "<b>Two games a day pay 1.5× on every win.</b> Different games each day. Look for the 🔥 on the menu." },
       { head: "MOST POINTS<br>WINS", frame: ["#ffe7a0", "#ffb02e"], lit: ["#ffe9f4", "#ff3d9a"],
         art: '<div class="gd-trophy">' + CUP + '</div>',
         body: "<b>Points add up all week.</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
