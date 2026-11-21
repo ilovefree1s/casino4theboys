@@ -348,12 +348,79 @@
       function txtPos(p) {
         return { x: tBox.x + tBox.w * p, y: tBox.cy + Math.sin(p * 22) * tBox.h * 0.22 };
       }
+      /* Drips: they run from the real bottom edge of a painted letter, in that letter's own colour.
+         Columns are tried across the piece; each takes the lowest solid run of paint it finds (a few pixels
+         of solid colour, so a stray speck is never mistaken for a letter). */
       var drips = [];
-      function startDrips() {
-        var cols = ["#ffb21f", "#ff2e88", "#ff6a00", "#fff36b", "#ff2e88"];
-        for (var i = 0; i < 5; i++) {
-          drips.push({ x: tBox.x + tBox.w * (0.12 + 0.76 * Math.random()), y: tBox.cy + tBox.size * (0.28 + Math.random() * 0.1),
-                       len: 0, max: (10 + Math.random() * 26) * S, w: (2.2 + Math.random() * 2.2) * S, col: cols[i], sp: (0.5 + Math.random() * 0.9) * S });
+      function dripsFrom(cnv, bx, n) {
+        var c = cnv.getContext("2d");
+        var x0 = Math.max(0, Math.floor(bx.x)), y0 = Math.max(0, Math.floor(bx.y));
+        var w = Math.min(cnv.width - x0, Math.ceil(bx.w)), h = Math.min(cnv.height - y0, Math.ceil(bx.h));
+        if (w < 4 || h < 4) return;
+        var d = c.getImageData(x0, y0, w, h).data, run = Math.max(3, Math.round(3 * S)), used = [], got = 0, tries = 0;
+        function solid(x, y) { return y >= 0 && d[(y * w + x) * 4 + 3] > 225; }
+        while (got < n && tries++ < 120) {
+          var cx = Math.floor(w * (0.05 + 0.9 * Math.random()));
+          if (used.some(function (u) { return Math.abs(u - cx) < w * 0.06; })) continue;
+          for (var yy = h - 1; yy >= run; yy--) {
+            if (!solid(cx, yy)) continue;
+            var ok = true; for (var k = 1; k <= run; k++) if (!solid(cx, yy - k)) { ok = false; break; }
+            if (!ok) continue;
+            var i = ((yy - run) * w + cx) * 4;
+            drips.push({ x: x0 + cx, y: y0 + yy - 2 * S, len: 0, max: (14 + Math.random() * 34) * S, w: (2.2 + Math.random() * 2.2) * S,
+                         col: [d[i], d[i + 1], d[i + 2]], sp: (0.4 + Math.random() * 0.8) * S });
+            used.push(cx); got++;
+            break;
+          }
+        }
+      }
+      function drawDrips(now) {
+        drips.forEach(function (dp) {
+          dp.len = Math.min(dp.max, dp.len + dp.sp * (now - last) / 16 * (1 - dp.len / dp.max * 0.7));
+          var c = dp.col, top = "rgb(" + c + ")", end = "rgb(" + c.map(function (v) { return Math.round(v * 0.78); }) + ")";
+          var gr = g.createLinearGradient(0, dp.y, 0, dp.y + dp.len);
+          gr.addColorStop(0, top); gr.addColorStop(1, end);
+          // a little wider where it leaves the letter, thinning as it runs, and a bead at the end
+          g.fillStyle = gr;
+          g.beginPath();
+          g.moveTo(dp.x - dp.w * 0.75, dp.y);
+          g.quadraticCurveTo(dp.x - dp.w * 0.45, dp.y + dp.len * 0.5, dp.x - dp.w * 0.38, dp.y + dp.len);
+          g.lineTo(dp.x + dp.w * 0.38, dp.y + dp.len);
+          g.quadraticCurveTo(dp.x + dp.w * 0.45, dp.y + dp.len * 0.5, dp.x + dp.w * 0.75, dp.y);
+          g.closePath(); g.fill();
+          g.fillStyle = end; g.beginPath(); g.arc(dp.x, dp.y + dp.len, dp.w * 0.62, 0, 6.283); g.fill();
+          g.fillStyle = "rgba(255,255,255,.35)"; g.beginPath(); g.arc(dp.x - dp.w * 0.2, dp.y + dp.len - dp.w * 0.2, dp.w * 0.18, 0, 6.283); g.fill();
+        });
+      }
+
+      /* Overspray over the whole wall, not only round the letters: it lands a bit at a time while the can
+         works, blue while the blue goes on and warm while the warm goes on, and stays. */
+      var spat = layer(), specks = { blue: [], warm: [] };
+      (function () {
+        var w = spat.width, h = spat.height, i;
+        function add(list, n, cols) {
+          for (i = 0; i < n; i++) {
+            var big = Math.random() < 0.02;
+            list.push({ x: Math.random() * w, y: Math.random() * h, r: (big ? 1.8 + Math.random() * 2 : 0.4 + Math.random() * 1.2) * S,
+                        a: big ? 0.55 + Math.random() * 0.35 : 0.22 + Math.random() * 0.55, col: cols[Math.floor(Math.random() * cols.length)],
+                        at: Math.random(), big: big });
+          }
+          list.sort(function (p, q) { return p.at - q.at; });
+          list.i = 0;
+        }
+        add(specks.blue, 1100, ["110,170,255", "150,110,255", "90,200,255"]);
+        add(specks.warm, 900, ["255,190,50", "255,120,30", "255,60,140", "255,240,120"]);
+      })();
+      function spray(list, upTo) {
+        var c = spat.getContext("2d");
+        while (list.i < list.length && list[list.i].at <= upTo) {
+          var p = list[list.i++];
+          c.fillStyle = "rgba(" + p.col + "," + p.a.toFixed(2) + ")";
+          c.beginPath(); c.arc(p.x, p.y, p.r, 0, 6.283); c.fill();
+          if (p.big) for (var k = 0; k < 6; k++) {            // a splat throws a few satellites
+            var an = Math.random() * 6.283, dd = p.r * (1.6 + Math.random() * 2.4);
+            c.beginPath(); c.arc(p.x + Math.cos(an) * dd, p.y + Math.sin(an) * dd, (0.4 + Math.random() * 0.9) * S, 0, 6.283); c.fill();
+          }
         }
       }
 
@@ -401,7 +468,7 @@
       }
       var can = null;
 
-      var snd = Sound(), t0 = 0, last = 0, raf = 0, over = false, hissing = false, thumped = false, dripped = false, prevA = 0, prevT = 0;
+      var snd = Sound(), t0 = 0, last = 0, raf = 0, over = false, hissing = false, thumped = false, dripped = false, wdripped = false, prevA = 0, prevT = 0;
       function hiss(on) { if (on !== hissing) { hissing = on; snd.hiss(on); } }
       function finish() {
         if (over) return;
@@ -431,6 +498,9 @@
         var t = now - t0;
         g.globalCompositeOperation = "source-over";
         g.drawImage(wall, 0, 0);
+        if (t >= A0) spray(specks.blue, Math.min(1, (t - A0) / (A1 - A0)) * 1.04);
+        if (t >= T0) spray(specks.warm, Math.min(1, (t - T0) / (T1 - T0)) * 1.04);
+        g.drawImage(spat, 0, 0);
 
         // 1) the piece
         var nozzle = null;
@@ -444,6 +514,7 @@
           if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
           else {
             // last pass: the gaps fill in and the whole wall around it takes the glow
+            if (opts.quick && !wdripped) { wdripped = true; dripsFrom(art, box, 7); }
             var c2 = artMask.getContext("2d");
             c2.fillStyle = "rgba(255,255,255," + Math.min(1, (t - A1) / 380) * 0.22 + ")";
             c2.fillRect(0, 0, artMask.width, artMask.height);
@@ -452,6 +523,7 @@
         g.globalCompositeOperation = "lighter";
         show(artMask, art);
         g.globalCompositeOperation = "source-over";
+        if (t < T0) drawDrips(now);
 
         // 2) the words
         if (t >= T0) {
@@ -465,16 +537,11 @@
           else {
             var c3 = txtMask.getContext("2d");
             c3.fillStyle = "rgba(255,255,255,.3)"; c3.fillRect(tBox.x, tBox.y, tBox.w, tBox.h);
-            if (!dripped) { dripped = true; startDrips(); }
+            if (!dripped) { dripped = true; dripsFrom(txt, tBox, 6); }
             if (!thumped) { thumped = true; snd.thump(); }
           }
           // drips first, so they run out from under the letters
-          drips.forEach(function (d) {
-            d.len = Math.min(d.max, d.len + d.sp * (now - last) / 16);
-            g.strokeStyle = d.col; g.lineWidth = d.w; g.lineCap = "round";
-            g.beginPath(); g.moveTo(d.x, d.y); g.lineTo(d.x, d.y + d.len); g.stroke();
-            g.fillStyle = d.col; g.beginPath(); g.arc(d.x, d.y + d.len, d.w * 0.75, 0, 6.283); g.fill();
-          });
+          drawDrips(now);
           show(txtMask, txt);
         }
         // 3) the small line under it, stencilled on
