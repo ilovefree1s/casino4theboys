@@ -4022,6 +4022,10 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   /* the hot game's own button: a lit border and a 🔥 2× tag in the corner */
   /* a hot game: its PLAY circle (or the leader's face on it) is on fire */
   .tt-hotbtn .play, .tt-hotbtn .pk-play { position: relative; isolation: isolate; }
+  .tt-x { position: absolute; right: -13px; bottom: -3px; z-index: 3; pointer-events: none; white-space: nowrap;
+          font: italic 900 23px/1 Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Black", sans-serif; letter-spacing: .01em;
+          color: #FFD24D; -webkit-text-stroke: 4px #1a0d02; paint-order: stroke fill;
+          text-shadow: 0 0 10px rgba(255,190,60,.85), 0 2px 0 #7a4a08; transform: rotate(-8deg); }
   .tt-fire { position: absolute; z-index: -1; pointer-events: none; max-width: none; max-height: none; }
   .tt-hotbtn { position: relative; box-shadow: 0 0 0 2px #FF8A3D, 0 0 22px rgba(255,120,40,.45) !important; }
   .tt-hot2x {
@@ -4463,7 +4467,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.66</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.67</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -11371,7 +11375,10 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
           var tag = btn.querySelector(".tt-hot2x");
           var on = g.indexOf(GAMES[id]) >= 0;
           var pl = btn.querySelector(".pk-play, .play"), fire = pl && pl.querySelector(".tt-fire");
-          if (!on) { if (tag) tag.remove(); if (fire) fire.remove(); btn.classList.remove("tt-hotbtn"); return; }
+          var mx = pl && pl.querySelector(".tt-x");
+          if (!on) { if (tag) tag.remove(); if (fire) fire.remove(); if (mx) mx.remove(); btn.classList.remove("tt-hotbtn"); return; }
+          if (pl && !mx) { mx = document.createElement("span"); mx.className = "tt-x"; pl.appendChild(mx); }
+          if (mx && mx.textContent !== tagX()) mx.textContent = tagX();
           btn.classList.add("tt-hotbtn");
           if (pl && !fire) { fire = document.createElement("canvas"); fire.className = "tt-fire"; fire.setAttribute("aria-hidden", "true"); pl.insertBefore(fire, pl.firstChild); }
           burn();
