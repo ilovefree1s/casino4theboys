@@ -421,3 +421,5 @@
   .gm-floor { margin: 2px auto 14px; max-width: 100%; }
   .gm-floor[hidden] { display: none; }
   .pk-head:has(+ .gm-floor:not([hidden])) #pk-sign { display: none; }
+  /* the tabs sit right under the title now, above your card */
+  #tt-tabs { margin-top: 12px; }

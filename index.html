@@ -4276,6 +4276,8 @@
   .gm-floor { margin: 2px auto 14px; max-width: 100%; }
   .gm-floor[hidden] { display: none; }
   .pk-head:has(+ .gm-floor:not([hidden])) #pk-sign { display: none; }
+  /* the tabs sit right under the title now, above your card */
+  #tt-tabs { margin-top: 12px; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4579,7 +4581,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.95</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.96</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -5946,6 +5948,11 @@
     <button class="wayout" id="tt-board-x" aria-label="Close the board"><i>&#8249;</i><b>CLOSE</b></button>
     <div id="tt-bhead">THE BOARD</div>
     <div id="tt-bsub"></div>
+    <div id="tt-tabs">
+      <button type="button" data-t="day">YESTERDAY</button>
+      <button type="button" data-t="week" class="on">THE WEEK</button>
+      <button type="button" data-t="msgs">INFO</button>
+    </div>
     <div class="tt-champ" id="tt-champ" hidden>🏆 LAST WEEK <b id="tt-champ-name"></b><span class="n" id="tt-champ-net"></span></div>
     <div class="tt-you" id="tt-you" hidden>
       <img id="tt-you-face" alt="">
@@ -5953,12 +5960,6 @@
       <div class="t"><span class="k">TODAY</span><span id="tt-you-today"></span></div>
     </div>
     <div class="tt-wins" id="tt-wins"></div>
-    <div id="tt-tabs">
-      <button type="button" data-t="day">YESTERDAY</button>
-      <button type="button" data-t="week" class="on">THE WEEK</button>
-      <button type="button" data-t="stats">STATS</button>
-      <button type="button" data-t="msgs">INFO</button>
-    </div>
     <div id="tt-rows"></div>
     <button type="button" class="tt-ruleslink" id="tt-ruleslink">THE RULES</button>
   </div>
