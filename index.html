@@ -4022,7 +4022,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   /* the hot game's own button: a lit border and a 🔥 2× tag in the corner */
   /* a hot game: its PLAY circle (or the leader's face on it) is on fire */
   .tt-hotbtn .play, .tt-hotbtn .pk-play { position: relative; isolation: isolate; }
-  .tt-x { position: absolute; right: -13px; bottom: -3px; z-index: 3; pointer-events: none; white-space: nowrap;
+  .tt-x { position: absolute; right: 48%; bottom: calc(100% - 11px); z-index: 3; pointer-events: none; white-space: nowrap;
           font: italic 900 23px/1 Impact, Haettenschweiler, "Arial Narrow Bold", "Arial Black", sans-serif; letter-spacing: .01em;
           color: #FFD24D; -webkit-text-stroke: 4px #1a0d02; paint-order: stroke fill;
           text-shadow: 0 0 10px rgba(255,190,60,.85), 0 2px 0 #7a4a08; transform: rotate(-8deg); }
@@ -4467,7 +4467,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.67</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.68</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -11382,12 +11382,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
           btn.classList.add("tt-hotbtn");
           if (pl && !fire) { fire = document.createElement("canvas"); fire.className = "tt-fire"; fire.setAttribute("aria-hidden", "true"); pl.insertBefore(fire, pl.firstChild); }
           burn();
-          if (tag && tag.textContent !== "🔥 " + tagX() + " TODAY") { tag.remove(); tag = null; }
-          if (!tag) {
-            tag = document.createElement("span"); tag.className = "tt-hot2x";
-            tag.textContent = "🔥 " + tagX() + " TODAY";
-            btn.appendChild(tag);
-          }
+          if (tag) tag.remove();          // the old pill: the gold number on the circle says it now
         });
       }
       function paintBanner() {

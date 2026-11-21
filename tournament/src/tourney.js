@@ -471,12 +471,7 @@
           btn.classList.add("tt-hotbtn");
           if (pl && !fire) { fire = document.createElement("canvas"); fire.className = "tt-fire"; fire.setAttribute("aria-hidden", "true"); pl.insertBefore(fire, pl.firstChild); }
           burn();
-          if (tag && tag.textContent !== "🔥 " + tagX() + " TODAY") { tag.remove(); tag = null; }
-          if (!tag) {
-            tag = document.createElement("span"); tag.className = "tt-hot2x";
-            tag.textContent = "🔥 " + tagX() + " TODAY";
-            btn.appendChild(tag);
-          }
+          if (tag) tag.remove();          // the old pill: the gold number on the circle says it now
         });
       }
       function paintBanner() {
