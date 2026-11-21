@@ -11649,7 +11649,45 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         box = { x: w / 2 - iw * 0.47, y: (h - ih) / 2 + h * 0.07 + ih * 0.2, w: iw * 0.94, h: ih * 0.5 };
         ready = true;
       };
-      img.src = src;
+      /* a day's piece: GRAFFITI WEEK itself, sprayed big in the middle in the can's blue, with the day over it */
+      function paintWords() {
+        var c = art.getContext("2d"), w = art.width, h = art.height;
+        var fam = SPRAY_OK ? "C4Spray" : "Impact, Haettenschweiler, 'Arial Black', sans-serif";
+        var words = ["GRAFFITI", "WEEK"], size = 112 * S * (SPRAY_OK ? SPRAY_SCALE : 1);
+        c.clearRect(0, 0, w, h);
+        c.font = size + "px " + fam;
+        while (c.measureText(words[0]).width > w * 0.86 && size > 20) { size -= 2; c.font = size + "px " + fam; }
+        var cx = w / 2, cy = h * 0.5, lh = size * 0.98, tw = c.measureText(words[0]).width, i, x, y, r;
+        c.save(); c.translate(cx, cy); c.rotate(-0.07);
+        c.textAlign = "center"; c.textBaseline = "middle";
+        words.forEach(function (wd, k) {
+          var yy = (k - 0.5) * lh;
+          c.shadowColor = "rgba(70,120,255,.95)"; c.shadowBlur = 30 * S; c.fillStyle = "rgba(70,120,255,.4)"; c.fillText(wd, 0, yy);
+          c.shadowColor = "rgba(150,90,255,.95)"; c.shadowBlur = 12 * S; c.fillStyle = "rgba(150,90,255,.55)"; c.fillText(wd, 0, yy);
+          var fg = c.createLinearGradient(0, yy - size / 2, 0, yy + size / 2);
+          fg.addColorStop(0, "#eef8ff"); fg.addColorStop(0.45, "#7cc8ff"); fg.addColorStop(1, "#7a52ff");
+          c.shadowColor = "rgba(160,210,255,.9)"; c.shadowBlur = 3 * S; c.fillStyle = fg; c.fillText(wd, 0, yy);
+        });
+        c.shadowBlur = 0; c.shadowColor = "transparent";
+        c.globalCompositeOperation = "destination-out";            // thin patches where the can moved fast
+        for (i = 0; i < 1300; i++) {
+          x = (Math.random() - 0.5) * (tw + 40 * S); y = (Math.random() - 0.5) * lh * 2.2; r = (0.4 + Math.random() * 1.4) * S;
+          c.fillStyle = "rgba(0,0,0," + (0.25 + Math.random() * 0.5).toFixed(2) + ")"; c.fillRect(x, y, r, r);
+        }
+        c.globalCompositeOperation = "source-over";
+        for (i = 0; i < 700; i++) {                                // specks thrown wide of the letters
+          x = (Math.random() - 0.5) * (tw + 90 * S); y = (Math.random() - 0.5) * lh * 2.8; r = (0.5 + Math.random() * 1.6) * S;
+          c.fillStyle = (Math.random() < 0.6 ? "rgba(120,190,255," : "rgba(160,100,255,") + (0.25 + Math.random() * 0.6).toFixed(2) + ")";
+          c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
+        }
+        c.restore();
+        box = { x: cx - tw / 2 - 18 * S, y: cy - lh - 6 * S, w: tw + 36 * S, h: lh * 2 + 12 * S };
+        ready = true;
+      }
+      if (opts.quick) {
+        var wordsDone = false, wordsGo = function () { if (!wordsDone) { wordsDone = true; paintWords(); } };
+        if (SPRAY_FACE && !SPRAY_OK) { SPRAY_FACE.then(wordsGo, wordsGo); setTimeout(wordsGo, 1500); } else wordsGo();
+      } else img.src = src;
 
       /* the words that go on after the piece */
       var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS";
@@ -11767,9 +11805,27 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         });
         return { legs: legs, total: total };
       })();
+      // for a day's piece the can works across GRAFFITI, comes back, and works across WEEK
+      var WORDS = (function () {
+        var segs = [], row = function (y, x0, x1) { var pts = []; for (var i = 0; i <= 30; i++) { var u = i / 30; pts.push([x0 + (x1 - x0) * u, y + Math.sin(u * 19) * 0.1]); } return pts; };
+        var a = row(0.27, 0.03, 0.97), b = row(0.76, 0.22, 0.8);
+        segs.push({ pts: a, down: true });
+        segs.push({ pts: [a[a.length - 1], b[0]], down: false });
+        segs.push({ pts: b, down: true });
+        var legs = [], total = 0;
+        segs.forEach(function (sg) {
+          for (var k = 1; k < sg.pts.length; k++) {
+            var dx = sg.pts[k][0] - sg.pts[k - 1][0], dy = (sg.pts[k][1] - sg.pts[k - 1][1]) * 0.5;
+            var len = Math.sqrt(dx * dx + dy * dy) * (sg.down ? 1 : 0.4);
+            legs.push({ a: sg.pts[k - 1], b: sg.pts[k], at: total, len: len, down: sg.down }); total += len;
+          }
+        });
+        return { legs: legs, total: total };
+      })();
+      var PATH = opts.quick ? WORDS : ART;
       function artPos(p) {
-        var d = Math.max(0, Math.min(1, p)) * ART.total, L = ART.legs[ART.legs.length - 1];
-        for (var i = 0; i < ART.legs.length; i++) { if (d <= ART.legs[i].at + ART.legs[i].len) { L = ART.legs[i]; break; } }
+        var d = Math.max(0, Math.min(1, p)) * PATH.total, L = PATH.legs[PATH.legs.length - 1];
+        for (var i = 0; i < PATH.legs.length; i++) { if (d <= PATH.legs[i].at + PATH.legs[i].len) { L = PATH.legs[i]; break; } }
         var u = L.len ? Math.min(1, (d - L.at) / L.len) : 1;
         return { x: box.x + box.w * (L.a[0] + (L.b[0] - L.a[0]) * u), y: box.y + box.h * (L.a[1] + (L.b[1] - L.a[1]) * u), down: L.down };
       }
@@ -11866,7 +11922,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           var pa = Math.min(1, (t - A0) / (A1 - A0));
           for (var q = prevA; q <= pa; q += 0.003) {
             var pt = artPos(q);
-            if (pt.down) blob(artMask, pt.x, pt.y, box.w * 0.125, 0.6);
+            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? box.h * 0.34 : box.w * 0.125, 0.6);
           }
           prevA = pa;
           if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
