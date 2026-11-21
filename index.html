@@ -11,6 +11,10 @@
 <script>if ('serviceWorker' in navigator && /^https:/.test(location.protocol)) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">
 <style>html, body { overflow-x: hidden; max-width: 100%; }
+/* tapping fast on a bet spot was picking out its text and bringing up the phone's Copy / Select all bar:
+   nothing in the game is text to pick, except the boxes you type in and Justin's posts */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 /* baccarat: the result pills float in the gap above the chips, so the table doesn't shift when they show */
 #screen-baccarat #pills { height: 0; margin: 0; overflow: visible; align-items: flex-end; align-content: flex-end;
   position: relative; z-index: 3; transform: translateY(-3px); }

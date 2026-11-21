@@ -1062,6 +1062,10 @@ sub("  paintMenu();\n  /* ---------- sound",
 _OLDFS = """/* at a table the fullscreen button sits up top in the middle, between the back button and the money */
 body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left: 50%; margin-left: -17px; }"""
 h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 100%; }
+/* tapping fast on a bet spot was picking out its text and bringing up the phone's Copy / Select all bar:
+   nothing in the game is text to pick, except the boxes you type in and Justin's posts */
+body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: text; user-select: text; -webkit-touch-callout: default; }
 /* baccarat: the result pills float in the gap above the chips, so the table doesn't shift when they show */
 #screen-baccarat #pills { height: 0; margin: 0; overflow: visible; align-items: flex-end; align-content: flex-end;
   position: relative; z-index: 3; transform: translateY(-3px); }
