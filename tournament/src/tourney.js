@@ -216,6 +216,14 @@
     function weekOver() {
       if (TT.closed) return;
       TT.closed = true;
+      // what starts next: a points week gives every game its own $10,000
+      var nextWk = "";
+      try { var nd = new Date((frame && frame.week) + "T12:00:00Z"); nd.setUTCDate(nd.getUTCDate() + 7); nextWk = nd.toISOString().slice(0, 10); } catch (e) {}
+      $("tt-over-big").textContent = "THE WEEK IS OVER";
+      $("tt-over-sub").textContent = isPoints(nextWk)
+        ? "Midnight Saturday. The board is final. Next up is a points week: every game starts at $10,000."
+        : "Midnight Saturday. The board is final and a new week starts at $5,000.";
+      $("tt-over-go").textContent = "SEE WHO WON";
       $("tt-over").classList.add("on");
     }
     /** Midnight under daily rules: today's money is locked in, tomorrow starts at $5,000. */
@@ -1356,7 +1364,7 @@
           store.setStr(seen, "1");
           $("tt-crown-wk").textContent = "WEEK " + (b.week_no - 1) + " CHAMPION";
           $("tt-crown-name").textContent = shown(b.last_champion.name).toUpperCase();
-          $("tt-crown-net").textContent = money(b.last_champion.net);
+          $("tt-crown-net").textContent = moneyS(b.last_champion.net);
           $("tt-crown").classList.add("on");
         }
       }
@@ -1387,13 +1395,13 @@
           if (b.rows.length) list.appendChild(heading("WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"));
           b.rows.forEach(function (r, i) {
             var t = hiw && hiw[r.name.toLowerCase()] ? "HIGHEST CASH $" + fmt(hiw[r.name.toLowerCase()]) : "";
-            list.appendChild(row(i + 1, r.name, t, money(r.net), r.name.toLowerCase() === me));
+            list.appendChild(row(i + 1, r.name, t, moneyS(r.net), r.name.toLowerCase() === me));
           });
           if (!b.rows.length) list.appendChild(empty("No standings from last week."));
         } else {
           // a new week: everybody's name, no money until the first midnight
           var all = roster || [];
-          if (all.length) list.appendChild(heading("WEEK " + b.week_no + " · " + all.length + " PLAYERS · " + (isPoints(b.week) ? "POINTS COME IN AT MIDNIGHT" : "MONEY SHOWS AT MIDNIGHT")));
+          if (all.length) list.appendChild(heading(isPoints(b.week) ? "POINTS COME IN AT MIDNIGHT" : "MONEY SHOWS AT MIDNIGHT"));
           all.forEach(function (p) {
             var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
             el.classList.add("blank");
@@ -1422,7 +1430,7 @@
         var listed = {};
         rows.forEach(function (r) { listed[r.name.toLowerCase()] = 1; });
         var rest = roster.filter(function (p) { return !listed[p.name.toLowerCase()]; });
-        if (!rows.length && rest.length) list.appendChild(heading("THE WEEK · " + roster.length + " PLAYERS · MONEY SHOWS AT MIDNIGHT"));
+        if (!rows.length && rest.length) list.appendChild(heading("MONEY SHOWS AT MIDNIGHT"));
         rest.forEach(function (p) {
           var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
           el.classList.add("blank");

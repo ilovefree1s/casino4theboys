@@ -81,8 +81,8 @@
           fs.style.left = Math.max(0, Math.round(p.left - 8 - 34)) + "px"; fs.style.top = Math.max(4, Math.round(p.top + (p.height - 34) / 2)) + "px";
           fs.style.right = "auto"; fs.style.bottom = "auto"; fs.style.marginLeft = "0";
         } else {
-          fs.style.left = "auto"; fs.style.bottom = "auto"; fs.style.marginLeft = "0";
-          fs.style.right = "12px"; fs.style.top = "calc(env(safe-area-inset-top, 0px) + 12px)";
+          // off the tables it goes back to the corner nothing else uses
+          fs.style.left = ""; fs.style.top = ""; fs.style.right = ""; fs.style.bottom = ""; fs.style.marginLeft = "";
         }
       }
       if (!btn) return;

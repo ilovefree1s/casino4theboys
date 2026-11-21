@@ -1,4 +1,1 @@
-/* the fullscreen button lives top right: in the corner on the menus, just left of your chips at a table (seat.js places it) */
-.fs-btn { top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px; bottom: auto; }
-.fs-hint { top: calc(env(safe-area-inset-top, 0px) + 58px); bottom: auto; right: 10px; }
-.fs-hint::after { top: -8px; bottom: auto; right: 12px; border: 0; border-left: 1px solid rgba(245,241,232,.35); border-top: 1px solid rgba(245,241,232,.35); }
+/* the fullscreen button: bottom right on the menus as it always was; at a table seat.js moves it just left of your chips */
