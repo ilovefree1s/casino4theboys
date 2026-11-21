@@ -36,7 +36,7 @@
 #seat-marker p.n { font-size: 11px; color: rgba(245,241,232,.65); }
 #seat-marker button { padding: 10px 8px 8px; border-radius: 10px; font: 800 14px/1.1 system-ui, sans-serif; letter-spacing: .04em; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 #seat-marker button small { font: 600 10px/1 system-ui, sans-serif; letter-spacing: .04em; opacity: .8; }
-#seat-marker .take { background: #D9B23A; color: #14101c; } #seat-marker .pay { background: rgba(87,224,106,.14); border: 1.5px solid #57E06A; color: #8CF0A0; }
+#seat-marker .take, #seat-marker .more { background: #D9B23A; color: #14101c; } #seat-marker .pay { background: rgba(87,224,106,.14); border: 1.5px solid #57E06A; color: #8CF0A0; }
 #seat-marker button:disabled { background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); color: rgba(245,241,232,.4); }
 
 #seat-btn { position: fixed; z-index: 9998; width: 44px; height: 34px; padding: 0; border-radius: 10px; background: rgba(8,6,14,.78);
@@ -11287,14 +11287,21 @@
       var get = typeof MARKER_AMOUNT !== "undefined" ? MARKER_AMOUNT : 5000, back = Math.round(get * (1 + (typeof MARKER_INTEREST !== "undefined" ? MARKER_INTEREST : 0.5)));
       var still = !(cur && cur.mod.seatOk && !cur.mod.seatOk());
       var why = "", canTake = false, canPay = false;
-      if (Shell.mode !== "campaign") why = "No markers in Play Testing.";
+      var free = Shell.mode !== "campaign", FREE = typeof TESTING_BANKROLL !== "undefined" ? TESTING_BANKROLL : 20000;
+      if (free) why = "";
       else if (TT.on && TT.points) why = "No markers in a points week. Bust a game and REBUY is free.";
       else {
         canTake = still && Shell.canOfferMarker();
         canPay = still && owed > 0 && bank - owed >= risk;
       }
-      var h = '<b class="t">MARKERS</b>';
-      if (why) h += '<p>' + why + '</p>';
+      var h = '<b class="t">' + (free ? "PLAY TESTING" : "MARKERS") + '</b>';
+      if (free) {
+        // play money: another stack whenever you like, nothing owed
+        h += '<p class="o">FREE CHIPS · NOTHING OWED</p>';
+        h += '<button type="button" class="more"' + (still && cur && cur.mod.credit ? '' : ' disabled') + '>TAKE +$' + fmt(FREE) + '<small>as often as you like</small></button>';
+        if (!still) h += '<p class="n">Finish this hand first.</p>';
+      }
+      else if (why) h += '<p>' + why + '</p>';
       else {
         h += '<p class="o">' + (owed > 0 ? 'YOU OWE <i>$' + fmt(owed) + '</i>' + (TT.on && TT.unpaid ? ' · ' + TT.unpaid() + '/' + TT.max() : '') : 'YOU OWE NOTHING') + '</p>';
         h += '<button type="button" class="take"' + (canTake ? '' : ' disabled') + '>TAKE +$' + fmt(get) + '<small>owe $' + fmt(back) + ' back</small></button>';
@@ -11307,7 +11314,8 @@
         if (note) h += '<p class="n">' + note + '</p>';
       }
       pop.innerHTML = h;
-      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay");
+      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay"), mr = pop.querySelector(".more");
+      if (mr) mr.onclick = function () { try { cur.mod.credit(FREE); } catch (e) {} say("+$" + fmt(FREE) + " IN CHIPS"); closePop(); };
       if (tk) tk.onclick = function () { Shell.takeMarker(); syncTable(); say("MARKER TAKEN · +$" + fmt(get)); closePop(); };
       if (py) py.onclick = function () { Shell.payMarker(); syncTable(); say("MARKER PAID"); closePop(); };
     }

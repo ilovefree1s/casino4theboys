@@ -15,5 +15,5 @@
 #seat-marker p.n { font-size: 11px; color: rgba(245,241,232,.65); }
 #seat-marker button { padding: 10px 8px 8px; border-radius: 10px; font: 800 14px/1.1 system-ui, sans-serif; letter-spacing: .04em; display: flex; flex-direction: column; align-items: center; gap: 3px; }
 #seat-marker button small { font: 600 10px/1 system-ui, sans-serif; letter-spacing: .04em; opacity: .8; }
-#seat-marker .take { background: #D9B23A; color: #14101c; } #seat-marker .pay { background: rgba(87,224,106,.14); border: 1.5px solid #57E06A; color: #8CF0A0; }
+#seat-marker .take, #seat-marker .more { background: #D9B23A; color: #14101c; } #seat-marker .pay { background: rgba(87,224,106,.14); border: 1.5px solid #57E06A; color: #8CF0A0; }
 #seat-marker button:disabled { background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); color: rgba(245,241,232,.4); }

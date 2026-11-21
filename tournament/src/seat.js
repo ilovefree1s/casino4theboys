@@ -110,14 +110,21 @@
       var get = typeof MARKER_AMOUNT !== "undefined" ? MARKER_AMOUNT : 5000, back = Math.round(get * (1 + (typeof MARKER_INTEREST !== "undefined" ? MARKER_INTEREST : 0.5)));
       var still = !(cur && cur.mod.seatOk && !cur.mod.seatOk());
       var why = "", canTake = false, canPay = false;
-      if (Shell.mode !== "campaign") why = "No markers in Play Testing.";
+      var free = Shell.mode !== "campaign", FREE = typeof TESTING_BANKROLL !== "undefined" ? TESTING_BANKROLL : 20000;
+      if (free) why = "";
       else if (TT.on && TT.points) why = "No markers in a points week. Bust a game and REBUY is free.";
       else {
         canTake = still && Shell.canOfferMarker();
         canPay = still && owed > 0 && bank - owed >= risk;
       }
-      var h = '<b class="t">MARKERS</b>';
-      if (why) h += '<p>' + why + '</p>';
+      var h = '<b class="t">' + (free ? "PLAY TESTING" : "MARKERS") + '</b>';
+      if (free) {
+        // play money: another stack whenever you like, nothing owed
+        h += '<p class="o">FREE CHIPS · NOTHING OWED</p>';
+        h += '<button type="button" class="more"' + (still && cur && cur.mod.credit ? '' : ' disabled') + '>TAKE +$' + fmt(FREE) + '<small>as often as you like</small></button>';
+        if (!still) h += '<p class="n">Finish this hand first.</p>';
+      }
+      else if (why) h += '<p>' + why + '</p>';
       else {
         h += '<p class="o">' + (owed > 0 ? 'YOU OWE <i>$' + fmt(owed) + '</i>' + (TT.on && TT.unpaid ? ' · ' + TT.unpaid() + '/' + TT.max() : '') : 'YOU OWE NOTHING') + '</p>';
         h += '<button type="button" class="take"' + (canTake ? '' : ' disabled') + '>TAKE +$' + fmt(get) + '<small>owe $' + fmt(back) + ' back</small></button>';
@@ -130,7 +137,8 @@
         if (note) h += '<p class="n">' + note + '</p>';
       }
       pop.innerHTML = h;
-      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay");
+      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay"), mr = pop.querySelector(".more");
+      if (mr) mr.onclick = function () { try { cur.mod.credit(FREE); } catch (e) {} say("+$" + fmt(FREE) + " IN CHIPS"); closePop(); };
       if (tk) tk.onclick = function () { Shell.takeMarker(); syncTable(); say("MARKER TAKEN · +$" + fmt(get)); closePop(); };
       if (py) py.onclick = function () { Shell.payMarker(); syncTable(); say("MARKER PAID"); closePop(); };
     }
