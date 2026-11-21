@@ -405,6 +405,56 @@
         paintBadges();
         return r;
       };
+      /* ---- fire on a hot game's PLAY circle: embers thrown off the rim that rise, narrow and burn out ---- */
+      var SPARK = null, fireRaf = 0, fireLast = 0;
+      function sprite(rgb) {
+        var c = document.createElement("canvas"); c.width = c.height = 64;
+        var x = c.getContext("2d"), g = x.createRadialGradient(32, 32, 0, 32, 32, 32);
+        g.addColorStop(0, "rgba(" + rgb + ",1)"); g.addColorStop(0.35, "rgba(" + rgb + ",.55)"); g.addColorStop(1, "rgba(" + rgb + ",0)");
+        x.fillStyle = g; x.fillRect(0, 0, 64, 64); return c;
+      }
+      function burn() { if (!fireRaf) { fireLast = 0; fireRaf = requestAnimationFrame(fireFrame); } }
+      function fireFrame(now) {
+        fireRaf = 0;
+        var cvs = document.querySelectorAll(".tt-fire"), live = 0;
+        if (!cvs.length) return;
+        if (!SPARK) SPARK = [sprite("255,226,120"), sprite("255,140,24"), sprite("236,62,8"), sprite("120,22,4")];
+        var dt = Math.min(0.05, fireLast ? (now - fireLast) / 1000 : 0.016); fireLast = now;
+        for (var i = 0; i < cvs.length; i++) {
+          var cv = cvs[i], pl = cv.parentNode;
+          if (!pl || cv.offsetParent === null) continue;                       // its menu isn't up: nothing to draw
+          live++;
+          var d = pl.offsetWidth; if (!d) continue;
+          var dpr = Math.min(2, window.devicePixelRatio || 1), W = d * 2.2, H = d * 2.15, cx = W / 2, cy = H - d * 0.78, R = d / 2;
+          if (cv._d !== d) { cv._d = d; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); cv.style.width = W + "px"; cv.style.height = H + "px";
+                             cv.style.left = (d - W) / 2 - pl.clientLeft + "px"; cv.style.top = (R - cy) - pl.clientTop + "px"; cv._p = []; }
+          var P = cv._p, c = cv.getContext("2d"), k, p;
+          // feed it all round the rim; what starts low climbs the sides, what starts high makes the tips
+          for (var n = 0; n < 8; n++) {
+            var a = Math.random() * 6.283, rr = R * (0.98 + Math.random() * 0.2), up = Math.sin(a) < 0 ? 1 : 0.75;
+            P.push({ x: cx + Math.cos(a) * rr, y: cy + Math.sin(a) * rr, vx: Math.cos(a) * d * 0.3, vy: -d * (0.5 + Math.random() * 0.9) * up,
+                     age: 0, life: 0.38 + Math.random() * 0.42, s: d * (0.2 + Math.random() * 0.2), ph: Math.random() * 6.28 });
+          }
+          c.setTransform(dpr, 0, 0, dpr, 0, 0); c.globalCompositeOperation = "source-over"; c.clearRect(0, 0, W, H); c.globalCompositeOperation = "lighter";
+          for (k = P.length - 1; k >= 0; k--) {
+            p = P[k]; p.age += dt;
+            var t = p.age / p.life;
+            if (t >= 1) { P.splice(k, 1); continue; }
+            p.vx += ((cx - p.x) * 2.4 + Math.sin(now / 110 + p.ph) * d * 2.2) * dt;          // lean in to a point, and waver
+            p.vx *= 1 - 2.5 * dt; p.vy -= d * 1.0 * dt;
+            p.x += p.vx * dt; p.y += p.vy * dt;
+            var sz = p.s * (1.15 - t * 0.85);
+            c.globalAlpha = (t < 0.1 ? t / 0.1 : 1 - (t - 0.1) / 0.9) * 0.5;
+            c.drawImage(SPARK[t < 0.22 ? 0 : t < 0.5 ? 1 : t < 0.8 ? 2 : 3], p.x - sz / 2, p.y - sz / 2, sz, sz);
+          }
+          // nothing burns inside the circle itself
+          c.globalAlpha = 1; c.globalCompositeOperation = "destination-out";
+          c.beginPath(); c.arc(cx, cy, R - 1.5, 0, 6.283); c.fill();
+          c.globalAlpha = 1;
+        }
+        if (live && !(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) fireRaf = requestAnimationFrame(fireFrame);
+        else if (!live) setTimeout(function () { if (document.querySelector(".tt-fire")) burn(); }, 500);     // look again when a menu opens
+      }
       /** A 🔥 2× tag on the hot game's own button, wherever it's listed. */
       function paintBadges() {
         var g = TT.on && TT.day ? list() : [];
@@ -413,8 +463,11 @@
           if (!btn) return;
           var tag = btn.querySelector(".tt-hot2x");
           var on = g.indexOf(GAMES[id]) >= 0;
-          if (!on) { if (tag) tag.remove(); btn.classList.remove("tt-hotbtn"); return; }
+          var pl = btn.querySelector(".pk-play, .play"), fire = pl && pl.querySelector(".tt-fire");
+          if (!on) { if (tag) tag.remove(); if (fire) fire.remove(); btn.classList.remove("tt-hotbtn"); return; }
           btn.classList.add("tt-hotbtn");
+          if (pl && !fire) { fire = document.createElement("canvas"); fire.className = "tt-fire"; fire.setAttribute("aria-hidden", "true"); pl.insertBefore(fire, pl.firstChild); }
+          burn();
           if (tag && tag.textContent !== "🔥 " + tagX() + " TODAY") { tag.remove(); tag = null; }
           if (!tag) {
             tag = document.createElement("span"); tag.className = "tt-hot2x";
