@@ -400,3 +400,7 @@
   .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 8px; }
   .mm-lane.tourney .tt-place { margin-top: 0; }
   .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) .nm { font-size: clamp(24px, 8.3vw, 38px); white-space: nowrap; min-width: 0; }
+  #tt-lane-days[hidden] { display: none; }
+  #tt-lane-days { margin-top: 12px; }
+  #tt-lane-days .tt-day { background: rgba(255,255,255,.05); }
+  .mm-lane.tourney .tt-stats { margin-top: 12px; }

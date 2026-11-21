@@ -509,7 +509,27 @@
       $("tt-play").disabled = !playOn;
       // one plain line: the tidy card's pieces step aside
       $("tt-line").hidden = false; $("tt-tag").hidden = false;
-      ["tt-place", "tt-hots", "tt-stats"].forEach(function (id) { $(id).hidden = true; });
+      ["tt-place", "tt-hots", "tt-stats", "tt-lane-days"].forEach(function (id) { $(id).hidden = true; });
+    }
+    /** One cell per day of the week with the face of whoever won it (an empty ring if nobody has yet); the board leads with last week's champ. */
+    function dayStrip(host, b, withChamp) {
+      host.innerHTML = "";
+      var cell = function (cls, name, label, tip) {
+        var c = document.createElement("span"); c.className = "tt-day " + cls;
+        if (name) { var im = document.createElement("img"); im.alt = ""; im.src = faceOf(String(name).toLowerCase()); c.appendChild(im); }
+        else c.appendChild(document.createElement("i"));
+        var l = document.createElement("b"); l.textContent = label; c.appendChild(l);
+        if (tip) c.title = tip;
+        return c;
+      };
+      var lc = b.last_champion, champName = lc && (isPoints(lc.week) ? ((pointsCache[lc.week] || [])[0] || {}).name : lc.name);
+      if (withChamp && champName) host.appendChild(cell("champ", champName, "CHAMP", shown(champName) + " won last week"));
+      var won = {}; (b.daily_winners || []).forEach(function (w) { won[w.day] = w; });
+      for (var di = 0; di < 7; di++) {
+        var dt = new Date(b.week + "T12:00:00Z"); dt.setUTCDate(dt.getUTCDate() + di);
+        var w = won[dt.toISOString().slice(0, 10)];
+        host.appendChild(w ? cell("", w.name, DAYS[di].charAt(0), shown(w.name) + " " + signedS(w.profit)) : cell("no", null, DAYS[di].charAt(0)));
+      }
     }
     function nth(n) { var t = n % 100; return n + (t > 10 && t < 14 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"); }
     /**
@@ -523,6 +543,8 @@
       var hots = $("tt-hots"); hots.hidden = !c.hot.length; hots.innerHTML = "";
       c.hot.forEach(function (g) { var t = document.createElement("span"); t.className = "g"; t.textContent = "🔥 " + g.toUpperCase(); hots.appendChild(t); });
       var x = document.createElement("b"); x.textContent = c.x + "$"; hots.appendChild(x);
+      var ld = $("tt-lane-days"); ld.hidden = !c.week;
+      if (c.week) dayStrip(ld, c.week, false);
       $("tt-stats").hidden = false;
       $("tt-st-day").textContent = c.day;
       $("tt-st-k").textContent = c.k; $("tt-st-v").textContent = c.v; $("tt-st-v").className = c.cls || "";
@@ -572,7 +594,7 @@
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
       if (b.daily) return laneCard({ place: rank, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
                                      k: "TODAY", v: signedS(you.today), cls: you.today > 0 ? "up" : you.today < 0 ? "down" : "",
-                                     bk: "BEST 3 DAYS", bv: moneyS(you.score || 0) });
+                                     bk: "BEST 3 DAYS", bv: moneyS(you.score || 0), week: b });
       laneSay(money(you.net) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }
@@ -1349,25 +1371,7 @@
         }
       }
       // the week at a glance: last week's champ, then one face per day for whoever won it
-      if (!isPoints(b.week)) {
-        var cell = function (cls, name, label, tip) {
-          var c = document.createElement("span"); c.className = "tt-day " + cls;
-          if (name) { var im = document.createElement("img"); im.alt = ""; im.src = faceOf(String(name).toLowerCase()); c.appendChild(im); }
-          else c.appendChild(document.createElement("i"));
-          var l = document.createElement("b"); l.textContent = label; c.appendChild(l);
-          if (tip) c.title = tip;
-          return c;
-        };
-        var lc = b.last_champion, champName = lc && (isPoints(lc.week) ? ((pointsCache[lc.week] || [])[0] || {}).name : lc.name);
-        if (champName) wins.appendChild(cell("champ", champName, "CHAMP", shown(champName) + " won last week"));
-        var won = {}; b.daily_winners.forEach(function (w) { won[w.day] = w; });
-        for (var di = 0; di < 7; di++) {
-          var dt = new Date(b.week + "T12:00:00Z"); dt.setUTCDate(dt.getUTCDate() + di);
-          var iso = dt.toISOString().slice(0, 10), w = won[iso];
-          wins.appendChild(w ? cell("", w.name, DAYS[di].charAt(0), shown(w.name) + " " + signedS(w.profit))
-                             : cell("no", null, DAYS[di].charAt(0)));
-        }
-      }
+      if (!isPoints(b.week)) dayStrip(wins, b, true);
 
       // the first tab is yesterday's day, or last week's final standings until this week has a midnight
       var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
