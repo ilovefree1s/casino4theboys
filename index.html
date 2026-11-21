@@ -4561,7 +4561,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.92</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.93</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -11019,8 +11019,8 @@
       { head: "POINTS", frame: ["#ffb3da", "#ff3d9a"], lit: ["#fff3d6", "#ffb02e"],
         art: '<div class="gd-pts"><div><b>3</b><i>PTS</i><span>3 GAMES</span></div><div><b>2</b><i>PTS</i><span>5 GAMES</span></div><div><b>1</b><i>PT</i><span>THE REST</span></div></div>',
         body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
-      { head: "WHO'S ON TOP", frame: ["#b6ffd6", "#22d37a"], lit: ["#e3f2ff", "#2f8cff"], top: true,
-        body: "<b>Every game's button shows who's on top.</b> It shows how much they have and what the game is worth today. Beat their number to take the points from them." },
+      { head: '<span style="font-size:38px;white-space:nowrap">WHO\'S ON TOP</span>', frame: ["#b6ffd6", "#22d37a"], lit: ["#e3f2ff", "#2f8cff"], top: true,
+        body: "<b>Every game's button shows who's on top.</b> Their face is in the PLAY circle with their money under it. The gold tag is the game's points. Beat their number to take them." },
       { head: "HOT GAMES", frame: ["#7fc4ff", "#2f8cff"], lit: ["#ffe9f4", "#ff3d9a"],
         art: '<div class="gd-hot">' + FLAME + '<b>1.5×</b></div>',
         body: "<b>Two games a day pay 1.5× on every win.</b> Different games each day. Look for the 🔥 on the menu." },
@@ -11028,16 +11028,16 @@
         art: '<div class="gd-trophy">' + CUP + '</div>',
         body: "<b>Points add up all week.</b> Sunday through Saturday night. Go broke on a game? <b>REBUY is free</b> and puts you back at $10,000." }
     ];
-    /* three made-up leaders on three game buttons, with real faces off the wall */
+    /* three made-up leaders on three game buttons, drawn the way the real buttons show them:
+       the points on the top edge, the leader's face in the PLAY circle, their money under it */
     function topArt() {
       var f = {}; try { f = (typeof Walkups !== "undefined" && Walkups.faces && Walkups.faces()) || {}; } catch (e) {}
       var names = Object.keys(f).sort(function () { return Math.random() - 0.5; });
-      var rows = [["BLACKJACK", "$41,250", 3], ["CRAPS", "$27,800", 2], ["ROULETTE", "$18,400", 1]];
+      var rows = [["BLACKJACK", "$41,250", 3, "#B98CFF"], ["CRAPS", "$27,800", 2, "#57E06A"], ["ROULETTE", "$18,400", 1, "#7fc4ff"]];
       return '<div class="gd-top">' + rows.map(function (r, i) {
-        var n = names[i] || ["QTIP", "JUICE", "COUGAR"][i];
-        var pic = f[n] ? '<img src="' + f[n] + '" alt="">' : '<span class="gd-noface">🙂</span>';
-        return '<div class="gd-tile">' + pic + '<div class="gd-who"><b>' + r[0] + '</b><span>' + CROWN + String(n).toUpperCase() + '</span></div>' +
-          '<div class="gd-amt"><b>' + r[1] + '</b><span>' + r[2] + ' PT' + (r[2] > 1 ? 'S' : '') + '</span></div></div>';
+        var n = names[i], pic = n && f[n] ? '<img src="' + f[n] + '" alt="">' : '<span class="gd-noface">🙂</span>';
+        return '<div class="gd-tile" style="--tc:' + r[3] + '"><span class="gd-pt">' + r[2] + ' PT' + (r[2] > 1 ? 'S' : '') + '</span>' +
+          '<b class="gd-game">' + r[0] + '</b><span class="gd-lead">' + pic + '<i>' + r[1] + '</i></span></div>';
       }).join("") + '<div class="gd-eg">EXAMPLE</div></div>';
     }
     var demoing = false;
@@ -11081,18 +11081,17 @@
           "#tt-demo .gd-pts>div:nth-child(1){" + tube("#fff3d6", "#ffb02e") + "}#tt-demo .gd-pts>div:nth-child(2){" + tube("#ffe9f4", "#ff3d9a") + "}#tt-demo .gd-pts>div:nth-child(3){" + tube("#e3f2ff", "#2f8cff") + "}" +
           "#tt-demo .gd-pts span{margin-top:8px;font:700 10px system-ui,sans-serif;letter-spacing:.14em;color:#dfe6f2;text-shadow:none}" +
           // 3
-          "#tt-demo .gd-top{width:100%;display:flex;flex-direction:column;gap:9px;padding:0 4px;box-sizing:border-box}" +
-          "#tt-demo .gd-tile{display:flex;align-items:center;gap:10px;padding:7px 12px 7px 7px;border-radius:999px;border:2px solid #b9c6dc;background:rgba(255,255,255,.04);box-shadow:0 0 8px rgba(160,190,255,.35),inset 0 0 8px rgba(160,190,255,.18);text-align:left}" +
-          "#tt-demo .gd-tile:first-child{border-color:#ffe7a0;box-shadow:0 0 10px #ffb02e,0 0 22px rgba(255,176,46,.6),inset 0 0 10px rgba(255,176,46,.5)}" +
-          "#tt-demo .gd-tile img,#tt-demo .gd-noface{width:46px;height:46px;border-radius:50%;object-fit:cover;border:2px solid #ffe7a0;box-shadow:0 0 10px #ffb02e;flex:none;display:flex;align-items:center;justify-content:center;font-size:24px;background:#222}" +
-          "#tt-demo .gd-who{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}" +
-          "#tt-demo .gd-who b{font:400 19px " + NE + ";letter-spacing:.06em;color:#fff}" +
-          "#tt-demo .gd-who span{display:flex;align-items:center;gap:4px;font:700 10px system-ui,sans-serif;letter-spacing:.12em;color:#ffe7a0;white-space:nowrap;overflow:hidden}" +
-          "#tt-demo .gd-who svg{width:12px;height:12px;flex:none}" +
-          "#tt-demo .gd-amt{display:flex;flex-direction:column;align-items:flex-end;gap:1px}" +
-          "#tt-demo .gd-amt b{font:400 19px " + NE + ";" + tube("#e6fff0", "#22d37a") + "}" +
-          "#tt-demo .gd-amt span{font:400 12px " + NE + ";letter-spacing:.14em;" + tube("#ffe9f4", "#ff3d9a") + "}" +
-          "#tt-demo .gd-eg{font:700 9px system-ui,sans-serif;letter-spacing:.24em;color:#aeb8cc;margin-top:2px}" +
+          "#tt-demo .gd-top{width:100%;display:flex;flex-direction:column;gap:13px;padding:8px 6px 0;box-sizing:border-box}" +
+          "#tt-demo .gd-tile{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 14px 5px 16px;border-radius:16px;" +
+            "border:2px solid var(--tc);background:rgba(255,255,255,.04);box-shadow:0 0 8px var(--tc),inset 0 0 8px rgba(255,255,255,.06);text-align:left}" +
+          "#tt-demo .gd-pt{position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:3px 9px;border-radius:999px;background:#FFD24D;color:#14101c;" +
+            "font:900 10px/1 system-ui,sans-serif;letter-spacing:.08em;white-space:nowrap;box-shadow:0 0 10px rgba(255,210,77,.7)}" +
+          "#tt-demo .gd-game{font:400 22px/1 " + NE + ";letter-spacing:.05em;color:#fff;text-shadow:0 0 8px var(--tc),0 0 18px var(--tc)}" +
+          "#tt-demo .gd-lead{display:flex;flex-direction:column;align-items:center;gap:3px;flex:none}" +
+          "#tt-demo .gd-lead img,#tt-demo .gd-noface{width:36px;height:36px;border-radius:50%;object-fit:cover;border:2.5px solid var(--tc);box-shadow:0 0 10px var(--tc);" +
+            "display:flex;align-items:center;justify-content:center;font-size:22px;background:#222;box-sizing:border-box}" +
+          "#tt-demo .gd-lead i{font:900 12px/1 system-ui,sans-serif;font-style:normal;color:#57E06A;text-shadow:0 0 8px rgba(87,224,106,.6);white-space:nowrap}" +
+          "#tt-demo .gd-eg{font:700 9px system-ui,sans-serif;letter-spacing:.24em;color:#aeb8cc;margin-top:-4px}" +
           // 4, 5
           "#tt-demo .gd-hot{display:flex;align-items:center;gap:4px;" + tube("#fff3d6", "#ff8a2b") + "}" +
           "#tt-demo .gd-hot svg{width:66px;height:66px;filter:drop-shadow(0 0 5px #ff8a2b) drop-shadow(0 0 14px #ff8a2b)}" +
