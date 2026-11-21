@@ -9,9 +9,9 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.85"
+VERSION = "1.86"
 h = open(src, encoding="utf-8").read()
-SEAT = bool(__import__("os").environ.get("SEAT"))      # seat save and the moved fullscreen button: built in only when asked for, until it ships
+SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
 def sub(old, new, count=1):
     global h
