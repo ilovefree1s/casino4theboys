@@ -4122,12 +4122,26 @@
   .tt-msg .hd b { color: #FF9A66; }
   .tt-msg .hd button { margin-left: auto; color: rgba(245,241,232,.45); font-size: 14px; padding: 0 4px; }
   .tt-msg p { margin: 7px 0 0; font-size: 14px; line-height: 1.4; color: var(--bone); white-space: pre-wrap; overflow-wrap: anywhere; }
-  .tt-compose { display: flex; flex-direction: column; gap: 8px; margin-bottom: 6px; }
-  .tt-compose textarea { width: 100%; min-height: 70px; padding: 10px 12px; border-radius: 11px; resize: vertical;
-                         background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.6); color: var(--bone);
+  .tt-compose { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 2px; }
+  .tt-compose textarea { flex: 1; min-width: 0; height: 42px; min-height: 42px; padding: 10px 12px; border-radius: 12px; resize: none;
+                         background: rgba(255,255,255,.06); border: 1px solid rgba(255,122,61,.5); color: var(--bone);
                          font: 14px/1.4 inherit; outline: none; }
-  .tt-compose button { align-self: flex-end; padding: 9px 22px; border-radius: 999px; background: #FF7A3D; color: #120604;
-                       font-family: var(--display); font-size: 11px; letter-spacing: .2em; }
+  .tt-compose button { flex: none; height: 42px; padding: 0 16px; border-radius: 12px; background: #FF7A3D; color: #120604;
+                       font-family: var(--display); font-size: 11px; letter-spacing: .16em; }
+  .tt-rhd { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .tt-rpills { display: flex; gap: 5px; }
+  .tt-rpills button { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,122,61,.55); color: #FF9A66;
+                      font: 800 9px system-ui, sans-serif; letter-spacing: .1em; }
+  .tt-rpills button.on { background: #FF7A3D; border-color: #FF7A3D; color: #120604; }
+  .tt-fold { border-radius: 12px; background: #110E13; border: 1px solid rgba(255,255,255,.08); }
+  .tt-fold > button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 13px; text-align: left; color: var(--bone); }
+  .tt-fold > button i { flex: none; width: 24px; text-align: center; font-style: normal; font-size: 17px; }
+  .tt-fold > button b { flex: 1; font: 800 14px/1.25 system-ui, sans-serif; }
+  .tt-fold > button em { flex: none; font-style: normal; font-size: 12px; color: rgba(245,241,232,.45); transition: transform .15s; }
+  .tt-fold.open > button em { transform: rotate(90deg); }
+  .tt-fold > p { display: none; margin: 0; padding: 0 13px 12px 47px; font-size: 13px; line-height: 1.45; color: rgba(245,241,232,.78); }
+  .tt-fold.open > p { display: block; }
+  .tt-fold > p b { color: var(--bone); }
   .tt-compose button:disabled { opacity: .5; }
 
   /* joining by face */
@@ -13150,13 +13164,15 @@
       }
       return box;
     }
-    var rulesWeek = "this", boardFresh = false, autoMsgs = false;
+    var rulesWeek = "this", rulesOpen = {}, boardFresh = false, autoMsgs = false;
     function paintMsgs(list) {
       if (isJustin()) {
         var box = document.createElement("div"); box.className = "tt-compose";
-        var ta = document.createElement("textarea"); ta.maxLength = 1000; ta.placeholder = "Say something to everybody…";
+        var ta = document.createElement("textarea"); ta.rows = 1; ta.maxLength = 1000; ta.placeholder = "Say something to everybody…";
         ta.value = store.getStr("ftt.msgdraft", "");
-        ta.addEventListener("input", function () { store.setStr("ftt.msgdraft", ta.value); });
+        var fit = function () { ta.style.height = "auto"; ta.style.height = Math.min(160, ta.scrollHeight + 2) + "px"; };
+        ta.addEventListener("input", function () { store.setStr("ftt.msgdraft", ta.value); fit(); });
+        setTimeout(fit, 0);
         var go = document.createElement("button"); go.type = "button"; go.textContent = "POST";
         go.addEventListener("click", function () {
           var t = ta.value.trim(); if (!t) return;
@@ -13169,7 +13185,9 @@
         });
         box.appendChild(ta); box.appendChild(go); list.appendChild(box);
       }
+      list.appendChild(heading("NEWS"));
       if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); }
+      else if (!msgs.length) list.appendChild(empty("Nothing new."));
       (msgs || []).forEach(function (m) {
         var el = document.createElement("div"); el.className = "tt-msg" + (m.id > msgSeenAtOpen ? " new" : "");
         var hd = document.createElement("div"); hd.className = "hd";
@@ -13195,25 +13213,46 @@
       setRules(rulesWeek === "next" ? { week: nx } : null);
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
-        list.appendChild(heading("THE RULES"));
-        if ((isPoints(wk) || isPoints(nx)) && typeof Intro !== "undefined" && Intro.demo) {
-          var hw = document.createElement("div"); hw.className = "tt-rweek";
-          var hb = document.createElement("button"); hb.type = "button"; hb.className = "on"; hb.textContent = "▶ HOW IT WORKS";
-          hb.onclick = function () { Intro.demo(); };
-          hw.appendChild(hb); list.appendChild(hw);
-        }
+        // one line a rule; tap a line to open it
+        var rh = heading("THE RULES"); rh.classList.add("tt-rhd");
         if (differs) {
-          var sw = document.createElement("div"); sw.className = "tt-rweek";
+          var sw = document.createElement("span"); sw.className = "tt-rpills";
           [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {
             var bt = document.createElement("button"); bt.type = "button"; bt.textContent = o[1];
             if (rulesWeek === o[0]) bt.className = "on";
             bt.onclick = function () { rulesWeek = o[0]; paintBoard(); };
             sw.appendChild(bt);
           });
-          list.appendChild(sw);
+          rh.appendChild(sw);
         }
-        var copy = ol.cloneNode(true); copy.classList.add("tt-msgrules");
-        list.appendChild(copy);
+        list.appendChild(rh);
+        var pts = isPoints(rulesWeek === "next" ? nx : wk);
+        var icons = pts ? ["💵", "🔁", "🎯", "🕛", "🏆", "🔥", "🙂"] : ["💵", "🏆", "🔥", "📝", "📋", "📱"];
+        [].forEach.call(ol.children, function (li, i) {
+          var c = li.cloneNode(true), b = c.querySelector("b");
+          var title = b ? b.textContent : "Rule " + (i + 1);
+          if (b) c.removeChild(b);
+          title = title.replace(/^[^A-Za-z0-9$]+/, "").replace(/[.:,]\s*$/, "");
+          if (title === "Markers") title = "Markers: up to 3 at a time";
+          var f = c.firstChild;
+          if (f && f.nodeType === 3) f.textContent = f.textContent.replace(/^\s*([a-z])/, function (m, ch) { return ch.toUpperCase(); });
+          var key = (pts ? "p" : "d") + i;
+          var el = document.createElement("div"); el.className = "tt-fold" + (rulesOpen[key] ? " open" : "");
+          var hd = document.createElement("button"); hd.type = "button";
+          var ic = document.createElement("i"); ic.textContent = icons[i] || "•";
+          var tx = document.createElement("b"); tx.textContent = title;
+          var ch = document.createElement("em"); ch.textContent = "▸";
+          hd.appendChild(ic); hd.appendChild(tx); hd.appendChild(ch);
+          var body = document.createElement("p"); body.innerHTML = c.innerHTML;
+          hd.onclick = function () { rulesOpen[key] = !rulesOpen[key]; el.classList.toggle("open", !!rulesOpen[key]); };
+          el.appendChild(hd); el.appendChild(body); list.appendChild(el);
+        });
+        if ((isPoints(wk) || isPoints(nx)) && typeof Intro !== "undefined" && Intro.demo) {
+          var hw = document.createElement("div"); hw.className = "tt-rweek";
+          var hb = document.createElement("button"); hb.type = "button"; hb.className = "on"; hb.textContent = "▶ HOW IT WORKS";
+          hb.onclick = function () { Intro.demo(); };
+          hw.appendChild(hb); list.appendChild(hw);
+        }
       }
       setRules();   // the rules sheet itself stays on this week
       markRead();

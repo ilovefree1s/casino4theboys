@@ -1844,13 +1844,15 @@
       }
       return box;
     }
-    var rulesWeek = "this", boardFresh = false, autoMsgs = false;
+    var rulesWeek = "this", rulesOpen = {}, boardFresh = false, autoMsgs = false;
     function paintMsgs(list) {
       if (isJustin()) {
         var box = document.createElement("div"); box.className = "tt-compose";
-        var ta = document.createElement("textarea"); ta.maxLength = 1000; ta.placeholder = "Say something to everybody…";
+        var ta = document.createElement("textarea"); ta.rows = 1; ta.maxLength = 1000; ta.placeholder = "Say something to everybody…";
         ta.value = store.getStr("ftt.msgdraft", "");
-        ta.addEventListener("input", function () { store.setStr("ftt.msgdraft", ta.value); });
+        var fit = function () { ta.style.height = "auto"; ta.style.height = Math.min(160, ta.scrollHeight + 2) + "px"; };
+        ta.addEventListener("input", function () { store.setStr("ftt.msgdraft", ta.value); fit(); });
+        setTimeout(fit, 0);
         var go = document.createElement("button"); go.type = "button"; go.textContent = "POST";
         go.addEventListener("click", function () {
           var t = ta.value.trim(); if (!t) return;
@@ -1863,7 +1865,9 @@
         });
         box.appendChild(ta); box.appendChild(go); list.appendChild(box);
       }
+      list.appendChild(heading("NEWS"));
       if (!msgs) { list.appendChild(empty("Loading…")); loadMsgs(); }
+      else if (!msgs.length) list.appendChild(empty("Nothing new."));
       (msgs || []).forEach(function (m) {
         var el = document.createElement("div"); el.className = "tt-msg" + (m.id > msgSeenAtOpen ? " new" : "");
         var hd = document.createElement("div"); hd.className = "hd";
@@ -1889,25 +1893,46 @@
       setRules(rulesWeek === "next" ? { week: nx } : null);
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
-        list.appendChild(heading("THE RULES"));
-        if ((isPoints(wk) || isPoints(nx)) && typeof Intro !== "undefined" && Intro.demo) {
-          var hw = document.createElement("div"); hw.className = "tt-rweek";
-          var hb = document.createElement("button"); hb.type = "button"; hb.className = "on"; hb.textContent = "▶ HOW IT WORKS";
-          hb.onclick = function () { Intro.demo(); };
-          hw.appendChild(hb); list.appendChild(hw);
-        }
+        // one line a rule; tap a line to open it
+        var rh = heading("THE RULES"); rh.classList.add("tt-rhd");
         if (differs) {
-          var sw = document.createElement("div"); sw.className = "tt-rweek";
+          var sw = document.createElement("span"); sw.className = "tt-rpills";
           [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {
             var bt = document.createElement("button"); bt.type = "button"; bt.textContent = o[1];
             if (rulesWeek === o[0]) bt.className = "on";
             bt.onclick = function () { rulesWeek = o[0]; paintBoard(); };
             sw.appendChild(bt);
           });
-          list.appendChild(sw);
+          rh.appendChild(sw);
         }
-        var copy = ol.cloneNode(true); copy.classList.add("tt-msgrules");
-        list.appendChild(copy);
+        list.appendChild(rh);
+        var pts = isPoints(rulesWeek === "next" ? nx : wk);
+        var icons = pts ? ["💵", "🔁", "🎯", "🕛", "🏆", "🔥", "🙂"] : ["💵", "🏆", "🔥", "📝", "📋", "📱"];
+        [].forEach.call(ol.children, function (li, i) {
+          var c = li.cloneNode(true), b = c.querySelector("b");
+          var title = b ? b.textContent : "Rule " + (i + 1);
+          if (b) c.removeChild(b);
+          title = title.replace(/^[^A-Za-z0-9$]+/, "").replace(/[.:,]\s*$/, "");
+          if (title === "Markers") title = "Markers: up to 3 at a time";
+          var f = c.firstChild;
+          if (f && f.nodeType === 3) f.textContent = f.textContent.replace(/^\s*([a-z])/, function (m, ch) { return ch.toUpperCase(); });
+          var key = (pts ? "p" : "d") + i;
+          var el = document.createElement("div"); el.className = "tt-fold" + (rulesOpen[key] ? " open" : "");
+          var hd = document.createElement("button"); hd.type = "button";
+          var ic = document.createElement("i"); ic.textContent = icons[i] || "•";
+          var tx = document.createElement("b"); tx.textContent = title;
+          var ch = document.createElement("em"); ch.textContent = "▸";
+          hd.appendChild(ic); hd.appendChild(tx); hd.appendChild(ch);
+          var body = document.createElement("p"); body.innerHTML = c.innerHTML;
+          hd.onclick = function () { rulesOpen[key] = !rulesOpen[key]; el.classList.toggle("open", !!rulesOpen[key]); };
+          el.appendChild(hd); el.appendChild(body); list.appendChild(el);
+        });
+        if ((isPoints(wk) || isPoints(nx)) && typeof Intro !== "undefined" && Intro.demo) {
+          var hw = document.createElement("div"); hw.className = "tt-rweek";
+          var hb = document.createElement("button"); hb.type = "button"; hb.className = "on"; hb.textContent = "▶ HOW IT WORKS";
+          hb.onclick = function () { Intro.demo(); };
+          hw.appendChild(hb); list.appendChild(hw);
+        }
       }
       setRules();   // the rules sheet itself stays on this week
       markRead();
