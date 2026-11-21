@@ -1106,7 +1106,9 @@
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : null;
       return f && Object.keys(f).length && (now() >= FACE_FROM || isPoints(board && board.week)) ? f : null;
     }
-    function askName(then) {
+    /** From Settings, for someone with no picture: straight to the name box. */
+    TT.signUp = function () { if (ready) askName(function () { refreshLane(); }, true); };
+    function askName(then, typeIt) {
       var faces = faceMode(), picked = "", typing = false;
       var grid = $("tt-faces"), sub = document.querySelector("#tt-join .sub");
       $("tt-pin").value = "";
@@ -1157,14 +1159,18 @@
         // faces somebody already has are greyed out (still tappable, so the owner can get back in with the PIN)
         rpc("c4tb_names", {}).then(function (names) {
           if (!Array.isArray(names)) return;
-          var t = {}; names.forEach(function (x) { t[String(x).toLowerCase()] = 1; });
+          // a player still under an old made-up name holds the face that name belongs to
+          var t = {}; names.forEach(function (x) {
+            var lk = String(x).toLowerCase(); t[lk] = 1;
+            var al = FACE_ALIAS[lk.replace(/[^a-z0-9]/g, "")]; if (al) t[al] = 1;
+          });
           grid.querySelectorAll("button[data-face]").forEach(function (x) {
             var f = x.getAttribute("data-face").toLowerCase();
             x.classList.toggle("taken", !!t[f] && f !== (myName() || "").toLowerCase());
           });
         }, function () {});
         // signed in before under a typed name: open on the name box
-        if (myName() && !picked) setTyping(true);
+        if ((myName() && !picked) || typeIt) setTyping(true);
       } else {
         $("tt-typename").hidden = true;
         $("tt-name").style.display = "";
@@ -1199,7 +1205,10 @@
           if (faces && !typing) { try { store.setStr("c4tb.walkme", n); } catch (e) {} }
           $("tt-join").classList.remove("on");
           // you're in: the piece goes up on the wall while the tournament loads behind it
-          if (faces && typeof Intro !== "undefined") { try { Intro.play(function () { try { Intro.demo(); } catch (e) {} }); } catch (e) {} }
+          if (faces && typeof Intro !== "undefined") {
+            try { if (board && board.week) store.setStr("ftt.weekintro", board.week); } catch (e) {}
+            try { Intro.play(function () { try { Intro.demo(); } catch (e) {} }); } catch (e) {}
+          }
           if (then) then(); else refreshLane();
         }, function () {
           $("tt-join-go").disabled = false;
@@ -1291,6 +1300,12 @@
         hot.banner();
         if (TT.points) points.leaders();
         if (local) push();
+        // already signed up from last week: the first time into a points week they get the piece and the tips too
+        if (TT.points && typeof Intro !== "undefined" && store.getStr("ftt.weekintro", "") !== s.week) {
+          store.setStr("ftt.weekintro", s.week);
+          if (s.day) store.setStr("ftt.dayintro", s.day);
+          if (!Intro.isPlaying()) { try { Intro.play(function () { try { Intro.demo(); } catch (e) {} }); } catch (e) {} }
+        }
         // a new day of a points week: the first time in, the can writes which day it is
         if (TT.points && s.day && typeof Intro !== "undefined") {
           var seenDay = store.getStr("ftt.dayintro", "");

@@ -191,17 +191,29 @@
         box = document.createElement("div"); box.id = "wu-me"; box.className = "st-dial"; box.style.setProperty("--c", "#FFD24D");
         host.appendChild(box);
       }
-      var mine = me(), people = Object.keys(FACES);
+      var mine = me(), people = Object.keys(FACES), typed = "";
+      try { typed = store.getStr("ftt.name", ""); } catch (e) {}
       box.innerHTML = '<i class="edge"></i><div class="hd"><span class="nm">WHO ARE YOU?</span><span class="pc">' +
-        (mine ? mine.toUpperCase() : "NOBODY") + '</span></div><span class="sub">YOU WON\'T WALK UP TO YOURSELF AT THE TABLES</span>' +
+        (mine ? mine.toUpperCase() : typed ? typed.toUpperCase() : "NOBODY") + '</span></div><span class="sub">YOU WON\'T WALK UP TO YOURSELF AT THE TABLES</span>' +
         '<div class="wu-grid">' + people.map(function (n) {
           return '<button type="button" data-me="' + n + '" class="' + (n === mine ? "on" : "") + '"><img alt="" src="' + FACES[n] + '"><b>' + n + "</b></button>";
-        }).join("") + '<button type="button" data-me="" class="' + (mine ? "" : "on") + '"><span class="wu-none">?</span><b>Nobody</b></button></div>';
+        }).join("") + '<button type="button" data-me="" class="' + (mine ? "" : "on") + '"><span class="wu-none">?</span><b>Not on here</b></button></div>';
       box.querySelectorAll("button[data-me]").forEach(function (b) {
         b.onclick = function () {
           try { store.setStr(ME_KEY, b.getAttribute("data-me")); } catch (e) {}
           deck = [];
           paintMe();
+          // no picture: type your name and pick a PIN, which signs you up for the tournament under it
+          if (!b.getAttribute("data-me") && typeof TT !== "undefined" && TT.signUp) {
+            var had = ""; try { had = store.getStr("ftt.name", ""); } catch (e) {}
+            if (!had) {
+              TT.signUp();
+              var seen = setInterval(function () {
+                var ov = document.getElementById("tt-join");
+                if (ov && !ov.classList.contains("on")) { clearInterval(seen); paintMe(); }
+              }, 400);
+            }
+          }
         };
       });
     }
