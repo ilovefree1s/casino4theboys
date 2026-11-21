@@ -165,6 +165,44 @@
         box = { x: w / 2 - iw * 0.47, y: (h - ih) / 2 + h * 0.07 + ih * 0.2, w: iw * 0.94, h: ih * 0.5 };
         ready = true;
       };
+      /* Letter by letter: where each letter of a line sits (left and right edge, from the line's start),
+         and a path that takes the can through each one in turn — a quick Z inside the letter, then a hop. */
+      function lettersOf(c, text) {
+        var out = [], acc = 0;
+        for (var i = 0; i < text.length; i++) {
+          var wch = c.measureText(text.slice(0, i + 1)).width - acc;
+          if (text[i] !== " ") out.push([acc, acc + wch]);
+          acc += wch;
+        }
+        return { xs: out, w: acc };
+      }
+      function letterPath(rows, cx, cy, rot) {
+        var legs = [], total = 0, prev = null, hmax = 0, co = Math.cos(rot), si = Math.sin(rot);
+        function P(x, y) { return [cx + x * co - y * si, cy + x * si + y * co]; }
+        function seg(a, b, down) {
+          var len = Math.hypot(b[0] - a[0], b[1] - a[1]) * (down ? 1 : 0.35);
+          legs.push({ a: a, b: b, at: total, len: len, down: down }); total += len;
+        }
+        rows.forEach(function (row) {
+          hmax = Math.max(hmax, row.h);
+          row.xs.forEach(function (lx) {
+            var x0 = row.left + lx[0], x1 = row.left + lx[1], wd = x1 - x0, t = row.y - row.h * 0.28, b = row.y + row.h * 0.26;
+            var pts = [P(x0 + wd * 0.22, t), P(x0 + wd * 0.8, t + row.h * 0.05), P(x0 + wd * 0.22, b), P(x0 + wd * 0.8, b)];
+            if (prev) seg(prev, pts[0], false);
+            for (var k = 1; k < pts.length; k++) seg(pts[k - 1], pts[k], true);
+            prev = pts[pts.length - 1];
+          });
+        });
+        return { legs: legs, total: total || 1, r: hmax * 0.36 };
+      }
+      function pathPos(P, p) {
+        var d = Math.max(0, Math.min(1, p)) * P.total, L = P.legs[P.legs.length - 1];
+        for (var i = 0; i < P.legs.length; i++) { if (d <= P.legs[i].at + P.legs[i].len) { L = P.legs[i]; break; } }
+        var u = L.len ? Math.min(1, (d - L.at) / L.len) : 1;
+        return { x: L.a[0] + (L.b[0] - L.a[0]) * u, y: L.a[1] + (L.b[1] - L.a[1]) * u, down: L.down };
+      }
+      var wordPath = null;
+
       /* a day's piece: GRAFFITI WEEK itself, sprayed big in the middle in the can's blue, with the day over it */
       function paintWords() {
         var c = art.getContext("2d"), w = art.width, h = art.height;
@@ -198,6 +236,10 @@
         }
         c.restore();
         box = { x: cx - tw / 2 - 18 * S, y: cy - lh - 6 * S, w: tw + 36 * S, h: lh * 2 + 12 * S };
+        c.font = size + "px " + fam;
+        wordPath = letterPath(words.map(function (wd, k) {
+          var L = lettersOf(c, wd); return { y: (k - 0.5) * lh, h: size, left: -L.w / 2, xs: L.xs };
+        }), cx, cy, -0.07);
         ready = true;
       }
       if (opts.quick) {
@@ -230,6 +272,8 @@
         c.restore();
         var tw = c.measureText(line1).width;
         tBox = { x: cx - tw / 2 - 26 * S, y: cy - size * 0.75, w: tw + 52 * S, h: size * 1.5, cy: cy, size: size };
+        var LF = lettersOf(c, line1);
+        tBox.path = letterPath([{ y: 0, h: size, left: -LF.w / 2, xs: LF.xs }], cx, cy, -0.055);
       }
       /* The title as paint, not type: no outline, soft edges, a halo of overspray, thin patches and specks. */
       function paintSpray(c, w, h) {
@@ -254,15 +298,18 @@
           x = (Math.random() - 0.5) * (tw + 40 * S); y = (Math.random() - 0.5) * size * 1.2; r = (0.4 + Math.random() * 1.3) * S;
           c.fillStyle = "rgba(0,0,0," + (0.25 + Math.random() * 0.5).toFixed(2) + ")"; c.fillRect(x, y, r, r);
         }
-        // and specks thrown wide of the letters
+        // and specks thrown wide of the letters (not on a day's screen: the wall already has its blue)
         c.globalCompositeOperation = "source-over";
-        for (i = 0; i < 520; i++) {
+        for (i = 0; i < (opts.quick ? 0 : 520); i++) {
           x = (Math.random() - 0.5) * (tw + 90 * S); y = (Math.random() - 0.5) * size * 1.9; r = (0.5 + Math.random() * 1.6) * S;
           c.fillStyle = (Math.random() < 0.6 ? "rgba(255,190,50," : "rgba(255,60,140,") + (0.25 + Math.random() * 0.6).toFixed(2) + ")";
           c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
         }
         c.restore();
         tBox = { x: cx - tw / 2 - 30 * S, y: cy - size * 0.85, w: tw + 60 * S, h: size * 1.7, cy: cy, size: size * 0.8 };
+        c.font = size + "px C4Spray";
+        var LT = lettersOf(c, line1);
+        tBox.path = letterPath([{ y: 0, h: size, left: -LT.w / 2, xs: LT.xs }], cx, cy, -0.055);
       }
       paintTitle();
       if (SPRAY_FACE && !SPRAY_OK) SPRAY_FACE.then(function () { SPRAY_OK = true; paintTitle(); }, function () {});
@@ -338,14 +385,16 @@
         });
         return { legs: legs, total: total };
       })();
-      var PATH = opts.quick ? WORDS : ART;
       function artPos(p) {
+        if (opts.quick && wordPath) return pathPos(wordPath, p);
+        var PATH = opts.quick ? WORDS : ART;
         var d = Math.max(0, Math.min(1, p)) * PATH.total, L = PATH.legs[PATH.legs.length - 1];
         for (var i = 0; i < PATH.legs.length; i++) { if (d <= PATH.legs[i].at + PATH.legs[i].len) { L = PATH.legs[i]; break; } }
         var u = L.len ? Math.min(1, (d - L.at) / L.len) : 1;
         return { x: box.x + box.w * (L.a[0] + (L.b[0] - L.a[0]) * u), y: box.y + box.h * (L.a[1] + (L.b[1] - L.a[1]) * u), down: L.down };
       }
       function txtPos(p) {
+        if (tBox.path) return pathPos(tBox.path, p);
         return { x: tBox.x + tBox.w * p, y: tBox.cy + Math.sin(p * 22) * tBox.h * 0.22 };
       }
       /* Drips: they run from the real bottom edge of a painted letter, in that letter's own colour.
@@ -601,7 +650,7 @@
           var pa = Math.min(1, (t - A0) / (A1 - A0));
           for (var q = prevA; q <= pa; q += 0.003) {
             var pt = artPos(q);
-            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? box.h * 0.34 : box.w * 0.125, 0.6);
+            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? (wordPath ? wordPath.r : box.h * 0.34) : box.w * 0.125, 0.6);
           }
           prevA = pa;
           if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
@@ -621,12 +670,12 @@
         // 2) the words
         if (t >= T0) {
           var pw = Math.min(1, (t - T0) / (T1 - T0));
-          for (var q2 = prevT; q2 <= pw; q2 += 0.006) {
+          for (var q2 = prevT; q2 <= pw; q2 += 0.003) {
             var p2 = txtPos(q2);
-            blob(txtMask, p2.x, p2.y, tBox.h * 0.62, 0.75);
+            if (p2.down !== false) blob(txtMask, p2.x, p2.y, tBox.path ? tBox.path.r : tBox.h * 0.62, 0.75);
           }
           prevT = pw;
-          if (pw < 1) { nozzle = txtPos(pw); puff(nozzle.x, nozzle.y, "255,190,60"); }
+          if (pw < 1) { nozzle = txtPos(pw); if (nozzle.down !== false) puff(nozzle.x, nozzle.y, "255,190,60"); }
           else {
             var c3 = txtMask.getContext("2d");
             c3.fillStyle = "rgba(255,255,255,.3)"; c3.fillRect(tBox.x, tBox.y, tBox.w, tBox.h);
@@ -678,7 +727,8 @@
         }
 
         // the mist coming off the can, and the can's cone of spray
-        hiss(!!nozzle);
+        var spraying = !!nozzle && nozzle.down !== false;      // between letters the hand lifts: no paint, no hiss
+        hiss(spraying);
         // the can itself: shaken first, then held off the wall and worked across it, then pulled away
         var want, paint = paintRes || (t < T0 - 150 ? "blue" : "orange");
         if (t < A0) want = { x: cv.width * 0.5, y: cv.height * 0.5 + Math.sin(t / 26) * 16 * S, tilt: -0.5 + Math.sin(t / 26) * 0.12 };
@@ -688,7 +738,7 @@
         if (!can) can = { x: want.x, y: want.y, tilt: want.tilt };
         var k = nozzle ? 1 : Math.min(1, (now - last) / 110);
         can.x += (want.x - can.x) * k; can.y += (want.y - can.y) * k; can.tilt += (want.tilt - can.tilt) * Math.min(1, (now - last) / 80);
-        if (nozzle) {
+        if (spraying) {
           // the fan of paint from the nozzle to the wall
           var ang = Math.atan2(nozzle.y - can.y, nozzle.x - can.x), dist = Math.hypot(nozzle.x - can.x, nozzle.y - can.y), sprd = 0.42;
           var fan = g.createRadialGradient(can.x, can.y, 2 * S, can.x, can.y, dist * 1.25);
@@ -700,7 +750,7 @@
           cone.addColorStop(0, "rgba(255,255,255,.45)"); cone.addColorStop(1, "rgba(255,255,255,0)");
           g.fillStyle = cone; g.fillRect(nozzle.x - 24 * S, nozzle.y - 24 * S, 48 * S, 48 * S);
         }
-        drawCan(can.x, can.y, can.tilt, paint, !!nozzle);
+        drawCan(can.x, can.y, can.tilt, paint, spraying);
         for (var i = mist.length - 1; i >= 0; i--) {
           var m = mist[i];
           m.x += m.vx; m.y += m.vy; m.life -= 0.035;
