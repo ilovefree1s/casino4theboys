@@ -1373,7 +1373,6 @@
               var playDay = function (results) {
                 if (once) return; once = true;
                 try { Intro.play({ quick: true, title: dayNo === 7 ? "FINAL DAY" : "DAY " + dayNo,
-                                   sub: hot.today(today).toUpperCase() + " PAY " + hot.tagX(today),
                                    results: results, resultsTitle: "DAY " + (dayNo - 1) + " RESULTS" }); } catch (e) {}
               };
               var yd = (function () { var d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();

@@ -11690,7 +11690,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       } else img.src = src;
 
       /* the words that go on after the piece */
-      var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS";
+      var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.quick ? (opts.sub || "") : (opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS");
       var tBox = null;
       function paintTitle() {
         var c = txt.getContext("2d"), w = txt.width, h = txt.height;
@@ -11956,7 +11956,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         var top = h * 0.32, bottom = h * 0.68, step = (bottom - top) / Math.max(1, n - 1 || 1);
         if (n === 1) top = h * 0.48;
         RES.forEach(function (r, k) {
-          var cy = n === 1 ? top : top + step * k, big = r.place === 1, md = MEDAL[r.place] || MEDAL[3];
+          var cy = n === 1 ? top : bottom - step * k, big = r.place === 1, md = MEDAL[r.place] || MEDAL[3];
           var cnv = layer(), c = cnv.getContext("2d"), x0 = w * 0.06, x1 = w * 0.94;
           var rot = (k % 2 ? 0.025 : -0.03);
           c.save(); c.translate(w / 2, cy); c.rotate(rot); c.translate(-w / 2, -cy);
@@ -12076,7 +12076,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         g.globalCompositeOperation = "source-over";
         g.drawImage(wall, 0, 0);
         if (t >= A0) spray(specks.blue, Math.min(1, (t - A0) / (A1 - A0)) * 1.04);
-        if (t >= T0) spray(specks.warm, Math.min(1, (t - T0) / (T1 - T0)) * 1.04);
+        if (t >= T0 && !opts.quick) spray(specks.warm, Math.min(1, (t - T0) / (T1 - T0)) * 1.04);
         g.drawImage(spat, 0, 0);
 
         // 1) the piece
@@ -12122,7 +12122,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           show(txtMask, txt);
         }
         // 3) the small line under it, stencilled on
-        if (t >= SUB) {
+        if (t >= SUB && line2) {
           var a = Math.min(1, (t - SUB) / 300);
           g.save();
           g.globalAlpha = a;
@@ -12143,7 +12143,6 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           for (var qc = prevC; qc <= cp; qc += 0.0025) { var pc = coverPos(qc); blob(res.cover, pc.x, pc.y, cv.height * 0.12, 0.85); }
           prevC = cp;
           if (cp < 1) { nozzle = coverPos(cp); paintRes = "black"; puff(nozzle.x, nozzle.y, "40,40,46"); }
-          else if (!covered) { covered = true; var cc = res.cover.getContext("2d"); cc.fillStyle = "#fff"; cc.fillRect(0, 0, cv.width, cv.height); }
           show(res.cover, res.black);
           var at = 1300;
           res.items.forEach(function (it, k) {
@@ -12447,7 +12446,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         tip.remove();
         if (day) {
           var fc = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
-          Intro.play({ quick: true, title: "DAY 2", sub: "PLINKO & MINES PAY 1.5×", resultsTitle: "DAY 1 RESULTS",
+          Intro.play({ quick: true, title: "DAY 2", resultsTitle: "DAY 1 RESULTS",
                        results: [{ place: 1, name: "JUSTIN", pts: 12, face: fc.Justin }, { place: 2, name: "MATT", pts: 8, face: fc.Matthew },
                                  { place: 3, name: "JACOB", pts: 4, face: fc.Zac }] });
         }
@@ -13832,7 +13831,6 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
               var playDay = function (results) {
                 if (once) return; once = true;
                 try { Intro.play({ quick: true, title: dayNo === 7 ? "FINAL DAY" : "DAY " + dayNo,
-                                   sub: hot.today(today).toUpperCase() + " PAY " + hot.tagX(today),
                                    results: results, resultsTitle: "DAY " + (dayNo - 1) + " RESULTS" }); } catch (e) {}
               };
               var yd = (function () { var d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
