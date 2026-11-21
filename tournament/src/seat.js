@@ -91,6 +91,59 @@
       btn.hidden = false;
       btn.style.left = Math.round(b.right + 7) + "px"; btn.style.top = Math.max(4, Math.round(b.top + (b.height - 34) / 2)) + "px";
     }
+    /* ---- tap your money at a table: take or pay a marker without walking back to the lobby ---- */
+    var pop = null;
+    function closePop() { if (pop) { pop.remove(); pop = null; } }
+    function syncTable() { try { if (cur && cur.mod.credit && cur.mod.cash) cur.mod.credit(Shell.getBankroll() - cur.mod.cash()); } catch (e) {} }
+    function openPop(anchor) {
+      closePop();
+      pop = document.createElement("div"); pop.id = "seat-marker";
+      var r = anchor.getBoundingClientRect();
+      pop.style.top = Math.round(r.bottom + 6) + "px";
+      pop.style.right = Math.max(6, Math.round(innerWidth - r.right)) + "px";
+      document.body.appendChild(pop);
+      paintPop();
+    }
+    function paintPop() {
+      if (!pop) return;
+      var owed = Shell.getDebt(), bank = Shell.getBankroll(), risk = atRisk();
+      var get = typeof MARKER_AMOUNT !== "undefined" ? MARKER_AMOUNT : 5000, back = Math.round(get * (1 + (typeof MARKER_INTEREST !== "undefined" ? MARKER_INTEREST : 0.5)));
+      var still = !(cur && cur.mod.seatOk && !cur.mod.seatOk());
+      var why = "", canTake = false, canPay = false;
+      if (Shell.mode !== "campaign") why = "No markers in Play Testing.";
+      else if (TT.on && TT.points) why = "No markers in a points week. Bust a game and REBUY is free.";
+      else {
+        canTake = still && Shell.canOfferMarker();
+        canPay = still && owed > 0 && bank - owed >= risk;
+      }
+      var h = '<b class="t">MARKERS</b>';
+      if (why) h += '<p>' + why + '</p>';
+      else {
+        h += '<p class="o">' + (owed > 0 ? 'YOU OWE <i>$' + fmt(owed) + '</i>' + (TT.on && TT.unpaid ? ' · ' + TT.unpaid() + '/' + TT.max() : '') : 'YOU OWE NOTHING') + '</p>';
+        h += '<button type="button" class="take"' + (canTake ? '' : ' disabled') + '>TAKE +$' + fmt(get) + '<small>owe $' + fmt(back) + ' back</small></button>';
+        h += '<button type="button" class="pay"' + (canPay ? '' : ' disabled') + '>' + (owed > 0 ? 'PAY $' + fmt(owed) : 'PAY MARKER') + '<small>' + (owed > 0 ? 'clears what you owe' : 'nothing to pay') + '</small></button>';
+        var note = !still ? "Finish this hand first."
+          : !canTake && Shell.canTakeMarker() ? "The house lends once you're low on chips, same as in the lobby."
+          : !canTake && !owed ? "" : !canTake ? "You're at the limit on markers."
+          : "";
+        if (owed > 0 && still && !canPay) note = bank < owed ? "Not enough to pay it yet." : "Take some chips off the felt to pay it.";
+        if (note) h += '<p class="n">' + note + '</p>';
+      }
+      pop.innerHTML = h;
+      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay");
+      if (tk) tk.onclick = function () { Shell.takeMarker(); syncTable(); say("MARKER TAKEN · +$" + fmt(get)); closePop(); };
+      if (py) py.onclick = function () { Shell.payMarker(); syncTable(); say("MARKER PAID"); closePop(); };
+    }
+    document.addEventListener("click", function (e) {
+      if (pop && e.target.closest && e.target.closest("#seat-marker")) return;
+      var had = !!pop; closePop();
+      var m = e.target.closest && e.target.closest(".purse, .uth-money, #rl-bankroll, #rl-staked");
+      if (!m || had || !cur) return;
+      var scr = m.closest(".screen");
+      if (!scr || !scr.classList.contains("on")) return;
+      openPop(m.id === "rl-staked" ? (document.getElementById("rl-bankroll") || m) : m);
+    }, true);
+
     function init() {
       wrap();
       btn = document.createElement("button"); btn.type = "button"; btn.id = "seat-btn"; btn.hidden = true;

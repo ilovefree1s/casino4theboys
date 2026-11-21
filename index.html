@@ -25,6 +25,19 @@
 #rl-sign.on { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: calc(var(--sw) * 14 / 836); }
 #rl-sign .nm { font-size: calc(var(--sw) * 22 / 836); letter-spacing: .03em; }
 #rl-sign .sub { margin: 0; }
+/* tap your money at a table for markers */
+.screen .purse, .screen .uth-money, #rl-bankroll, #rl-staked { cursor: pointer; }
+#rl-bankroll, #rl-staked { z-index: 12; }
+#seat-marker { position: fixed; z-index: 10010; width: 208px; padding: 12px; border-radius: 14px; background: rgba(12,10,18,.98); border: 1.5px solid #D9B23A;
+  box-shadow: 0 10px 28px rgba(0,0,0,.7); color: #F5F1E8; font-family: system-ui, sans-serif; display: flex; flex-direction: column; gap: 8px; }
+#seat-marker .t { font: 800 11px/1 system-ui, sans-serif; letter-spacing: .18em; color: #FFD24D; }
+#seat-marker p { margin: 0; font: 600 12px/1.35 system-ui, sans-serif; color: rgba(245,241,232,.8); }
+#seat-marker p.o { font: 800 13px/1.2 system-ui, sans-serif; color: #fff; } #seat-marker p.o i { font-style: normal; color: #FF8FA0; }
+#seat-marker p.n { font-size: 11px; color: rgba(245,241,232,.65); }
+#seat-marker button { padding: 10px 8px 8px; border-radius: 10px; font: 800 14px/1.1 system-ui, sans-serif; letter-spacing: .04em; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+#seat-marker button small { font: 600 10px/1 system-ui, sans-serif; letter-spacing: .04em; opacity: .8; }
+#seat-marker .take { background: #D9B23A; color: #14101c; } #seat-marker .pay { background: rgba(87,224,106,.14); border: 1.5px solid #57E06A; color: #8CF0A0; }
+#seat-marker button:disabled { background: rgba(255,255,255,.06); border: 1.5px solid rgba(255,255,255,.14); color: rgba(245,241,232,.4); }
 
 #seat-btn { position: fixed; z-index: 9998; width: 44px; height: 34px; padding: 0; border-radius: 10px; background: rgba(8,6,14,.78);
   border: 1px solid rgba(255,210,77,.55); color: #FFD24D; font: 800 8.5px/1.15 system-ui, sans-serif; letter-spacing: .08em; text-align: center; }
@@ -4566,7 +4579,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.94</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.95</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10490,6 +10503,59 @@
       btn.hidden = false;
       btn.style.left = Math.round(b.right + 7) + "px"; btn.style.top = Math.max(4, Math.round(b.top + (b.height - 34) / 2)) + "px";
     }
+    /* ---- tap your money at a table: take or pay a marker without walking back to the lobby ---- */
+    var pop = null;
+    function closePop() { if (pop) { pop.remove(); pop = null; } }
+    function syncTable() { try { if (cur && cur.mod.credit && cur.mod.cash) cur.mod.credit(Shell.getBankroll() - cur.mod.cash()); } catch (e) {} }
+    function openPop(anchor) {
+      closePop();
+      pop = document.createElement("div"); pop.id = "seat-marker";
+      var r = anchor.getBoundingClientRect();
+      pop.style.top = Math.round(r.bottom + 6) + "px";
+      pop.style.right = Math.max(6, Math.round(innerWidth - r.right)) + "px";
+      document.body.appendChild(pop);
+      paintPop();
+    }
+    function paintPop() {
+      if (!pop) return;
+      var owed = Shell.getDebt(), bank = Shell.getBankroll(), risk = atRisk();
+      var get = typeof MARKER_AMOUNT !== "undefined" ? MARKER_AMOUNT : 5000, back = Math.round(get * (1 + (typeof MARKER_INTEREST !== "undefined" ? MARKER_INTEREST : 0.5)));
+      var still = !(cur && cur.mod.seatOk && !cur.mod.seatOk());
+      var why = "", canTake = false, canPay = false;
+      if (Shell.mode !== "campaign") why = "No markers in Play Testing.";
+      else if (TT.on && TT.points) why = "No markers in a points week. Bust a game and REBUY is free.";
+      else {
+        canTake = still && Shell.canOfferMarker();
+        canPay = still && owed > 0 && bank - owed >= risk;
+      }
+      var h = '<b class="t">MARKERS</b>';
+      if (why) h += '<p>' + why + '</p>';
+      else {
+        h += '<p class="o">' + (owed > 0 ? 'YOU OWE <i>$' + fmt(owed) + '</i>' + (TT.on && TT.unpaid ? ' · ' + TT.unpaid() + '/' + TT.max() : '') : 'YOU OWE NOTHING') + '</p>';
+        h += '<button type="button" class="take"' + (canTake ? '' : ' disabled') + '>TAKE +$' + fmt(get) + '<small>owe $' + fmt(back) + ' back</small></button>';
+        h += '<button type="button" class="pay"' + (canPay ? '' : ' disabled') + '>' + (owed > 0 ? 'PAY $' + fmt(owed) : 'PAY MARKER') + '<small>' + (owed > 0 ? 'clears what you owe' : 'nothing to pay') + '</small></button>';
+        var note = !still ? "Finish this hand first."
+          : !canTake && Shell.canTakeMarker() ? "The house lends once you're low on chips, same as in the lobby."
+          : !canTake && !owed ? "" : !canTake ? "You're at the limit on markers."
+          : "";
+        if (owed > 0 && still && !canPay) note = bank < owed ? "Not enough to pay it yet." : "Take some chips off the felt to pay it.";
+        if (note) h += '<p class="n">' + note + '</p>';
+      }
+      pop.innerHTML = h;
+      var tk = pop.querySelector(".take"), py = pop.querySelector(".pay");
+      if (tk) tk.onclick = function () { Shell.takeMarker(); syncTable(); say("MARKER TAKEN · +$" + fmt(get)); closePop(); };
+      if (py) py.onclick = function () { Shell.payMarker(); syncTable(); say("MARKER PAID"); closePop(); };
+    }
+    document.addEventListener("click", function (e) {
+      if (pop && e.target.closest && e.target.closest("#seat-marker")) return;
+      var had = !!pop; closePop();
+      var m = e.target.closest && e.target.closest(".purse, .uth-money, #rl-bankroll, #rl-staked");
+      if (!m || had || !cur) return;
+      var scr = m.closest(".screen");
+      if (!scr || !scr.classList.contains("on")) return;
+      openPop(m.id === "rl-staked" ? (document.getElementById("rl-bankroll") || m) : m);
+    }, true);
+
     function init() {
       wrap();
       btn = document.createElement("button"); btn.type = "button"; btn.id = "seat-btn"; btn.hidden = true;
