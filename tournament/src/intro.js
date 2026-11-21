@@ -606,6 +606,16 @@
       }
       next.onclick = function () { mus.chips(); if (at < CARDS.length - 1) { at++; show(); } else close(); };
       skip.onclick = close;
+      // a swipe turns the page too: left for the next tip, right to go back one
+      var sx = null, sy = 0;
+      wrap.addEventListener("touchstart", function (e) { var t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+      wrap.addEventListener("touchend", function (e) {
+        if (sx === null) return;
+        var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
+        if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+        if (dx < 0 && at < CARDS.length - 1) { at++; mus.chips(); show(); }
+        else if (dx > 0 && at > 0) { at--; mus.chips(); show(); }
+      }, { passive: true });
       show();
     }
 
