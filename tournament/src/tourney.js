@@ -498,7 +498,7 @@
         el.style.display = g ? "" : "none";
         if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY " + tagX();
       }
-      return { today: today, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra, tableOf: tableOf,
+      return { today: today, list: list, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra, tableOf: tableOf,
                banner: function () { paintBanner(); paintBadges(); } };
     })();
 
@@ -507,6 +507,26 @@
       $("tt-line").textContent = line;
       $("tt-play").textContent = play;
       $("tt-play").disabled = !playOn;
+      // one plain line: the tidy card's pieces step aside
+      $("tt-line").hidden = false; $("tt-tag").hidden = false;
+      ["tt-place", "tt-hots", "tt-stats"].forEach(function (id) { $(id).hidden = true; });
+    }
+    function nth(n) { var t = n % 100; return n + (t > 10 && t < 14 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"); }
+    /**
+     * The front page once you're playing: your place beside the title, today's hot games under it,
+     * then the day, one number of yours, and a second in a box over BOARD.
+     */
+    function laneCard(c) {
+      $("tt-play").textContent = "PLAY"; $("tt-play").disabled = false;
+      $("tt-line").hidden = true; $("tt-tag").hidden = true;
+      $("tt-place").hidden = !c.place; $("tt-place-n").textContent = c.place ? nth(c.place) : "";
+      var hots = $("tt-hots"); hots.hidden = !c.hot.length; hots.innerHTML = "";
+      c.hot.forEach(function (g) { var t = document.createElement("span"); t.className = "g"; t.textContent = "🔥 " + g.toUpperCase(); hots.appendChild(t); });
+      var x = document.createElement("b"); x.textContent = c.x + "$"; hots.appendChild(x);
+      $("tt-stats").hidden = false;
+      $("tt-st-day").textContent = c.day;
+      $("tt-st-k").textContent = c.k; $("tt-st-v").textContent = c.v; $("tt-st-v").className = c.cls || "";
+      $("tt-st-bk").textContent = c.bk; $("tt-st-bv").textContent = c.bv;
     }
     var roster = null;   // everyone signed up: names only
     function refreshLane() {
@@ -545,12 +565,14 @@
         var pb = pointsCache[b.week], mine2 = null, rk = 0;
         if (!pb) getPoints(b.week).then(paintLane);
         (pb || []).forEach(function (r, i) { if (r.name.toLowerCase() === me.toLowerCase()) { mine2 = r; rk = i + 1; } });
-        return laneSay("POINTS WEEK · " + (mine2 ? mine2.points + " PTS" + (rk ? " · #" + rk : "") : "0 PTS") +
-                       " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
+        return laneCard({ place: mine2 && mine2.points > 0 ? rk : 0, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
+                          k: "YOUR POINTS", v: (mine2 ? mine2.points : 0) + " PTS", cls: "gold",
+                          bk: "GAMES WON", bv: String(mine2 ? mine2.wins : 0) });
       }
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
-      if (b.daily) return laneSay("BEST 3 DAYS " + money(you.score || 0) + " · TODAY " + signed(you.today) +
-              (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
+      if (b.daily) return laneCard({ place: rank, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
+                                     k: "TODAY", v: signedS(you.today), cls: you.today > 0 ? "up" : you.today < 0 ? "down" : "",
+                                     bk: "BEST 3 DAYS", bv: moneyS(you.score || 0) });
       laneSay(money(you.net) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }

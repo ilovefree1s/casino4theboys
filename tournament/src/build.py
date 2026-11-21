@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.74"
+VERSION = "1.75"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -48,8 +48,13 @@ sub("      <!-- the run -->\n",
     """      <!-- the week-long contest -->
       <div class="mm-lane tourney" style="--c:#FF7A3D">
         <i class="edge"></i>
-        <div class="mm-hdr"><span class="nm">TOURNAMENT</span><span class="tag" id="tt-tag">THIS WEEK</span></div>
+        <div class="mm-hdr"><span class="nm">TOURNAMENT</span><span class="tag" id="tt-tag">THIS WEEK</span><span class="tt-place" id="tt-place" hidden><b id="tt-place-n"></b><i>PLACE</i></span></div>
+        <div class="tt-hots" id="tt-hots" hidden></div>
         <div class="tt-line" id="tt-line">CONNECTING…</div>
+        <div class="tt-stats" id="tt-stats" hidden>
+          <div class="l"><span class="dy"><i>DAY</i><b id="tt-st-day"></b></span><span class="td"><i id="tt-st-k"></i><b id="tt-st-v"></b></span></div>
+          <div class="bx"><i id="tt-st-bk"></i><b id="tt-st-bv"></b></div>
+        </div>
         <div class="tt-btns">
           <button type="button" id="tt-play">PLAY</button>
           <button type="button" id="tt-boardbtn">BOARD<i class="tt-dot" hidden></i></button>

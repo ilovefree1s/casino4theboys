@@ -4201,6 +4201,32 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   .tt-row .tt-face.on { box-shadow: 0 0 8px rgba(87,224,106,.6); }
   .tt-row .who b { font: 800 15px/1.1 system-ui, sans-serif; letter-spacing: .01em; }
   .tt-row .val { font: 800 16px/1 system-ui, sans-serif; white-space: nowrap; }
+
+  /* ---- the front-page tournament box, tidied (1.75) ---- */
+  #tt-tag[hidden], .tt-line[hidden], .tt-place[hidden], .tt-hots[hidden], .tt-stats[hidden] { display: none; }
+  .tt-place { flex: none; margin-top: 6px; padding: 6px 10px 5px; border-radius: 12px; text-align: center;
+              background: rgba(255,210,77,.1); border: 1px solid rgba(255,210,77,.45); }
+  .tt-place b { display: block; font: 800 18px/1 system-ui, sans-serif; color: #FFD24D; }
+  .tt-place i { display: block; margin-top: 4px; font: 700 9px/1 system-ui, sans-serif; font-style: normal; letter-spacing: .14em; color: #D9C48A; }
+  .tt-hots { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .tt-hots .g { padding: 5px 9px; border-radius: 999px; background: rgba(255,120,40,.14); border: 1px solid rgba(255,138,61,.5);
+                font: 800 10px/1.2 system-ui, sans-serif; letter-spacing: .06em; color: #FFB07A; white-space: nowrap; }
+  .tt-hots b { margin-left: 2px; font: italic 900 15px/1 Impact, "Arial Black", sans-serif; color: #FFD24D; }
+  .tt-stats { display: flex; gap: 10px; margin-top: 14px; align-items: stretch; }
+  .tt-stats i { display: block; font: 700 9px/1 system-ui, sans-serif; font-style: normal; letter-spacing: .14em; color: #B9A79C; }
+  .tt-stats .l { flex: 2; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+  .tt-stats .dy { flex: none; text-align: center; }
+  .tt-stats .dy b { display: block; margin-top: 4px; font: 800 13px/1 system-ui, sans-serif; letter-spacing: .08em; color: #fff; white-space: nowrap; }
+  .tt-stats .td { flex: 1; min-width: 0; text-align: center; }
+  .tt-stats .td b { display: block; margin-top: 3px; font: 800 18px/1.1 system-ui, sans-serif; color: var(--bone); white-space: nowrap; }
+  .tt-stats .td b.up { color: #57E06A; } .tt-stats .td b.down { color: #FF3B5C; } .tt-stats .td b.gold { color: #FFD24D; }
+  .tt-stats .bx { flex: 1; min-width: 0; padding: 8px 4px 7px; border-radius: 12px; text-align: center;
+                  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+  .tt-stats .bx b { display: block; margin-top: 4px; font: 800 16px/1 system-ui, sans-serif; color: var(--bone); white-space: nowrap; }
+  .mm-lane.tourney .tt-btns { margin-top: 12px; }
+  .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 8px; }
+  .mm-lane.tourney .tt-place { margin-top: 0; }
+  .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) .nm { font-size: clamp(24px, 8.3vw, 38px); white-space: nowrap; min-width: 0; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4504,15 +4530,20 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.74</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.75</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
       <!-- the week-long contest -->
       <div class="mm-lane tourney" style="--c:#FF7A3D">
         <i class="edge"></i>
-        <div class="mm-hdr"><span class="nm">TOURNAMENT</span><span class="tag" id="tt-tag">THIS WEEK</span></div>
+        <div class="mm-hdr"><span class="nm">TOURNAMENT</span><span class="tag" id="tt-tag">THIS WEEK</span><span class="tt-place" id="tt-place" hidden><b id="tt-place-n"></b><i>PLACE</i></span></div>
+        <div class="tt-hots" id="tt-hots" hidden></div>
         <div class="tt-line" id="tt-line">CONNECTING…</div>
+        <div class="tt-stats" id="tt-stats" hidden>
+          <div class="l"><span class="dy"><i>DAY</i><b id="tt-st-day"></b></span><span class="td"><i id="tt-st-k"></i><b id="tt-st-v"></b></span></div>
+          <div class="bx"><i id="tt-st-bk"></i><b id="tt-st-bv"></b></div>
+        </div>
         <div class="tt-btns">
           <button type="button" id="tt-play">PLAY</button>
           <button type="button" id="tt-boardbtn">BOARD<i class="tt-dot" hidden></i></button>
@@ -11510,7 +11541,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         el.style.display = g ? "" : "none";
         if (g) el.textContent = "🔥 " + (g.indexOf(" & ") >= 0 ? "HOT GAMES" : "HOT GAME") + " TODAY · " + g.toUpperCase() + " · WINS PAY " + tagX();
       }
-      return { today: today, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra, tableOf: tableOf,
+      return { today: today, list: list, tagX: tagX, sit: sit, track: track, end: end, extra: extra, setExtra: setExtra, tableOf: tableOf,
                banner: function () { paintBanner(); paintBadges(); } };
     })();
 
@@ -11519,6 +11550,26 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       $("tt-line").textContent = line;
       $("tt-play").textContent = play;
       $("tt-play").disabled = !playOn;
+      // one plain line: the tidy card's pieces step aside
+      $("tt-line").hidden = false; $("tt-tag").hidden = false;
+      ["tt-place", "tt-hots", "tt-stats"].forEach(function (id) { $(id).hidden = true; });
+    }
+    function nth(n) { var t = n % 100; return n + (t > 10 && t < 14 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"); }
+    /**
+     * The front page once you're playing: your place beside the title, today's hot games under it,
+     * then the day, one number of yours, and a second in a box over BOARD.
+     */
+    function laneCard(c) {
+      $("tt-play").textContent = "PLAY"; $("tt-play").disabled = false;
+      $("tt-line").hidden = true; $("tt-tag").hidden = true;
+      $("tt-place").hidden = !c.place; $("tt-place-n").textContent = c.place ? nth(c.place) : "";
+      var hots = $("tt-hots"); hots.hidden = !c.hot.length; hots.innerHTML = "";
+      c.hot.forEach(function (g) { var t = document.createElement("span"); t.className = "g"; t.textContent = "🔥 " + g.toUpperCase(); hots.appendChild(t); });
+      var x = document.createElement("b"); x.textContent = c.x + "$"; hots.appendChild(x);
+      $("tt-stats").hidden = false;
+      $("tt-st-day").textContent = c.day;
+      $("tt-st-k").textContent = c.k; $("tt-st-v").textContent = c.v; $("tt-st-v").className = c.cls || "";
+      $("tt-st-bk").textContent = c.bk; $("tt-st-bv").textContent = c.bv;
     }
     var roster = null;   // everyone signed up: names only
     function refreshLane() {
@@ -11557,12 +11608,14 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         var pb = pointsCache[b.week], mine2 = null, rk = 0;
         if (!pb) getPoints(b.week).then(paintLane);
         (pb || []).forEach(function (r, i) { if (r.name.toLowerCase() === me.toLowerCase()) { mine2 = r; rk = i + 1; } });
-        return laneSay("POINTS WEEK · " + (mine2 ? mine2.points + " PTS" + (rk ? " · #" + rk : "") : "0 PTS") +
-                       " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
+        return laneCard({ place: mine2 && mine2.points > 0 ? rk : 0, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
+                          k: "YOUR POINTS", v: (mine2 ? mine2.points : 0) + " PTS", cls: "gold",
+                          bk: "GAMES WON", bv: String(mine2 ? mine2.wins : 0) });
       }
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
-      if (b.daily) return laneSay("BEST 3 DAYS " + money(you.score || 0) + " · TODAY " + signed(you.today) +
-              (rank ? " · #" + rank : "") + " · 🔥 " + hot.today(b.day).toUpperCase() + " " + hot.tagX(b.day), "PLAY", true);
+      if (b.daily) return laneCard({ place: rank, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
+                                     k: "TODAY", v: signedS(you.today), cls: you.today > 0 ? "up" : you.today < 0 ? "down" : "",
+                                     bk: "BEST 3 DAYS", bv: moneyS(you.score || 0) });
       laneSay(money(you.net) + " · TODAY " + signed(you.today) +
               (rank ? " · #" + rank + " AT MIDNIGHT" : ""), "PLAY", true);
     }

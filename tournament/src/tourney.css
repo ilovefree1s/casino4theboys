@@ -374,3 +374,29 @@
   .tt-row .tt-face.on { box-shadow: 0 0 8px rgba(87,224,106,.6); }
   .tt-row .who b { font: 800 15px/1.1 system-ui, sans-serif; letter-spacing: .01em; }
   .tt-row .val { font: 800 16px/1 system-ui, sans-serif; white-space: nowrap; }
+
+  /* ---- the front-page tournament box, tidied (1.75) ---- */
+  #tt-tag[hidden], .tt-line[hidden], .tt-place[hidden], .tt-hots[hidden], .tt-stats[hidden] { display: none; }
+  .tt-place { flex: none; margin-top: 6px; padding: 6px 10px 5px; border-radius: 12px; text-align: center;
+              background: rgba(255,210,77,.1); border: 1px solid rgba(255,210,77,.45); }
+  .tt-place b { display: block; font: 800 18px/1 system-ui, sans-serif; color: #FFD24D; }
+  .tt-place i { display: block; margin-top: 4px; font: 700 9px/1 system-ui, sans-serif; font-style: normal; letter-spacing: .14em; color: #D9C48A; }
+  .tt-hots { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  .tt-hots .g { padding: 5px 9px; border-radius: 999px; background: rgba(255,120,40,.14); border: 1px solid rgba(255,138,61,.5);
+                font: 800 10px/1.2 system-ui, sans-serif; letter-spacing: .06em; color: #FFB07A; white-space: nowrap; }
+  .tt-hots b { margin-left: 2px; font: italic 900 15px/1 Impact, "Arial Black", sans-serif; color: #FFD24D; }
+  .tt-stats { display: flex; gap: 10px; margin-top: 14px; align-items: stretch; }
+  .tt-stats i { display: block; font: 700 9px/1 system-ui, sans-serif; font-style: normal; letter-spacing: .14em; color: #B9A79C; }
+  .tt-stats .l { flex: 2; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 0 4px; }
+  .tt-stats .dy { flex: none; text-align: center; }
+  .tt-stats .dy b { display: block; margin-top: 4px; font: 800 13px/1 system-ui, sans-serif; letter-spacing: .08em; color: #fff; white-space: nowrap; }
+  .tt-stats .td { flex: 1; min-width: 0; text-align: center; }
+  .tt-stats .td b { display: block; margin-top: 3px; font: 800 18px/1.1 system-ui, sans-serif; color: var(--bone); white-space: nowrap; }
+  .tt-stats .td b.up { color: #57E06A; } .tt-stats .td b.down { color: #FF3B5C; } .tt-stats .td b.gold { color: #FFD24D; }
+  .tt-stats .bx { flex: 1; min-width: 0; padding: 8px 4px 7px; border-radius: 12px; text-align: center;
+                  background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); }
+  .tt-stats .bx b { display: block; margin-top: 4px; font: 800 16px/1 system-ui, sans-serif; color: var(--bone); white-space: nowrap; }
+  .mm-lane.tourney .tt-btns { margin-top: 12px; }
+  .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) { flex-direction: row; align-items: center; justify-content: space-between; flex-wrap: nowrap; gap: 8px; }
+  .mm-lane.tourney .tt-place { margin-top: 0; }
+  .mm-lane.tourney .mm-hdr:has(.tt-place:not([hidden])) .nm { font-size: clamp(24px, 8.3vw, 38px); white-space: nowrap; min-width: 0; }
