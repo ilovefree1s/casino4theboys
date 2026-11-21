@@ -3,7 +3,7 @@
      first tap (phones won't play sound before one), follows the MUSIC dial,
      and stops for tables, the spray-can intro, the tips, and a hidden app. */
   var MenuMusic = (function () {
-    var TABLES = /^screen-(baccarat|blackjack|craps|destroyer|djwild|doubledown|dragontiger|holdem|iluvsuits|keno|kirby|mines|miniuth|plinko|roulette|shootout|sicbo|wheel)$/;
+    var TABLES = /^screen-(baccarat|blackjack|craps|destroyer|djwild|doubledown|dragontiger|holdem|iluvsuits|keno|kirby|mines|miniuth|plinko|roulette|shootout|sicbo|wheel|paigow|chain)$/;
     var ctx = null, gain = null, src = null, loading = false, unlocked = false, on = false, stopT = null;
     function onMenu() { var s = document.querySelector(".screen.on"); return !!s && !TABLES.test(s.id); }
     function busy() { try { return typeof Intro !== "undefined" && Intro.isPlaying(); } catch (e) { return false; } }

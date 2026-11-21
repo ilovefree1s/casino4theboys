@@ -312,6 +312,26 @@ sub("  paintMenu();\n  /* ---------- sound",
 
 sub('{ nm: "POKER",     sub: "5",', '{ nm: "POKER",     sub: "6",')
 
+sub('{ nm: "POKER",     sub: "6",', '{ nm: "POKER",     sub: "7",')   # the Play Testing panel lists Pai Gow too
+# ---- PAI GOW POKER: seven cards set into two hands. Campaign and Play Testing only; the tournament hides it ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "paigow.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "paigow.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+sub("""        <span class="pk-txt"><span class="nm">KIRBY</span><span class="l1">THREE CARDS · HOLD OR DROP</span><span class="l2">BEAT KIRBY · TAKE THE POT</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>""",
+"""        <span class="pk-txt"><span class="nm">KIRBY</span><span class="l1">THREE CARDS · HOLD OR DROP</span><span class="l2">BEAT KIRBY · TAKE THE POT</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>
+      <button class="pk-game" id="pk-paigow" style="--c:#E24B5B" aria-label="Pai Gow Poker — play">
+        <img src="data:image/svg+xml;base64,""" + __import__("base64").b64encode((here / "paigow-icon.svg").read_bytes()).decode() + """" alt="">
+        <span class="pk-txt"><span class="nm">PAI GOW</span><span class="l1">SEVEN CARDS · SET TWO HANDS</span><span class="l2">WIN BOTH · JOKER IN THE DECK</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>""")
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "paigow.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
 # the slot's lettering
 sub("</head><body>", '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&display=swap">\n</head><body>')
 

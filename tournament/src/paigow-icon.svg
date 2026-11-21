@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="34 2 116 118">
+<g transform="translate(92 34)">
+<g transform="translate(-37 -22)"><rect width="34" height="46" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="6" y="15" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#C8102E">A</text><text x="17" y="36" text-anchor="middle" font-size="17" fill="#C8102E">&#9830;</text></g>
+<g transform="translate(3 -22)"><rect width="34" height="46" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="6" y="15" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#1a1a1a">K</text><text x="17" y="36" text-anchor="middle" font-size="17" fill="#1a1a1a">&#9827;</text></g>
+</g>
+<g transform="translate(92 92)">
+<g transform="translate(-56 -22)"><rect width="30" height="42" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="15" y="28" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#1a1a1a">9</text></g>
+<g transform="translate(-35 -22)"><rect width="30" height="42" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="15" y="28" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C8102E">9</text></g>
+<g transform="translate(-14 -22)"><rect width="30" height="42" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="15" y="28" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#1a1a1a">9</text></g>
+<g transform="translate(7 -22)"><rect width="30" height="42" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="15" y="28" text-anchor="middle" font-family="Georgia,serif" font-size="17" font-weight="700" fill="#C8102E">4</text></g>
+<g transform="translate(28 -22)"><rect width="30" height="42" rx="5" fill="#E24B5B" stroke="#000" stroke-opacity=".4"/><text x="15" y="29" text-anchor="middle" font-size="19" fill="#FFF3E0">&#9733;</text></g>
+</g>
+</svg>

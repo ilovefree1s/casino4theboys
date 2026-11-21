@@ -1,0 +1,43 @@
+<!-- ================= PAI GOW POKER ================= -->
+<div class="screen" id="screen-paigow">
+  <div class="uth-table dj-table pg-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="wayout" id="pg-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
+        <div class="uth-money purse">
+          <span class="lbl">BANKROLL</span><span class="val" id="pg-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="pg-risk">0</span>
+        </div>
+      </div>
+      <div class="pg-sign">PAI GOW POKER <span>WIN BOTH HANDS TO WIN · ONE EACH IS A PUSH</span></div>
+      <div class="uth-label" id="pg-dealer-label"><span class="nm">DEALER</span></div>
+      <div class="pg-row" id="pg-dealer"></div>
+      <div class="pg-caps" id="pg-dealer-caps"></div>
+      <div class="uth-rule pg-rule"></div>
+      <div class="uth-label gold" id="pg-you-label"><span class="nm">YOUR HAND</span></div>
+      <div class="pg-row you" id="pg-you"></div>
+      <div class="pg-caps" id="pg-you-caps"></div>
+      <div class="uth-message" id="pg-message">Place your bet</div>
+      <div class="pg-bonusline" id="pg-bonusline"></div>
+    </div>
+    <div class="dj-bottom">
+      <div class="pg-spots" id="pg-spots"></div>
+      <div id="pg-rack"></div>
+      <div class="uth-actions" id="pg-actions"></div>
+    </div>
+  </div>
+  <div class="pg-pays" id="pg-pays">
+    <div class="box">
+      <div class="ttl">BONUS BET PAYS</div>
+      <div class="sub">On the best hand in your seven cards, win or lose</div>
+      <div class="rows" id="pg-pays-rows"></div>
+      <button class="uth-btn" id="pg-pays-x">GOT IT</button>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="pg-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="pg-buyin">BUY BACK IN</button>
+  </div>
+</div>
