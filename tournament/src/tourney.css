@@ -337,3 +337,40 @@
   .tt-row .val { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; text-align: right; }
   #tt-winners, #tt-champ { min-width: 0; max-width: 100%; }
   #tt-winners { flex-wrap: wrap; }
+
+  /* ---- the board, cleaned up (1.72): fewer words, faces for people, short numbers ---- */
+  .tt-wrap { position: relative; }
+  #tt-bsub { position: absolute; right: 16px; top: calc(env(safe-area-inset-top, 0px) + 18px); margin: 0; text-align: right;
+             font: 600 10px/1.35 system-ui, sans-serif; letter-spacing: .08em; color: rgba(245,241,232,.6); }
+  #tt-bsub b { display: block; font: 800 13px/1.3 system-ui, sans-serif; letter-spacing: .02em; color: var(--bone); }
+  #tt-bhead { margin-top: 14px; }
+  .tt-you { margin-top: 12px; padding: 12px 14px; border-radius: 16px; flex-direction: row; align-items: center; gap: 12px; }
+  .tt-you img { width: 46px; height: 46px; border-radius: 50%; object-fit: cover; flex: none; border: 2.5px solid #57E06A; box-sizing: border-box; }
+  .tt-you .a { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .tt-you .t { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+  .tt-you .k { font: 700 9.5px/1 system-ui, sans-serif; letter-spacing: .14em; color: #FF9A66; }
+  .tt-you .a b { font: 800 23px/1.05 system-ui, sans-serif; color: var(--bone); white-space: nowrap; }
+  .tt-you .t .k { color: rgba(245,241,232,.6); }
+  .tt-you .t span:last-child { font: 800 15px/1.1 system-ui, sans-serif; color: rgba(245,241,232,.75); white-space: nowrap; }
+  .tt-you .t span.up { color: #57E06A; } .tt-you .t span.down { color: #FF3B5C; }
+  .tt-you small { font: 700 9px/1.3 system-ui, sans-serif; letter-spacing: .08em; color: #FF8FA0; }
+  .tt-you small:empty { display: none; }
+  .tt-wins { display: flex; flex-wrap: nowrap; gap: 5px; margin-top: 10px; }
+  .tt-day { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 7px 0 6px; border-radius: 12px; background: #14121A; }
+  .tt-day img, .tt-day i { width: 30px; height: 30px; border-radius: 50%; box-sizing: border-box; display: block; }
+  .tt-day img { object-fit: cover; border: 2px solid #2E8B45; }
+  .tt-day i { border: 2px dashed rgba(255,255,255,.28); }
+  .tt-day b { font: 800 10px/1 system-ui, sans-serif; letter-spacing: .06em; color: #57E06A; }
+  .tt-day.no b { color: rgba(245,241,232,.45); }
+  .tt-day.champ { flex: 1.5; background: #2A2108; } .tt-day.champ img { border-color: var(--campaign-gold); } .tt-day.champ b { color: var(--campaign-gold); }
+  #tt-tabs { gap: 4px; margin-top: 12px; padding: 4px; border-radius: 14px; background: #14121A; }
+  #tt-tabs button { padding: 11px 0; border: 0; border-radius: 10px; font: 800 10.5px/1 system-ui, sans-serif; letter-spacing: .08em; color: rgba(245,241,232,.62); }
+  #tt-tabs button.on { background: #FF8A3D; color: #14101C; }
+  .tt-row { gap: 11px; padding: 8px 14px 8px 10px; border-radius: 14px; background: #14121A; border: 1.5px solid transparent; }
+  .tt-row.me { border-color: rgba(255,122,61,.75); background: #1C1210; }
+  .tt-row .rk { width: 16px; flex: none; font: 800 13px/1 system-ui, sans-serif; color: rgba(245,241,232,.5); text-align: center; }
+  .tt-row .tt-face { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex: none; box-sizing: border-box; border: 2px solid #3A3644; box-shadow: none; }
+  .tt-row .tt-face.on, .tt-row.me .tt-face { border-color: #57E06A; }
+  .tt-row .tt-face.on { box-shadow: 0 0 8px rgba(87,224,106,.6); }
+  .tt-row .who b { font: 800 15px/1.1 system-ui, sans-serif; letter-spacing: .01em; }
+  .tt-row .val { font: 800 16px/1 system-ui, sans-serif; white-space: nowrap; }

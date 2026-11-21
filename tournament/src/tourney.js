@@ -22,6 +22,15 @@
       return (v > 0 ? "+" : "") + v + "%";
     }
     function signed(n) { return (n > 0 ? "+" : n < 0 ? "-" : "") + "$" + fmt(Math.abs(n)); }
+    // the board's own, short past a million: $53.4Q, +$9.06M
+    function amt(n) { n = Math.abs(n); return "$" + (n >= 1e6 && typeof shortAmt === "function" ? shortAmt(n) : fmt(n)); }
+    function moneyS(n) { return (n < 0 ? "-" : "") + amt(n); }
+    function signedS(n) { return (n > 0 ? "+" : n < 0 ? "-" : "") + amt(n); }
+    /** The line beside CLOSE: a small label over what it counts down to. */
+    function subline(label, value) {
+      var el = $("tt-bsub"); el.textContent = label;
+      if (value) { var v = document.createElement("b"); v.textContent = value; el.appendChild(v); }
+    }
     function now() { return Date.now() + skew; }
     function left(iso) {
       var ms = Date.parse(iso) - now();
@@ -1269,34 +1278,34 @@
       var champ = $("tt-champ"), wins = $("tt-wins");
       champ.hidden = true; wins.innerHTML = "";
 
-      if (tab === "msgs") { $("tt-you").hidden = true; $("tt-ruleslink").hidden = true; $("tt-bhead").textContent = "NEWS & RULES"; $("tt-bsub").textContent = "FROM JUSTIN"; return paintMsgs(list); }
+      if (tab === "msgs") { $("tt-you").hidden = true; $("tt-ruleslink").hidden = true; $("tt-bhead").textContent = "NEWS & RULES"; subline("FROM JUSTIN"); return paintMsgs(list); }
       if (b.status === "upcoming") {
         $("tt-bhead").textContent = "WEEK 1";
-        $("tt-bsub").textContent = "STARTS SUNDAY 12:00 AM · IN " + left(b.starts_at);
+        subline("STARTS SUNDAY", left(b.starts_at).toLowerCase());
         b.players.forEach(function (p, i) { list.appendChild(row(i + 1, p.name, "SIGNED UP", "", p.name.toLowerCase() === me)); });
         if (!b.players.length) list.appendChild(empty("Nobody's signed up yet."));
         return;
       }
       var finalDay = b.day_no === 7;
       $("tt-bhead").textContent = "WEEK " + b.week_no + " · " + (finalDay ? "FINAL DAY" : "DAY " + b.day_no + " OF 7");
-      $("tt-bsub").textContent = (finalDay ? "WINNER AT MIDNIGHT · " + left(b.ends_at)
-                                           : "STANDINGS UPDATE AT MIDNIGHT · NEXT IN " + left(b.day_ends_at));
+      subline(finalDay ? "WINNER IN" : "NEXT UPDATE", left(finalDay ? b.ends_at : b.day_ends_at).toLowerCase());
       // you, live - nobody else sees this (a points week has no one purse to show)
       var you = $("tt-you"), y = isPoints(b.week) ? null : b.me;
       you.hidden = !(y && !y.fresh);
       if (y && !y.fresh) {
-        $("tt-you-net").textContent = money(y.net);
-        $("tt-you-today").textContent = "TODAY " + signed(y.today);
+        $("tt-you-face").src = faceOf(me);
+        $("tt-you-net").textContent = moneyS(y.net);
+        $("tt-you-today").textContent = signedS(y.today);
         $("tt-you-today").className = y.today > 0 ? "up" : y.today < 0 ? "down" : "";
-        $("tt-you-tags").textContent = (b.daily ? "BEST 3 DAYS " + money(y.score || 0) + " · " : "") +
-          (y.owed ? "OWES $" + fmt(y.owed) + " · " + Math.ceil(y.owed / 7500) + "/" + b.max_markers + " MARKERS · " : "") +
-          (y.out ? (b.daily ? "OUT FOR TODAY · " : "OUT FOR THE WEEK · ") : "") + "ONLY YOU SEE THIS UNTIL MIDNIGHT";
+        // only what you'd want to know: what you owe, and if you're out
+        $("tt-you-tags").textContent = [y.owed ? "OWES " + amt(y.owed) + " · " + Math.ceil(y.owed / 7500) + "/" + b.max_markers + " MARKERS" : "",
+          y.out ? (b.daily ? "OUT FOR TODAY" : "OUT FOR THE WEEK") : ""].filter(Boolean).join(" · ");
       }
 
       if (b.last_champion) {
-        champ.hidden = false;
+        champ.hidden = !isPoints(b.week);          // a money week shows the champ as a face on the day strip instead
         $("tt-champ-name").textContent = shown(b.last_champion.name).toUpperCase();
-        $("tt-champ-net").textContent = money(b.last_champion.net);
+        $("tt-champ-net").textContent = moneyS(b.last_champion.net);
         var seen = "ftt.champseen." + b.last_champion.week;
         if (!store.getStr(seen, "")) {
           store.setStr(seen, "1");
@@ -1317,14 +1326,26 @@
           $("tt-crown-net").textContent = lp[0].points + " PTS";
         }
       }
-      if (!isPoints(b.week)) b.daily_winners.forEach(function (w) {
-        var c = document.createElement("span");
-        c.className = "tt-win";
-        var d = document.createElement("b"); d.textContent = dayName(w.day);
-        var n = document.createElement("span"); n.textContent = shown(w.name).toUpperCase() + " " + signed(w.profit);
-        c.appendChild(d); c.appendChild(n);
-        wins.appendChild(c);
-      });
+      // the week at a glance: last week's champ, then one face per day for whoever won it
+      if (!isPoints(b.week)) {
+        var cell = function (cls, name, label, tip) {
+          var c = document.createElement("span"); c.className = "tt-day " + cls;
+          if (name) { var im = document.createElement("img"); im.alt = ""; im.src = faceOf(String(name).toLowerCase()); c.appendChild(im); }
+          else c.appendChild(document.createElement("i"));
+          var l = document.createElement("b"); l.textContent = label; c.appendChild(l);
+          if (tip) c.title = tip;
+          return c;
+        };
+        var lc = b.last_champion, champName = lc && (isPoints(lc.week) ? ((pointsCache[lc.week] || [])[0] || {}).name : lc.name);
+        if (champName) wins.appendChild(cell("champ", champName, "CHAMP", shown(champName) + " won last week"));
+        var won = {}; b.daily_winners.forEach(function (w) { won[w.day] = w; });
+        for (var di = 0; di < 7; di++) {
+          var dt = new Date(b.week + "T12:00:00Z"); dt.setUTCDate(dt.getUTCDate() + di);
+          var iso = dt.toISOString().slice(0, 10), w = won[iso];
+          wins.appendChild(w ? cell("", w.name, DAYS[di].charAt(0), shown(w.name) + " " + signedS(w.profit))
+                             : cell("no", null, DAYS[di].charAt(0)));
+        }
+      }
 
       // the first tab is yesterday's day, or last week's final standings until this week has a midnight
       var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
@@ -1358,12 +1379,12 @@
       var dayTab = tab === "day", asOf = dayName(b.as_of);
       if (b.rows.length) list.appendChild(heading(b.final ? "WEEK " + (b.week_no - 1) + " · FINAL STANDINGS"
                                : dayTab ? asOf + " · WHAT EACH PLAYER MADE"
-                               : b.daily ? "BEST 3 DAYS ADDED UP · AS OF " + asOf + " MIDNIGHT" : "THE WEEK · AS OF " + asOf + " MIDNIGHT"));
+                               : b.daily ? "BEST 3 DAYS ADDED UP" : "THE WEEK"));
       var rows = b.rows.slice();
       if (dayTab) rows.sort(function (a, c) { return c.day - a.day || c.net - a.net || a.name.localeCompare(c.name); });
       var hi = b.final ? highs(lastWeekOf(b)) : null;
       rows.forEach(function (r, i) {
-        var v = dayTab ? signed(r.day) : money(r.net);
+        var v = dayTab ? signedS(r.day) : moneyS(r.net);
         var tag = hi && hi[r.name.toLowerCase()] ? "HIGHEST CASH $" + fmt(hi[r.name.toLowerCase()]) : "";
         var el = row(i + 1, r.name, tag, v, r.name.toLowerCase() === me);
         if (dayTab) el.classList.add(r.day > 0 ? "up" : r.day < 0 ? "down" : "flat");
@@ -1616,28 +1637,22 @@
     function row(rank, name, tags, value, mine) {
       var el = document.createElement("div");
       el.className = "tt-row" + (mine ? " me" : "");
-      // where the place number was: their face if they're on right now, a grey dot if they're not
-      var a = document.createElement("span"); a.className = "rk av";
+      // place, then their face (a green ring while they're on), their name, their number
+      var a = document.createElement("span"); a.className = "rk"; a.textContent = rank === "" || rank == null ? "" : rank;
       var mid = document.createElement("span"); mid.className = "who";
-      var n = document.createElement("b"); n.textContent = shown(name).toUpperCase() + (mine ? " (YOU)" : "");
-      if (players()[String(name).toLowerCase()]) el.setAttribute("data-player", name);
-      var lk = String(name).toLowerCase(), face = faceOf(lk);
-      if (online[lk] && face) {
-        var im = document.createElement("img"); im.alt = ""; im.src = face; im.className = "tt-face"; im.title = "Online";
-        a.appendChild(im);
-      } else {
-        var d = document.createElement("i"); d.className = "tt-on" + (online[lk] ? "" : " off");
-        d.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
-        a.appendChild(d);
-      }
-      if (!online[lk] && lastSeen[lk]) {
-        var ag = document.createElement("span"); ag.className = "tt-ago"; ag.textContent = " " + ago(lastSeen[lk]);
-        n.appendChild(ag);
+      var lk = String(name).toLowerCase(), person = !!players()[lk];
+      var n = document.createElement("b"); n.textContent = mine && person ? "YOU" : shown(name).toUpperCase();
+      el.appendChild(a);
+      if (person) {
+        el.setAttribute("data-player", name);
+        var im = document.createElement("img"); im.alt = ""; im.src = faceOf(lk); im.className = "tt-face" + (online[lk] ? " on" : "");
+        im.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
+        el.appendChild(im);
       }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);
       var v = document.createElement("span"); v.className = "val"; v.textContent = value;
-      el.appendChild(a); el.appendChild(mid); el.appendChild(v);
+      el.appendChild(mid); el.appendChild(v);
       return el;
     }
     /* ---- the message board: Justin posts, everyone reads; a red dot until you've seen the newest ---- */
