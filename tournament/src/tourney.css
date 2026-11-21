@@ -406,3 +406,5 @@
   .mm-lane.tourney .tt-stats { margin-top: 12px; }
   .tt-stats .dy { display: none; }          /* the day strip under it says which day it is */
   .tt-stats .l { justify-content: center; }
+  .tt-row .tt-off { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .tt-row .tt-off i { width: 10px; height: 10px; border-radius: 50%; background: #6B6F78; display: block; }

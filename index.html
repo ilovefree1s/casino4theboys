@@ -4233,6 +4233,8 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   .mm-lane.tourney .tt-stats { margin-top: 12px; }
   .tt-stats .dy { display: none; }          /* the day strip under it says which day it is */
   .tt-stats .l { justify-content: center; }
+  .tt-row .tt-off { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; }
+  .tt-row .tt-off i { width: 10px; height: 10px; border-radius: 50%; background: #6B6F78; display: block; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4536,7 +4538,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.79</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.80</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -12736,9 +12738,14 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
       el.appendChild(a);
       if (person) {
         el.setAttribute("data-player", name);
-        var im = document.createElement("img"); im.alt = ""; im.src = faceOf(lk); im.className = "tt-face" + (online[lk] ? " on" : "");
-        im.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
-        el.appendChild(im);
+        // their picture only while they're on; a grey dot when they're not
+        if (online[lk]) {
+          var im = document.createElement("img"); im.alt = ""; im.src = faceOf(lk); im.className = "tt-face on"; im.title = "Online";
+          el.appendChild(im);
+        } else {
+          var off = document.createElement("span"); off.className = "tt-off"; off.title = lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
+          off.appendChild(document.createElement("i")); el.appendChild(off);
+        }
       }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);

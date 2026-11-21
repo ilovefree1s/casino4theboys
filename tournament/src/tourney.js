@@ -1671,9 +1671,14 @@
       el.appendChild(a);
       if (person) {
         el.setAttribute("data-player", name);
-        var im = document.createElement("img"); im.alt = ""; im.src = faceOf(lk); im.className = "tt-face" + (online[lk] ? " on" : "");
-        im.title = online[lk] ? "Online" : lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
-        el.appendChild(im);
+        // their picture only while they're on; a grey dot when they're not
+        if (online[lk]) {
+          var im = document.createElement("img"); im.alt = ""; im.src = faceOf(lk); im.className = "tt-face on"; im.title = "Online";
+          el.appendChild(im);
+        } else {
+          var off = document.createElement("span"); off.className = "tt-off"; off.title = lastSeen[lk] ? "Last on " + ago(lastSeen[lk]) : "Offline";
+          off.appendChild(document.createElement("i")); el.appendChild(off);
+        }
       }
       var t = document.createElement("small"); t.textContent = tags;
       mid.appendChild(n); if (tags) mid.appendChild(t);
