@@ -888,6 +888,15 @@ sub("""    var lane = $("mm-testing"), hdr = $("mm-testing-hdr");""",
     })();
     var lane = $("mm-testing"), hdr = $("mm-testing-hdr");""")
 
+# ---- lightning roulette: a chip on a struck number slides left so the multiplier pill beside it can be read ----
+sub("""        chip.style.left = PX(cen.x); chip.style.top = PY(cen.y);
+        chip.innerHTML = chipHtml(bets[id], 62);
+        armDrag(chip, id);""",
+    """        var struck = id.indexOf("s-") === 0 && strikes && strikes[id.slice(2)] != null;
+        chip.style.left = PX(cen.x - (struck ? 52 : 0)); chip.style.top = PY(cen.y);
+        chip.innerHTML = chipHtml(bets[id], 62);
+        armDrag(chip, id);""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

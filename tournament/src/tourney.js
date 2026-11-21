@@ -391,14 +391,15 @@
             x + '</span><span class="amt">' + amt + "</span></div>");
           return;
         }
+        // tables with no money window (roulette, craps): said plainly, in the middle, long enough to read
         var t = document.createElement("div");
-        t.textContent = x + "  " + amt;
-        t.style.cssText = "position:fixed;right:max(16px,env(safe-area-inset-right,0px));top:calc(env(safe-area-inset-top,0px) + 74px);z-index:9999;" +
-          "padding:4px 12px;border-radius:999px;border:1.5px solid #FF8A3D;background:rgba(20,8,4,.9);color:#FFD24D;" +
-          "font:800 12px/1.3 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;transition:opacity .4s;opacity:1";
+        t.textContent = "🔥 HOT GAME " + tagX() + " · " + amt + " MORE";
+        t.style.cssText = "position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 96px);z-index:9999;white-space:nowrap;" +
+          "padding:8px 16px;border-radius:999px;border:2px solid #FF8A3D;background:rgba(20,8,4,.95);color:#FFD24D;" +
+          "font:800 15px/1.3 system-ui,sans-serif;letter-spacing:.04em;pointer-events:none;transition:opacity .4s;opacity:1;box-shadow:0 0 18px rgba(255,120,40,.6)";
         document.body.appendChild(t);
-        setTimeout(function () { t.style.opacity = "0"; }, 2600);
-        setTimeout(function () { t.remove(); }, 3200);
+        setTimeout(function () { t.style.opacity = "0"; }, 4200);
+        setTimeout(function () { t.remove(); }, 4800);
       }
       /** Up from the table: the bonuses won there go into the bankroll. */
       function end() {
@@ -543,6 +544,7 @@
         host.appendChild(w ? cell("", w.name, DAYS[di].charAt(0), shown(w.name) + " " + signedS(w.profit)) : cell("no", null, DAYS[di].charAt(0)));
       }
     }
+    var hotGo = null;      // a hot game's tag was tapped on the front page: the room to open once you're in
     function nth(n) { var t = n % 100; return n + (t > 10 && t < 14 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"); }
     /**
      * The front page once you're playing: your place beside the title, today's hot games under it,
@@ -553,7 +555,18 @@
       $("tt-line").hidden = true; $("tt-tag").hidden = true;
       $("tt-place").hidden = !c.place; $("tt-place-n").textContent = c.place ? nth(c.place) : "";
       var hots = $("tt-hots"); hots.hidden = !c.hot.length; hots.innerHTML = "";
-      c.hot.forEach(function (g) { var t = document.createElement("span"); t.className = "g"; t.textContent = "🔥 " + g.toUpperCase(); hots.appendChild(t); });
+      // each hot game is a button: into the tournament and straight to that game's room
+      c.hot.forEach(function (g) {
+        var t = document.createElement("button"); t.type = "button"; t.className = "g"; t.textContent = "🔥 " + g.toUpperCase();
+        t.onclick = function () {
+          var id = Object.keys(GAMES).filter(function (i) { return GAMES[i] === g; })[0] || "";
+          var room = { bm: "bacmenu", bjm: "bjmenu", pk: "poker", rlm: "rlmenu", cm: "crapsmenu", om: "othermenu" }[id.split("-")[0]];
+          if ($("tt-play").disabled) return;
+          hotGo = room || null;
+          $("tt-play").click();
+        };
+        hots.appendChild(t);
+      });
       var x = document.createElement("b"); x.textContent = c.x + "$"; hots.appendChild(x);
       var ld = $("tt-lane-days"); ld.hidden = !c.week;
       if (c.week) dayStrip(ld, c.week, false);
@@ -1314,6 +1327,7 @@
         TT.on = true; TT.closed = false;
         Shell.mode = "campaign";
         Shell.showLobby();
+        if (hotGo) { var room = hotGo; hotGo = null; try { Shell.show(room); } catch (e) {} }
         hot.banner();
         if (TT.points) points.leaders();
         if (local) push();

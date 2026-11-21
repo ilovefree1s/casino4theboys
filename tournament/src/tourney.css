@@ -440,3 +440,5 @@
   #wu-me .wu-grid button.taken img { filter: grayscale(1) brightness(.5); }
   #wu-me .wu-grid button.taken b { color: rgba(245,241,232,.4); }
   #wu-me .wu-grid button.taken::after { content: "TAKEN"; display: block; margin-top: 1px; font: 700 8px/1 var(--mono); letter-spacing: .14em; color: rgba(245,241,232,.5); }
+  button.g { cursor: pointer; font-family: inherit; }
+  .tt-hots button.g:active { transform: scale(.96); }
