@@ -11572,8 +11572,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.55);
         },
         stop: function () {
+          if (this.done) return; this.done = true;          // GAMBLE! and closing both stop it: close the sound once
           try { hiss.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.03); } catch (e) {}
-          setTimeout(function () { try { ctx.close(); } catch (e) {} }, 400);
+          setTimeout(function () { try { var p = ctx.close(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }, 400);
         }
       };
     }
