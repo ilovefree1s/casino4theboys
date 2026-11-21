@@ -423,3 +423,13 @@
   .pk-head:has(+ .gm-floor:not([hidden])) #pk-sign { display: none; }
   /* the tabs sit right under the title now, above your card */
   #tt-tabs { margin-top: 12px; }
+  #tt-board { background-color: #050408; background-size: cover; background-position: center; }
+  /* ---- campaign folds up like Play Testing: its name and money until tapped open (1.97) ---- */
+  .mm-lane.campaign .mm-hdr { cursor: pointer; -webkit-tap-highlight-color: transparent; justify-content: flex-start; }
+  .mm-lane.campaign .mm-hdr .tag { margin-left: auto; font-size: 8px; letter-spacing: .14em; white-space: nowrap; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); color: color-mix(in srgb, var(--c) 70%, #F5F1E8); }
+  .mm-lane.campaign .mm-hdr .chev { display: inline-block; margin-left: 10px; font-size: 11px; color: color-mix(in srgb, var(--c) 70%, #FFF); transition: transform .2s ease; }
+  .mm-lane.campaign.open .mm-hdr .chev { transform: rotate(90deg); }
+  .mm-lane.campaign.open .mm-hdr .tag { display: none; }
+  .mm-lane.campaign:not(.open) > :not(.mm-hdr):not(.edge) { display: none; }
+  .mm-lane.campaign:not(.open) .mm-hdr:active { opacity: .8; }

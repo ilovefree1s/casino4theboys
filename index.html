@@ -4278,6 +4278,16 @@
   .pk-head:has(+ .gm-floor:not([hidden])) #pk-sign { display: none; }
   /* the tabs sit right under the title now, above your card */
   #tt-tabs { margin-top: 12px; }
+  #tt-board { background-color: #050408; background-size: cover; background-position: center; }
+  /* ---- campaign folds up like Play Testing: its name and money until tapped open (1.97) ---- */
+  .mm-lane.campaign .mm-hdr { cursor: pointer; -webkit-tap-highlight-color: transparent; justify-content: flex-start; }
+  .mm-lane.campaign .mm-hdr .tag { margin-left: auto; font-size: 8px; letter-spacing: .14em; white-space: nowrap; padding: 5px 10px; border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--c) 45%, transparent); color: color-mix(in srgb, var(--c) 70%, #F5F1E8); }
+  .mm-lane.campaign .mm-hdr .chev { display: inline-block; margin-left: 10px; font-size: 11px; color: color-mix(in srgb, var(--c) 70%, #FFF); transition: transform .2s ease; }
+  .mm-lane.campaign.open .mm-hdr .chev { transform: rotate(90deg); }
+  .mm-lane.campaign.open .mm-hdr .tag { display: none; }
+  .mm-lane.campaign:not(.open) > :not(.mm-hdr):not(.edge) { display: none; }
+  .mm-lane.campaign:not(.open) .mm-hdr:active { opacity: .8; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4581,7 +4591,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.96</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.97</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -4602,9 +4612,9 @@
         </div>
       </div>
       <!-- the run -->
-      <div class="mm-lane campaign" style="--c:#FFD24D">
+      <div class="mm-lane campaign" id="mm-campaign" style="--c:#FFD24D">
         <i class="edge"></i>
-        <div class="mm-hdr"><span class="nm">CAMPAIGN</span></div>
+        <div class="mm-hdr" id="mm-campaign-hdr" role="button" tabindex="0" aria-expanded="false"><span class="nm">CAMPAIGN</span><span class="tag" id="mm-camp-tag"></span><span class="chev" aria-hidden="true">▸</span></div>
         <div class="mm-money"><span id="mm-big">$5,000</span><span class="goal" id="mm-goal">/ $1,000,000</span></div>
         <div class="mm-chase" id="mm-chase"><span id="mm-meta">CHASING $1,000,000</span></div>
         <div class="mm-bar"><i id="mm-barfill"></i></div>
@@ -8479,6 +8489,19 @@
     Shell.showFloor();
   });
   (function () {
+    (function () {
+      var cl = $("mm-campaign"), ch = $("mm-campaign-hdr"), big = $("mm-big"), tag = $("mm-camp-tag");
+      function sync() { tag.textContent = big.textContent; }
+      function flipC() {
+        var open = cl.classList.toggle("open");
+        ch.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) setTimeout(function () { cl.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 30);
+      }
+      ch.addEventListener("click", flipC);
+      ch.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flipC(); } });
+      try { new MutationObserver(sync).observe(big, { childList: true, characterData: true, subtree: true }); } catch (e) {}
+      sync();
+    })();
     var lane = $("mm-testing"), hdr = $("mm-testing-hdr");
     function flip() {
       var open = lane.classList.toggle("open");
@@ -12575,6 +12598,12 @@
       loadMsgs().then(function () {
         if (boardFresh && tab !== "msgs" && unread() && $("tt-board").classList.contains("on")) { tab = "msgs"; autoMsgs = true; msgSeenAtOpen = msgSeen; paintBoard(); }
       });
+      // the front page's chips lie behind the board too
+      try {
+        var rain = $("cr-rain");
+        if (rain && rain.width) $("tt-board").style.backgroundImage =
+          "linear-gradient(rgba(5,4,8,.45), rgba(5,4,8,.6)), url(" + rain.toDataURL("image/jpeg", 0.8) + ")";
+      } catch (e) {}
       $("tt-board").classList.add("on");
       paintBoard();
       ping();

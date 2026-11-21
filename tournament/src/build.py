@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.96"
+VERSION = "1.97"
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -865,6 +865,28 @@ sub("""  $("lb-roomplate").addEventListener("click", function () { Shell.showFlo
       Shell.showFloor();
     });
   });""")
+
+# ---- campaign on the front page folds up like Play Testing ----
+sub('<div class="mm-lane campaign" style="--c:#FFD24D">',
+    '<div class="mm-lane campaign" id="mm-campaign" style="--c:#FFD24D">')
+sub('<div class="mm-hdr"><span class="nm">CAMPAIGN</span></div>',
+    '<div class="mm-hdr" id="mm-campaign-hdr" role="button" tabindex="0" aria-expanded="false"><span class="nm">CAMPAIGN</span>'
+    '<span class="tag" id="mm-camp-tag"></span><span class="chev" aria-hidden="true">▸</span></div>')
+sub("""    var lane = $("mm-testing"), hdr = $("mm-testing-hdr");""",
+    """    (function () {
+      var cl = $("mm-campaign"), ch = $("mm-campaign-hdr"), big = $("mm-big"), tag = $("mm-camp-tag");
+      function sync() { tag.textContent = big.textContent; }
+      function flipC() {
+        var open = cl.classList.toggle("open");
+        ch.setAttribute("aria-expanded", open ? "true" : "false");
+        if (open) setTimeout(function () { cl.scrollIntoView({ behavior: "smooth", block: "nearest" }); }, 30);
+      }
+      ch.addEventListener("click", flipC);
+      ch.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); flipC(); } });
+      try { new MutationObserver(sync).observe(big, { childList: true, characterData: true, subtree: true }); } catch (e) {}
+      sync();
+    })();
+    var lane = $("mm-testing"), hdr = $("mm-testing-hdr");""")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips

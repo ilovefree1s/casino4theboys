@@ -1326,6 +1326,12 @@
       loadMsgs().then(function () {
         if (boardFresh && tab !== "msgs" && unread() && $("tt-board").classList.contains("on")) { tab = "msgs"; autoMsgs = true; msgSeenAtOpen = msgSeen; paintBoard(); }
       });
+      // the front page's chips lie behind the board too
+      try {
+        var rain = $("cr-rain");
+        if (rain && rain.width) $("tt-board").style.backgroundImage =
+          "linear-gradient(rgba(5,4,8,.45), rgba(5,4,8,.6)), url(" + rain.toDataURL("image/jpeg", 0.8) + ")";
+      } catch (e) {}
       $("tt-board").classList.add("on");
       paintBoard();
       ping();
