@@ -49,6 +49,8 @@
     document.addEventListener("visibilitychange", sync);
     window.addEventListener("pagehide", sync);
     setInterval(sync, 400);
+    // fetch and decode the song while the page is still loading, so the first tap starts it at once
+    setTimeout(function () { if (!ctx && level() > 0) { try { make(); } catch (e) {} } }, 300);
     return { sync: sync, playing: function () { return !!src && on && ctx.state === "running"; },
              dbg: function () { return { gain: gain ? gain.gain.value : null, ctx: ctx ? ctx.state : null, t: ctx ? ctx.currentTime : null, level: level(), loaded: !!src }; } };
   })();
