@@ -11801,6 +11801,9 @@
       }
       function paintBanner() {
         var line = $("lb-campaign-line"), el = $("tt-hotline");
+        // the lobby no longer announces the hot games: the front page's tags and the fire on the games' own buttons do
+        if (el) el.remove();
+        return;
         if (!line) return;
         if (!el) {
           el = document.createElement("div"); el.id = "tt-hotline";
