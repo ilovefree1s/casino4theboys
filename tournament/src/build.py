@@ -1093,6 +1093,7 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
 .purse[data-won] .pr { visibility: hidden; }
 .purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
 .purse .pw b.up { color: #57E06A; font-size: 12px; }
+.purse .pw b.dn { color: #FF6B6B; font-size: 12px; }
 .purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
 /* Mini UTH: the dealer's hand name sits beside the dealer's card, clear of the money window */
 #mu-dealer-label { position: relative; }
@@ -1170,8 +1171,9 @@ h = h.replace("</head>", """<style>html, body { overflow-x: hidden; max-width: 1
       delete el.dataset.won; delete el.dataset.hot;
       var b = el.querySelector(".pw"); if (b) b.innerHTML = "";
     },
-    net: function (el, v) {
+    net: function (el, v, losses) {
       if (!el || el.dataset.hot) return;
+      if (losses && v < 0) { el.dataset.won = "1"; pw(el).innerHTML = '<b class="dn">−' + short(-v) + "</b>"; return; }
       if (!(v > 0)) { this.clear(el); return; }
       el.dataset.won = "1"; pw(el).innerHTML = '<b class="up">+' + short(v) + "</b>";
     },

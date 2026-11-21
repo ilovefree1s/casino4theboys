@@ -271,6 +271,12 @@
     function renderTop() {
       $("pg-bankroll").textContent = fmt(bankroll);
       $("pg-risk").textContent = fmt(phase === "betting" || phase === "result" ? 0 : total());
+      // under the money: what the hand made or cost, cleared when the next one starts
+      if (window.purseWin) {
+        var purse = document.querySelector("#screen-paigow .purse");
+        if (phase === "result" && outcome) purseWin.net(purse, paid.main + paid.bonus + paid.ace, true);
+        else purseWin.clear(purse);
+      }
     }
     /** A set hand in a row: the two, a gap, the five. */
     function rowSet(host, cards, set, marks) {
