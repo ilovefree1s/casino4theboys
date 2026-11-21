@@ -4969,7 +4969,7 @@
           <i class="edge"></i>
           <div class="hd"><span class="nm">MUSIC</span><span class="pc" id="sf-musicpc">30%</span></div>
           <span class="sub">NOTHING ON THE JUKEBOX YET</span>
-          <input type="range" id="sf-music" min="0" max="100" step="5" value="30"
+          <input type="range" id="sf-music" min="0" max="100" step="1" value="2"
                  aria-label="Music volume">
         </div>
       </div>
@@ -11121,7 +11121,7 @@
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
     function Music() {
-      var v = vol(), mv = typeof SOUND !== "undefined" ? SOUND.music : 0.3;        // chips follow the sound dial, the beat the music dial
+      var v = vol(), mv = typeof SOUND !== "undefined" ? (SOUND.music > 0 ? Math.max(SOUND.music, 0.3) : 0) : 0.3;        // chips follow the sound dial, the beat the music dial
       var none = { stop: function () {}, wake: function () {}, chips: function () {} }, ctx;
       if (!(v > 0) && !(mv > 0)) return none;
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return none; }
@@ -13360,7 +13360,7 @@
      other way round. */
   var SOUND = {
     sfx: Math.min(1, Math.max(0, store.get("ftb.sfx", 0.4))),
-    music: Math.min(1, Math.max(0, store.get("ftb.music", 0.3)))
+    music: (function () { if (!store.get("ftb.music2", 0)) { store.set("ftb.music2", 1); store.set("ftb.music", 0.02); } return Math.min(1, Math.max(0, store.get("ftb.music", 0.02))); })()
   };
   function paintDial(key) {
     var pc = Math.round(SOUND[key] * 100);

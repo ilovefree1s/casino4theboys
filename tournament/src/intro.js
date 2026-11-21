@@ -417,7 +417,7 @@
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
     function Music() {
-      var v = vol(), mv = typeof SOUND !== "undefined" ? SOUND.music : 0.3;        // chips follow the sound dial, the beat the music dial
+      var v = vol(), mv = typeof SOUND !== "undefined" ? (SOUND.music > 0 ? Math.max(SOUND.music, 0.3) : 0) : 0.3;        // chips follow the sound dial, the beat the music dial
       var none = { stop: function () {}, wake: function () {}, chips: function () {} }, ctx;
       if (!(v > 0) && !(mv > 0)) return none;
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return none; }

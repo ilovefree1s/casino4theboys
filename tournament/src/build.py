@@ -897,6 +897,12 @@ sub("""        chip.style.left = PX(cen.x); chip.style.top = PY(cen.y);
         chip.innerHTML = chipHtml(bets[id], 62);
         armDrag(chip, id);""")
 
+# ---- menu music starts everyone at 2% (once), and the dial moves a point at a time ----
+sub('music: Math.min(1, Math.max(0, store.get("ftb.music", 0.3)))',
+    'music: (function () { if (!store.get("ftb.music2", 0)) { store.set("ftb.music2", 1); store.set("ftb.music", 0.02); } '
+    'return Math.min(1, Math.max(0, store.get("ftb.music", 0.02))); })()')
+sub('id="sf-music" min="0" max="100" step="5" value="30"', 'id="sf-music" min="0" max="100" step="1" value="2"')
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
