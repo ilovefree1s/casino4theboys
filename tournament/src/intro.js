@@ -281,7 +281,9 @@
       wrap.onclick = finish;
 
       // timings, in ms
-      var A0 = 420, A1 = 2450, T0 = 2750, T1 = 3500, SUB = 3650;
+      var A0 = 420, A1 = 2450, T0 = 2750, T1 = 3500, SUB = 3650, len = LEN;
+      // the short one for a new day: the piece is already on the wall, the can just writes the day across the top
+      if (opts.quick) { A0 = 300; A1 = 310; T0 = 650; T1 = 1450; SUB = 1550; len = 3000; }
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
@@ -381,13 +383,13 @@
           g.fillRect(m.x, m.y, m.r, m.r);
         }
         last = now;
-        if (t >= LEN) { finish(); return; }
+        if (t >= len) { finish(); return; }
         raf = requestAnimationFrame(frame);
       }
       raf = requestAnimationFrame(frame);
       // never hang: if the picture won't load, or the tab is put away, get out of the way
       setTimeout(function () { if (!over && !t0) finish(); }, 2500);
-      setTimeout(function () { finish(); }, LEN + 3000);
+      setTimeout(function () { finish(); }, len + 3000);
     }
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
@@ -628,7 +630,13 @@
       tip.textContent = "TAP TO PLAY THE INTRO";
       tip.style.cssText = "position:fixed;inset:0;z-index:10049;display:flex;align-items:center;justify-content:center;" +
         "background:rgba(0,0,0,.85);color:#FFD24D;font:800 16px system-ui,sans-serif;letter-spacing:.14em";
-      tip.onclick = function () { tip.remove(); Intro.play(function () { Intro.demo(); }); };
+      var day = /(^|[#&])intro-day\b/.test(location.hash);      // #intro-day previews the short new-day one
+      if (day) tip.textContent = "TAP TO PLAY THE NEW DAY INTRO";
+      tip.onclick = function () {
+        tip.remove();
+        if (day) Intro.play({ quick: true, title: "DAY 2", sub: "PLINKO & MINES PAY 1.5×" });
+        else Intro.play(function () { Intro.demo(); });
+      };
       document.body.appendChild(tip);
     });
   }

@@ -1291,6 +1291,17 @@
         hot.banner();
         if (TT.points) points.leaders();
         if (local) push();
+        // a new day of a points week: the first time in, the can writes which day it is
+        if (TT.points && s.day && typeof Intro !== "undefined") {
+          var seenDay = store.getStr("ftt.dayintro", "");
+          if (seenDay !== s.day) {
+            store.setStr("ftt.dayintro", s.day);
+            if (s.day_no > 1 && !Intro.isPlaying()) {
+              try { Intro.play({ quick: true, title: s.day_no === 7 ? "FINAL DAY" : "DAY " + s.day_no,
+                                 sub: hot.today(s.day).toUpperCase() + " PAY " + hot.tagX(s.day) }); } catch (e) {}
+            }
+          }
+        }
       };
       rpc("c4tb_state", { p_name: myName(), p_token: token() }).then(go, function () {
         laneSay("CAN'T REACH THE TOURNAMENT", "RETRY", true);
