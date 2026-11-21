@@ -467,7 +467,7 @@
           var mx = pl && pl.querySelector(".tt-x");
           if (!on) { if (tag) tag.remove(); if (fire) fire.remove(); if (mx) mx.remove(); btn.classList.remove("tt-hotbtn"); return; }
           if (pl && !mx) { mx = document.createElement("span"); mx.className = "tt-x"; pl.appendChild(mx); }
-          if (mx && mx.textContent !== tagX()) mx.textContent = tagX();
+          if (mx && mx.textContent !== tagX() + "$") mx.textContent = tagX() + "$";
           btn.classList.add("tt-hotbtn");
           if (pl && !fire) { fire = document.createElement("canvas"); fire.className = "tt-fire"; fire.setAttribute("aria-hidden", "true"); pl.insertBefore(fire, pl.firstChild); }
           burn();
