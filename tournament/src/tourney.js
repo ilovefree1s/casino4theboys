@@ -544,6 +544,7 @@
         host.appendChild(w ? cell("", w.name, DAYS[di].charAt(0), shown(w.name) + " " + signedS(w.profit)) : cell("no", null, DAYS[di].charAt(0)));
       }
     }
+    var todayLead = null;  // who leads each game today, for the front page's "today's points"
     var hotGo = null;      // a hot game's tag was tapped on the front page: the room to open once you're in
     function nth(n) { var t = n % 100; return n + (t > 10 && t < 14 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"); }
     /**
@@ -612,9 +613,18 @@
         var pb = pointsCache[b.week], mine2 = null, rk = 0;
         if (!pb) getPoints(b.week).then(paintLane);
         (pb || []).forEach(function (r, i) { if (r.name.toLowerCase() === me.toLowerCase()) { mine2 = r; rk = i + 1; } });
+        // today's points: what the games you lead right now are worth (yours at midnight if nobody passes you)
+        if (!todayLead || todayLead.day !== b.day || Date.now() - todayLead.at > 30000) {
+          var keep = todayLead && todayLead.day === b.day ? todayLead.rows : [];
+          todayLead = { day: b.day, at: Date.now(), rows: keep };
+          rpc("c4tb_game_leaders", { p_day: b.day }).then(function (j) { todayLead.rows = Array.isArray(j) ? j : []; paintLane(); }, function () {});
+        }
+        var todayPts = 0;
+        todayLead.rows.forEach(function (x) { if (String(x.name).toLowerCase() === me.toLowerCase()) todayPts += gpts(b.day, x.game); });
+        var wkPts = mine2 ? mine2.points : 0;
         return laneCard({ place: mine2 && mine2.points > 0 ? rk : 0, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
-                          k: "YOUR POINTS", v: (mine2 ? mine2.points : 0) + " PTS", cls: "gold",
-                          bk: "GAMES WON", bv: String(mine2 ? mine2.wins : 0) });
+                          k: "TODAY'S POINTS", v: todayPts + (todayPts === 1 ? " PT" : " PTS"), cls: "gold",
+                          bk: "WEEK'S POINTS", bv: wkPts + (wkPts === 1 ? " PT" : " PTS") });
       }
       if (b.daily && you.out) return laneSay("OUT FOR TODAY · FRESH $" + fmt(b.start_cash) + " AT MIDNIGHT", "OUT", false);
       if (b.daily) return laneCard({ place: rank, hot: hot.list(b.day), x: hot.tagX(b.day), day: b.day_no + " OF 7",
