@@ -392,7 +392,7 @@
 
     /* ---- lounge music for the how-it-works cards: walking bass, a soft piano comp, brushes ---- */
     function Music() {
-      var v = vol(), none = { stop: function () {}, wake: function () {} }, ctx;
+      var v = vol(), none = { stop: function () {}, wake: function () {}, chips: function () {} }, ctx;
       if (!(v > 0)) return none;
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return none; }
       var out = ctx.createGain(); out.gain.value = 0.0001; out.connect(ctx.destination);
@@ -441,7 +441,28 @@
         }
       }
       var iv = setInterval(sched, 120); sched();
+      // a couple of clay chips knocked together: short bright clacks, each a ping with a tick of noise on the front
+      function chips() {
+        try {
+          if (ctx.state === "suspended") ctx.resume();
+          var t = ctx.currentTime + 0.01, at = 0;
+          [0, 0.055 + Math.random() * 0.02, 0.125 + Math.random() * 0.03].forEach(function (d, i) {
+            var when = t + d, f0 = 2500 + Math.random() * 1300, lvl = (i ? 0.5 : 0.75) * v;
+            [1, 1.52, 2.35].forEach(function (mul, k) {
+              var o = ctx.createOscillator(), g = ctx.createGain();
+              o.type = "sine"; o.frequency.value = f0 * mul;
+              g.gain.setValueAtTime(lvl * [0.5, 0.3, 0.16][k], when); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.05 - k * 0.012);
+              o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.07);
+            });
+            var n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g2 = ctx.createGain();
+            n.buffer = nb; f.type = "bandpass"; f.frequency.value = f0 * 1.4; f.Q.value = 1.2;
+            g2.gain.setValueAtTime(lvl * 0.9, when); g2.gain.exponentialRampToValueAtTime(0.0001, when + 0.018);
+            n.connect(f); f.connect(g2); g2.connect(ctx.destination); n.start(when); n.stop(when + 0.03);
+          });
+        } catch (e) {}
+      }
       return {
+        chips: chips,
         wake: function () { try { if (ctx.state === "suspended") { ctx.resume(); nextAt = Math.max(nextAt, ctx.currentTime + 0.1); } } catch (e) {} },
         stop: function () {
           if (stopped) return; stopped = true; clearInterval(iv);
@@ -584,7 +605,7 @@
         dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
         next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT";
       }
-      next.onclick = function () { if (at < CARDS.length - 1) { at++; show(); } else close(); };
+      next.onclick = function () { mus.chips(); if (at < CARDS.length - 1) { at++; show(); } else close(); };
       skip.onclick = close;
       show();
     }
