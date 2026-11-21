@@ -4235,6 +4235,14 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   .tt-stats .l { justify-content: center; }
   .tt-row .tt-off { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; }
   .tt-row .tt-off i { width: 10px; height: 10px; border-radius: 50%; background: #6B6F78; display: block; }
+
+  /* ---- tournament lobby header (1.83): the money sits level with MENU, week and day stacked over the markers on the right ---- */
+  #screen-lobby.tourney .lb-campaign { max-width: none; margin: -35px 0 12px; padding-left: 92px; box-sizing: border-box; pointer-events: none; min-height: 34px; display: flex; align-items: center; }
+  #screen-lobby.tourney .lb-campaign .ln { width: 100%; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "v k" "v g"; align-items: center; column-gap: 10px; row-gap: 4px; }
+  #screen-lobby.tourney .lb-campaign .v { grid-area: v; justify-self: center; line-height: 1; }
+  #screen-lobby.tourney .lb-campaign .k { grid-area: k; justify-self: end; align-self: end; white-space: nowrap; }
+  #screen-lobby.tourney .lb-campaign .g { grid-area: g; justify-self: end; align-self: start; text-align: right; max-width: 132px; line-height: 1.35; }
+  #screen-lobby.tourney .lb-campaign .v { white-space: nowrap; }
   /* ========== KIRBY ==========
      Three-card guts against four players and a dummy hand that always plays. */
   #screen-kirby {
@@ -4538,7 +4546,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.82</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.83</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -13064,9 +13072,9 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
     if (TT.on && TT.points) {
       var fp = TT.frame() || {};
       host.querySelector(".k").textContent = "WEEK " + (fp.week_no || 1) + " · " +
-        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1)) + " · POINTS";
-      host.querySelector(".v").textContent = "$10,000 A GAME";
-      host.querySelector(".g").textContent = "MOST MONEY ON A GAME AT MIDNIGHT TAKES ITS POINTS";
+        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1));
+      host.querySelector(".v").textContent = "$10,000";
+      host.querySelector(".g").textContent = "A GAME · POINTS";
       return;
     }
     if (TT.on) {

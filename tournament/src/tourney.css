@@ -408,3 +408,11 @@
   .tt-stats .l { justify-content: center; }
   .tt-row .tt-off { width: 36px; height: 36px; flex: none; display: flex; align-items: center; justify-content: center; }
   .tt-row .tt-off i { width: 10px; height: 10px; border-radius: 50%; background: #6B6F78; display: block; }
+
+  /* ---- tournament lobby header (1.83): the money sits level with MENU, week and day stacked over the markers on the right ---- */
+  #screen-lobby.tourney .lb-campaign { max-width: none; margin: -35px 0 12px; padding-left: 92px; box-sizing: border-box; pointer-events: none; min-height: 34px; display: flex; align-items: center; }
+  #screen-lobby.tourney .lb-campaign .ln { width: 100%; display: grid; grid-template-columns: 1fr auto; grid-template-areas: "v k" "v g"; align-items: center; column-gap: 10px; row-gap: 4px; }
+  #screen-lobby.tourney .lb-campaign .v { grid-area: v; justify-self: center; line-height: 1; }
+  #screen-lobby.tourney .lb-campaign .k { grid-area: k; justify-self: end; align-self: end; white-space: nowrap; }
+  #screen-lobby.tourney .lb-campaign .g { grid-area: g; justify-self: end; align-self: start; text-align: right; max-width: 132px; line-height: 1.35; }
+  #screen-lobby.tourney .lb-campaign .v { white-space: nowrap; }

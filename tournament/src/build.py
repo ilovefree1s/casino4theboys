@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.82"
+VERSION = "1.83"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -250,9 +250,9 @@ sub("""  function paintRun(id) {
     if (TT.on && TT.points) {
       var fp = TT.frame() || {};
       host.querySelector(".k").textContent = "WEEK " + (fp.week_no || 1) + " · " +
-        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1)) + " · POINTS";
-      host.querySelector(".v").textContent = "$10,000 A GAME";
-      host.querySelector(".g").textContent = "MOST MONEY ON A GAME AT MIDNIGHT TAKES ITS POINTS";
+        (fp.day_no === 7 ? "FINAL DAY" : "DAY " + (fp.day_no || 1));
+      host.querySelector(".v").textContent = "$10,000";
+      host.querySelector(".g").textContent = "A GAME · POINTS";
       return;
     }
     if (TT.on) {
