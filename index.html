@@ -4504,7 +4504,7 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.72</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.73</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10763,23 +10763,30 @@ body:has(.screen.on .purse) .fs-btn { top: 11px; bottom: auto; right: auto; left
         }
       }
       var iv = setInterval(sched, 120); sched();
-      // a couple of clay chips knocked together: short bright clacks, each a ping with a tick of noise on the front
+      // ceramic chips riffled and dropped on a stack: dry clacks, all click and no ring.
+      // Each one is a few milliseconds of noise through two tight filters (the chip's body and its edge), gone in ~25ms.
       function chips() {
         try {
           if (ctx.state === "suspended") ctx.resume();
-          var t = ctx.currentTime + 0.01, at = 0;
-          [0, 0.055 + Math.random() * 0.02, 0.125 + Math.random() * 0.03].forEach(function (d, i) {
-            var when = t + d, f0 = 2500 + Math.random() * 1300, lvl = (i ? 0.5 : 0.75) * v;
-            [1, 1.52, 2.35].forEach(function (mul, k) {
-              var o = ctx.createOscillator(), g = ctx.createGain();
-              o.type = "sine"; o.frequency.value = f0 * mul;
-              g.gain.setValueAtTime(lvl * [0.5, 0.3, 0.16][k], when); g.gain.exponentialRampToValueAtTime(0.0001, when + 0.05 - k * 0.012);
-              o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.07);
+          var t = ctx.currentTime + 0.01, at = 0, gaps = [0, 0.052, 0.046, 0.04, 0.036, 0.06];
+          gaps.forEach(function (gap, i) {
+            at += gap * (0.9 + Math.random() * 0.2);
+            var when = t + at, last = i === gaps.length - 1, lvl = (last ? 1 : 0.5 + Math.random() * 0.25) * v;
+            var body = 1700 + Math.random() * 500, edge = 3900 + Math.random() * 900;
+            [[body, 2.2, 0.9, 0.03], [edge, 4.5, 0.75, 0.016], [edge * 1.9, 3, 0.25, 0.008]].forEach(function (b) {
+              var n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+              n.buffer = nb; n.playbackRate.value = 0.9 + Math.random() * 0.3;
+              f.type = "bandpass"; f.frequency.value = b[0]; f.Q.value = b[1];
+              g.gain.setValueAtTime(0.0001, when); g.gain.linearRampToValueAtTime(lvl * b[2] * 1.6, when + 0.0012);
+              g.gain.exponentialRampToValueAtTime(0.0001, when + b[3]);
+              n.connect(f); f.connect(g); g.connect(ctx.destination); n.start(when, Math.random() * 0.2); n.stop(when + b[3] + 0.01);
             });
-            var n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g2 = ctx.createGain();
-            n.buffer = nb; f.type = "bandpass"; f.frequency.value = f0 * 1.4; f.Q.value = 1.2;
-            g2.gain.setValueAtTime(lvl * 0.9, when); g2.gain.exponentialRampToValueAtTime(0.0001, when + 0.018);
-            n.connect(f); f.connect(g2); g2.connect(ctx.destination); n.start(when); n.stop(when + 0.03);
+            if (last) {                       // the stack takes the weight: a soft low knock under the last clack
+              var o = ctx.createOscillator(), og = ctx.createGain();
+              o.type = "sine"; o.frequency.setValueAtTime(190, when); o.frequency.exponentialRampToValueAtTime(95, when + 0.05);
+              og.gain.setValueAtTime(lvl * 0.35, when); og.gain.exponentialRampToValueAtTime(0.0001, when + 0.06);
+              o.connect(og); og.connect(ctx.destination); o.start(when); o.stop(when + 0.08);
+            }
           });
         } catch (e) {}
       }
