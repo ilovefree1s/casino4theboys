@@ -2,7 +2,7 @@
      PAI GOW POKER — seven cards each, from 52 and a joker.
      You split yours into a two-card hand and a five-card hand; the five has to
      outrank the two. The dealer does the same. Win both and the bet pays even
-     money less the house's 5%; lose both and it's gone; one each is a push.
+     money, no commission; lose both and it's gone; one each is a push.
      A hand that ties exactly (a "copy") goes to the dealer.
      The joker is an ace, unless it finishes a straight or a flush.
      The bonus bet pays on the best hand in your seven cards, win or lose.
@@ -134,7 +134,7 @@
       var all = splits(cards), best = null, bestEv = -9;
       all.forEach(function (s) {
         var pl = below(dist.lo, s.loS), ph = below(dist.hi, s.hiS);
-        var ev = pl * ph * 0.95 - (1 - pl) * (1 - ph);
+        var ev = pl * ph - (1 - pl) * (1 - ph);
         if (ev > bestEv + 1e-9 || (Math.abs(ev - bestEv) <= 1e-9 && best && s.hiS > best.hiS)) { bestEv = ev; best = s; }
       });
       return best;
@@ -209,7 +209,7 @@
 
   var PaiGow = (function () {
     var RED = "#E24B5B", GOLD = "#FFD24D", LOSS = "#FF4D4D", DIM = "rgba(245,241,232,.7)";
-    var COMMISSION = 0.05;
+    var COMMISSION = 0;      // no house cut: a win pays even money
     var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     // betting | dealing | set | reveal | result
     var phase = "betting";
@@ -439,7 +439,7 @@
       }
       if (back > 0) { bankroll += back; syncWallet(); }
       var net = paid.main + (paid.sideBet > 0 ? paid.side : 0);
-      var msg = outcome.result > 0 ? "You win both — +$" + fmt(won) + " after the house's 5%"
+      var msg = outcome.result > 0 ? "You win both — +$" + fmt(won)
         : outcome.result === 0 ? "One each — push, your bet comes back"
         : "Dealer takes both";
       phase = "result";
