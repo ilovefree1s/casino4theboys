@@ -498,10 +498,25 @@
       document.addEventListener("visibilitychange", vis); window.addEventListener("pagehide", vis);
       // ceramic chips riffled and dropped on a stack: dry clacks, all click and no ring.
       // Each one is a few milliseconds of noise through two tight filters (the chip's body and its edge), gone in ~25ms.
+      // Justin's own chips, recorded: decoded once, played on every tap. The made-up clack below is only the fallback.
+      var clip = null;
+      try {
+        var bin = atob("/*CHIPCLACK*/"), bytes = new Uint8Array(bin.length);
+        for (var bi = 0; bi < bin.length; bi++) bytes[bi] = bin.charCodeAt(bi);
+        var got = function (buf) { clip = buf; }, pr = ctx.decodeAudioData(bytes.buffer, got, function () {});
+        if (pr && pr.catch) pr.catch(function () {});
+      } catch (e) {}
       function chips() {
         try {
           if (!(v > 0) || document.hidden) return;
           if (ctx.state === "suspended") ctx.resume();
+          if (clip) {
+            var src = ctx.createBufferSource(), cg = ctx.createGain();
+            src.buffer = clip; src.playbackRate.value = 0.97 + Math.random() * 0.06;      // never quite the same twice
+            cg.gain.value = Math.min(1.6, v * 2.4);
+            src.connect(cg); cg.connect(ctx.destination); src.start();
+            return;
+          }
           var t = ctx.currentTime + 0.01, at = 0, gaps = [0, 0.052, 0.046, 0.04, 0.036, 0.06];
           gaps.forEach(function (gap, i) {
             at += gap * (0.9 + Math.random() * 0.2);
