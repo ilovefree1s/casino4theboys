@@ -3,7 +3,7 @@
      who they are and goes into the tournament. Tap SKIP (or anywhere) to cut it short.
      Open the game with #intro on the end of the address to watch it any time. */
   var Intro = (function () {
-    var LEN = 5600, playing = false;
+    var LEN = 5220, playing = false;
 
     function artSrc() {
       var im = document.querySelector("#screen-menu .mm-art");
@@ -305,8 +305,8 @@
       wrap.onclick = finish;
 
       // timings, in ms
-      // the can is shaken for a second first (as long as the recording of it runs), then the paint goes on
-      var A0 = 1000, A1 = 3030, T0 = 3330, T1 = 4080, SUB = 4230, len = LEN;
+      // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
+      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = LEN;
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
@@ -638,8 +638,11 @@
         if (sx === null) return;
         var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy; sx = null;
         if (Math.abs(dx) < 45 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-        if (dx < 0 && at < CARDS.length - 1) { at++; mus.chips(); show(); }
-        else if (dx > 0 && at > 0) { at--; mus.chips(); show(); }
+        // a swipe sounds like a card coming off the deck (the chip clack is the NEXT button's)
+        var turned = false;
+        if (dx < 0 && at < CARDS.length - 1) { at++; turned = true; }
+        else if (dx > 0 && at > 0) { at--; turned = true; }
+        if (turned) { try { playDraw(1); } catch (err) {} show(); }
       }, { passive: true });
       show();
     }
