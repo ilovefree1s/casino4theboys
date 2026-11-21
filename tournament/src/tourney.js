@@ -1368,8 +1368,17 @@
           if (seenDay !== s.day) {
             store.setStr("ftt.dayintro", s.day);
             if (s.day_no > 1 && !Intro.isPlaying()) {
-              try { Intro.play({ quick: true, title: s.day_no === 7 ? "FINAL DAY" : "DAY " + s.day_no,
-                                 sub: hot.today(s.day).toUpperCase() + " PAY " + hot.tagX(s.day) }); } catch (e) {}
+              // after the day goes up, yesterday's top three are sprayed on: fetched first, but never waited on long
+              var dayNo = s.day_no, today = s.day, once = false;
+              var playDay = function (results) {
+                if (once) return; once = true;
+                try { Intro.play({ quick: true, title: dayNo === 7 ? "FINAL DAY" : "DAY " + dayNo,
+                                   sub: hot.today(today).toUpperCase() + " PAY " + hot.tagX(today),
+                                   results: results, resultsTitle: "DAY " + (dayNo - 1) + " RESULTS" }); } catch (e) {}
+              };
+              var yd = (function () { var d = new Date(today + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); })();
+              setTimeout(function () { playDay(null); }, 2500);
+              rpc("c4tb_game_leaders", { p_day: yd }).then(function (rows) { playDay(topThree(rows)); }, function () { playDay(null); });
             }
           }
         }
@@ -1752,6 +1761,23 @@
       var f = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
       for (var k in f) if (k.toLowerCase() === al) return k;
       return String(name || "");
+    }
+    /** A day's game leaders, added up per player: the top three places (ties share one), for the day's spray. */
+    function topThree(rows) {
+      var by = {};
+      (Array.isArray(rows) ? rows : []).forEach(function (r) {
+        if (!r || !r.name || !(r.pts > 0)) return;
+        var lk = String(r.name).toLowerCase();
+        (by[lk] = by[lk] || { name: r.name, pts: 0 }).pts += r.pts;
+      });
+      var list = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.pts - a.pts; });
+      var out = [];
+      list.forEach(function (p, i) {
+        var place = i && p.pts === list[i - 1].pts ? out[i - 1].place : i + 1;
+        if (place <= 3 && out.length < 4) out.push({ place: place, name: shown(p.name).toUpperCase(), pts: p.pts, face: faceOf(String(p.name).toLowerCase()) });
+        else out.push({ place: 99 });
+      });
+      return out.filter(function (r) { return r.place <= 3; });
     }
     function faceOf(lk) {
       lk = FACE_ALIAS[String(lk).replace(/[^a-z0-9]/g, "")] || lk;

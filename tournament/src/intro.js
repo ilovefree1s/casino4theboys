@@ -424,9 +424,102 @@
         }
       }
 
+      /* ---------- yesterday's results, sprayed on after a coat of black ----------
+         opts.results: [{ place, name, pts, face }], already the top three (ties share a place). */
+      var RES = opts.quick && opts.results && opts.results.length ? opts.results.slice() : null;
+      var res = null, prevC = 0, covered = false, goShown = false;
+      if (RES) {
+        RES.sort(function (a, b) { return b.place - a.place || a.pts - b.pts; });     // 3rd at the top, 1st last
+        RES.forEach(function (r) { if (r.face) { r.img = new Image(); r.img.src = r.face; } });
+      }
+      function famNow() { return SPRAY_OK ? "C4Spray" : "Impact, Haettenschweiler, 'Arial Black', sans-serif"; }
+      function sprayText(c, text, x, y, size, cols, glow, align) {
+        c.font = size + "px " + famNow(); c.textAlign = align || "center"; c.textBaseline = "middle";
+        c.shadowColor = glow; c.shadowBlur = 18 * S; c.fillStyle = glow; c.globalAlpha = 0.45; c.fillText(text, x, y); c.globalAlpha = 1;
+        var fg = c.createLinearGradient(0, y - size / 2, 0, y + size / 2);
+        fg.addColorStop(0, cols[0]); fg.addColorStop(0.5, cols[1]); fg.addColorStop(1, cols[2]);
+        c.shadowColor = glow; c.shadowBlur = 3 * S; c.fillStyle = fg; c.fillText(text, x, y);
+        c.shadowBlur = 0; c.shadowColor = "transparent";
+        return c.measureText(text).width;
+      }
+      function roughen(c, bx, n) {                     // thin patches and stray specks, like the rest of the wall
+        var i, x, y, r;
+        c.save(); c.globalCompositeOperation = "destination-out";
+        for (i = 0; i < n; i++) { x = bx.x + Math.random() * bx.w; y = bx.y + Math.random() * bx.h; r = (0.4 + Math.random() * 1.3) * S;
+          c.fillStyle = "rgba(0,0,0," + (0.2 + Math.random() * 0.5).toFixed(2) + ")"; c.fillRect(x, y, r, r); }
+        c.restore();
+      }
+      var MEDAL = { 1: { cols: ["#fff8c4", "#ffd24d", "#ff9a1f"], glow: "rgba(255,190,40,.95)", ring: "#ffd24d", word: "1ST" },
+                    2: { cols: ["#ffffff", "#d4dcea", "#8a9bb5"], glow: "rgba(170,200,255,.9)", ring: "#d4dcea", word: "2ND" },
+                    3: { cols: ["#ffe0bd", "#e8914f", "#a3531f"], glow: "rgba(240,130,60,.9)", ring: "#e8914f", word: "3RD" } };
+      function buildRes() {
+        var w = cv.width, h = cv.height, n = RES.length;
+        res = { black: layer(), cover: layer(), items: [] };
+        var bc = res.black.getContext("2d");
+        bc.fillStyle = "#060608"; bc.fillRect(0, 0, w, h);
+        for (var i = 0; i < 1400; i++) { bc.fillStyle = "rgba(255,255,255," + (Math.random() * 0.035).toFixed(3) + ")"; bc.fillRect(Math.random() * w, Math.random() * h, 1.4 * S, 1.4 * S); }
+        // the heading
+        var tl = layer(), tc = tl.getContext("2d"), tsz = 46 * S * SPRAY_SCALE, ty = h * 0.15;
+        tc.font = tsz + "px " + famNow();
+        while (tc.measureText(opts.resultsTitle || "RESULTS").width > w * 0.88 && tsz > 18) { tsz -= 2; tc.font = tsz + "px " + famNow(); }
+        tc.save(); tc.translate(w / 2, ty); tc.rotate(-0.045);
+        var tw = sprayText(tc, opts.resultsTitle || "RESULTS", 0, 0, tsz, ["#fff9b0", "#ffc93a", "#ff7a12"], "rgba(255,46,136,.9)");
+        tc.restore();
+        var tb = { x: w / 2 - tw / 2 - 16 * S, y: ty - tsz * 0.75, w: tw + 32 * S, h: tsz * 1.5, cy: ty };
+        roughen(tc, tb, 500);
+        res.items.push({ cnv: tl, box: tb, mask: layer(), prev: 0, r: tsz * 0.7 });
+        // a line for each of the top three
+        var top = h * 0.32, bottom = h * 0.68, step = (bottom - top) / Math.max(1, n - 1 || 1);
+        if (n === 1) top = h * 0.48;
+        RES.forEach(function (r, k) {
+          var cy = n === 1 ? top : top + step * k, big = r.place === 1, md = MEDAL[r.place] || MEDAL[3];
+          var cnv = layer(), c = cnv.getContext("2d"), x0 = w * 0.06, x1 = w * 0.94;
+          var rot = (k % 2 ? 0.025 : -0.03);
+          c.save(); c.translate(w / 2, cy); c.rotate(rot); c.translate(-w / 2, -cy);
+          var psz = (big ? 38 : 33) * S * SPRAY_SCALE;
+          var pw = sprayText(c, md.word, x0, cy, psz, md.cols, md.glow, "left");
+          var fr = (big ? 30 : 25) * S, fx = x0 + Math.max(pw, 60 * S) + 12 * S + fr;
+          // the face, sprayed round like a stencil
+          c.save(); c.beginPath(); c.arc(fx, cy, fr, 0, 6.283); c.closePath();
+          c.fillStyle = "#1a1a22"; c.fill(); c.clip();
+          if (r.img && r.img.complete && r.img.naturalWidth) c.drawImage(r.img, fx - fr, cy - fr, fr * 2, fr * 2);
+          c.restore();
+          c.lineWidth = 3.5 * S; c.strokeStyle = md.ring; c.shadowColor = md.glow; c.shadowBlur = 12 * S;
+          c.beginPath(); c.arc(fx, cy, fr, 0, 6.283); c.stroke(); c.shadowBlur = 0;
+          // the points, right-hand end
+          var ptxt = r.pts + (r.pts === 1 ? " PT" : " PTS"), qsz = 28 * S * SPRAY_SCALE;
+          c.font = qsz + "px " + famNow();
+          var qw = c.measureText(ptxt).width;
+          sprayText(c, ptxt, x1, cy, qsz, ["#fff9b0", "#ffd24d", "#ff9a1f"], "rgba(255,170,30,.9)", "right");
+          // the name, in the room between
+          var nx = fx + fr + 12 * S, room = x1 - qw - 12 * S - nx, nsz = (big ? 34 : 28) * S * SPRAY_SCALE;
+          c.font = nsz + "px " + famNow();
+          while (c.measureText(r.name).width > room && nsz > 12) { nsz -= 1; c.font = nsz + "px " + famNow(); }
+          sprayText(c, r.name, nx, cy, nsz, ["#ffffff", "#bfe6ff", "#6fb8ff"], "rgba(90,160,255,.9)", "left");
+          c.restore();
+          var hh = (big ? 82 : 68) * S, bx = { x: x0 - 8 * S, y: cy - hh / 2, w: x1 - x0 + 16 * S, h: hh, cy: cy };
+          roughen(c, bx, 650);
+          res.items.push({ cnv: cnv, box: bx, mask: layer(), prev: 0, r: hh * 0.62 });
+        });
+      }
+      // the black coat: the can goes back and forth down the whole wall
+      function coverPos(p) {
+        var rows = 5, f = Math.max(0, Math.min(1, p)) * rows, i = Math.min(rows - 1, Math.floor(f)), u = f - i;
+        var y = cv.height * (0.06 + 0.88 * (i + u * 0.15) / (rows - 1 + 0.15));
+        var x = i % 2 ? cv.width * (1.08 - 1.16 * u) : cv.width * (-0.08 + 1.16 * u);
+        return { x: x, y: y };
+      }
+      function sweepPos(it, p) { return { x: it.box.x + it.box.w * p, y: it.box.cy + Math.sin(p * 17) * it.box.h * 0.14 }; }
+      function showGo() {
+        if (goShown || over) return;
+        goShown = true; held = true; snd.stop();
+        skip.style.display = "none";
+        go.style.opacity = "1"; go.style.pointerEvents = "auto";
+      }
+
       /* A spray can, drawn with its nozzle at (x, y) and leaning by `tilt`. */
       function drawCan(x, y, tilt, paint, pressed) {
-        var bw = 46 * S, bh = 112 * S, c1 = paint === "blue" ? "#2f7bff" : "#ff8a1f", c2 = paint === "blue" ? "#0b2f8f" : "#b33a00";
+        var bw = 46 * S, bh = 112 * S, c1 = paint === "blue" ? "#2f7bff" : paint === "black" ? "#3a3a42" : "#ff8a1f", c2 = paint === "blue" ? "#0b2f8f" : paint === "black" ? "#0c0c10" : "#b33a00";
         g.save();
         g.translate(x, y); g.rotate(tilt);
         g.shadowColor = "rgba(0,0,0,.6)"; g.shadowBlur = 14 * S; g.shadowOffsetY = 6 * S;
@@ -480,9 +573,9 @@
       var held = false;
       function hold() {
         if (held || over) return;
-        held = true; snd.stop();
-        skip.style.display = "none";
-        go.style.opacity = "1"; go.style.pointerEvents = "auto";
+        held = true;
+        if (RES) return;            // yesterday's results come next; GAMBLE! shows when they're on
+        showGo();
       }
       skip.onclick = function (e) { e.stopPropagation(); finish(); };
       go.onclick = function (e) { e.stopPropagation(); finish(); };
@@ -558,10 +651,37 @@
           g.restore();
         }
 
+        // 4) yesterday's results: a coat of black over everything, then the heading and the top three, sprayed on one by one
+        var paintRes = null, RS = len + 300;
+        if (RES && t >= RS) {
+          if (!res) buildRes();
+          var rt = t - RS, cp = Math.min(1, rt / 1150);
+          for (var qc = prevC; qc <= cp; qc += 0.0025) { var pc = coverPos(qc); blob(res.cover, pc.x, pc.y, cv.height * 0.12, 0.85); }
+          prevC = cp;
+          if (cp < 1) { nozzle = coverPos(cp); paintRes = "black"; puff(nozzle.x, nozzle.y, "40,40,46"); }
+          else if (!covered) { covered = true; var cc = res.cover.getContext("2d"); cc.fillStyle = "#fff"; cc.fillRect(0, 0, cv.width, cv.height); }
+          show(res.cover, res.black);
+          var at = 1300;
+          res.items.forEach(function (it, k) {
+            var s0 = at + k * 780, s1 = s0 + (k ? 520 : 460);
+            if (rt < s0) return;
+            var p = Math.min(1, (rt - s0) / (s1 - s0));
+            for (var qq = it.prev; qq <= p; qq += 0.01) { var sp = sweepPos(it, qq); blob(it.mask, sp.x, sp.y, it.r, 0.8); }
+            it.prev = p;
+            if (p < 1) { nozzle = sweepPos(it, p); paintRes = "orange"; puff(nozzle.x, nozzle.y, "255,190,60"); }
+            else if (!it.done) {
+              it.done = true; snd.thump();
+              var mc = it.mask.getContext("2d"); mc.fillStyle = "#fff"; mc.fillRect(it.box.x - it.r, it.box.y - it.r, it.box.w + it.r * 2, it.box.h + it.r * 2);
+            }
+            show(it.mask, it.cnv);
+          });
+          if (rt >= at + res.items.length * 780 + 250) showGo();
+        }
+
         // the mist coming off the can, and the can's cone of spray
         hiss(!!nozzle);
         // the can itself: shaken first, then held off the wall and worked across it, then pulled away
-        var want, paint = t < T0 - 150 ? "blue" : "orange";
+        var want, paint = paintRes || (t < T0 - 150 ? "blue" : "orange");
         if (t < A0) want = { x: cv.width * 0.5, y: cv.height * 0.5 + Math.sin(t / 26) * 16 * S, tilt: -0.5 + Math.sin(t / 26) * 0.12 };
         else if (nozzle) want = { x: nozzle.x + 46 * S, y: nozzle.y + 40 * S, tilt: -0.62 };
         else if (t < T0) { var st = txtPos(0); want = { x: st.x + 46 * S, y: st.y + 40 * S, tilt: -0.62 }; }
@@ -573,7 +693,7 @@
           // the fan of paint from the nozzle to the wall
           var ang = Math.atan2(nozzle.y - can.y, nozzle.x - can.x), dist = Math.hypot(nozzle.x - can.x, nozzle.y - can.y), sprd = 0.42;
           var fan = g.createRadialGradient(can.x, can.y, 2 * S, can.x, can.y, dist * 1.25);
-          var rgb = paint === "blue" ? "150,200,255" : "255,205,90";
+          var rgb = paint === "blue" ? "150,200,255" : paint === "black" ? "70,70,80" : "255,205,90";
           fan.addColorStop(0, "rgba(" + rgb + ",.75)"); fan.addColorStop(0.7, "rgba(" + rgb + ",.28)"); fan.addColorStop(1, "rgba(" + rgb + ",0)");
           g.fillStyle = fan;
           g.beginPath(); g.moveTo(can.x, can.y); g.arc(can.x, can.y, dist * 1.25, ang - sprd, ang + sprd); g.closePath(); g.fill();
@@ -597,6 +717,7 @@
       // never hang: if the picture won't load, or the tab is put away, get out of the way
       setTimeout(function () { if (!over && !t0) finish(); }, 2500);
       setTimeout(hold, len + 3000);
+      if (RES) setTimeout(showGo, len + 9000);        // never stuck behind the results
     }
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
@@ -840,7 +961,12 @@
       if (day) tip.textContent = "TAP TO PLAY THE NEW DAY INTRO";
       tip.onclick = function () {
         tip.remove();
-        if (day) Intro.play({ quick: true, title: "DAY 2", sub: "PLINKO & MINES PAY 1.5×" });
+        if (day) {
+          var fc = typeof Walkups !== "undefined" && Walkups.faces ? Walkups.faces() : {};
+          Intro.play({ quick: true, title: "DAY 2", sub: "PLINKO & MINES PAY 1.5×", resultsTitle: "DAY 1 RESULTS",
+                       results: [{ place: 1, name: "JUSTIN", pts: 12, face: fc.Justin }, { place: 2, name: "MATT", pts: 8, face: fc.Matthew },
+                                 { place: 3, name: "JACOB", pts: 4, face: fc.Zac }] });
+        }
         else Intro.play(function () { Intro.demo(); });
       };
       document.body.appendChild(tip);
