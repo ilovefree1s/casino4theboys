@@ -4,6 +4,15 @@
      Open the game with #intro on the end of the address to watch it any time. */
   var Intro = (function () {
     var LEN = 5220, playing = false;
+    // the title's paint font, when one is built in (a spray-can face, cut down to capitals and numbers)
+    var SPRAY_B64 = "/*SPRAYFONT*/", SPRAY_SCALE = +"/*SPRAYSCALE*/" || 1, SPRAY_OK = false, SPRAY_FACE = null;
+    if (SPRAY_B64.length > 100 && typeof FontFace !== "undefined") {
+      try {
+        var ff = new FontFace("C4Spray", "url(data:font/woff2;base64," + SPRAY_B64 + ") format('woff2')");
+        SPRAY_FACE = ff.load().then(function (f) { document.fonts.add(f); SPRAY_OK = true; });
+        SPRAY_FACE.catch(function () {});
+      } catch (e) { SPRAY_FACE = null; }
+    }
 
     function artSrc() {
       var im = document.querySelector("#screen-menu .mm-art");
@@ -105,7 +114,14 @@
       skip.type = "button"; skip.textContent = "SKIP ›";
       skip.style.cssText = "position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 14px);padding:8px 14px;border-radius:999px;" +
         "border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em";
-      wrap.appendChild(cv); wrap.appendChild(skip);
+      // once the paint is on, SKIP goes and this comes up: the way out
+      var go = document.createElement("button");
+      go.type = "button"; go.textContent = "GAMBLE!";
+      go.style.cssText = "position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translateX(-50%) rotate(-2deg);" +
+        "min-width:230px;padding:15px 30px;border-radius:16px;border:3px solid #07060b;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);" +
+        "color:#07060b;font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;" +
+        "box-shadow:0 0 0 3px #ff2e88,0 10px 26px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .35s ease";
+      wrap.appendChild(cv); wrap.appendChild(skip); wrap.appendChild(go);
       document.body.appendChild(wrap);
 
       var g = cv.getContext("2d");
@@ -154,8 +170,10 @@
       /* the words that go on after the piece */
       var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS";
       var tBox = null;
-      (function () {
+      function paintTitle() {
         var c = txt.getContext("2d"), w = txt.width, h = txt.height;
+        c.setTransform(1, 0, 0, 1, 0, 0); c.globalCompositeOperation = "source-over"; c.clearRect(0, 0, w, h);
+        if (SPRAY_OK) return paintSpray(c, w, h);
         var size = 62 * S;
         c.font = "900 italic " + size + "px Impact, Haettenschweiler, 'Arial Narrow Bold', 'Arial Black', sans-serif";
         while (c.measureText(line1).width > w * 0.86 && size > 20) { size -= 2; c.font = c.font.replace(/[\d.]+px/, size + "px"); }
@@ -174,7 +192,42 @@
         c.restore();
         var tw = c.measureText(line1).width;
         tBox = { x: cx - tw / 2 - 26 * S, y: cy - size * 0.75, w: tw + 52 * S, h: size * 1.5, cy: cy, size: size };
-      })();
+      }
+      /* The title as paint, not type: no outline, soft edges, a halo of overspray, thin patches and specks. */
+      function paintSpray(c, w, h) {
+        var size = 74 * S * SPRAY_SCALE;
+        c.font = size + "px C4Spray";
+        while (c.measureText(line1).width > w * 0.9 && size > 20) { size -= 2; c.font = size + "px C4Spray"; }
+        c.textAlign = "center"; c.textBaseline = "middle";
+        var cx = w / 2, cy = h * 0.15, tw = c.measureText(line1).width;
+        c.save(); c.translate(cx, cy); c.rotate(-0.055);
+        // the cloud that lands round the letters before the line is tight
+        c.shadowColor = "rgba(255,46,136,.9)"; c.shadowBlur = 26 * S; c.fillStyle = "rgba(255,46,136,.35)"; c.fillText(line1, 0, 0);
+        c.shadowColor = "rgba(255,150,30,.95)"; c.shadowBlur = 11 * S; c.fillStyle = "rgba(255,150,30,.6)"; c.fillText(line1, 0, 0);
+        // the paint itself, a touch soft at the edge
+        var fg = c.createLinearGradient(0, -size / 2, 0, size / 2);
+        fg.addColorStop(0, "#fff9b0"); fg.addColorStop(0.45, "#ffc93a"); fg.addColorStop(1, "#ff7a12");
+        c.shadowColor = "rgba(255,200,60,.9)"; c.shadowBlur = 3 * S; c.fillStyle = fg; c.fillText(line1, 0, 0);
+        c.shadowBlur = 0; c.shadowColor = "transparent";
+        // thin patches where the can moved fast: bits of wall showing through
+        c.globalCompositeOperation = "destination-out";
+        var i, x, y, r;
+        for (i = 0; i < 900; i++) {
+          x = (Math.random() - 0.5) * (tw + 40 * S); y = (Math.random() - 0.5) * size * 1.2; r = (0.4 + Math.random() * 1.3) * S;
+          c.fillStyle = "rgba(0,0,0," + (0.25 + Math.random() * 0.5).toFixed(2) + ")"; c.fillRect(x, y, r, r);
+        }
+        // and specks thrown wide of the letters
+        c.globalCompositeOperation = "source-over";
+        for (i = 0; i < 520; i++) {
+          x = (Math.random() - 0.5) * (tw + 90 * S); y = (Math.random() - 0.5) * size * 1.9; r = (0.5 + Math.random() * 1.6) * S;
+          c.fillStyle = (Math.random() < 0.6 ? "rgba(255,190,50," : "rgba(255,60,140,") + (0.25 + Math.random() * 0.6).toFixed(2) + ")";
+          c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
+        }
+        c.restore();
+        tBox = { x: cx - tw / 2 - 30 * S, y: cy - size * 0.85, w: tw + 60 * S, h: size * 1.7, cy: cy, size: size * 0.8 };
+      }
+      paintTitle();
+      if (SPRAY_FACE && !SPRAY_OK) SPRAY_FACE.then(function () { SPRAY_OK = true; paintTitle(); }, function () {});
 
       /* spraying: soft blobs of "paint" go into a mask, and the art shows through wherever it's been hit */
       function blob(mask, x, y, r, a) {
@@ -301,8 +354,16 @@
         setTimeout(function () { wrap.remove(); playing = false; }, 460);
         if (done) done();
       }
+      var held = false;
+      function hold() {
+        if (held || over) return;
+        held = true; snd.stop();
+        skip.style.display = "none";
+        go.style.opacity = "1"; go.style.pointerEvents = "auto";
+      }
       skip.onclick = function (e) { e.stopPropagation(); finish(); };
-      wrap.onclick = finish;
+      go.onclick = function (e) { e.stopPropagation(); finish(); };
+      wrap.onclick = function () { if (!held) finish(); };
 
       // timings, in ms
       // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
@@ -406,13 +467,13 @@
           g.fillRect(m.x, m.y, m.r, m.r);
         }
         last = now;
-        if (t >= len) { finish(); return; }
+        if (t >= len) hold();
         raf = requestAnimationFrame(frame);
       }
       raf = requestAnimationFrame(frame);
       // never hang: if the picture won't load, or the tab is put away, get out of the way
       setTimeout(function () { if (!over && !t0) finish(); }, 2500);
-      setTimeout(function () { finish(); }, len + 3000);
+      setTimeout(hold, len + 3000);
     }
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
