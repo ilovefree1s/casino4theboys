@@ -11600,7 +11600,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         "border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em";
       // once the paint is on, SKIP goes and this comes up: the way out
       var go = document.createElement("button");
-      go.type = "button"; go.textContent = "GAMBLE!";
+      go.type = "button"; go.textContent = opts.quick && opts.title ? opts.title + "!" : "GAMBLE!";   // a day's screen: DAY 2!
       go.style.cssText = "position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translateX(-50%) rotate(-2deg);" +
         "min-width:230px;padding:15px 30px;border-radius:16px;border:3px solid #07060b;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);" +
         "color:#07060b;font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;" +
@@ -12195,7 +12195,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           show(res.cover, res.black);
           var at = 1300;
           res.items.forEach(function (it, k) {
-            var s0 = at + k * 780, s1 = s0 + (k ? 520 : 460);
+            var s0 = at + k * 780 + Math.max(0, k - 1) * 1000, s1 = s0 + (k ? 520 : 460);   // a beat longer before 2nd, and before 1st
             if (rt < s0) return;
             var p = Math.min(1, (rt - s0) / (s1 - s0));
             for (var qq = it.prev; qq <= p; qq += 0.01) { var sp = sweepPos(it, qq); blob(it.mask, sp.x, sp.y, it.r, 0.8); }
@@ -12207,7 +12207,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
             }
             show(it.mask, it.cnv);
           });
-          if (rt >= at + res.items.length * 780 + 250) showGo();
+          var nI = res.items.length - 1;
+          if (rt >= at + nI * 780 + Math.max(0, nI - 1) * 1000 + 520 + 250) showGo();
         }
 
         // the mist coming off the can, and the can's cone of spray
@@ -12250,7 +12251,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       // never hang: if the picture won't load, or the tab is put away, get out of the way
       setTimeout(function () { if (!over && !t0) finish(); }, 2500);
       setTimeout(hold, len + 3000);
-      if (RES) setTimeout(showGo, len + 9000);        // never stuck behind the results
+      if (RES) setTimeout(showGo, len + 12000);        // never stuck behind the results
     }
 
     /* ---- the beat under the how-it-works cards: Justin's pick, one loop of it, round and round ---- */
