@@ -20,6 +20,11 @@
   border: 2px dashed rgba(0,0,0,.45); box-sizing: border-box; }
 #pour-bub b { font: 800 16px/1 system-ui, sans-serif; color: #FFD24D; letter-spacing: .02em; }
 /* the fullscreen button: bottom right on the menus as it always was; at a table seat.js moves it just left of your chips */
+/* roulette's table sign: one line under the buttons (the gap between them is too narrow for it), name then small print */
+#rl-sign { left: 0; top: 5.9%; width: 100%; height: 2.7%; }
+#rl-sign.on { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: calc(var(--sw) * 14 / 836); }
+#rl-sign .nm { font-size: calc(var(--sw) * 22 / 836); letter-spacing: .03em; }
+#rl-sign .sub { margin: 0; }
 
 #seat-btn { position: fixed; z-index: 9998; width: 44px; height: 34px; padding: 0; border-radius: 10px; background: rgba(8,6,14,.78);
   border: 1px solid rgba(255,210,77,.55); color: #FFD24D; font: 800 8.5px/1.15 system-ui, sans-serif; letter-spacing: .08em; text-align: center; }
@@ -4561,7 +4566,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.93</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.94</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">

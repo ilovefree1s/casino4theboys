@@ -1,1 +1,6 @@
 /* the fullscreen button: bottom right on the menus as it always was; at a table seat.js moves it just left of your chips */
+/* roulette's table sign: one line under the buttons (the gap between them is too narrow for it), name then small print */
+#rl-sign { left: 0; top: 5.9%; width: 100%; height: 2.7%; }
+#rl-sign.on { display: flex; flex-direction: row; align-items: center; justify-content: center; gap: calc(var(--sw) * 14 / 836); }
+#rl-sign .nm { font-size: calc(var(--sw) * 22 / 836); letter-spacing: .03em; }
+#rl-sign .sub { margin: 0; }
