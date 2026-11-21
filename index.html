@@ -12831,6 +12831,9 @@
       refreshLane();
     }
     function paintBoard() {
+      // typing a message: leave the page alone, or the redraw takes the box (and the keyboard) away
+      var ae = document.activeElement;
+      if (tab === "msgs" && ae && ae.tagName === "TEXTAREA" && ae.parentNode && ae.parentNode.className === "tt-compose") return;
       var b = board, me = (myName() || "").toLowerCase();
       var list = $("tt-rows"); list.innerHTML = "";
       if (!b) { $("tt-bhead").textContent = "LOADING…"; return; }
@@ -13293,6 +13296,7 @@
         var go = document.createElement("button"); go.type = "button"; go.textContent = "POST";
         go.addEventListener("click", function () {
           var t = ta.value.trim(); if (!t) return;
+          ta.blur();
           go.disabled = true;
           rpc("c4tb_msg_post", { p_name: myName(), p_token: token(), p_body: t }).then(function (r) {
             go.disabled = false;
