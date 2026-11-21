@@ -709,10 +709,12 @@
           var old = btn.querySelector(".tt-lead"); if (old) old.remove();          // the tag builds before 1.64 hung here
           var pl = btn.querySelector(".pk-play, .play");
           if (!pl) return;
-          var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = pl.querySelector(".tt-lp");
+          var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = btn.querySelector(".tt-lp");
+          if (pt && pt.parentNode !== btn) { pt.remove(); pt = null; }               // it used to ride on the circle
           if (!TT.on || !TT.points || !TT.day) { [face, amt, pt].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
-          if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; pl.appendChild(pt); }
+          if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; btn.appendChild(pt); }
+          if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
           pt.textContent = pts + " PT" + (pts > 1 ? "S" : "");
           pl.classList.toggle("tt-led", !!x);
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
