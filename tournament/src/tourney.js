@@ -1894,18 +1894,18 @@
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
         // one line a rule; tap a line to open it
-        var rh = heading("THE RULES"); rh.classList.add("tt-rhd");
+        var rh = heading("THE RULES"), sw;
         if (differs) {
-          var sw = document.createElement("span"); sw.className = "tt-rpills";
+          sw = document.createElement("div"); sw.className = "tt-rpills";
           [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {
             var bt = document.createElement("button"); bt.type = "button"; bt.textContent = o[1];
             if (rulesWeek === o[0]) bt.className = "on";
             bt.onclick = function () { rulesWeek = o[0]; paintBoard(); };
             sw.appendChild(bt);
           });
-          rh.appendChild(sw);
         }
         list.appendChild(rh);
+        if (differs) list.appendChild(sw);
         var pts = isPoints(rulesWeek === "next" ? nx : wk);
         var icons = pts ? ["💵", "🔁", "🎯", "🕛", "🏆", "🔥", "🙂"] : ["💵", "🏆", "🔥", "📝", "📋", "📱"];
         [].forEach.call(ol.children, function (li, i) {

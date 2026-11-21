@@ -4128,10 +4128,9 @@
                          font: 14px/1.4 inherit; outline: none; }
   .tt-compose button { flex: none; height: 42px; padding: 0 16px; border-radius: 12px; background: #FF7A3D; color: #120604;
                        font-family: var(--display); font-size: 11px; letter-spacing: .16em; }
-  .tt-rhd { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-  .tt-rpills { display: flex; gap: 5px; }
-  .tt-rpills button { padding: 6px 10px; border-radius: 999px; border: 1px solid rgba(255,122,61,.55); color: #FF9A66;
-                      font: 800 9px system-ui, sans-serif; letter-spacing: .1em; }
+  .tt-rpills { display: flex; gap: 8px; }
+  .tt-rpills button { flex: 1; height: 50px; border-radius: 14px; border: 1.5px solid rgba(255,122,61,.6); color: #FF9A66;
+                      font: 800 16px system-ui, sans-serif; letter-spacing: .08em; }
   .tt-rpills button.on { background: #FF7A3D; border-color: #FF7A3D; color: #120604; }
   .tt-fold { border-radius: 12px; background: #110E13; border: 1px solid rgba(255,255,255,.08); }
   .tt-fold > button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 13px; text-align: left; color: var(--bone); }
@@ -13264,18 +13263,18 @@
       var ol = document.querySelector("#tt-rules .tt-rlist");
       if (ol) {
         // one line a rule; tap a line to open it
-        var rh = heading("THE RULES"); rh.classList.add("tt-rhd");
+        var rh = heading("THE RULES"), sw;
         if (differs) {
-          var sw = document.createElement("span"); sw.className = "tt-rpills";
+          sw = document.createElement("div"); sw.className = "tt-rpills";
           [["this", "THIS WEEK"], ["next", "NEXT WEEK"]].forEach(function (o) {
             var bt = document.createElement("button"); bt.type = "button"; bt.textContent = o[1];
             if (rulesWeek === o[0]) bt.className = "on";
             bt.onclick = function () { rulesWeek = o[0]; paintBoard(); };
             sw.appendChild(bt);
           });
-          rh.appendChild(sw);
         }
         list.appendChild(rh);
+        if (differs) list.appendChild(sw);
         var pts = isPoints(rulesWeek === "next" ? nx : wk);
         var icons = pts ? ["💵", "🔁", "🎯", "🕛", "🏆", "🔥", "🙂"] : ["💵", "🏆", "🔥", "📝", "📋", "📱"];
         [].forEach.call(ol.children, function (li, i) {
