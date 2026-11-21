@@ -4598,7 +4598,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v2.00</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v1.099</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10631,6 +10631,12 @@
     return { save: save, saved: function () { return saved; }, place: place };
   })();
   try { window.Seat = Seat; } catch (e) {}
+  /* the name on the door turns over to 2.0 with the points week: midnight Eastern, Sunday 22 November */
+  (function () {
+    var V2_AT = Date.parse("2026-11-22T05:00:00Z");
+    function ver() { var el = document.getElementById("mm-ver"); if (el && Date.now() >= V2_AT) el.textContent = "v2.0"; }
+    ver(); setInterval(ver, 30000);
+  })();
   /* ---------- the tournament intro: the 4 The Boys piece gets sprayed onto a wall ----------
      About five seconds, with a spray can's rattle and hiss. Plays once, right after a player picks
      who they are and goes into the tournament. Tap SKIP (or anywhere) to cut it short.

@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.00"
+VERSION = "1.099"
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -99,7 +99,7 @@ sub('$("pk-back").addEventListener("click", function () { Plinko.leave(); Shell.
 # ---- the front page: chip rain behind glass, the sign in its own gold box ----
 sub('  <div class="mm-col">\n    <div class="mm-name">Casino Games</div>\n    <div class="mm-casino">4 THE BOYS</div>\n',
     '  <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>\n'
-    '  <div class="mm-col">\n    <div class="mm-sign">\n      <div class="mm-name">Casino Games<span class="mm-ver">v' + VERSION + '</span></div>\n'
+    '  <div class="mm-col">\n    <div class="mm-sign">\n      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v' + VERSION + '</span></div>\n'
     '      <div class="mm-casino">4 THE BOYS</div>\n    </div>\n')
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chiprain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
