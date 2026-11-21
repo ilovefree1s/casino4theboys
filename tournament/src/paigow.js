@@ -8,7 +8,7 @@
      The joker is an ace, unless it finishes a straight or a flush.
      Two side bets: BONUS pays on the best hand in your seven cards, win or
      lose; ACE-HIGH pays when the dealer is ace-high.
-     Campaign and Play Testing only; the tournament doesn't list it.
+     In Campaign, Play Testing and (once the server lists it) the tournament.
      ============================================================ */
   var PGE = (function () {
     var HIGH = 0, PAIR = 1, TWOPAIR = 2, TRIPS = 3, STRAIGHT = 4, FLUSH = 5, FULL = 6, QUADS = 7, SFLUSH = 8, FIVEACES = 9;
@@ -563,11 +563,12 @@
     (function () { var from = document.querySelector("#screen-miniuth .mu-bg"); if (from) $("pg-bg").src = from.src; })();
     $("pg-back").addEventListener("click", function () { Shell.show("poker"); });
     $("pk-paigow").addEventListener("click", function () { PaiGow.enter(); Shell.show("paigow"); });
-    // The tournament doesn't list this table (yet): the poker page shows it for Campaign and Play Testing only.
+    // Campaign and Play Testing always list this table; the tournament does once its server knows the game.
     (function () {
       var show = Shell.show;
       Shell.show = function (name) {
-        if (name === "poker") $("pk-paigow").style.display = typeof TT !== "undefined" && !!TT.on ? "none" : "";
+        // in the tournament it shows once the server counts it as one of the games
+        if (name === "poker") $("pk-paigow").style.display = typeof TT !== "undefined" && TT.on && !(TT.hasGame && TT.hasGame("Pai Gow")) ? "none" : "";
         return show.apply(this, arguments);
       };
     })();
