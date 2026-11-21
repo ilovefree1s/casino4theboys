@@ -404,3 +404,5 @@
   #tt-lane-days { margin-top: 12px; }
   #tt-lane-days .tt-day { background: rgba(255,255,255,.05); }
   .mm-lane.tourney .tt-stats { margin-top: 12px; }
+  .tt-stats .dy { display: none; }          /* the day strip under it says which day it is */
+  .tt-stats .l { justify-content: center; }
