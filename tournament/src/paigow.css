@@ -31,13 +31,13 @@
   .pg-caps > div b { display: block; font-size: 8px; letter-spacing: .16em; color: rgba(245,241,232,.45); font-weight: 400; }
   .pg-caps > div.win { color: #57E06A; }
   .pg-caps > div.lose { color: #FF6B6B; }
-  .pg-caps .hint { width: 100%; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: #FFD24D; }
+  .pg-caps .hint { align-self: center; width: 100%; font-family: var(--mono); font-size: 9px; letter-spacing: .1em; color: #FFD24D; }
   .pg-rule { margin: 4px 0; }
   #screen-paigow .uth-label.win .nm { color: #57E06A; }
   #screen-paigow .uth-label.lose .nm { color: #FF4D4D; }
-  .pg-bonusline { min-height: 18px; margin-top: 3px; font-family: var(--display); font-size: 12px; letter-spacing: .06em; color: #FFD24D; text-align: center; }
+  .pg-bonusline { height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 3px; font-family: var(--display); font-size: 12px; letter-spacing: .06em; color: #FFD24D; text-align: center; }
   .pg-bonusline.miss { color: rgba(245,241,232,.45); }
-  .pg-spots { display: flex; justify-content: center; align-items: flex-start; gap: 26px; margin-bottom: 10px; }
+  .pg-spots { display: flex; justify-content: center; align-items: flex-start; gap: 22px; margin-bottom: 10px; }
   .pg-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--bone); }
   .pg-spot .ring { position: relative; width: 62px; height: 62px; border-radius: 50%; border: 2px solid #E24B5B; background: rgba(0,0,0,.35);
                    display: grid; place-items: center; }
@@ -61,10 +61,29 @@
   .pg-pays .rows div b { color: #FFD24D; font-weight: 400; }
   .pg-pays .rows div.hit { background: #FFD24D; color: #16070B; }
   .pg-pays .rows div.hit b { color: #16070B; }
+  .pg-pays.ace .rows { display: flex; justify-content: space-between; gap: 6px; }
+  .pg-pays.ace .rows div { gap: 6px; }
+  .pg-pays + .pg-pays { margin-top: -4px; }
+  /* shorter phones: the same table, packed tighter, so it never has to scroll */
+  @media (max-height: 770px) {
+    .pg-sign { margin: 0 0 4px; } .pg-sign span { display: none; }
+    .pg-row { min-height: 68px; } .pg-row.you { min-height: 74px; }
+    .pg-caps { min-height: 27px; margin-top: 3px; }
+    .pg-pays { margin-bottom: 6px; }
+    .pg-spots { margin-bottom: 6px; }
+    .pg-spot .ring { width: 54px; height: 54px; } .pg-spot .ring .placed { width: 44px; height: 44px; }
+    .pg-spot .amt { display: none; }
+  }
   @media (max-height: 700px) {
+    .pg-sign { display: none; }
     .pg-row .card, .pg-row .slot { width: 38px; height: 57px; }
-    .pg-row { min-height: 68px; } .pg-row.you { min-height: 72px; }
-    .pg-spot .ring { width: 52px; height: 52px; } .pg-spot .ring .placed { width: 42px; height: 42px; }
-    .pg-sign span { display: none; }
-    .pg-pays { margin-bottom: 6px; } .pg-pays .rows div { font-size: 9px; padding: 0 5px; }
+    .pg-row { min-height: 62px; } .pg-row.you { min-height: 70px; }
+    .pg-row .card.low { transform: translateY(-9px); }
+    .pg-pays .rows div { font-size: 9px; padding: 0 5px; }
+    .pg-pays .hd { margin-bottom: 2px; }
+    .pg-spot .ring { width: 46px; height: 46px; } .pg-spot .ring .placed { width: 38px; height: 38px; }
+    .pg-spot .cap { font-size: 9px; }
+    #pg-rack { min-height: 46px; } #screen-paigow .uth-rack .chip-btn { width: 46px; height: 46px; }
+    #screen-paigow .uth-actions { margin-top: 5px; }
+    #screen-paigow .uth-table { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
   }

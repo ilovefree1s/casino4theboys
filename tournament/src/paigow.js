@@ -1,11 +1,13 @@
   /* ============================================================
-     PAI GOW POKER — seven cards each, from 52 and a joker.
-     You split yours into a two-card hand and a five-card hand; the five has to
-     outrank the two. The dealer does the same. Win both and the bet pays even
-     money, no commission; lose both and it's gone; one each is a push.
-     A hand that ties exactly (a "copy") goes to the dealer.
+     FACE UP PAI GOW POKER — seven cards each, from 52 and a joker.
+     The dealer's seven are dealt face up and set first. You split yours into a
+     two-card hand and a five-card hand; the five has to outrank the two.
+     Win both and the bet pays even money, no commission; lose both and it's
+     gone; one each is a push. A hand that ties exactly (a "copy") goes to the
+     dealer. When the best the dealer can make is ace-high, every bet pushes.
      The joker is an ace, unless it finishes a straight or a flush.
-     The bonus bet pays on the best hand in your seven cards, win or lose.
+     Two side bets: BONUS pays on the best hand in your seven cards, win or
+     lose; ACE-HIGH pays when the dealer is ace-high.
      Campaign and Play Testing only; the tournament doesn't list it.
      ============================================================ */
   var PGE = (function () {
@@ -130,18 +132,26 @@
       while (lo < hi) { var m = (lo + hi) >> 1; if (arr[m] < x) lo = m + 1; else hi = m; }
       return lo / arr.length;
     }
+    /** A five-card hand without its kickers: a pair is its pair, two pair its two pairs, a high-card hand its top card.
+        The house never gives up a better two-card hand to keep a kicker, so the odds are worked on this. */
+    function coarse(sc) {
+      var c = catOf(sc);
+      return pack(c, [tie(sc, 0), c === TWOPAIR || c === FULL ? tie(sc, 1) : 0]);
+    }
     function byOdds(cards, dist) {
       var all = splits(cards), best = null, bestEv = -9;
       all.forEach(function (s) {
-        var pl = below(dist.lo, s.loS), ph = below(dist.hi, s.hiS);
+        var pl = below(dist.lo, s.loS), ph = below(dist.hi, coarse(s.hiS));
         var ev = pl * ph - (1 - pl) * (1 - ph);
-        if (ev > bestEv + 1e-9 || (Math.abs(ev - bestEv) <= 1e-9 && best && s.hiS > best.hiS)) { bestEv = ev; best = s; }
+        // level odds: the stronger two-card hand first, then the stronger five
+        var level = Math.abs(ev - bestEv) <= 1e-9 && best && (s.loS > best.loS || (s.loS === best.loS && s.hiS > best.hiS));
+        if (ev > bestEv + 1e-9 || level) { bestEv = ev; best = s; }
       });
       return best;
     }
     function sample(setter, n) {
       var lo = [], hi = [];
-      for (var i = 0; i < n; i++) { var s = setter(deck().slice(0, 7)); lo.push(s.loS); hi.push(s.hiS); }
+      for (var i = 0; i < n; i++) { var s = setter(deck().slice(0, 7)); lo.push(s.loS); hi.push(coarse(s.hiS)); }
       var num = function (a, b) { return a - b; };
       return { lo: lo.sort(num), hi: hi.sort(num) };
     }
@@ -202,22 +212,36 @@
       var lo = you.loS > dealer.loS, hi = you.hiS > dealer.hiS;
       return { lo: lo, hi: hi, result: lo && hi ? 1 : !lo && !hi ? -1 : 0 };
     }
+    /** Ace-high: the best five in the seven is no pair, no straight, no flush, with an ace (or the joker as one) on top. */
+    function aceHigh(cards) {
+      var sc = best5(cards);
+      return { is: catOf(sc) === HIGH && tie(sc, 0) === 14, joker: cards.some(function (c) { return !!c.joker; }) };
+    }
+    var ACEPAYS = [{ key: "ah5", name: "DEALER ACE-HIGH", pays: 5 }, { key: "ah15", name: "WITH JOKER", pays: 15 }, { key: "ah40", name: "YOU TOO", pays: 40 }];
+    /** What the ace-high bet makes of the two hands: one of ACEPAYS, or null. */
+    function aceBet(yours, dealers) {
+      var d = aceHigh(dealers);
+      if (!d.is) return null;
+      return aceHigh(yours).is ? ACEPAYS[2] : d.joker ? ACEPAYS[1] : ACEPAYS[0];
+    }
     return { five: five, two: two, fouled: fouled, name5: name5, name2: name2, splits: splits, deck: deck, houseWay: houseWay,
-             warm: warm, bonus: bonus, BONUS: BONUS, settle: settle, catOf: catOf, best5: best5 };
+             warm: warm, bonus: bonus, BONUS: BONUS, settle: settle, catOf: catOf, best5: best5,
+             aceHigh: aceHigh, aceBet: aceBet, ACEPAYS: ACEPAYS };
   })();
   window.PGE = PGE;   // exposed so the rules can be exercised directly
 
   var PaiGow = (function () {
     var RED = "#E24B5B", GOLD = "#FFD24D", LOSS = "#FF4D4D", DIM = "rgba(245,241,232,.7)";
-    var COMMISSION = 0;      // no house cut: a win pays even money
     var bankroll = FREEPLAY.buyIn, selectedChip = 25;
     // betting | dealing | set | reveal | result
     var phase = "betting";
-    var bet = 0, side = 0, lastBet = 0, lastSide = 0;
-    var mine = [], theirs = [], pick = [], mySet = null, dealerSet = null, outcome = null, sideHit = null, paid = { main: 0, side: 0 };
+    var bets = { bet: 0, bonus: 0, ace: 0 }, last = { bet: 0, bonus: 0, ace: 0 };
+    var mine = [], theirs = [], pick = [], mySet = null, dealerSet = null, dealerAce = false, outcome = null;
+    var sideHit = null, aceHit = null, paid = { main: 0, bonus: 0, ace: 0, bonusBet: 0, aceBet: 0 };
     var timers = [];
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
     function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+    function total() { return bets.bet + bets.bonus + bets.ace; }
     function syncWallet() {
       if (Shell.mode !== "campaign") return;
       Shell.setBankroll(bankroll);
@@ -246,33 +270,36 @@
     }
     function renderTop() {
       $("pg-bankroll").textContent = fmt(bankroll);
-      $("pg-risk").textContent = fmt(phase === "betting" || phase === "result" ? 0 : bet + side);
+      $("pg-risk").textContent = fmt(phase === "betting" || phase === "result" ? 0 : total());
     }
     /** A set hand in a row: the two, a gap, the five. */
-    function rowSet(host, cards, set, up, marks) {
+    function rowSet(host, cards, set, marks) {
       var lo = set.lo, hi = [0, 1, 2, 3, 4, 5, 6].filter(function (k) { return lo.indexOf(k) < 0; });
-      lo.forEach(function (k) { var el = cardEl(cards[k], up); if (marks) el.classList.add(marks.lo ? "won" : "lost"); host.appendChild(el); });
+      lo.forEach(function (k) { var el = cardEl(cards[k], true); if (marks) el.classList.add(marks.lo ? "won" : "lost"); host.appendChild(el); });
       gap(host);
-      hi.forEach(function (k) { var el = cardEl(cards[k], up); if (marks) el.classList.add(marks.hi ? "won" : "lost"); host.appendChild(el); });
+      hi.forEach(function (k) { var el = cardEl(cards[k], true); if (marks) el.classList.add(marks.hi ? "won" : "lost"); host.appendChild(el); });
     }
     function renderCards() {
       var d = $("pg-dealer"), y = $("pg-you"), dc = $("pg-dealer-caps"), yc = $("pg-you-caps"), i;
       d.innerHTML = ""; y.innerHTML = ""; dc.innerHTML = ""; yc.innerHTML = "";
       y.classList.toggle("pick", phase === "set");
-      var shown = phase === "reveal" || phase === "result";
-      // the dealer
+      var judged = outcome && !outcome.aceHigh;      // an ace-high dealer pushes everything: nothing won or lost to mark
+      // the dealer: face up from the first card, and set before you set yours
       if (!theirs.length) { for (i = 0; i < 7; i++) { if (i === 2) gap(d); slot(d); } }
-      else if (shown && dealerSet) {
-        rowSet(d, theirs, dealerSet, true, outcome ? { lo: !outcome.lo, hi: !outcome.hi } : null);
-        cap(dc, "lo", "2-CARD", PGE.name2(dealerSet.loS), outcome ? (outcome.lo ? "lose" : "win") : "");
-        cap(dc, "hi", "5-CARD", PGE.name5(dealerSet.hiS), outcome ? (outcome.hi ? "lose" : "win") : "");
-      } else { for (i = 0; i < theirs.length; i++) d.appendChild(cardEl(theirs[i], false)); for (; i < 7; i++) slot(d); }
+      else if (dealerSet) {
+        rowSet(d, theirs, dealerSet, judged ? { lo: !outcome.lo, hi: !outcome.hi } : null);
+        if (dealerAce) { var ah = document.createElement("div"); ah.className = "hint"; ah.textContent = "ACE-HIGH · EVERY BET PUSHES"; dc.appendChild(ah); }
+        else {
+          cap(dc, "lo", "2-CARD", PGE.name2(dealerSet.loS), judged ? (outcome.lo ? "lose" : "win") : "");
+          cap(dc, "hi", "5-CARD", PGE.name5(dealerSet.hiS), judged ? (outcome.hi ? "lose" : "win") : "");
+        }
+      } else { for (i = 0; i < theirs.length; i++) d.appendChild(cardEl(theirs[i], true)); for (; i < 7; i++) slot(d); }
       // you
       if (!mine.length) { for (i = 0; i < 7; i++) { if (i === 2) gap(y); slot(y); } }
       else if (mySet) {
-        rowSet(y, mine, mySet, true, outcome ? { lo: outcome.lo, hi: outcome.hi } : null);
-        cap(yc, "lo", "2-CARD", PGE.name2(mySet.loS), outcome ? (outcome.lo ? "win" : "lose") : "");
-        cap(yc, "hi", "5-CARD", PGE.name5(mySet.hiS), outcome ? (outcome.hi ? "win" : "lose") : "");
+        rowSet(y, mine, mySet, judged ? { lo: outcome.lo, hi: outcome.hi } : null);
+        cap(yc, "lo", "2-CARD", PGE.name2(mySet.loS), judged ? (outcome.lo ? "win" : "lose") : "");
+        cap(yc, "hi", "5-CARD", PGE.name5(mySet.hiS), judged ? (outcome.hi ? "win" : "lose") : "");
       } else {
         for (i = 0; i < mine.length; i++) (function (k) {
           var el = cardEl(mine[k], true);
@@ -290,9 +317,9 @@
           yc.appendChild(h);
         }
       }
-      var res = outcome ? outcome.result : 0;
-      label("pg-dealer-label", "DEALER", outcome && res < 0 ? "lose" : "");
-      label("pg-you-label", "YOUR HAND", outcome && res > 0 ? "win" : outcome && res < 0 ? "lose" : "");
+      var res = judged ? outcome.result : 0;
+      label("pg-dealer-label", "DEALER", res < 0 ? "lose" : "");
+      label("pg-you-label", "YOUR HAND", res > 0 ? "win" : res < 0 ? "lose" : "");
     }
     function check() {
       if (pick.length < 2) return { foul: true };
@@ -300,14 +327,15 @@
       var loS = PGE.two(lo), hiS = PGE.five(hi);
       return { loS: loS, hiS: hiS, foul: PGE.fouled(loS, hiS) };
     }
+    var SPOTS = [["bet", "BET"], ["bonus", "BONUS"], ["ace", "ACE-HIGH"]];
     function renderSpots() {
       var host = $("pg-spots"); host.innerHTML = "";
       var open = phase === "betting";
-      [["bet", "BET", bet], ["bonus", "BONUS", side]].forEach(function (o) {
-        var b = document.createElement("button");
-        b.type = "button"; b.className = "pg-spot" + (o[0] === "bonus" ? " bonus" : ""); b.disabled = !open;
-        b.innerHTML = '<span class="ring">' + (o[2] > 0 ? '<span class="placed">' + chipHtml(o[2], 50) + "</span>" : '<span class="empty">TAP</span>') +
-          '</span><span class="cap">' + o[1] + '</span><span class="amt">' + (o[2] > 0 ? "$" + fmt(o[2]) : "") + "</span>";
+      SPOTS.forEach(function (o) {
+        var v = bets[o[0]], b = document.createElement("button");
+        b.type = "button"; b.className = "pg-spot" + (o[0] === "bet" ? "" : " bonus"); b.disabled = !open;
+        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 50) + "</span>" : '<span class="empty">TAP</span>') +
+          '</span><span class="cap">' + o[1] + '</span><span class="amt">' + (v > 0 ? "$" + fmt(v) : "") + "</span>";
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
@@ -338,8 +366,8 @@
     function renderActions() {
       var a = $("pg-actions"); a.innerHTML = "";
       if (phase === "betting") {
-        a.appendChild(actionBtn("CLEAR", DIM, clearBets, bet + side <= 0));
-        a.appendChild(actionBtn(bet > 0 ? "DEAL · $" + fmt(bet + side) : "DEAL", GOLD, deal, bet <= 0 || bet + side > bankroll));
+        a.appendChild(actionBtn("CLEAR", DIM, clearBets, total() <= 0));
+        a.appendChild(actionBtn(bets.bet > 0 ? "DEAL · $" + fmt(total()) : "DEAL", GOLD, deal, bets.bet <= 0 || total() > bankroll));
       } else if (phase === "set") {
         a.appendChild(actionBtn("HOUSE WAY", DIM, auto));
         a.appendChild(actionBtn("SET HAND", GOLD, confirm, check().foul));
@@ -347,12 +375,43 @@
         a.appendChild(actionBtn("NEW HAND", GOLD, nextHand));
       }
     }
+    /** The side bets, in one line under the result. */
     function renderBonusLine() {
       var el = $("pg-bonusline");
       el.className = "pg-bonusline";
-      if (phase !== "result" || !paid.sideBet) { el.textContent = ""; return; }
-      if (sideHit) el.textContent = "BONUS · " + sideHit.name.toUpperCase() + " PAYS " + fmt(sideHit.pays) + " TO 1 · +$" + fmt(paid.side);
-      else { el.textContent = "BONUS · NOTHING THIS TIME"; el.classList.add("miss"); }
+      if (phase !== "result" || !(paid.bonusBet || paid.aceBet)) { el.textContent = ""; return; }
+      var bits = [];
+      if (sideHit && paid.bonusBet) bits.push("BONUS +$" + fmt(paid.bonus));
+      if (aceHit && paid.aceBet) bits.push("ACE-HIGH +$" + fmt(paid.ace));
+      if (bits.length) el.textContent = bits.join("  ·  ");
+      else { el.textContent = "SIDE BETS · NOTHING THIS TIME"; el.classList.add("miss"); }
+    }
+    // what the side bets pay, on the felt the whole time; the line that hit lights up
+    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
+                     quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
+    (function () {
+      var rows = $("pg-pays-rows"), ace = $("pg-ace-rows");
+      PGE.BONUS.forEach(function (b) {
+        var d = document.createElement("div");
+        d.setAttribute("data-k", b.key);
+        d.innerHTML = "<span>" + SHORTPAY[b.key] + "</span><b>" + fmt(b.pays) + "</b>";
+        rows.appendChild(d);
+      });
+      PGE.ACEPAYS.forEach(function (b) {
+        var d = document.createElement("div");
+        d.setAttribute("data-k", b.key);
+        d.innerHTML = "<span>" + b.name + "</span><b>" + b.pays + "</b>";
+        ace.appendChild(d);
+      });
+    })();
+    function renderPays() {
+      var done = phase === "result";
+      var hit = done && paid.bonusBet > 0 && sideHit ? sideHit.key : null, ah = done && paid.aceBet > 0 && aceHit ? aceHit.key : null;
+      [].forEach.call($("pg-pays-rows").children, function (d) { d.classList.toggle("hit", d.getAttribute("data-k") === hit); });
+      [].forEach.call($("pg-ace-rows").children, function (d) { d.classList.toggle("hit", d.getAttribute("data-k") === ah); });
+      var live = phase === "betting" ? bets : { bonus: paid.bonusBet, ace: paid.aceBet };
+      $("pg-pays").classList.toggle("live", live.bonus > 0);
+      $("pg-acepays").classList.toggle("live", live.ace > 0);
     }
     function renderRebuy() {
       var broke = Shell.mode === "testing" && bankroll < 25 && phase === "betting";
@@ -363,43 +422,54 @@
     // ---------- betting ----------
     function place(which) {
       if (phase !== "betting") return;
-      var lim = Shell.limits(), isSide = which === "bonus", on = isSide ? side : bet;
-      var room = bankroll - bet - side;
-      var want = Math.min(selectedChip, room);
+      var lim = Shell.limits(), isSide = which !== "bet";
+      var want = Math.min(selectedChip, bankroll - total());
       if (want <= 0) { setMessage("That's all your chips"); return; }
-      var ok = allow(lim, want, on, isSide);
+      var ok = allow(lim, want, bets[which], isSide);
       if (ok <= 0) { setMessage(refusal(lim, isSide)); return; }
-      if (isSide) side += ok; else bet += ok;
-      setMessage(bet > 0 ? "Deal when you're ready" : "Put a bet down first — the bonus rides with it");
+      bets[which] += ok;
+      setMessage(bets.bet > 0 ? "Deal when you're ready" : "Put a bet down first — the side bets ride with it");
       renderAll();
     }
     function clearBets() {
       if (phase !== "betting") return;
-      bet = 0; side = 0;
+      bets = { bet: 0, bonus: 0, ace: 0 };
       setMessage("Place your bet");
       renderAll();
     }
 
     // ---------- the hand ----------
     function deal() {
-      if (phase !== "betting" || bet <= 0 || bet + side > bankroll) return;
-      bankroll -= bet + side;
+      if (phase !== "betting" || bets.bet <= 0 || total() > bankroll) return;
+      bankroll -= total();
       syncWallet();
-      lastBet = bet; lastSide = side;
+      last = { bet: bets.bet, bonus: bets.bonus, ace: bets.ace };
       var d = PGE.deck();
-      var my = sortHand(d.slice(0, 7)), dl = d.slice(7, 14);
-      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; outcome = null; sideHit = null; paid = { main: 0, side: 0, sideBet: side };
+      var my = sortHand(d.slice(0, 7)), dl = sortHand(d.slice(7, 14));
+      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; dealerAce = false; outcome = null; sideHit = null; aceHit = null;
+      paid = { main: 0, bonus: 0, ace: 0, bonusBet: bets.bonus, aceBet: bets.ace };
       phase = "dealing";
       setMessage("Dealing…");
       renderAll();
       for (var i = 0; i < 7; i++) (function (k) {
         t(80 + k * 110, function () { theirs.push(dl[k]); mine.push(my[k]); renderCards(); });
       })(i);
-      t(80 + 7 * 110 + 120, function () {
+      t(80 + 7 * 110 + 160, function () {
+        // the dealer sets first, face up, the house way
+        dealerSet = PGE.houseWay(theirs);
+        dealerAce = PGE.aceHigh(theirs).is;
+        if (dealerAce) {
+          // nothing to play for: every bet pushes, so your hand is just laid out
+          mySet = PGE.houseWay(mine);
+          phase = "reveal";
+          setMessage("Dealer is ace-high…");
+          renderAll();
+          t(900, settle);
+          return;
+        }
         phase = "set";
-        setMessage("Set your two hands");
+        setMessage("Set your two hands to beat the dealer's");
         renderAll();
-        setTimeout(PGE.warm, 30);      // the dealer's odds, worked out while you look at your cards
       });
     }
     function toggle(k) {
@@ -420,26 +490,32 @@
       var chk = check();
       if (chk.foul) { setMessage(pick.length < 2 ? "Pick two cards for the 2-card hand" : "The 5-card hand has to be the higher one"); return; }
       mySet = { lo: pick.slice().sort(function (a, b) { return a - b; }), loS: chk.loS, hiS: chk.hiS };
-      dealerSet = PGE.houseWay(theirs);
       phase = "reveal";
-      setMessage("Dealer shows…");
+      setMessage("…");
       renderAll();
-      t(900, settle);
+      t(500, settle);
     }
     function settle() {
       outcome = PGE.settle(mySet, dealerSet);
+      if (dealerAce) outcome = { lo: false, hi: false, result: 0, aceHigh: true };
       var back = 0, won = 0;
-      if (outcome.result > 0) { won = wholeDollars(bet * (1 - COMMISSION)); back = bet + won; }
-      else if (outcome.result === 0) back = bet;
-      paid.main = back - bet;
-      if (paid.sideBet > 0) {
+      if (outcome.result > 0) { won = bets.bet; back = bets.bet * 2; }
+      else if (outcome.result === 0) back = bets.bet;
+      paid.main = back - bets.bet;
+      if (paid.bonusBet > 0) {
         sideHit = PGE.bonus(mine);
-        if (sideHit) { paid.side = paid.sideBet * sideHit.pays; back += paid.sideBet + paid.side; }
-        else paid.side = -paid.sideBet;
+        if (sideHit) { paid.bonus = paid.bonusBet * sideHit.pays; back += paid.bonusBet + paid.bonus; }
+        else paid.bonus = -paid.bonusBet;
+      }
+      if (paid.aceBet > 0) {
+        aceHit = PGE.aceBet(mine, theirs);
+        if (aceHit) { paid.ace = paid.aceBet * aceHit.pays; back += paid.aceBet + paid.ace; }
+        else paid.ace = -paid.aceBet;
       }
       if (back > 0) { bankroll += back; syncWallet(); }
-      var net = paid.main + (paid.sideBet > 0 ? paid.side : 0);
-      var msg = outcome.result > 0 ? "You win both — +$" + fmt(won)
+      var net = paid.main + paid.bonus + paid.ace;
+      var msg = outcome.aceHigh ? "Dealer is ace-high — your bet pushes"
+        : outcome.result > 0 ? "You win both — +$" + fmt(won)
         : outcome.result === 0 ? "One each — push, your bet comes back"
         : "Dealer takes both";
       phase = "result";
@@ -452,47 +528,31 @@
       if (phase !== "result") return;
       clearTimers();
       phase = "betting";
-      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; outcome = null; sideHit = null;
+      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; dealerAce = false; outcome = null; sideHit = null; aceHit = null;
       // the same bets go back down, as far as the purse and the room allow
-      var lim = Shell.limits();
-      bet = Math.min(allow(lim, lastBet, 0, false), bankroll);
-      side = Math.min(allow(lim, lastSide, 0, true), Math.max(0, bankroll - bet));
-      if (bet <= 0) side = 0;
-      setMessage(bet > 0 ? "Same bet — deal, or change it" : "Place your bet");
+      var lim = Shell.limits(), left = bankroll;
+      bets.bet = Math.min(allow(lim, last.bet, 0, false), left); left -= bets.bet;
+      bets.bonus = bets.bet > 0 ? Math.min(allow(lim, last.bonus, 0, true), left) : 0; left -= bets.bonus;
+      bets.ace = bets.bet > 0 ? Math.min(allow(lim, last.ace, 0, true), left) : 0;
+      setMessage(bets.bet > 0 ? "Same bet — deal, or change it" : "Place your bet");
       renderAll();
       Shell.gate(refresh);
     }
     function refresh() {
       if (Shell.mode === "campaign") bankroll = Shell.getBankroll();
-      if (phase === "betting" && bet + side > bankroll) { bet = 0; side = 0; }
+      if (phase === "betting" && total() > bankroll) bets = { bet: 0, bonus: 0, ace: 0 };
       renderAll();
     }
     function enter() {
       clearTimers();
       phase = "betting";
-      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; outcome = null; sideHit = null;
-      bet = 0; side = 0; lastBet = 0; lastSide = 0;
+      mine = []; theirs = []; pick = []; mySet = null; dealerSet = null; dealerAce = false; outcome = null; sideHit = null; aceHit = null;
+      bets = { bet: 0, bonus: 0, ace: 0 }; last = { bet: 0, bonus: 0, ace: 0 };
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       setMessage("Place your bet");
       renderAll();
       Shell.gate(refresh);
-    }
-    // what the bonus pays, on the felt the whole time; the line that hit lights up
-    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
-                     quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
-    (function () {
-      var rows = $("pg-pays-rows");
-      PGE.BONUS.forEach(function (b) {
-        var d = document.createElement("div");
-        d.setAttribute("data-k", b.key);
-        d.innerHTML = "<span>" + SHORTPAY[b.key] + "</span><b>" + fmt(b.pays) + "</b>";
-        rows.appendChild(d);
-      });
-    })();
-    function renderPays() {
-      var hit = phase === "result" && paid.sideBet > 0 && sideHit ? sideHit.key : null;
-      [].forEach.call($("pg-pays-rows").children, function (d) { d.classList.toggle("hit", d.getAttribute("data-k") === hit); });
-      $("pg-pays").classList.toggle("live", side > 0 || (phase !== "betting" && paid.sideBet > 0));
+      setTimeout(PGE.warm, 60);      // the dealer's odds, worked out while you put your chips down
     }
     $("pg-buyin").addEventListener("click", function () {
       if (phase !== "betting" || bankroll >= 25) return;
@@ -504,11 +564,7 @@
     (function () {
       var show = Shell.show;
       Shell.show = function (name) {
-        if (name === "poker") {
-          var hidden = typeof TT !== "undefined" && !!TT.on;
-          $("pk-paigow").style.display = hidden ? "none" : "";
-          var sign = $("pk-sign"); if (sign) sign.textContent = hidden ? "SIX TABLES" : "SEVEN TABLES";
-        }
+        if (name === "poker") $("pk-paigow").style.display = typeof TT !== "undefined" && !!TT.on ? "none" : "";
         return show.apply(this, arguments);
       };
     })();
@@ -516,7 +572,7 @@
       busy: function () { return phase !== "betting" && phase !== "result"; },
       credit: function (x) {
         bankroll += x; syncWallet();
-        if (phase === "betting" && bet + side > bankroll) { bet = 0; side = 0; }
+        if (phase === "betting" && total() > bankroll) bets = { bet: 0, bonus: 0, ace: 0 };
         renderAll();
       },
       seatOk: function () { return phase === "betting" || phase === "result"; },

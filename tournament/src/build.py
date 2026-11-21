@@ -326,7 +326,7 @@ sub("""        <span class="pk-txt"><span class="nm">KIRBY</span><span class="l1
       </button>
       <button class="pk-game" id="pk-paigow" style="--c:#E24B5B" aria-label="Pai Gow Poker — play">
         <img src="data:image/svg+xml;base64,""" + __import__("base64").b64encode((here / "paigow-icon.svg").read_bytes()).decode() + """" alt="">
-        <span class="pk-txt"><span class="nm">PAI GOW</span><span class="l1">SEVEN CARDS · SET TWO HANDS</span><span class="l2">WIN BOTH · JOKER IN THE DECK</span></span>
+        <span class="pk-txt"><span class="nm">PAI GOW</span><span class="l1">FACE UP · SET TWO HANDS</span><span class="l2">NO COMMISSION · JOKER IN THE DECK</span></span>
         <span class="pk-play">PLAY</span>
       </button>""")
 sub("  paintMenu();\n  /* ---------- sound",
