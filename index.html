@@ -4447,7 +4447,11 @@
   .pg-spot .ring .placed { display: block; width: 46px; height: 46px; }
   .pg-spot .ring .empty { font-family: var(--display); font-size: 9px; letter-spacing: .1em; color: rgba(245,241,232,.45); }
   .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: var(--k); white-space: nowrap; }
-  .pg-spot[disabled] { opacity: .8; }
+  .pg-spot[disabled] { opacity: 1; }
+  /* the result pill rides the top edge of its circle, so nothing on the table moves when it shows */
+  .pg-pill { position: absolute; left: 50%; top: -8px; transform: translateX(-50%); z-index: 3; padding: 2px 8px; font-size: 11px; white-space: nowrap;
+             background: rgba(6,4,8,.94); pointer-events: none; }
+  .pg-pill.w { border-color: #57E06A; } .pg-pill.l { border-color: rgba(255,77,77,.7); }
   #pg-rack { min-height: 50px; }   /* the rack leaves, its room stays: nothing on the table moves between betting and the hand */
   #screen-paigow .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
   #screen-paigow .uth-btn[disabled] { opacity: .4; }
@@ -9692,6 +9696,17 @@
       return { loS: loS, hiS: hiS, foul: PGE.fouled(loS, hiS) };
     }
     var SPOTS = [["bet", "BET"], ["bonus", "BONUS"], ["ace", "ACE-HIGH"]];
+    /** After a hand: what that bet made or lost, in a pill on top of its circle. */
+    function pill(which) {
+      if (phase !== "result" || !outcome) return "";
+      var staked = which === "bet" ? last.bet : which === "bonus" ? paid.bonusBet : paid.aceBet;
+      if (!(staked > 0)) return "";
+      var net = which === "bet" ? paid.main : which === "bonus" ? paid.bonus : paid.ace;
+      var big = Math.abs(net) >= 100000 && typeof shortAmt === "function";
+      var amt = big ? shortAmt(Math.abs(net)) : fmt(Math.abs(net));
+      return '<span class="dj-pill pg-pill ' + (net > 0 ? "w" : net < 0 ? "l" : "p") + '"><span class="amt">' +
+        (net > 0 ? "+" + amt : net < 0 ? "−" + amt : "PUSH") + "</span></span>";
+    }
     function renderSpots() {
       var open = phase === "betting";
       SPOTS.forEach(function (o) {
@@ -9700,7 +9715,7 @@
         b.type = "button"; b.className = "pg-spot" + (o[0] === "bet" ? "" : " bonus"); b.disabled = !open;
         b.setAttribute("data-spot", o[0]);
         b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 46) + "</span>" : '<span class="empty">TAP</span>') +
-          '</span><span class="cap">' + o[1] + "</span>";
+          '</span><span class="cap">' + o[1] + "</span>" + pill(o[0]);
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });

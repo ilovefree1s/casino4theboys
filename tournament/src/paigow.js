@@ -328,6 +328,17 @@
       return { loS: loS, hiS: hiS, foul: PGE.fouled(loS, hiS) };
     }
     var SPOTS = [["bet", "BET"], ["bonus", "BONUS"], ["ace", "ACE-HIGH"]];
+    /** After a hand: what that bet made or lost, in a pill on top of its circle. */
+    function pill(which) {
+      if (phase !== "result" || !outcome) return "";
+      var staked = which === "bet" ? last.bet : which === "bonus" ? paid.bonusBet : paid.aceBet;
+      if (!(staked > 0)) return "";
+      var net = which === "bet" ? paid.main : which === "bonus" ? paid.bonus : paid.ace;
+      var big = Math.abs(net) >= 100000 && typeof shortAmt === "function";
+      var amt = big ? shortAmt(Math.abs(net)) : fmt(Math.abs(net));
+      return '<span class="dj-pill pg-pill ' + (net > 0 ? "w" : net < 0 ? "l" : "p") + '"><span class="amt">' +
+        (net > 0 ? "+" + amt : net < 0 ? "−" + amt : "PUSH") + "</span></span>";
+    }
     function renderSpots() {
       var open = phase === "betting";
       SPOTS.forEach(function (o) {
@@ -336,7 +347,7 @@
         b.type = "button"; b.className = "pg-spot" + (o[0] === "bet" ? "" : " bonus"); b.disabled = !open;
         b.setAttribute("data-spot", o[0]);
         b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 46) + "</span>" : '<span class="empty">TAP</span>') +
-          '</span><span class="cap">' + o[1] + "</span>";
+          '</span><span class="cap">' + o[1] + "</span>" + pill(o[0]);
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
