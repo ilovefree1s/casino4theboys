@@ -217,7 +217,7 @@
       var sc = best5(cards);
       return { is: catOf(sc) === HIGH && tie(sc, 0) === 14, joker: cards.some(function (c) { return !!c.joker; }) };
     }
-    var ACEPAYS = [{ key: "ah5", name: "DEALER ACE-HIGH", pays: 5 }, { key: "ah15", name: "WITH JOKER", pays: 15 }, { key: "ah40", name: "YOU TOO", pays: 40 }];
+    var ACEPAYS = [{ key: "ah5", name: "DEALER ONLY", pays: 5 }, { key: "ah15", name: "WITH THE JOKER", pays: 15 }, { key: "ah40", name: "YOU BOTH", pays: 40 }];
     /** What the ace-high bet makes of the two hands: one of ACEPAYS, or null. */
     function aceBet(yours, dealers) {
       var d = aceHigh(dealers);
@@ -329,13 +329,14 @@
     }
     var SPOTS = [["bet", "BET"], ["bonus", "BONUS"], ["ace", "ACE-HIGH"]];
     function renderSpots() {
-      var host = $("pg-spots"); host.innerHTML = "";
       var open = phase === "betting";
       SPOTS.forEach(function (o) {
+        var host = $("pg-spot-" + o[0]); host.innerHTML = "";
         var v = bets[o[0]], b = document.createElement("button");
         b.type = "button"; b.className = "pg-spot" + (o[0] === "bet" ? "" : " bonus"); b.disabled = !open;
-        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 50) + "</span>" : '<span class="empty">TAP</span>') +
-          '</span><span class="cap">' + o[1] + '</span><span class="amt">' + (v > 0 ? "$" + fmt(v) : "") + "</span>";
+        b.setAttribute("data-spot", o[0]);
+        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 46) + "</span>" : '<span class="empty">TAP</span>') +
+          '</span><span class="cap">' + o[1] + "</span>";
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
@@ -387,7 +388,7 @@
       else { el.textContent = "SIDE BETS · NOTHING THIS TIME"; el.classList.add("miss"); }
     }
     // what the side bets pay, on the felt the whole time; the line that hit lights up
-    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
+    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF, JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
                      quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
     (function () {
       var rows = $("pg-pays-rows"), ace = $("pg-ace-rows");

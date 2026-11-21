@@ -4432,51 +4432,49 @@
   #screen-paigow .uth-label.lose .nm { color: #FF4D4D; }
   .pg-bonusline { height: 18px; line-height: 18px; white-space: nowrap; overflow: hidden; margin-top: 3px; font-family: var(--display); font-size: 12px; letter-spacing: .06em; color: #FFD24D; text-align: center; }
   .pg-bonusline.miss { color: rgba(245,241,232,.45); }
-  .pg-spots { display: flex; justify-content: center; align-items: flex-start; gap: 22px; margin-bottom: 10px; }
-  .pg-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--bone); }
-  .pg-spot .ring { position: relative; width: 62px; height: 62px; border-radius: 50%; border: 2px solid #E24B5B; background: rgba(0,0,0,.35);
+  /* the felt: each side bet's circle sits against the box that says what it pays */
+  .pg-felt { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1.28fr); gap: 8px; align-items: stretch; margin-bottom: 8px; }
+  .pg-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .pg-col.l { justify-content: space-between; gap: 6px; }
+  .pg-col.c { justify-content: space-between; gap: 6px; padding-top: 2px; }
+  .pg-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--bone); }
+  .pg-spot .ring { position: relative; width: 56px; height: 56px; border-radius: 50%; border: 2px solid #E24B5B; background: rgba(0,0,0,.35);
                    display: grid; place-items: center; }
   .pg-spot.bonus .ring { border-color: #FFD24D; }
-  .pg-spot .ring .placed { display: block; width: 50px; height: 50px; }
+  .pg-spot .ring .placed { display: block; width: 46px; height: 46px; }
   .pg-spot .ring .empty { font-family: var(--display); font-size: 9px; letter-spacing: .1em; color: rgba(245,241,232,.45); }
-  .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.8); }
-  .pg-spot .amt { font-family: var(--display); font-size: 11px; color: #FFD24D; min-height: 13px; }
-  .pg-spot[disabled] { opacity: .75; }
+  .pg-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.8); white-space: nowrap; }
+  .pg-spot[disabled] { opacity: .8; }
   #pg-rack { min-height: 50px; }   /* the rack leaves, its room stays: nothing on the table moves between betting and the hand */
   #screen-paigow .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
   #screen-paigow .uth-btn[disabled] { opacity: .4; }
   #screen-paigow .uth-actions { width: 100%; display: flex; gap: 10px; margin-top: 8px; }
-  .pg-pays { width: 100%; margin-bottom: 10px; opacity: .7; transition: opacity .2s; }
-  .pg-pays.live { opacity: 1; }
-  .pg-pays .hd { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: #FFD24D; margin-bottom: 5px; }
-  .pg-pays .hd i { flex: 1; height: 1px; background: rgba(255,210,77,.35); }
-  .pg-pays .rows { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: column; grid-template-rows: repeat(5, auto); gap: 2px 18px; }
-  .pg-pays .rows div { display: flex; justify-content: space-between; align-items: baseline; padding: 1px 5px; border-radius: 4px;
-                       font-family: var(--display); font-size: 10px; letter-spacing: .04em; color: rgba(245,241,232,.82); white-space: nowrap; }
+  .pg-pays { width: 100%; box-sizing: border-box; padding: 5px 6px 6px; border-radius: 10px; border: 1.5px solid rgba(255,210,77,.38); background: rgba(0,0,0,.28);
+             transition: border-color .2s; }
+  .pg-pays.live { border-color: #FFD24D; }
+  .pg-pays .hd { font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: #FFD24D; text-align: center; margin-bottom: 4px; }
+  .pg-pays .ft { font-family: var(--mono); font-size: 7px; letter-spacing: .1em; color: rgba(245,241,232,.5); text-align: center; margin-top: 4px; }
+  .pg-pays .rows { display: flex; flex-direction: column; gap: 1px; }
+  .pg-pays .rows div { display: flex; justify-content: space-between; align-items: baseline; gap: 6px; padding: 1px 4px; border-radius: 4px;
+                       font-family: var(--display); font-size: 9.5px; line-height: 12px; letter-spacing: 0; color: rgba(245,241,232,.85); white-space: nowrap; }
   .pg-pays .rows div b { color: #FFD24D; font-weight: 400; }
   .pg-pays .rows div.hit { background: #FFD24D; color: #16070B; }
   .pg-pays .rows div.hit b { color: #16070B; }
-  .pg-pays.ace .rows { display: flex; justify-content: space-between; gap: 6px; }
-  .pg-pays.ace .rows div { gap: 6px; }
-  .pg-pays + .pg-pays { margin-top: -4px; }
+  .pg-col.r .pg-pays { height: 100%; }
   /* shorter phones: the same table, packed tighter, so it never has to scroll */
   @media (max-height: 770px) {
     .pg-sign { margin: 0 0 4px; } .pg-sign span { display: none; }
     .pg-row { min-height: 68px; } .pg-row.you { min-height: 74px; }
     .pg-caps { min-height: 27px; margin-top: 3px; }
-    .pg-pays { margin-bottom: 6px; }
-    .pg-spots { margin-bottom: 6px; }
-    .pg-spot .ring { width: 54px; height: 54px; } .pg-spot .ring .placed { width: 44px; height: 44px; }
-    .pg-spot .amt { display: none; }
+    .pg-felt { margin-bottom: 6px; }
   }
   @media (max-height: 700px) {
     .pg-sign { display: none; }
     .pg-row .card, .pg-row .slot { width: 38px; height: 57px; }
     .pg-row { min-height: 62px; } .pg-row.you { min-height: 70px; }
     .pg-row .card.low { transform: translateY(-9px); }
-    .pg-pays .rows div { font-size: 9px; padding: 0 5px; }
-    .pg-pays .hd { margin-bottom: 2px; }
-    .pg-spot .ring { width: 46px; height: 46px; } .pg-spot .ring .placed { width: 38px; height: 38px; }
+    .pg-pays .rows div { font-size: 9px; line-height: 11px; }
+    .pg-spot .ring { width: 48px; height: 48px; } .pg-spot .ring .placed { width: 40px; height: 40px; }
     .pg-spot .cap { font-size: 9px; }
     #pg-rack { min-height: 46px; } #screen-paigow .uth-rack .chip-btn { width: 46px; height: 46px; }
     #screen-paigow .uth-actions { margin-top: 5px; }
@@ -4964,15 +4962,27 @@
       <div class="pg-bonusline" id="pg-bonusline"></div>
     </div>
     <div class="dj-bottom">
-      <div class="pg-pays" id="pg-pays">
-        <div class="hd"><i></i><span>BONUS PAYS · BEST HAND IN YOUR SEVEN</span><i></i></div>
-        <div class="rows" id="pg-pays-rows"></div>
+      <div class="pg-felt">
+        <div class="pg-col l">
+          <div id="pg-spot-ace"></div>
+          <div class="pg-pays" id="pg-acepays">
+            <div class="hd">ACE-HIGH PAYS</div>
+            <div class="rows" id="pg-ace-rows"></div>
+            <div class="ft">DEALER IS ACE-HIGH</div>
+          </div>
+        </div>
+        <div class="pg-col c">
+          <div id="pg-spot-bonus"></div>
+          <div id="pg-spot-bet"></div>
+        </div>
+        <div class="pg-col r">
+          <div class="pg-pays" id="pg-pays">
+            <div class="hd">BONUS PAYS</div>
+            <div class="rows" id="pg-pays-rows"></div>
+            <div class="ft">BEST HAND IN YOUR SEVEN</div>
+          </div>
+        </div>
       </div>
-      <div class="pg-pays ace" id="pg-acepays">
-        <div class="hd"><i></i><span>ACE-HIGH PAYS · WHEN THE DEALER'S BEST IS ACE-HIGH</span><i></i></div>
-        <div class="rows" id="pg-ace-rows"></div>
-      </div>
-      <div class="pg-spots" id="pg-spots"></div>
       <div id="pg-rack"></div>
       <div class="uth-actions" id="pg-actions"></div>
     </div>
@@ -9566,7 +9576,7 @@
       var sc = best5(cards);
       return { is: catOf(sc) === HIGH && tie(sc, 0) === 14, joker: cards.some(function (c) { return !!c.joker; }) };
     }
-    var ACEPAYS = [{ key: "ah5", name: "DEALER ACE-HIGH", pays: 5 }, { key: "ah15", name: "WITH JOKER", pays: 15 }, { key: "ah40", name: "YOU TOO", pays: 40 }];
+    var ACEPAYS = [{ key: "ah5", name: "DEALER ONLY", pays: 5 }, { key: "ah15", name: "WITH THE JOKER", pays: 15 }, { key: "ah40", name: "YOU BOTH", pays: 40 }];
     /** What the ace-high bet makes of the two hands: one of ACEPAYS, or null. */
     function aceBet(yours, dealers) {
       var d = aceHigh(dealers);
@@ -9678,13 +9688,14 @@
     }
     var SPOTS = [["bet", "BET"], ["bonus", "BONUS"], ["ace", "ACE-HIGH"]];
     function renderSpots() {
-      var host = $("pg-spots"); host.innerHTML = "";
       var open = phase === "betting";
       SPOTS.forEach(function (o) {
+        var host = $("pg-spot-" + o[0]); host.innerHTML = "";
         var v = bets[o[0]], b = document.createElement("button");
         b.type = "button"; b.className = "pg-spot" + (o[0] === "bet" ? "" : " bonus"); b.disabled = !open;
-        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 50) + "</span>" : '<span class="empty">TAP</span>') +
-          '</span><span class="cap">' + o[1] + '</span><span class="amt">' + (v > 0 ? "$" + fmt(v) : "") + "</span>";
+        b.setAttribute("data-spot", o[0]);
+        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 46) + "</span>" : '<span class="empty">TAP</span>') +
+          '</span><span class="cap">' + o[1] + "</span>";
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
@@ -9736,7 +9747,7 @@
       else { el.textContent = "SIDE BETS · NOTHING THIS TIME"; el.classList.add("miss"); }
     }
     // what the side bets pay, on the felt the whole time; the line that hit lights up
-    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF + JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
+    var SHORTPAY = { sf7: "7-CARD STR FLUSH", sf7j: "7-CARD SF, JOKER", aces: "FIVE ACES", royal: "ROYAL FLUSH", sf: "STRAIGHT FLUSH",
                      quads: "FOUR OF A KIND", full: "FULL HOUSE", flush: "FLUSH", trips: "THREE OF A KIND", straight: "STRAIGHT" };
     (function () {
       var rows = $("pg-pays-rows"), ace = $("pg-ace-rows");
