@@ -390,61 +390,117 @@
       setTimeout(function () { finish(); }, LEN + 3000);
     }
 
-    /* ---- lounge music for the how-it-works cards: walking bass, a soft piano comp, brushes ---- */
+    /* ---- lounge music for the how-it-works cards: an eight-bar turnaround, electric piano, upright bass, ride, vibes ---- */
     function Music() {
-      var v = vol(), none = { stop: function () {}, wake: function () {}, chips: function () {} }, ctx;
-      if (!(v > 0)) return none;
+      var v = vol(), mv = typeof SOUND !== "undefined" ? SOUND.music : 0.3;        // chips follow the sound dial, the band the music dial
+      var none = { stop: function () {}, wake: function () {}, chips: function () {} }, ctx;
+      if (!(v > 0) && !(mv > 0)) return none;
       try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return none; }
-      var out = ctx.createGain(); out.gain.value = 0.0001; out.connect(ctx.destination);
-      out.gain.setTargetAtTime(0.5 * v, ctx.currentTime, 0.25);
-      var nb = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate), nd = nb.getChannelData(0);
+      var out = ctx.createGain(); out.gain.value = 0.0001;
+      var tone_ = ctx.createBiquadFilter(); tone_.type = "lowpass"; tone_.frequency.value = 7500;
+      out.connect(tone_); tone_.connect(ctx.destination);
+      out.gain.setTargetAtTime(Math.min(1, mv * 2.2), ctx.currentTime, 0.4);
+      // a small room, so nothing sounds like a bare beep
+      var room = ctx.createConvolver(), rl = Math.floor(ctx.sampleRate * 1.5), rb = ctx.createBuffer(2, rl, ctx.sampleRate);
+      for (var ch = 0; ch < 2; ch++) { var rd = rb.getChannelData(ch); for (var ri = 0; ri < rl; ri++) rd[ri] = (Math.random() * 2 - 1) * Math.pow(1 - ri / rl, 2.6); }
+      room.buffer = rb;
+      var wet = ctx.createGain(); wet.gain.value = 0.22; room.connect(wet); wet.connect(out);
+      var nb = ctx.createBuffer(1, ctx.sampleRate * 0.4, ctx.sampleRate), nd = nb.getChannelData(0);
       for (var i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
       function hz(m) { return 440 * Math.pow(2, (m - 69) / 12); }
-      function tone(type, m, t, len, vol_, cut) {
-        var o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
-        o.type = type; o.frequency.value = hz(m); f.type = "lowpass"; f.frequency.value = cut;
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol_, t + 0.012);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        o.connect(f); f.connect(g); g.connect(out); o.start(t); o.stop(t + len + 0.03);
+      function send(node, dry, rev) {
+        var d = ctx.createGain(); d.gain.value = dry; node.connect(d); d.connect(out);
+        if (rev) { var r = ctx.createGain(); r.gain.value = rev; node.connect(r); r.connect(room); }
       }
-      function brush(t, vol_, len) {
+      // electric piano: a warm fundamental, a touch of octave, and a short bell on the attack
+      function ep(m, t, len, lvl) {
+        var g = ctx.createGain(), f = hz(m);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(lvl, t + 0.008);
+        g.gain.exponentialRampToValueAtTime(lvl * 0.45, t + 0.18); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        [[1, 1], [2, 0.22], [3, 0.05]].forEach(function (h) {
+          var o = ctx.createOscillator(), og = ctx.createGain(); o.type = "sine"; o.frequency.value = f * h[0]; o.detune.value = (Math.random() - 0.5) * 6;
+          og.gain.value = h[1]; o.connect(og); og.connect(g); o.start(t); o.stop(t + len + 0.05);
+        });
+        var b = ctx.createOscillator(), bg = ctx.createGain(); b.type = "sine"; b.frequency.value = f * 7;
+        bg.gain.setValueAtTime(lvl * 0.16, t); bg.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+        b.connect(bg); bg.connect(g); b.start(t); b.stop(t + 0.1);
+        send(g, 0.9, 0.5);
+      }
+      // upright bass: round, with a little finger on the front
+      function bass(m, t, len) {
+        var o = ctx.createOscillator(), o2 = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+        o.type = "triangle"; o2.type = "sine"; o.frequency.value = hz(m); o2.frequency.value = hz(m) * 2;
+        f.type = "lowpass"; f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(260, t + 0.14);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.62, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.3, t + 0.2); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        var g2 = ctx.createGain(); g2.gain.value = 0.18; o2.connect(g2); g2.connect(f);
+        o.connect(f); f.connect(g); o.start(t); o2.start(t); o.stop(t + len + 0.05); o2.stop(t + len + 0.05);
+        send(g, 1, 0.05);
+      }
+      function vibes(m, t, len, lvl) {
+        var g = ctx.createGain(), f = hz(m);
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(lvl, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        [[1, 1, len], [4, 0.2, 0.25], [10, 0.05, 0.08]].forEach(function (h) {
+          var o = ctx.createOscillator(), og = ctx.createGain(); o.type = "sine"; o.frequency.value = f * h[0];
+          og.gain.setValueAtTime(h[1], t); og.gain.exponentialRampToValueAtTime(0.0001, t + h[2]);
+          o.connect(og); og.connect(g); o.start(t); o.stop(t + len + 0.05);
+        });
+        send(g, 0.8, 0.9);
+      }
+      function cym(t, lvl, len, hp) {
         var n = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-        n.buffer = nb; f.type = "highpass"; f.frequency.value = 6500;
-        g.gain.setValueAtTime(vol_, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
-        n.connect(f); f.connect(g); g.connect(out); n.start(t); n.stop(t + len + 0.02);
+        n.buffer = nb; n.loop = true; f.type = "highpass"; f.frequency.value = hp;
+        g.gain.setValueAtTime(lvl, t); g.gain.exponentialRampToValueAtTime(0.0001, t + len);
+        n.connect(f); f.connect(g); n.start(t, Math.random() * 0.3); n.stop(t + len + 0.02);
+        send(g, 1, 0.25);
       }
-      // Dm7  G7  Cmaj7  A7 — one bar each, bass walks four to the bar
+      function kick(t) {
+        var o = ctx.createOscillator(), g = ctx.createGain(); o.type = "sine";
+        o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(48, t + 0.09);
+        g.gain.setValueAtTime(0.28, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+        o.connect(g); o.start(t); o.stop(t + 0.2); send(g, 1, 0);
+      }
+      // Cmaj9  A7  Dm9  G13  |  Em7  A7  Dm9  G7b9
       var BARS = [
-        { bass: [38, 41, 45, 44], ch: [60, 65, 69, 72] },
-        { bass: [43, 47, 50, 49], ch: [59, 65, 69, 71] },
-        { bass: [36, 40, 43, 45], ch: [59, 64, 67, 71] },
-        { bass: [45, 49, 52, 39], ch: [61, 64, 67, 70] }
+        { b: [36, 40, 43, 45], c: [52, 59, 62, 67] }, { b: [45, 43, 40, 37], c: [55, 59, 61, 66] },
+        { b: [38, 41, 45, 44], c: [53, 57, 60, 64] }, { b: [43, 47, 50, 41], c: [53, 57, 59, 64] },
+        { b: [40, 43, 47, 46], c: [50, 55, 59, 62] }, { b: [45, 49, 52, 39], c: [55, 59, 61, 64] },
+        { b: [38, 45, 41, 42], c: [53, 57, 60, 64] }, { b: [43, 41, 38, 37], c: [53, 56, 59, 64] }
       ];
-      var LICK = [[0, 76], [1.67, 74], [2, 72], [3.67, 69], [4, 71], [6, 74], [7.67, 72], [8, 67], [10, 71], [11.67, 72], [12, 73], [14, 76]];
-      var beat = 60 / 132, bar = 0, nextAt = ctx.currentTime + 0.12, stopped = false;
+      // [beat in the eight bars, note, beats long]
+      var TUNE = [[0, 79, 1.5], [2, 76, 1], [3.67, 74, 0.6], [4, 73, 1.6], [6, 76, 1], [7, 79, 1], [8, 77, 2], [10.67, 76, 0.6], [11, 74, 1],
+        [12, 71, 2.2], [14.67, 74, 0.6], [15, 76, 1], [16, 79, 1], [17.67, 83, 0.6], [18, 81, 1.6], [20, 79, 1], [21.67, 76, 0.6], [22, 73, 1.6],
+        [24, 74, 1], [25, 77, 1], [26, 81, 1], [27.67, 84, 0.6], [28, 83, 1.6], [30, 80, 1], [31, 79, 1.2]];
+      var beat = 60 / 100, bar = 0, nextAt = ctx.currentTime + 0.15, stopped = false;
       function sched() {
-        if (stopped) return;
-        while (nextAt < ctx.currentTime + 0.6) {
-          var b = BARS[bar % 4], t = nextAt, k;
+        if (stopped || ctx.state !== "running") return;
+        if (nextAt < ctx.currentTime) nextAt = ctx.currentTime + 0.1;               // came back from a pause: pick up from here
+        while (nextAt < ctx.currentTime + 0.7) {
+          var n = bar % 8, B = BARS[n], t = nextAt, k;
           for (k = 0; k < 4; k++) {
-            tone("triangle", b.bass[k], t + k * beat, beat * 0.95, 0.5, 420);
-            brush(t + k * beat, k % 2 ? 0.14 : 0.07, 0.07);
-            if (k % 2) brush(t + (k + 0.67) * beat, 0.06, 0.04);          // the swung skip
+            bass(B.b[k], t + k * beat, beat * 0.92);
+            cym(t + k * beat, 0.05, 0.22, 7000);                                    // ride on every beat
+            if (k % 2) { cym(t + (k + 0.67) * beat, 0.03, 0.12, 7500); cym(t + k * beat, 0.07, 0.035, 5000); }   // the skip note, and the hat closing on 2 and 4
           }
-          [0.67, 2.67].forEach(function (at) {                            // comp on the off-beats
-            b.ch.forEach(function (m) { tone("triangle", m, t + at * beat, beat * 1.1, 0.085, 1800); });
+          kick(t); if (n % 2 === 0) kick(t + 2.67 * beat);
+          (n % 2 ? [[1.67, 1.2], [3, 0.9]] : [[0, 1.6], [2.67, 1.1]]).forEach(function (h) {
+            B.c.forEach(function (m, j) { ep(m, t + h[0] * beat + j * 0.012, beat * h[1] * 1.5, 0.085); });
           });
-          LICK.forEach(function (n) {                                     // a little vibes line over the top
-            if (Math.floor(n[0] / 4) === bar % 4) tone("sine", n[1] + 12, t + (n[0] % 4) * beat, beat * 1.4, 0.07, 5000);
-          });
+          TUNE.forEach(function (x) { if (Math.floor(x[0] / 4) === n) vibes(x[1], t + (x[0] % 4) * beat, beat * x[2] * 1.6, 0.075); });
           bar++; nextAt += beat * 4;
         }
       }
       var iv = setInterval(sched, 120); sched();
+      // off the screen means off: the band stops the moment the app is minimised, and picks up when it's back
+      function vis() {
+        try { if (document.hidden) ctx.suspend(); else if (!stopped) ctx.resume().then(sched, function () {}); } catch (e) {}
+      }
+      document.addEventListener("visibilitychange", vis); window.addEventListener("pagehide", vis);
       // ceramic chips riffled and dropped on a stack: dry clacks, all click and no ring.
       // Each one is a few milliseconds of noise through two tight filters (the chip's body and its edge), gone in ~25ms.
       function chips() {
         try {
+          if (!(v > 0) || document.hidden) return;
           if (ctx.state === "suspended") ctx.resume();
           var t = ctx.currentTime + 0.01, at = 0, gaps = [0, 0.052, 0.046, 0.04, 0.036, 0.06];
           gaps.forEach(function (gap, i) {
@@ -470,9 +526,10 @@
       }
       return {
         chips: chips,
-        wake: function () { try { if (ctx.state === "suspended") { ctx.resume(); nextAt = Math.max(nextAt, ctx.currentTime + 0.1); } } catch (e) {} },
+        wake: function () { try { if (ctx.state === "suspended" && !document.hidden) ctx.resume().then(sched, function () {}); } catch (e) {} },
         stop: function () {
           if (stopped) return; stopped = true; clearInterval(iv);
+          document.removeEventListener("visibilitychange", vis); window.removeEventListener("pagehide", vis);
           try { out.gain.cancelScheduledValues(ctx.currentTime); out.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.12); } catch (e) {}
           setTimeout(function () { try { ctx.close(); } catch (e) {} }, 700);
         }
