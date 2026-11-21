@@ -9,7 +9,11 @@ Decided with Justin on 2026-11-21. Not built yet.
 - No hot games.
 - Markers stay: up to 3, same rules as the money weeks.
 
+- Knocked out: you can keep playing for fun but can't win.
+- If more than one player is still alive at the end, most money wins.
+- The line must NOT be fixed numbers picked from old weeks (those had 2x hot games). It has to come from this week's own
+  money: an average or a % step based on what players actually made on day 1, then day 2, and so on.
+
 Still open:
-- What a knocked-out player can do (nothing / play for fun / walk-ups at the survivors).
-- The line numbers per day (set from real week 1-3 results).
-- Winner if several survive Saturday (proposal: most money on Saturday), or if everyone left falls the same night (proposal: closest to the line).
+- The exact line formula (proposal: a rising % of the middle score of yesterday's survivors; day 1 a fixed starter line).
+- "Most money" at the end: Saturday only, or the whole week added up.
