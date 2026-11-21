@@ -416,3 +416,8 @@
   #screen-lobby.tourney .lb-campaign .k { grid-area: k; justify-self: end; align-self: end; white-space: nowrap; }
   #screen-lobby.tourney .lb-campaign .g { grid-area: g; justify-self: end; align-self: start; text-align: right; max-width: 132px; line-height: 1.35; }
   #screen-lobby.tourney .lb-campaign .v { white-space: nowrap; }
+
+  /* ---- the floor plate on each game menu (1.84) ---- */
+  .gm-floor { margin: 2px auto 14px; max-width: 100%; }
+  .gm-floor[hidden] { display: none; }
+  .pk-head:has(+ .gm-floor:not([hidden])) #pk-sign { display: none; }

@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "1.83"
+VERSION = "1.84"
 h = open(src, encoding="utf-8").read()
 
 def sub(old, new, count=1):
@@ -815,6 +815,55 @@ sub("""    return html;
   }
 
   // ---------- the floor ----------""")
+
+# ---- the floor plate on every game menu: change rooms without going back to the lobby ----
+import re as _re
+_PLATE = '<button class="lb-plate room gm-floor" type="button" aria-label="Change floor" hidden><span class="rungs"></span><span class="nm"></span><span class="lim"></span><span class="arrow">▸</span></button>'
+h, _np = _re.subn(r'(<div class="(?:cm|bjm)-head">.*?</div>)', lambda m: m.group(1) + "\n    " + _PLATE, h, flags=_re.S)
+assert _np == 5, _np
+sub('<div class="pk-head"><b>POKER</b><span id="pk-sign">SIX TABLES</span></div>',
+    '<div class="pk-head"><b>POKER</b><span id="pk-sign">SIX TABLES</span></div>\n    ' + _PLATE)
+sub("""            self.enter(room);
+            $("ov-floor").classList.remove("on");
+            self.showLobby();""",
+    """            self.enter(room);
+            $("ov-floor").classList.remove("on");
+            // picked from a game menu: stay on it, with the new room's limits
+            if (self._floorFrom) { var back = self._floorFrom; self._floorFrom = null; self.renderRoomRow(); paintRun("lb-campaign-line"); self.show(back); }
+            else self.showLobby();""")
+sub("""      window.scrollTo(0, 0);
+    },
+    showMenu: function () { TT.on = false;""",
+    """      paintFloors();
+      window.scrollTo(0, 0);
+    },
+    showMenu: function () { TT.on = false;""")
+sub("""  $("lb-roomplate").addEventListener("click", function () { Shell.showFloor(); });""",
+    """  $("lb-roomplate").addEventListener("click", function () { Shell._floorFrom = null; Shell.showFloor(); });
+  /** The same room plate the lobby wears, on each game menu: what room you're in and its limits; tap to change. */
+  function paintFloors() {
+    var on = Shell.mode === "campaign", plates = document.querySelectorAll(".gm-floor");
+    if (!plates.length) return;
+    var r = on ? Shell.getRoom() : null, at = on ? Shell.roomIndex() : 0, rungs = "";
+    for (var k = 0; on && k < FLOOR_TINTS.length; k++) {
+      rungs += '<b class="' + (k <= at ? "" : "off") + '" style="height:' + (k <= at ? 4 + k * 2.2 : 3) + 'px"></b>';
+    }
+    plates.forEach(function (p) {
+      p.hidden = !on;
+      if (!on) return;
+      p.style.setProperty("--rc", FLOOR_TINTS[at]);
+      p.querySelector(".rungs").innerHTML = rungs;
+      p.querySelector(".nm").textContent = r.name.toUpperCase();
+      p.querySelector(".lim").textContent = roomSign(r) + " · " + roomSideSign(r);
+    });
+  }
+  document.querySelectorAll(".gm-floor").forEach(function (p) {
+    p.addEventListener("click", function () {
+      var scr = document.querySelector(".screen.on");
+      Shell._floorFrom = scr ? scr.id.replace("screen-", "") : null;
+      Shell.showFloor();
+    });
+  });""")
 
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
