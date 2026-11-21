@@ -4561,7 +4561,7 @@
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver">v1.88</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver">v1.89</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -10529,19 +10529,23 @@
       var len = ctx.sampleRate * 1, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
       for (var i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
       function noise() { var s = ctx.createBufferSource(); s.buffer = buf; s.loop = true; return s; }
-      // the rattle: a handful of dull clacks, a little uneven
+      // the rattle: a steel ball knocking round a tin can. Each knock is a hard tick with the can ringing after it:
+      // a few high, out-of-tune partials that die away over a tenth of a second, which is what makes it sound like metal
       [0, 0.07, 0.15, 0.21, 0.30].forEach(function (at, n) {
-        var t = ctx.currentTime + 0.02 + at;
+        var t = ctx.currentTime + 0.02 + at, hit = (n % 2 ? 0.8 : 1) * v;
         var s = noise(), f = ctx.createBiquadFilter(), g = ctx.createGain();
-        f.type = "bandpass"; f.frequency.value = 2200 + (n % 2) * 700; f.Q.value = 5;
-        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.55 * v, t + 0.004);
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
-        s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.06);
-        var o = ctx.createOscillator(), og = ctx.createGain();
-        o.type = "triangle"; o.frequency.setValueAtTime(760 + (n % 3) * 90, t);
-        og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(0.22 * v, t + 0.003);
-        og.gain.exponentialRampToValueAtTime(0.0001, t + 0.035);
-        o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + 0.05);
+        f.type = "highpass"; f.frequency.value = 2600;
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.5 * hit, t + 0.002);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.022);
+        s.connect(f); f.connect(g); g.connect(ctx.destination); s.start(t); s.stop(t + 0.04);
+        var base = 1850 + (n % 3) * 140;
+        [[1, 0.2, 0.13], [1.59, 0.16, 0.11], [2.31, 0.13, 0.09], [3.42, 0.09, 0.07], [4.87, 0.06, 0.05]].forEach(function (pt) {
+          var o = ctx.createOscillator(), og = ctx.createGain();
+          o.type = "sine"; o.frequency.value = base * pt[0] * (1 + (Math.random() - 0.5) * 0.02);
+          og.gain.setValueAtTime(0.0001, t); og.gain.exponentialRampToValueAtTime(pt[1] * hit, t + 0.002);
+          og.gain.exponentialRampToValueAtTime(0.0001, t + pt[2]);
+          o.connect(og); og.connect(ctx.destination); o.start(t); o.stop(t + pt[2] + 0.02);
+        });
       });
       // the hiss: bright filtered noise, faded up and down as the can is pressed
       var src = noise(), hp = ctx.createBiquadFilter(), bp = ctx.createBiquadFilter(), hg = ctx.createGain();
