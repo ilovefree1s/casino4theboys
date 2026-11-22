@@ -12362,9 +12362,10 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     // frame = the tube round the sign, head = the lettering, each [bright core, glow]
     var CARDS = [
       { head: "HOW YOU<br>SCORE", frame: ["#7fc4ff", "#2f8cff"], lit: ["#ffe9f4", "#ff3d9a"],
-        art: '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">' + ARROW + '</span><span class="gd-cash gd-up">$15,000+</span></div>' +
+        art: '<div class="gd-sub">EVERY GAME STARTS AT $10,000</div>' +
+          '<div class="gd-row"><span class="gd-cash">$10,000</span><span class="gd-arrow">' + ARROW + '</span><span class="gd-cash gd-up">$15,000+</span></div>' +
           '<div class="gd-crown">' + CROWN + '<span>TAKES THE POINTS</span></div>',
-        body: "<b>Every game starts you at $10,000.</b> Whoever has the most money on a game at midnight takes that game's points. You have to be up at least $5,000 — that's <b>$15,000 or more</b>." },
+        body: "Whoever has the most money on a game at midnight takes that game's points. You have to be up at least $5,000 — that's <span class=\"gd-em\">$15,000 or more</span>." },
       { head: "POINTS", frame: ["#ffb3da", "#ff3d9a"], lit: ["#fff3d6", "#ffb02e"],
         art: '<div class="gd-pts"><div><b>3</b><i>PTS</i><span>3 GAMES</span></div><div><b>2</b><i>PTS</i><span>5 GAMES</span></div><div><b>1</b><i>PT</i><span>THE REST</span></div></div>',
         body: "<b>Games are worth 3, 2 or 1 points.</b> They get shuffled every day. Each game's button shows what it's worth today and who's on top." },
@@ -12443,6 +12444,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           "#tt-demo .gd-hot svg{width:66px;height:66px;filter:drop-shadow(0 0 5px #ff8a2b) drop-shadow(0 0 14px #ff8a2b)}" +
           "#tt-demo .gd-hot b{font:400 112px/1 " + NE + "}" +
           "#tt-demo .gd-trophy svg{width:128px;height:128px;stroke-width:1.1;color:#fff3d6;filter:drop-shadow(0 0 5px #ffb02e) drop-shadow(0 0 16px #ffb02e)}" +
+          "#tt-demo .gd-sub{margin:0 0 14px;font:400 15px/1.25 " + NE + ";letter-spacing:.08em;" + tube("#e3f2ff", "#2f8cff") + "}" +
+          "#tt-demo .gd-em{color:#fff;font-weight:700}" +
+          "@media (max-width:350px){#tt-demo .gd-sub{font-size:13px;letter-spacing:.03em}}" +
           "#tt-demo .gd-body{margin:26px auto 0;max-width:336px;font-size:16px;line-height:1.45;color:#c9d3e6}" +
           "#tt-demo .gd-body b{display:block;margin-bottom:8px;font-size:20px;line-height:1.25;color:#fff}#tt-demo .gd-body b+b,#tt-demo .gd-body b:not(:first-child){display:inline;margin:0;font-size:inherit}" +
           "#tt-demo .gd-foot{position:relative;margin:0 0 22px;display:flex;flex-direction:column;align-items:center;gap:16px;width:100%}" +
