@@ -3687,6 +3687,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   .dt-spot .placed { position: absolute; left: auto; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: none; }
   .dt-spot .placed.on { display: block; pointer-events: auto; touch-action: none; cursor: grab; }
   /* the lifted chips ride a ghost pinned to the glass, over everything */
+  .uth-spot .placed, .pg-spot .placed, #dd-spots .spot .placed { touch-action: none; cursor: grab; }
   .dt-ghost { position: fixed; z-index: 60; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 6px 14px rgba(0,0,0,.6); }
   .dt-ghost .scrim {
     position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
@@ -8114,6 +8115,61 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     var net = 0; (results || []).forEach(function (r) { net += r.net; });
     purseWin.net(purse, net);
   }
+  /** One drag for every table's spots. o.map: selector -> bet key; o.get/o.set read and write a bet;
+      o.add(key, amount) places it through the table's own rules (limits, ante + blind room);
+      o.rack: where a chip goes to come down; o.done(): redraw. A tap is still the spot's own click. */
+  var chipDragEat = 0;
+  document.addEventListener("click", function (e) {
+    if (chipDragEat && Date.now() < chipDragEat) { chipDragEat = 0; e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  function chipDrag(root, o) {
+    if (!root) return;
+    var sels = Object.keys(o.map);
+    sels.forEach(function (sel) {
+      var el = root.querySelector(sel), k = o.map[sel];
+      if (!el || el.disabled || !(o.get(k) > 0)) return;
+      el.onpointerdown = function (e) {
+        if (!o.live() || !(o.get(k) > 0) || !e.isPrimary) return;
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null, lift = Math.min(o.chip(), o.get(k));
+        var pl = el.querySelector(".placed"), r = (pl && pl.offsetWidth ? pl : el).getBoundingClientRect();
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 9) {
+            moved = true;
+            ghost = document.createElement("div"); ghost.className = "dt-ghost";
+            var sz = Math.min(r.width, r.height) || 40;
+            ghost.style.left = (r.left + r.width / 2 - sz / 2) + "px"; ghost.style.top = (r.top + r.height / 2 - sz / 2) + "px";
+            ghost.style.width = sz + "px"; ghost.style.height = sz + "px";
+            ghost.innerHTML = chipHtml(lift, sz);
+            document.body.appendChild(ghost);
+            if (pl) pl.style.opacity = o.get(k) > lift ? "1" : ".25";
+          }
+          if (ghost) { ev.preventDefault(); ghost.style.transform = "translate(" + dx + "px," + dy + "px)"; }
+        }
+        function up(ev) {
+          window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+          if (!moved) return;
+          chipDragEat = Date.now() + 150;
+          if (ghost) ghost.remove();
+          var at = document.elementFromPoint(ev.clientX, ev.clientY), dst = null;
+          if (at && at.closest) sels.forEach(function (s) { if (!dst && at.closest(s)) dst = o.map[s]; });
+          if (dst && dst !== k) {
+            o.set(k, o.get(k) - lift);
+            var before = o.get(dst);
+            o.add(dst, lift);
+            var got = o.get(dst) - before;
+            if (got < lift) o.set(k, o.get(k) + lift - got);
+          } else if (!dst && at && at.closest && at.closest(o.rack)) {
+            o.set(k, o.get(k) - lift);
+            o.say(o.get(k) > 0 ? fmt(lift) + " taken down" : "Chip taken down");
+          }
+          o.done();
+        }
+        window.addEventListener("pointermove", mv, { passive: false });
+        window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+      };
+    });
+  }
   function chipHtml(amount, size) {
     var values = [25, 100, 500, 1000, 5000, 25000, 100000, 1000000, 100000000, 1000000000];
     var chip = null;
@@ -9739,6 +9795,11 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
+      if (open) chipDrag($("screen-paigow"), { map: { '.pg-spot[data-spot="bet"]': "bet", '.pg-spot[data-spot="bonus"]': "bonus", '.pg-spot[data-spot="ace"]': "ace" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return bets[k]; }, set: function (k, v) { bets[k] = v; },
+        add: function (k, v) { var q = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = q; } },
+        rack: "#pg-rack, #pg-actions", say: setMessage, done: renderAll });
     }
     function renderRack() {
       var host = $("pg-rack"); host.innerHTML = "";
@@ -17617,6 +17678,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       fill(s, "#dd-betspot", betting ? bet : hand ? hand.stake : 0);
       fill(s, "#dd-pushspot", betting ? push22Bet : push22Stake, 32);
       fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);
+      if (betting) chipDrag(s, { map: { "#dd-betspot": "main", "#dd-pushspot": "push22", "#dd-pairspot": "pair" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "push22" ? push22Bet : k === "pair" ? pairBet : bet; },
+        set: function (k, v) { if (k === "push22") push22Bet = v; else if (k === "pair") pairBet = v; else bet = v; },
+        add: function (k, v) { var q = selectedChip; selectedChip = v; try { addChip(k); } finally { selectedChip = q; } },
+        rack: "#dd-rack, #dd-actions", say: setMessage, done: function () { chipHist = []; renderTop(); renderSpots(); } });
       var rack = $("dd-rack");
       rack.innerHTML = "";
       // With the rack gone the action row jumps up; hold a little of its place.
@@ -18115,6 +18182,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         $("uth-badbeat").addEventListener("click", function () { place("badbeat"); });
         $("uth-ante").addEventListener("click", function () { place("ante"); });
       }
+      if (betting) chipDrag($("uth-spots"), { map: { "#uth-ante": "ante", "#uth-blind": "ante", "#uth-trips": "trips", "#uth-badbeat": "badbeat" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "ante" ? ante : k === "trips" ? trips : k === "badbeat" ? badBeat : 0; },
+        set: function (k, v) { if (k === "ante") ante = v; else if (k === "trips") trips = v; else if (k === "badbeat") badBeat = v; },
+        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },
+        rack: "#uth-rack, #uth-actions", say: setMessage, done: function () { chipHist = []; renderTop(); renderSpots(); } });
     }
     function renderRack() {
       var host = $("uth-rack");
@@ -18564,6 +18637,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         $("dj-trips").addEventListener("click", function () { place("trips"); });
         $("dj-ante").addEventListener("click", function () { place("ante"); });
       }
+      if (betting) chipDrag($("dj-spots"), { map: { "#dj-ante": "ante", "#dj-blind": "ante", "#dj-trips": "trips", "#dj-badbeat": "badbeat" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "ante" ? ante : k === "trips" ? trips : k === "badbeat" ? badBeat : 0; },
+        set: function (k, v) { if (k === "ante") ante = v; else if (k === "trips") trips = v; else if (k === "badbeat") badBeat = v; },
+        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },
+        rack: "#dj-rack, #dj-actions", say: setMessage, done: function () { chipHist = []; renderTop(); renderSpots(); } });
     }
     function renderRack() {
       var host = $("dj-rack");
@@ -19516,6 +19595,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         $("mu-bonus").addEventListener("click", function () { place("bonus"); });
         $("mu-ante").addEventListener("click", function () { place("ante"); });
       }
+      if (betting) chipDrag($("mu-spots"), { map: { "#mu-ante": "ante", "#mu-blind": "ante", "#mu-flushplus": "flushplus", "#mu-bonus": "bonus" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "ante" ? ante : k === "flushplus" ? flushPlus : k === "bonus" ? bonus : 0; },
+        set: function (k, v) { if (k === "ante") ante = v; else if (k === "flushplus") flushPlus = v; else if (k === "bonus") bonus = v; },
+        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },
+        rack: "#mu-rack, #mu-actions", say: setMessage, done: function () { renderTop(); renderSpots(); } });
     }
     function renderRack() {
       var host = $("mu-rack");
@@ -19971,6 +20056,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         $("is-superrush").addEventListener("click", function () { place("superrush"); });
         $("is-ante").addEventListener("click", function () { place("ante"); });
       }
+      if (betting) chipDrag($("is-spots"), { map: { "#is-ante": "ante", "#is-flushrush": "flushrush", "#is-superrush": "superrush" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "ante" ? ante : k === "flushrush" ? flushRush : k === "superrush" ? superRush : 0; },
+        set: function (k, v) { if (k === "ante") ante = v; else if (k === "flushrush") flushRush = v; else if (k === "superrush") superRush = v; },
+        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },
+        rack: "#is-rack, #is-actions", say: setMessage, done: function () { renderTop(); renderSpots(); } });
     }
     function renderRack() {
       var host = $("is-rack");
@@ -23333,6 +23424,11 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         (amount > 0
           ? '<div class="placed" style="display:block">' + chipHtml(amount, 38) + "</div>"
           : '<span class="cap">BET</span>');
+      spot.onpointerdown = null;
+      if (phase === "betting") chipDrag(spot.parentNode, { map: { "#dz-bet": "bet" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function () { return bet; }, set: function (k, v) { bet = v; }, add: function () {},
+        rack: "#dz-rack, #dz-actions", say: setMessage, done: function () { renderTop(); renderBet(); } });
       $("dz-shuffle").style.visibility = phase === "betting" ? "visible" : "hidden";
       $("dz-shuffle-ghost") && ($("dz-shuffle-ghost").style.visibility = "hidden");
     }

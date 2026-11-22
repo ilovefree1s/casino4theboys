@@ -1000,6 +1000,103 @@ sub("""      fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : tr
       bjArmDrag(row);
       return row;""")
 
+# ---- every poker table: drag a chip stack between spots, or back to the rack to take it down ----
+sub("""  function chipHtml(amount, size) {""", """  /** One drag for every table's spots. o.map: selector -> bet key; o.get/o.set read and write a bet;
+      o.add(key, amount) places it through the table's own rules (limits, ante + blind room);
+      o.rack: where a chip goes to come down; o.done(): redraw. A tap is still the spot's own click. */
+  var chipDragEat = 0;
+  document.addEventListener("click", function (e) {
+    if (chipDragEat && Date.now() < chipDragEat) { chipDragEat = 0; e.stopPropagation(); e.preventDefault(); }
+  }, true);
+  function chipDrag(root, o) {
+    if (!root) return;
+    var sels = Object.keys(o.map);
+    sels.forEach(function (sel) {
+      var el = root.querySelector(sel), k = o.map[sel];
+      if (!el || el.disabled || !(o.get(k) > 0)) return;
+      el.onpointerdown = function (e) {
+        if (!o.live() || !(o.get(k) > 0) || !e.isPrimary) return;
+        var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null, lift = Math.min(o.chip(), o.get(k));
+        var pl = el.querySelector(".placed"), r = (pl && pl.offsetWidth ? pl : el).getBoundingClientRect();
+        function mv(ev) {
+          var dx = ev.clientX - x0, dy = ev.clientY - y0;
+          if (!moved && Math.abs(dx) + Math.abs(dy) > 9) {
+            moved = true;
+            ghost = document.createElement("div"); ghost.className = "dt-ghost";
+            var sz = Math.min(r.width, r.height) || 40;
+            ghost.style.left = (r.left + r.width / 2 - sz / 2) + "px"; ghost.style.top = (r.top + r.height / 2 - sz / 2) + "px";
+            ghost.style.width = sz + "px"; ghost.style.height = sz + "px";
+            ghost.innerHTML = chipHtml(lift, sz);
+            document.body.appendChild(ghost);
+            if (pl) pl.style.opacity = o.get(k) > lift ? "1" : ".25";
+          }
+          if (ghost) { ev.preventDefault(); ghost.style.transform = "translate(" + dx + "px," + dy + "px)"; }
+        }
+        function up(ev) {
+          window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+          if (!moved) return;
+          chipDragEat = Date.now() + 150;
+          if (ghost) ghost.remove();
+          var at = document.elementFromPoint(ev.clientX, ev.clientY), dst = null;
+          if (at && at.closest) sels.forEach(function (s) { if (!dst && at.closest(s)) dst = o.map[s]; });
+          if (dst && dst !== k) {
+            o.set(k, o.get(k) - lift);
+            var before = o.get(dst);
+            o.add(dst, lift);
+            var got = o.get(dst) - before;
+            if (got < lift) o.set(k, o.get(k) + lift - got);
+          } else if (!dst && at && at.closest && at.closest(o.rack)) {
+            o.set(k, o.get(k) - lift);
+            o.say(o.get(k) > 0 ? fmt(lift) + " taken down" : "Chip taken down");
+          }
+          o.done();
+        }
+        window.addEventListener("pointermove", mv, { passive: false });
+        window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+      };
+    });
+  }
+  function chipHtml(amount, size) {""")
+for pre, spots, keys in [
+    ("uth", "uth-spots", [("ante","ante"),("blind","ante"),("trips","trips"),("badbeat","badBeat")]),
+    ("dj", "dj-spots", [("ante","ante"),("blind","ante"),("trips","trips"),("badbeat","badBeat")]),
+    ("mu", "mu-spots", [("ante","ante"),("blind","ante"),("flushplus","flushPlus"),("bonus","bonus")]),
+    ("is", "is-spots", [("ante","ante"),("flushrush","flushRush"),("superrush","superRush")]),
+]:
+    names = sorted(set(k for k,_ in keys if k != "blind"))
+    m = ", ".join('"#%s-%s": "%s"' % (pre, k, "ante" if k == "blind" else k) for k,_ in keys)
+    var = dict((k, v) for k, v in keys if k != "blind")
+    get = " : ".join('k === "%s" ? %s' % (k, v) for k, v in var.items()) + " : 0"
+    st = " else ".join('if (k === "%s") %s = v;' % (k, v) for k, v in var.items())
+    sub('      $("%s-ante").addEventListener("click", function () { place("ante"); });\n      }' % pre,
+        '      $("%s-ante").addEventListener("click", function () { place("ante"); });\n      }\n'
+        '      if (betting) chipDrag($("%s"), { map: { %s },\n'
+        '        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },\n'
+        '        get: function (k) { return %s; },\n'
+        '        set: function (k, v) { %s },\n'
+        '        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },\n'
+        '        rack: "#%s-rack, #%s-actions", say: setMessage, done: function () { %srenderTop(); renderSpots(); } });'
+        % (pre, spots, m, get, st, pre, pre, "chipHist = []; " if pre in ("uth", "dj") else ""))
+sub("  .dt-ghost { position: fixed;", "  .uth-spot .placed, .pg-spot .placed, #dd-spots .spot .placed { touch-action: none; cursor: grab; }\n  .dt-ghost { position: fixed;")
+# Double Down Madness
+sub('      fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);',
+    '''      fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);
+      if (betting) chipDrag(s, { map: { "#dd-betspot": "main", "#dd-pushspot": "push22", "#dd-pairspot": "pair" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return k === "push22" ? push22Bet : k === "pair" ? pairBet : bet; },
+        set: function (k, v) { if (k === "push22") push22Bet = v; else if (k === "pair") pairBet = v; else bet = v; },
+        add: function (k, v) { var q = selectedChip; selectedChip = v; try { addChip(k); } finally { selectedChip = q; } },
+        rack: "#dd-rack, #dd-actions", say: setMessage, done: function () { chipHist = []; renderTop(); renderSpots(); } });''')
+# Destroyer: one spot, so the drag only takes it down
+sub('''          : '<span class="cap">BET</span>');
+      $("dz-shuffle").style.visibility''', '''          : '<span class="cap">BET</span>');
+      spot.onpointerdown = null;
+      if (phase === "betting") chipDrag(spot.parentNode, { map: { "#dz-bet": "bet" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function () { return bet; }, set: function (k, v) { bet = v; }, add: function () {},
+        rack: "#dz-rack, #dz-actions", say: setMessage, done: function () { renderTop(); renderBet(); } });
+      $("dz-shuffle").style.visibility''')
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

@@ -357,6 +357,11 @@
         b.addEventListener("click", function () { place(o[0]); });
         host.appendChild(b);
       });
+      if (open) chipDrag($("screen-paigow"), { map: { '.pg-spot[data-spot="bet"]': "bet", '.pg-spot[data-spot="bonus"]': "bonus", '.pg-spot[data-spot="ace"]': "ace" },
+        live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
+        get: function (k) { return bets[k]; }, set: function (k, v) { bets[k] = v; },
+        add: function (k, v) { var q = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = q; } },
+        rack: "#pg-rack, #pg-actions", say: setMessage, done: renderAll });
     }
     function renderRack() {
       var host = $("pg-rack"); host.innerHTML = "";
