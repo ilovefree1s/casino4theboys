@@ -4122,11 +4122,11 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   /* a hot game's 1.5x badge sits on top of the circle: there the leader's money stays underneath */
   .tt-hotbtn .tt-led .tt-la { top: calc(100% + 5px); bottom: auto; }
   .tt-hotbtn .tt-led { transform: none; }
-  /* your wallet: a pill sitting on the game's bottom edge, off the circle's lower left (on a hot game, against the circle) */
-  .tt-ly { position: absolute; right: calc(50% - 12px); bottom: -27px; z-index: 2; padding: 4px 8px; border-radius: 999px;
+  /* your wallet: a pill standing on the game's bottom line, just left of the circle (on a hot game, up against the circle) */
+  .tt-ly { position: absolute; right: 31px; bottom: 0; z-index: 2; padding: 4px 8px; border-radius: 999px;
            background: rgba(10,9,14,.96); border: 1.5px solid var(--c, rgba(245,241,232,.5)); box-shadow: 0 2px 6px rgba(0,0,0,.7);
            font: 800 10.5px/1 system-ui, sans-serif; letter-spacing: .03em; color: #F5F1E8; white-space: nowrap; pointer-events: none; }
-  .tt-hotbtn .tt-ly { right: calc(100% - 16px); bottom: -2px !important; }
+  .tt-hotbtn .tt-ly { right: 53px; bottom: 26px; }
   .tt-ly b { font-weight: 800; font-size: 8.5px; letter-spacing: .14em; color: rgba(245,241,232,.6); margin-right: 4px; }
   #tt-rebuy { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%);
               z-index: 9990; padding: 12px 20px; border-radius: 999px; border: 2px solid #57E06A; background: rgba(8,30,12,.95);
@@ -13509,7 +13509,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           if (!pl) return;
           var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = btn.querySelector(".tt-lp");
           if (pt && pt.parentNode !== btn) { pt.remove(); pt = null; }               // it used to ride on the circle
-          var you = pl.querySelector(".tt-ly");
+          var you = btn.querySelector(".tt-ly");
           if (!TT.on || !TT.points || !TT.day) { [face, amt, pt, you].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
           if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; btn.appendChild(pt); }
@@ -13520,12 +13520,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           var mineRaw = store.getStr("ftt." + TT.week + "." + TT.day + ".g." + gslug(g) + ".bankroll", "");
           var showYou = !!x && mineRaw !== "" && String(x.name).toLowerCase() !== (myName() || "").toLowerCase();
           if (showYou) {
-            if (!you) { you = document.createElement("span"); you.className = "tt-ly"; pl.appendChild(you); }
+            if (!you) { you = document.createElement("span"); you.className = "tt-ly"; btn.appendChild(you); }
             var mine = Number(mineRaw) || 0;
             you.innerHTML = "<b>YOU</b>$" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
-            // centred on the game's bottom edge, however tall this menu's games are
-            var br = btn.getBoundingClientRect(), pr = pl.getBoundingClientRect();
-            you.style.bottom = btn.classList.contains("tt-hotbtn") || !br.height ? "" : -(br.bottom - pr.bottom + you.offsetHeight / 2) + "px";
           } else if (you) you.remove();
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
           var src = faceOf(String(x.name).toLowerCase());

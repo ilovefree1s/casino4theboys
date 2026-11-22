@@ -831,7 +831,7 @@
           if (!pl) return;
           var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = btn.querySelector(".tt-lp");
           if (pt && pt.parentNode !== btn) { pt.remove(); pt = null; }               // it used to ride on the circle
-          var you = pl.querySelector(".tt-ly");
+          var you = btn.querySelector(".tt-ly");
           if (!TT.on || !TT.points || !TT.day) { [face, amt, pt, you].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
           if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; btn.appendChild(pt); }
@@ -842,12 +842,9 @@
           var mineRaw = store.getStr("ftt." + TT.week + "." + TT.day + ".g." + gslug(g) + ".bankroll", "");
           var showYou = !!x && mineRaw !== "" && String(x.name).toLowerCase() !== (myName() || "").toLowerCase();
           if (showYou) {
-            if (!you) { you = document.createElement("span"); you.className = "tt-ly"; pl.appendChild(you); }
+            if (!you) { you = document.createElement("span"); you.className = "tt-ly"; btn.appendChild(you); }
             var mine = Number(mineRaw) || 0;
             you.innerHTML = "<b>YOU</b>$" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
-            // centred on the game's bottom edge, however tall this menu's games are
-            var br = btn.getBoundingClientRect(), pr = pl.getBoundingClientRect();
-            you.style.bottom = btn.classList.contains("tt-hotbtn") || !br.height ? "" : -(br.bottom - pr.bottom + you.offsetHeight / 2) + "px";
           } else if (you) you.remove();
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
           var src = faceOf(String(x.name).toLowerCase());
