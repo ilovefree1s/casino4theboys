@@ -845,6 +845,9 @@
             if (!you) { you = document.createElement("span"); you.className = "tt-ly"; pl.appendChild(you); }
             var mine = Number(mineRaw) || 0;
             you.innerHTML = "<b>YOU</b>$" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
+            // centred on the game's bottom edge, however tall this menu's games are
+            var br = btn.getBoundingClientRect(), pr = pl.getBoundingClientRect();
+            you.style.bottom = btn.classList.contains("tt-hotbtn") || !br.height ? "" : -(br.bottom - pr.bottom + you.offsetHeight / 2) + "px";
           } else if (you) you.remove();
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
           var src = faceOf(String(x.name).toLowerCase());

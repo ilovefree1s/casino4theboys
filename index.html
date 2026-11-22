@@ -4119,9 +4119,14 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   /* points week: the leader's money sits on top of the circle, your own wallet to its left */
   .tt-led .tt-la { top: auto; bottom: calc(100% + 4px); }
   .tt-led { transform: translateY(7px); }
-  .tt-ly { position: absolute; right: calc(100% - 16px); bottom: -2px; z-index: 2; padding: 4px 8px; border-radius: 999px;
-           background: rgba(10,9,14,.94); border: 1.5px solid var(--c, rgba(245,241,232,.5)); box-shadow: 0 2px 6px rgba(0,0,0,.7);
+  /* a hot game's 1.5x badge sits on top of the circle: there the leader's money stays underneath */
+  .tt-hotbtn .tt-led .tt-la { top: calc(100% + 5px); bottom: auto; }
+  .tt-hotbtn .tt-led { transform: none; }
+  /* your wallet: a pill sitting on the game's bottom edge, off the circle's lower left (on a hot game, against the circle) */
+  .tt-ly { position: absolute; right: calc(50% - 12px); bottom: -27px; z-index: 2; padding: 4px 8px; border-radius: 999px;
+           background: rgba(10,9,14,.96); border: 1.5px solid var(--c, rgba(245,241,232,.5)); box-shadow: 0 2px 6px rgba(0,0,0,.7);
            font: 800 10.5px/1 system-ui, sans-serif; letter-spacing: .03em; color: #F5F1E8; white-space: nowrap; pointer-events: none; }
+  .tt-hotbtn .tt-ly { right: calc(100% - 16px); bottom: -2px !important; }
   .tt-ly b { font-weight: 800; font-size: 8.5px; letter-spacing: .14em; color: rgba(245,241,232,.6); margin-right: 4px; }
   #tt-rebuy { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translateX(-50%);
               z-index: 9990; padding: 12px 20px; border-radius: 999px; border: 2px solid #57E06A; background: rgba(8,30,12,.95);
@@ -13518,6 +13523,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
             if (!you) { you = document.createElement("span"); you.className = "tt-ly"; pl.appendChild(you); }
             var mine = Number(mineRaw) || 0;
             you.innerHTML = "<b>YOU</b>$" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
+            // centred on the game's bottom edge, however tall this menu's games are
+            var br = btn.getBoundingClientRect(), pr = pl.getBoundingClientRect();
+            you.style.bottom = btn.classList.contains("tt-hotbtn") || !br.height ? "" : -(br.bottom - pr.bottom + you.offsetHeight / 2) + "px";
           } else if (you) you.remove();
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
           var src = faceOf(String(x.name).toLowerCase());
