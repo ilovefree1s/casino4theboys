@@ -1118,6 +1118,50 @@ sub("""        if ((recs[i].oldValue || "").split(/s+/).indexOf("up") >= 0) cont
 sub('<div class="cards is-hand" id="is-dealer" style="margin-top:4px"></div>', '<div class="cards is-hand" id="is-dealer" data-cardsnd="off" style="margin-top:4px"></div>')
 sub('<div class="cards is-hand" id="is-hole" style="margin-top:4px"></div>', '<div class="cards is-hand" id="is-hole" data-cardsnd="pool" style="margin-top:4px"></div>')
 
+# ---- card backs: pick one in Settings (kept on this phone) ----
+import base64 as _b64
+_classic = re.search(r'\.card \.back \{\s*transform: rotateY\(180deg\);\s*background: #0A0507 url\("(data:image/webp;base64,[^"]+)"\)', h).group(1)
+CARDBACKS = [("classic", "CLASSIC", _classic)] + [
+    (k, n, "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / f"back_{k}.webp").read_bytes()).decode())
+    for k, n in [("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG")]]
+_cbcss = "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS[1:])
+_cbcss += "".join(f'  .cb-opt[data-cb="{k}"] i {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
+_cbcss += """  .cb-box { width: 100%; max-width: 380px; margin-top: 14px; }
+  .cb-box .hd { font-family: var(--display); font-size: 11px; letter-spacing: .16em; color: rgba(245,241,232,.8); text-align: center; margin-bottom: 8px; }
+  .cb-row { display: flex; justify-content: center; gap: 8px; }
+  .cb-opt { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; background: none; border: 0; color: rgba(245,241,232,.55);
+            font-family: var(--mono); font-size: 7px; letter-spacing: .1em; white-space: nowrap; cursor: pointer; }
+  .cb-opt i { display: block; width: 52px; height: 78px; border-radius: 6px; background: #0A0507 center/cover no-repeat;
+              box-shadow: 0 4px 10px rgba(0,0,0,.5); outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .15s, transform .15s; }
+  .cb-opt.on { color: #FFD24D; }
+  .cb-opt.on i { outline-color: #FFD24D; transform: translateY(-3px); }
+"""
+sub("  .st-foot {", _cbcss + "  .st-foot {")
+sub('      <div class="st-foot">BOTH ARE KEPT ON THIS PHONE', '''      <div class="cb-box"><div class="hd">CARD BACK</div><div class="cb-row" id="cb-row">'''
+    + "".join(f'<button class="cb-opt" data-cb="{k}" type="button"><i></i>{n}</button>' for k, n, u in CARDBACKS)
+    + '''</div></div>
+      <div class="st-foot">BOTH ARE KEPT ON THIS PHONE''')
+sub("</body>", """<script>
+(function () {
+  var KEY = "ftb.cardback", root = document.documentElement;
+  function get() { try { return localStorage.getItem(KEY) || "classic"; } catch (e) { return "classic"; } }
+  function apply(k) {
+    root.setAttribute("data-cb", k);
+    var row = document.getElementById("cb-row");
+    if (row) [].forEach.call(row.children, function (b) { b.classList.toggle("on", b.getAttribute("data-cb") === k); });
+  }
+  apply(get());
+  var row = document.getElementById("cb-row");
+  if (row) row.addEventListener("click", function (e) {
+    var b = e.target.closest(".cb-opt"); if (!b) return;
+    var k = b.getAttribute("data-cb");
+    try { localStorage.setItem(KEY, k); } catch (e2) {}
+    apply(k);
+  });
+})();
+</script>
+</body>""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
