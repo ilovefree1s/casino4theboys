@@ -13512,6 +13512,13 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           var you = btn.querySelector(".tt-ly");
           if (!TT.on || !TT.points || !TT.day) { [face, amt, pt, you].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
+          // the server's leader can be a few seconds behind this phone (the wallet you just walked away with
+          // is still going up): if what's here beats it, you're the leader
+          var meLk = (myName() || "").toLowerCase(), hereRaw = store.getStr("ftt." + TT.week + "." + TT.day + ".g." + gslug(g) + ".bankroll", "");
+          var here = Number(hereRaw) || 0;
+          if (meLk && hereRaw !== "" && here >= 15000) {
+            if (!x || (String(x.name).toLowerCase() === meLk ? x.cash !== here : here > x.cash)) x = { game: g, name: myName(), cash: here };
+          }
           if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; btn.appendChild(pt); }
           if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
           pt.textContent = pts + " PT" + (pts > 1 ? "S" : "");
@@ -13543,7 +13550,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       var showScreen = Shell.show;
       Shell.show = function (name) {
         var r = showScreen.apply(this, arguments);
-        if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow)$/.test(name)) leaders();
+        if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow)$/.test(name)) { leaders(); setTimeout(leaders, 2500); }   // again once the wallet you left with has gone up
         else if (!(TT.on && TT.points)) paint();   // out of the tournament: the leaders' faces and money come off the tiles
         return r;
       };
