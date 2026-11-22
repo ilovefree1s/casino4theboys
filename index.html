@@ -11490,6 +11490,40 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     function ver() { var el = document.getElementById("mm-ver"); if (el && Date.now() >= V2_AT) el.textContent = "v2.0"; }
     ver(); setInterval(ver, 30000);
   })();
+  /* Craps is a sideways table. On the way in, the game holds the screen sideways itself (full screen, then the
+     landscape lock) so nobody has to turn auto-rotate on; on the way out it lets go of whatever it took.
+     Phones that won't lock (iPhones) still get the "turn your phone" card. */
+  (function () {
+    var tookFs = false, locked = false;
+    function lockSideways() {
+      try {
+        var so = screen.orientation;
+        if (!so || !so.lock) return;
+        var go = function () { so.lock("landscape").then(function () { locked = true; }, function () {}); };
+        var el = document.documentElement, ask = el.requestFullscreen || el.webkitRequestFullscreen;
+        if (document.fullscreenElement || document.webkitFullscreenElement || !ask) { go(); return; }
+        var p = ask.call(el, { navigationUI: "hide" });
+        tookFs = true;
+        if (p && p.then) p.then(go, function () { tookFs = false; }); else go();
+      } catch (e) {}
+    }
+    function letGo() {
+      try { if (locked && screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+      locked = false;
+      if (tookFs) {
+        tookFs = false;
+        try { var ex = document.exitFullscreen || document.webkitExitFullscreen; if (ex && (document.fullscreenElement || document.webkitFullscreenElement)) ex.call(document); } catch (e) {}
+      }
+    }
+    var show = Shell.show;
+    Shell.show = function (name) {
+      if (name === "craps") lockSideways(); else if (locked || tookFs) letGo();
+      return show.apply(this, arguments);
+    };
+    // the "turn your phone" card: a tap there tries the lock again
+    var card = document.querySelector(".turn-over");
+    if (card) card.addEventListener("click", lockSideways);
+  })();
   /* ---------- the tournament intro: the 4 The Boys piece gets sprayed onto a wall ----------
      About five seconds, with a spray can's rattle and hiss. Plays once, right after a player picks
      who they are and goes into the tournament. Tap SKIP (or anywhere) to cut it short.
