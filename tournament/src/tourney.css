@@ -53,6 +53,10 @@
   .tt-champ[hidden] { display: none; }
   .tt-champ b { font-family: var(--display); font-style: italic; font-size: 14px; letter-spacing: .04em; color: var(--campaign-gold); }
   .tt-champ .n { margin-left: auto; color: var(--campaign-gold); }
+  .tt-champ { cursor: pointer; }
+  .tt-champ .chev { font-style: normal; color: var(--campaign-gold); opacity: .7; margin-left: 8px; font-size: 16px; transition: transform .15s; }
+  .tt-champ.on { box-shadow: 0 0 0 2px var(--campaign-gold), 0 0 14px rgba(232,192,98,.35); }
+  .tt-champ.on .chev { transform: rotate(90deg); }
   .tt-wins { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
   .tt-wins:empty { display: none; }
   .tt-win {

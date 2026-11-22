@@ -599,6 +599,10 @@
       rpc("c4tb_roster", {}).then(function (r) { roster = r; paintLane(); if ($("tt-board").classList.contains("on")) paintBoard(); }, function () {});
       return ask.then(function (b) {
         board = b; frame = b;
+        try {
+          if (b && b.final && b.rows && b.rows.length && b.week)
+            store.setStr("ftt.lastrows." + lastWeekOf(b), JSON.stringify(b.rows.map(function (r) { return { name: r.name, net: r.net }; })));
+        } catch (e) {}
         paintLane();
         if (!$("tt-rules").classList.contains("on")) checkPin();
         if (store.getStr("ftt.showboard", "")) { store.setStr("ftt.showboard", ""); showBoard(); }
@@ -1483,12 +1487,15 @@
       if (!isPoints(b.week)) dayStrip(wins, b, true);
 
       // the first tab is yesterday's day, or last week's final standings until this week has a midnight
-      var dayBtn = document.querySelector('#tt-tabs [data-t="day"]');
-      if (dayBtn) dayBtn.textContent = b.final ? "LAST WEEK" : "YESTERDAY";
+      var dayBtn = document.querySelector('#tt-tabs [data-t="day"]'), wkBtn = document.querySelector('#tt-tabs [data-t="week"]');
+      if (dayBtn) dayBtn.textContent = isPoints(b.week) ? "TODAY" : b.final ? "LAST WEEK" : "YESTERDAY";
+      if (wkBtn) wkBtn.textContent = isPoints(b.week) ? "THIS WEEK" : "THE WEEK";
+      champ.classList.toggle("on", tab === "last");
+      if (tab === "last") return paintLast(b, list, me);
       if (tab === "stats") return paintStats(b);
       $("tt-ruleslink").hidden = tab === "msgs";
       if (tab === "msgs") return paintMsgs(list);
-      if (isPoints(b.week) && !b.final) return paintPoints(b, list, me);
+      if (isPoints(b.week)) return paintPoints(b, list, me);
       if (b.final) {
         if (tab === "day") {
           var hiw = highs(lastWeekOf(b));
@@ -1591,25 +1598,63 @@
       });
       return m;
     }
+    /** Last week's final standings, from the gold banner. */
+    function paintLast(b, list, me) {
+      var lw = lastWeekOf(b), wkno = b.week_no - 1;
+      list.appendChild(heading("WEEK " + wkno + " · FINAL STANDINGS"));
+      if (b.last_champion && isPoints(b.last_champion.week)) {
+        var lp = pointsCache[b.last_champion.week];
+        if (!lp) { list.appendChild(empty("Loading…")); getPoints(b.last_champion.week).then(function () { if (tab === "last") paintBoard(); }); return; }
+        lp.filter(function (r) { return r.points > 0 || r.money; }).forEach(function (r, i) {
+          list.appendChild(row(i + 1, r.name, r.wins + " WIN" + (r.wins === 1 ? "" : "S") + " · " + signed(r.money),
+            r.points + " PT" + (r.points === 1 ? "" : "S"), r.name.toLowerCase() === me));
+        });
+        return;
+      }
+      var rows = b.final ? b.rows : null;
+      if (!rows || !rows.length) { try { rows = JSON.parse(store.getStr("ftt.lastrows." + lw, "null")); } catch (e) { rows = null; } }
+      if (!rows || !rows.length) { list.appendChild(empty("Last week's full standings aren't saved on this phone.")); return; }
+      var hiw = highs(lw);
+      rows.forEach(function (r, i) {
+        var lk = r.name.toLowerCase();
+        list.appendChild(row(i + 1, r.name, hiw && hiw[lk] ? "HIGHEST CASH $" + fmt(hiw[lk]) : "", moneyS(r.net), lk === me));
+      });
+    }
     function todayTag(t) { return t && t.pts ? "+" + t.pts + " TODAY · LEADING " + t.games + " GAME" + (t.games === 1 ? "" : "S") : ""; }
     function paintPoints(b, list, me) {
-      var dayTab = tab === "day";
+      var dayTab = tab === "day", live = liveToday(b);
       if (dayTab) {
-        var yd = prevDay(b.day);
-        if (!winnersCache[yd]) { list.appendChild(empty("Loading…")); getWinners(yd).then(function () { if (tab === "day") paintBoard(); }); return; }
-        var ws = winnersCache[yd];
-        list.appendChild(heading(dayName(yd) + " · WHO TOOK EACH GAME"));
-        if (!ws.length) list.appendChild(empty("Nobody played yesterday."));
-        ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
-          list.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
-            w.name.toLowerCase() === me));
+        // who has the most points right now: what the games they lead are worth if midnight hit now
+        var on = (roster || []).map(function (p) { return { name: p.name, t: live[p.name.toLowerCase()] }; })
+          .filter(function (x) { return x.t; });
+        Object.keys(live).forEach(function (lk) {
+          if (!on.some(function (x) { return x.name.toLowerCase() === lk; })) on.push({ name: (todayLead.rows.filter(function (r) { return String(r.name).toLowerCase() === lk; })[0] || {}).name || lk, t: live[lk] });
         });
+        on.sort(function (a, c) { return c.t.pts - a.t.pts || c.t.games - a.t.games || a.name.localeCompare(c.name); });
+        list.appendChild(heading("TODAY SO FAR · POINTS COUNT AT MIDNIGHT"));
+        if (!on.length) list.appendChild(empty("Nobody's on top of a game yet today. You need $15,000+ on a game to lead it."));
+        on.forEach(function (x, i) {
+          list.appendChild(row(i + 1, x.name, "LEADING " + x.t.games + " GAME" + (x.t.games === 1 ? "" : "S"),
+            "+" + x.t.pts + " PT" + (x.t.pts === 1 ? "" : "S"), x.name.toLowerCase() === me));
+        });
+        if (b.day_no > 1) {
+          var yd = prevDay(b.day);
+          if (!winnersCache[yd]) { getWinners(yd).then(function () { if (tab === "day") paintBoard(); }); return; }
+          var ws = winnersCache[yd];
+          list.appendChild(heading(dayName(yd) + " · WHO TOOK EACH GAME"));
+          if (!ws.length) list.appendChild(empty("Nobody played yesterday."));
+          ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
+            list.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
+              w.name.toLowerCase() === me));
+          });
+        }
         return;
       }
       var pb = pointsCache[b.week];
       if (!pb) { list.appendChild(empty("Loading…")); getPoints(b.week).then(function () { if (tab === "week") paintBoard(); }); return; }
-      var scored = pb.filter(function (r) { return r.points > 0 || r.money; }), live = liveToday(b);
-      list.appendChild(heading("POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT · TIES GO TO MOST MONEY"));
+      var scored = pb.filter(function (r) { return r.points > 0 || r.money; });
+      list.appendChild(heading(b.final || !scored.length ? "POINTS COME IN AT MIDNIGHT · TODAY SO FAR UNDER EACH NAME"
+                               : "POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT · TIES GO TO MOST MONEY"));
       var listed = {};
       scored.forEach(function (r, i) {
         var lk = r.name.toLowerCase(); listed[lk] = 1;
@@ -2019,6 +2064,11 @@
     function empty(text) {
       var el = document.createElement("div"); el.className = "tt-empty"; el.textContent = text; return el;
     }
+    $("tt-champ").addEventListener("click", function () {
+      boardFresh = false; autoMsgs = false;
+      tab = tab === "last" ? "week" : "last";
+      paintBoard();
+    });
     document.querySelectorAll("#tt-tabs button").forEach(function (x) {
       x.addEventListener("click", function () {
         var was = tab;
