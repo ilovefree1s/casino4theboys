@@ -123,7 +123,7 @@
         "border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font:700 11px system-ui,sans-serif;letter-spacing:.14em";
       // once the paint is on, SKIP goes and this comes up: the way out
       var go = document.createElement("button");
-      go.type = "button"; go.textContent = opts.quick && opts.title ? opts.title + "!" : "GAMBLE!";   // a day's screen: DAY 2!
+      go.type = "button"; go.textContent = opts.quick && opts.title ? opts.title + "!" : "HOW TO PLAY";   // a day's screen: DAY 2!; the week's leads into the tips
       go.style.cssText = "position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 34px);transform:translateX(-50%) rotate(-2deg);" +
         "min-width:230px;padding:15px 30px;border-radius:16px;border:3px solid #07060b;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);" +
         "color:#07060b;font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;" +
@@ -143,6 +143,8 @@
           "box-shadow:0 0 8px #ff3d9a,0 0 26px #ff3d9a,inset 0 0 8px #ff3d9a,inset 0 0 22px rgba(255,61,154,.6);" +
           "transform:translateX(calc(50vw + 60%));opacity:0;transition:transform .6s cubic-bezier(.2,.9,.25,1.12),opacity .25s;pointer-events:none";
       }
+      go.style.whiteSpace = "nowrap";
+      if (go.textContent.length > 8) go.style.fontSize = "26px";
       wrap.appendChild(cv); wrap.appendChild(skip); wrap.appendChild(go);
       if (sign) wrap.appendChild(sign);
       document.body.appendChild(wrap);
@@ -976,7 +978,11 @@
           "#tt-demo .gd-dots i.on{background:var(--hc);box-shadow:0 0 10px var(--hg),0 0 20px var(--hg)}" +
           "#tt-demo .gd-next{width:100%;max-width:300px;height:58px;border:3px solid var(--hc);border-radius:999px;background:rgba(255,255,255,.05);font:400 25px " + NE + ";letter-spacing:.16em;" +
             "color:var(--hc);text-shadow:0 0 10px var(--hg);box-shadow:0 0 12px var(--hg),0 0 34px var(--hg),inset 0 0 14px var(--hg)}" +
-          "#tt-demo .gd-next:active{transform:scale(.97)}";
+          "#tt-demo .gd-next:active{transform:scale(.97)}" +
+          "#tt-demo .gd-next.go{border:3px solid #07060b;border-radius:16px;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);color:#07060b;" +
+            "font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;text-shadow:none;" +
+            "box-shadow:0 0 0 3px #ff2e88,0 10px 26px rgba(0,0,0,.6);transform:rotate(-2deg)}" +
+          "#tt-demo .gd-next.go:active{transform:rotate(-2deg) scale(.97)}";
         document.head.appendChild(st);
       }
       var wrap = document.createElement("div"); wrap.id = "tt-demo";
@@ -1007,7 +1013,9 @@
           '<div class="gd-art">' + (c.top ? topArt() : c.art) + '</div></div><div class="gd-body">' + c.body + '</div>';
         void card.offsetWidth; card.className = "gd-card in";
         dots.innerHTML = CARDS.map(function (_, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join("");
-        next.textContent = at === CARDS.length - 1 ? "LET'S PLAY" : "NEXT";
+        var lastCard = at === CARDS.length - 1;
+        next.textContent = lastCard ? "GAMBLE!" : "NEXT";          // the last tip's button is the spray-painted GAMBLE!
+        next.classList.toggle("go", lastCard);
       }
       next.onclick = function () { mus.chips(); if (at < CARDS.length - 1) { at++; show(); } else close(); };
       skip.onclick = close;
