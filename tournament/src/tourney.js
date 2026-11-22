@@ -1652,23 +1652,19 @@
       }
       var pb = pointsCache[b.week];
       if (!pb) { list.appendChild(empty("Loading…")); getPoints(b.week).then(function () { if (tab === "week") paintBoard(); }); return; }
-      var scored = pb.filter(function (r) { return r.points > 0 || r.money; });
-      list.appendChild(heading(b.final || !scored.length ? "POINTS COME IN AT MIDNIGHT · TODAY SO FAR UNDER EACH NAME"
-                               : "POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT · TIES GO TO MOST MONEY"));
+      // the week's points as locked in at each midnight, and nothing else: today lives on the TODAY tab
+      var scored = pb.filter(function (r) { return r.points > 0; });
+      list.appendChild(heading(scored.length ? "POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT" : "POINTS COME IN AT MIDNIGHT"));
       var listed = {};
       scored.forEach(function (r, i) {
         var lk = r.name.toLowerCase(); listed[lk] = 1;
-        var el = row(i + 1, r.name, r.wins + " WIN" + (r.wins === 1 ? "" : "S") + " · " + signed(r.money) + (live[lk] ? " · +" + live[lk].pts + " TODAY" : ""),
-          r.points + " PT" + (r.points === 1 ? "" : "S"), lk === me);
+        list.appendChild(row(i + 1, r.name, "", r.points + " PT" + (r.points === 1 ? "" : "S"), lk === me));
+      });
+      (roster || []).filter(function (p) { return !listed[p.name.toLowerCase()]; }).forEach(function (p) {
+        var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
+        el.classList.add("blank");
         list.appendChild(el);
       });
-      (roster || []).filter(function (p) { return !listed[p.name.toLowerCase()]; })
-        .sort(function (a, c) { return ((live[c.name.toLowerCase()] || {}).pts || 0) - ((live[a.name.toLowerCase()] || {}).pts || 0); })
-        .forEach(function (p) {
-          var lk = p.name.toLowerCase(), el = row(" ", p.name, todayTag(live[lk]), live[lk] ? "0 PTS" : "", lk === me);
-          if (!live[lk]) el.classList.add("blank");
-          list.appendChild(el);
-        });
       if (!scored.length && !(roster || []).length) list.appendChild(empty("Points come in at midnight."));
     }
     // walk-ups: everyone's, live
