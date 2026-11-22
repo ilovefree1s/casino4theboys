@@ -5448,12 +5448,12 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       </div>
       <div class="is-drop"></div>
       <div class="uth-label" id="is-dealer-label"><span class="nm">DEALER</span></div>
-      <div class="cards is-hand" id="is-dealer" style="margin-top:4px"></div>
+      <div class="cards is-hand" id="is-dealer" data-cardsnd="off" style="margin-top:4px"></div>
       <div style="height:8px"></div>
       <div class="uth-rule"></div>
       <div style="height:8px"></div>
       <div class="uth-label gold" id="is-hand-label"><span class="nm">YOUR HAND</span></div>
-      <div class="cards is-hand" id="is-hole" style="margin-top:4px"></div>
+      <div class="cards is-hand" id="is-hole" data-cardsnd="pool" style="margin-top:4px"></div>
       <div class="uth-message" id="is-message">Place your ante</div>
       <div class="dj-pills" id="is-results"></div>
     </div>
@@ -14923,7 +14923,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     function countCards(screen) {
       var out = {}, cards = screen.querySelectorAll(".card");
       for (var i = 0; i < cards.length; i++) {
-        var k = spotOf(cards[i].parentNode, screen);
+        var q = cards[i].closest("[data-cardsnd]");
+        if (q && q.getAttribute("data-cardsnd") === "off") continue;
+        var k = q ? "pool:" + q.id : spotOf(cards[i].parentNode, screen);
         out[k] = (out[k] || 0) + 1;
       }
       return out;
@@ -14970,7 +14972,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         var el = recs[i].target;
         if (!el.classList || !el.classList.contains("card")) continue;
         if (!el.classList.contains("up")) continue;
-        if ((recs[i].oldValue || "").split(/s+/).indexOf("up") >= 0) continue;
+        if ((recs[i].oldValue || "").split(/\s+/).indexOf("up") >= 0) continue;   // was /s+/: a face-up card changing any other class turned over again
+        if (el.closest('[data-cardsnd="off"]')) continue;
         if (!el.offsetParent) continue;
         turning++;
       }

@@ -1105,6 +1105,19 @@ sub('''          : '<span class="cap">BET</span>');
         rack: "#dz-rack, #dz-actions", say: setMessage, done: function () { renderTop(); renderBet(); } });
       $("dz-shuffle").style.visibility''')
 
+# ---- card sounds: a hand can opt out (data-cardsnd="off"), or count as one pile however it's split (data-cardsnd="pool") ----
+sub("""      for (var i = 0; i < cards.length; i++) {
+        var k = spotOf(cards[i].parentNode, screen);""", """      for (var i = 0; i < cards.length; i++) {
+        var q = cards[i].closest("[data-cardsnd]");
+        if (q && q.getAttribute("data-cardsnd") === "off") continue;
+        var k = q ? "pool:" + q.id : spotOf(cards[i].parentNode, screen);""")
+sub("""        if ((recs[i].oldValue || "").split(/s+/).indexOf("up") >= 0) continue;""",
+    """        if ((recs[i].oldValue || "").split(/\\s+/).indexOf("up") >= 0) continue;   // was /s+/: a face-up card changing any other class turned over again
+        if (el.closest('[data-cardsnd="off"]')) continue;""")
+# I Luv Suits: only your own cards make a sound; sorting them into the flush and the rest is not a deal
+sub('<div class="cards is-hand" id="is-dealer" style="margin-top:4px"></div>', '<div class="cards is-hand" id="is-dealer" data-cardsnd="off" style="margin-top:4px"></div>')
+sub('<div class="cards is-hand" id="is-hole" style="margin-top:4px"></div>', '<div class="cards is-hand" id="is-hole" data-cardsnd="pool" style="margin-top:4px"></div>')
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand
