@@ -128,25 +128,9 @@
         "min-width:230px;padding:15px 30px;border-radius:16px;border:3px solid #07060b;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);" +
         "color:#07060b;font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;" +
         "box-shadow:0 0 0 3px #ff2e88,0 10px 26px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .35s ease";
-      // the week's first screen: a neon sign slides in under the title once the paint is on
-      var sign = null;
-      if (!opts.quick) {
-        neonFont();
-        var NE = "'Tilt Neon',system-ui,sans-serif";
-        sign = document.createElement("div");
-        sign.innerHTML = '<span style="display:block;font:400 14px/1.2 ' + NE + ';letter-spacing:.08em;white-space:nowrap;color:#ffe9f4;' +
-            'text-shadow:0 0 6px #ff3d9a,0 0 16px #ff3d9a">EVERY GAME HAS ITS OWN WALLET</span>' +
-          '<span style="display:block;margin-top:4px;font:400 31px/1 ' + NE + ';letter-spacing:.03em;white-space:nowrap;color:#e6fff0;' +
-            'text-shadow:0 0 6px #22d37a,0 0 18px #22d37a,0 0 40px #22d37a">STARTING AT $10K</span>';
-        sign.style.cssText = "position:absolute;left:50%;top:" + Math.round(H * 0.4) + "px;width:min(340px,92vw);box-sizing:border-box;padding:9px 8px 10px;" +
-          "text-align:center;border:3px solid #ffb3da;border-radius:22px;background:rgba(5,5,10,.6);" +
-          "box-shadow:0 0 8px #ff3d9a,0 0 26px #ff3d9a,inset 0 0 8px #ff3d9a,inset 0 0 22px rgba(255,61,154,.6);" +
-          "transform:translateX(calc(50vw + 60%));opacity:0;transition:transform .6s cubic-bezier(.2,.9,.25,1.12),opacity .25s;pointer-events:none";
-      }
       go.style.whiteSpace = "nowrap";
       if (go.textContent.length > 8) go.style.fontSize = "26px";
       wrap.appendChild(cv); wrap.appendChild(skip); wrap.appendChild(go);
-      if (sign) wrap.appendChild(sign);
       document.body.appendChild(wrap);
 
       var g = cv.getContext("2d");
@@ -302,39 +286,49 @@
       }
       /* The title as paint, not type: no outline, soft edges, a halo of overspray, thin patches and specks. */
       function paintSpray(c, w, h) {
-        var size = 74 * S * SPRAY_SCALE;
+        // a day's screen is one line (DAY 2); the week's title is stacked, GRAFFITI over WEEK, and bigger
+        var lines = opts.quick ? [line1] : line1.split(" "), widest = function () {
+          return Math.max.apply(null, lines.map(function (l) { return c.measureText(l).width; }));
+        };
+        var size = (lines.length > 1 ? 96 : 74) * S * SPRAY_SCALE;
         c.font = size + "px C4Spray";
-        while (c.measureText(line1).width > w * 0.9 && size > 20) { size -= 2; c.font = size + "px C4Spray"; }
+        while (widest() > w * 0.9 && size > 20) { size -= 2; c.font = size + "px C4Spray"; }
         c.textAlign = "center"; c.textBaseline = "middle";
-        var cx = w / 2, cy = h * 0.15, tw = c.measureText(line1).width;
+        var lh = size * 0.92, cx = w / 2, cy = lines.length > 1 ? Math.max(h * 0.09, 56 * S) + lh * 0.85 : h * 0.15, tw = widest();
+        var ys = lines.map(function (l, k) { return (k - (lines.length - 1) / 2) * lh; });
         c.save(); c.translate(cx, cy); c.rotate(-0.055);
-        // the cloud that lands round the letters before the line is tight
-        c.shadowColor = "rgba(255,46,136,.9)"; c.shadowBlur = 26 * S; c.fillStyle = "rgba(255,46,136,.35)"; c.fillText(line1, 0, 0);
-        c.shadowColor = "rgba(255,150,30,.95)"; c.shadowBlur = 11 * S; c.fillStyle = "rgba(255,150,30,.6)"; c.fillText(line1, 0, 0);
-        // the paint itself, a touch soft at the edge
-        var fg = c.createLinearGradient(0, -size / 2, 0, size / 2);
-        fg.addColorStop(0, "#fff9b0"); fg.addColorStop(0.45, "#ffc93a"); fg.addColorStop(1, "#ff7a12");
-        c.shadowColor = "rgba(255,200,60,.9)"; c.shadowBlur = 3 * S; c.fillStyle = fg; c.fillText(line1, 0, 0);
+        lines.forEach(function (l, k) {
+          var y0 = ys[k];
+          // the cloud that lands round the letters before the line is tight
+          c.shadowColor = "rgba(255,46,136,.9)"; c.shadowBlur = 26 * S; c.fillStyle = "rgba(255,46,136,.35)"; c.fillText(l, 0, y0);
+          c.shadowColor = "rgba(255,150,30,.95)"; c.shadowBlur = 11 * S; c.fillStyle = "rgba(255,150,30,.6)"; c.fillText(l, 0, y0);
+          // the paint itself, a touch soft at the edge
+          var fg = c.createLinearGradient(0, y0 - size / 2, 0, y0 + size / 2);
+          fg.addColorStop(0, "#fff9b0"); fg.addColorStop(0.45, "#ffc93a"); fg.addColorStop(1, "#ff7a12");
+          c.shadowColor = "rgba(255,200,60,.9)"; c.shadowBlur = 3 * S; c.fillStyle = fg; c.fillText(l, 0, y0);
+        });
         c.shadowBlur = 0; c.shadowColor = "transparent";
+        var span = lh * (lines.length - 1) + size;
         // thin patches where the can moved fast: bits of wall showing through
         c.globalCompositeOperation = "destination-out";
         var i, x, y, r;
-        for (i = 0; i < 900; i++) {
-          x = (Math.random() - 0.5) * (tw + 40 * S); y = (Math.random() - 0.5) * size * 1.2; r = (0.4 + Math.random() * 1.3) * S;
+        for (i = 0; i < 900 * lines.length; i++) {
+          x = (Math.random() - 0.5) * (tw + 40 * S); y = (Math.random() - 0.5) * span * 1.2; r = (0.4 + Math.random() * 1.3) * S;
           c.fillStyle = "rgba(0,0,0," + (0.25 + Math.random() * 0.5).toFixed(2) + ")"; c.fillRect(x, y, r, r);
         }
         // and specks thrown wide of the letters (not on a day's screen: the wall already has its blue)
         c.globalCompositeOperation = "source-over";
-        for (i = 0; i < (opts.quick ? 0 : 520); i++) {
-          x = (Math.random() - 0.5) * (tw + 90 * S); y = (Math.random() - 0.5) * size * 1.9; r = (0.5 + Math.random() * 1.6) * S;
+        for (i = 0; i < (opts.quick ? 0 : 520 * lines.length); i++) {
+          x = (Math.random() - 0.5) * (tw + 90 * S); y = (Math.random() - 0.5) * (span + size * 0.9); r = (0.5 + Math.random() * 1.6) * S;
           c.fillStyle = (Math.random() < 0.6 ? "rgba(255,190,50," : "rgba(255,60,140,") + (0.25 + Math.random() * 0.6).toFixed(2) + ")";
           c.beginPath(); c.arc(x, y, r, 0, 6.283); c.fill();
         }
         c.restore();
-        tBox = { x: cx - tw / 2 - 30 * S, y: cy - size * 0.85, w: tw + 60 * S, h: size * 1.7, cy: cy, size: size * 0.8 };
+        tBox = { x: cx - tw / 2 - 30 * S, y: cy - span / 2 - size * 0.35, w: tw + 60 * S, h: span + size * 0.7, cy: cy, size: size * 0.8 };
         c.font = size + "px C4Spray";
-        var LT = lettersOf(c, line1);
-        tBox.path = letterPath([{ y: 0, h: size, left: -LT.w / 2, xs: LT.xs }], cx, cy, -0.055);
+        tBox.path = letterPath(lines.map(function (l, k) {
+          var L = lettersOf(c, l); return { y: ys[k], h: size, left: -L.w / 2, xs: L.xs };
+        }), cx, cy, -0.055);
       }
       paintTitle();
       if (SPRAY_FACE && !SPRAY_OK) SPRAY_FACE.then(function () { SPRAY_OK = true; paintTitle(); }, function () {});
@@ -657,7 +651,7 @@
 
       // timings, in ms
       // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
-      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = opts.quick ? LEN : 6100, SIGN = T1 + 1000;
+      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = LEN;
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
@@ -725,12 +719,6 @@
           g.restore();
         }
 
-        // the neon sign slides in, then flickers on
-        if (sign && t >= SIGN && !sign.dataset.on) {
-          sign.dataset.on = "1";
-          sign.style.opacity = "1"; sign.style.transform = "translateX(-50%)";
-          setTimeout(function () { if (sign.animate) sign.animate([{ opacity: 1 }, { opacity: 0.35 }, { opacity: 1 }, { opacity: 0.7 }, { opacity: 1 }], { duration: 420, easing: "linear" }); }, 560);
-        }
         // 4) yesterday's results: a coat of black over everything, then the heading and the top three, sprayed on one by one
         var paintRes = null, RS = len + 300;
         if (RES && t >= RS) {
