@@ -4,6 +4,12 @@
      Open the game with #intro on the end of the address to watch it any time. */
   var Intro = (function () {
     var LEN = 5220, playing = false;
+    function neonFont() {
+      if (document.getElementById("gd-font")) return;
+      var f = document.createElement("style"); f.id = "gd-font";
+      f.textContent = "@font-face{font-family:'Tilt Neon';font-display:block;src:url(data:font/woff2;base64,/*NEONFONT*/) format('woff2')}";
+      document.head.appendChild(f);
+    }
     // the title's paint font, when one is built in (a spray-can face, cut down to capitals and numbers)
     var SPRAY_B64 = "/*SPRAYFONT*/", SPRAY_SCALE = +"/*SPRAYSCALE*/" || 1, SPRAY_OK = false, SPRAY_FACE = null;
     if (SPRAY_B64.length > 100 && typeof FontFace !== "undefined") {
@@ -122,7 +128,23 @@
         "min-width:230px;padding:15px 30px;border-radius:16px;border:3px solid #07060b;background:linear-gradient(180deg,#fff36b,#ffb21f 55%,#ff6a00);" +
         "color:#07060b;font:900 italic 30px Impact,Haettenschweiler,'Arial Narrow Bold','Arial Black',sans-serif;letter-spacing:.06em;" +
         "box-shadow:0 0 0 3px #ff2e88,0 10px 26px rgba(0,0,0,.6);opacity:0;pointer-events:none;transition:opacity .35s ease";
+      // the week's first screen: a neon sign slides in under the title once the paint is on
+      var sign = null;
+      if (!opts.quick) {
+        neonFont();
+        var NE = "'Tilt Neon',system-ui,sans-serif";
+        sign = document.createElement("div");
+        sign.innerHTML = '<span style="display:block;font:400 14px/1.2 ' + NE + ';letter-spacing:.08em;white-space:nowrap;color:#ffe9f4;' +
+            'text-shadow:0 0 6px #ff3d9a,0 0 16px #ff3d9a">EVERY GAME HAS ITS OWN WALLET</span>' +
+          '<span style="display:block;margin-top:4px;font:400 31px/1 ' + NE + ';letter-spacing:.03em;white-space:nowrap;color:#e6fff0;' +
+            'text-shadow:0 0 6px #22d37a,0 0 18px #22d37a,0 0 40px #22d37a">STARTING AT $10K</span>';
+        sign.style.cssText = "position:absolute;left:50%;top:" + Math.round(H * 0.195) + "px;width:min(340px,92vw);box-sizing:border-box;padding:9px 8px 10px;" +
+          "text-align:center;border:3px solid #ffb3da;border-radius:22px;background:rgba(5,5,10,.6);" +
+          "box-shadow:0 0 8px #ff3d9a,0 0 26px #ff3d9a,inset 0 0 8px #ff3d9a,inset 0 0 22px rgba(255,61,154,.6);" +
+          "transform:translateX(calc(50vw + 60%));opacity:0;transition:transform .6s cubic-bezier(.2,.9,.25,1.12),opacity .25s;pointer-events:none";
+      }
       wrap.appendChild(cv); wrap.appendChild(skip); wrap.appendChild(go);
+      if (sign) wrap.appendChild(sign);
       document.body.appendChild(wrap);
 
       var g = cv.getContext("2d");
@@ -249,7 +271,7 @@
       } else img.src = src;
 
       /* the words that go on after the piece */
-      var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.quick ? (opts.sub || "") : (opts.sub || "EVERY GAME · $10,000 · MOST POINTS WINS");
+      var line1 = opts.title || "GRAFFITI WEEK", line2 = opts.sub || "";
       var tBox = null;
       function paintTitle() {
         var c = txt.getContext("2d"), w = txt.width, h = txt.height;
@@ -633,7 +655,7 @@
 
       // timings, in ms
       // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
-      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = LEN;
+      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = opts.quick ? LEN : 6100, SIGN = T1 + 1000;
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
@@ -701,6 +723,12 @@
           g.restore();
         }
 
+        // the neon sign slides in, then flickers on
+        if (sign && t >= SIGN && !sign.dataset.on) {
+          sign.dataset.on = "1";
+          sign.style.opacity = "1"; sign.style.transform = "translateX(-50%)";
+          setTimeout(function () { if (sign.animate) sign.animate([{ opacity: 1 }, { opacity: 0.35 }, { opacity: 1 }, { opacity: 0.7 }, { opacity: 1 }], { duration: 420, easing: "linear" }); }, 560);
+        }
         // 4) yesterday's results: a coat of black over everything, then the heading and the top three, sprayed on one by one
         var paintRes = null, RS = len + 300;
         if (RES && t >= RS) {
@@ -888,12 +916,12 @@
     function demo(done) {
       if (demoing) { if (done) done(); return; }
       demoing = true;
+      neonFont();
       if (!document.getElementById("gd-style")) {
         var NE = "'Tilt Neon',system-ui,sans-serif";
         function tube(core, glow) { return "color:" + core + ";text-shadow:0 0 6px " + glow + ",0 0 18px " + glow + ",0 0 44px " + glow; }
         var st = document.createElement("style"); st.id = "gd-style";
         st.textContent =
-          "@font-face{font-family:'Tilt Neon';font-display:block;src:url(data:font/woff2;base64,/*NEONFONT*/) format('woff2')}" +
           "#tt-demo{--c:#7fc4ff;--g:#2f8cff;--hc:#ffe9f4;--hg:#ff3d9a;position:fixed;inset:0;z-index:10050;overflow:hidden;display:flex;flex-direction:column;align-items:center;" +
             "padding:calc(env(safe-area-inset-top,0px) + 56px) 24px calc(env(safe-area-inset-bottom,0px) + 20px);box-sizing:border-box;" +
             "background:#05050a;transition:opacity .35s ease;color:#fff;font-family:system-ui,sans-serif}" +
