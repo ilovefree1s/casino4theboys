@@ -13175,7 +13175,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         (roster ? " · " + roster.length + " PLAYERS" : "");
       // the first time the app is opened in a new week, the rules come up
       var seenRules = "ftt.rules" + (isPoints(b.week) ? "3." : b.daily ? "2." : ".") + b.week;
-      if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); showRules(b); }
+      // (not in a points week: the spray-can intro and the tips do that job now)
+      if (!store.getStr(seenRules, "")) { store.setStr(seenRules, "1"); if (!isPoints(b.week)) showRules(b); }
       var you = b.me, rank = 0;
       if (!b.final) b.rows.forEach(function (r, i) { if (me && r.name.toLowerCase() === me.toLowerCase()) rank = i + 1; });
       if (!me) return laneSay("ENDS IN " + left(b.ends_at), "JOIN", true);
