@@ -1123,12 +1123,12 @@ import base64 as _b64
 _classic = re.search(r'\.card \.back \{\s*transform: rotateY\(180deg\);\s*background: #0A0507 url\("(data:image/webp;base64,[^"]+)"\)', h).group(1)
 CARDBACKS = [("classic", "CLASSIC", _classic)] + [
     (k, n, "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / f"back_{k}.webp").read_bytes()).decode())
-    for k, n in [("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG")]]
+    for k, n in [("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG"), ("midnight", "MIDNIGHT"), ("black", "BLACK CARD")]]
 _cbcss = "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS[1:])
 _cbcss += "".join(f'  .cb-opt[data-cb="{k}"] i {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += """  .cb-box { width: 100%; max-width: 380px; margin-top: 14px; }
   .cb-box .hd { font-family: var(--display); font-size: 11px; letter-spacing: .16em; color: rgba(245,241,232,.8); text-align: center; margin-bottom: 8px; }
-  .cb-row { display: flex; justify-content: center; gap: 8px; }
+  .cb-row { display: grid; grid-template-columns: repeat(4, 64px); justify-content: center; gap: 12px 10px; }
   .cb-opt { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0; background: none; border: 0; color: rgba(245,241,232,.55);
             font-family: var(--mono); font-size: 7px; letter-spacing: .1em; white-space: nowrap; cursor: pointer; }
   .cb-opt i { display: block; width: 52px; height: 78px; border-radius: 6px; background: #0A0507 center/cover no-repeat;
