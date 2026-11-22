@@ -188,22 +188,26 @@
       function letterPath(rows, cx, cy, rot) {
         var legs = [], total = 0, prev = null, hmax = 0, co = Math.cos(rot), si = Math.sin(rot);
         function P(x, y) { return [cx + x * co - y * si, cy + x * si + y * co]; }
-        function seg(a, b, down) {
+        function seg(a, b, down, band) {
           var len = Math.hypot(b[0] - a[0], b[1] - a[1]) * (down ? 1 : 0.35);
-          legs.push({ a: a, b: b, at: total, len: len, down: down }); total += len;
+          legs.push({ a: a, b: b, at: total, len: len, down: down, band: band }); total += len;
         }
-        rows.forEach(function (row) {
+        // each line's paint is kept to its own band, so working the bottoms of GRAFFITI never marks WEEK
+        rows.forEach(function (row, ri) {
+          // the band only stops at the line above or below: halfway between them. Tops and bottoms are free.
+          var up = ri ? (rows[ri - 1].y + row.y) / 2 : null, dn = ri < rows.length - 1 ? (rows[ri + 1].y + row.y) / 2 : null;
           hmax = Math.max(hmax, row.h);
           row.xs.forEach(function (lx) {
-            // up and down passes side by side across the letter, close enough that they overlap
-            var x0 = row.left + lx[0], x1 = row.left + lx[1], wd = x1 - x0, t = row.y - row.h * 0.4, b = row.y + row.h * 0.3;
+            // up and down passes side by side across the letter, close enough that they overlap, top to bottom of it
+            var x0 = row.left + lx[0], x1 = row.left + lx[1], wd = x1 - x0, t = row.y - row.h * 0.52, b = row.y + row.h * 0.44;
+            var xm = (x0 + x1) / 2, band = [up == null ? -1e5 : P(xm, up)[1], dn == null ? 1e5 : P(xm, dn)[1]];
             var n = Math.max(2, Math.ceil(wd / (row.h * 0.22))), pts = [];
             for (var i = 0; i < n; i++) {
               var x = x0 + wd * (i + 0.5) / n, down = i % 2 === 0;
               pts.push(P(x, down ? t : b)); pts.push(P(x + wd * 0.04, down ? b : t));
             }
-            if (prev) seg(prev, pts[0], false);
-            for (var k = 1; k < pts.length; k++) seg(pts[k - 1], pts[k], true);
+            if (prev) seg(prev, pts[0], false, band);
+            for (var k = 1; k < pts.length; k++) seg(pts[k - 1], pts[k], true, band);
             prev = pts[pts.length - 1];
           });
         });
@@ -213,7 +217,7 @@
         var d = Math.max(0, Math.min(1, p)) * P.total, L = P.legs[P.legs.length - 1];
         for (var i = 0; i < P.legs.length; i++) { if (d <= P.legs[i].at + P.legs[i].len) { L = P.legs[i]; break; } }
         var u = L.len ? Math.min(1, (d - L.at) / L.len) : 1;
-        return { x: L.a[0] + (L.b[0] - L.a[0]) * u, y: L.a[1] + (L.b[1] - L.a[1]) * u, down: L.down };
+        return { x: L.a[0] + (L.b[0] - L.a[0]) * u, y: L.a[1] + (L.b[1] - L.a[1]) * u, down: L.down, band: L.band };
       }
       var wordPath = null;
 
@@ -339,8 +343,9 @@
       if (SPRAY_FACE && !SPRAY_OK) SPRAY_FACE.then(function () { SPRAY_OK = true; paintTitle(); }, function () {});
 
       /* spraying: soft blobs of "paint" go into a mask, and the art shows through wherever it's been hit */
-      function blob(mask, x, y, r, a) {
+      function blob(mask, x, y, r, a, band) {
         var c = mask.getContext("2d"), rg = c.createRadialGradient(x, y, 0, x, y, r);
+
         rg.addColorStop(0, "rgba(255,255,255," + a + ")"); rg.addColorStop(0.55, "rgba(255,255,255," + a * 0.55 + ")");
         rg.addColorStop(1, "rgba(255,255,255,0)");
         c.fillStyle = rg; c.fillRect(x - r, y - r, r * 2, r * 2);
@@ -348,6 +353,13 @@
         for (var i = 0; i < 9; i++) {                      // overspray: specks thrown wide of the fat line
           var an = Math.random() * 6.283, d = r * (0.7 + Math.random() * 1.1), s = (0.6 + Math.random() * 1.7) * S;
           c.fillRect(x + Math.cos(an) * d, y + Math.sin(an) * d, s, s);
+        }
+        // the line below isn't painted yet: wipe away anything that drifted onto it, fading out so there's no edge
+        if (band && band[1] < 1e4 && y + r * 2.2 > band[1]) {
+          var e0 = band[1] - r * 0.55, e1 = band[1] + r * 0.25, eg = c.createLinearGradient(0, e0, 0, e1);
+          eg.addColorStop(0, "rgba(0,0,0,0)"); eg.addColorStop(1, "rgba(0,0,0,1)");
+          c.save(); c.globalCompositeOperation = "destination-out"; c.fillStyle = eg;
+          c.fillRect(x - r * 2.2, e0, r * 4.4, r * 3); c.restore();
         }
       }
       var mist = [];
@@ -675,7 +687,7 @@
           var stepA = opts.quick && wordPath ? wordPath.r * 0.28 / wordPath.total : 0.003;
           for (var q = prevA; q <= pa; q += stepA) {
             var pt = artPos(q);
-            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? (wordPath ? wordPath.r : box.h * 0.34) : box.w * 0.125, opts.quick && wordPath ? 0.45 : 0.6);
+            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? (wordPath ? wordPath.r : box.h * 0.34) : box.w * 0.125, 0.6, pt.band);
           }
           prevA = pa;
           if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
@@ -683,7 +695,7 @@
             // last pass: the gaps fill in and the whole wall around it takes the glow
             if (opts.quick && !wdripped) { wdripped = true; dripsFrom(art, box, 7); }
             var c2 = artMask.getContext("2d");
-            c2.fillStyle = "rgba(255,255,255," + Math.min(1, (t - A1) / 380) * 0.22 + ")";
+            c2.fillStyle = "rgba(255,255,255," + (opts.quick ? 0.035 : Math.min(1, (t - A1) / 380) * 0.22) + ")";
             c2.fillRect(0, 0, artMask.width, artMask.height);
           }
         }
@@ -698,13 +710,13 @@
           var stepT = tBox.path ? tBox.path.r * 0.28 / tBox.path.total : 0.003;
           for (var q2 = prevT; q2 <= pw; q2 += stepT) {
             var p2 = txtPos(q2);
-            if (p2.down !== false) blob(txtMask, p2.x, p2.y, tBox.path ? tBox.path.r : tBox.h * 0.62, tBox.path ? 0.5 : 0.75);
+            if (p2.down !== false) blob(txtMask, p2.x, p2.y, tBox.path ? tBox.path.r : tBox.h * 0.62, tBox.path ? 0.6 : 0.75, p2.band);
           }
           prevT = pw;
           if (pw < 1) { nozzle = txtPos(pw); if (nozzle.down !== false) puff(nozzle.x, nozzle.y, "255,190,60"); }
           else {
             var c3 = txtMask.getContext("2d");
-            c3.fillStyle = "rgba(255,255,255,.3)"; c3.fillRect(tBox.x, tBox.y, tBox.w, tBox.h);
+            c3.fillStyle = "rgba(255,255,255," + (tBox.path ? 0.035 : 0.3) + ")"; c3.fillRect(tBox.x, tBox.y, tBox.w, tBox.h);   // the last of it settles in, no flick
             if (!dripped) { dripped = true; dripsFrom(txt, tBox, 6); }
             if (!thumped) { thumped = true; snd.thump(); }
           }
