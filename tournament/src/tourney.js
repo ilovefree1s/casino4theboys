@@ -668,7 +668,16 @@
     // capture, so the game is named before its own click handler deals the first hand
     document.addEventListener("click", function (e) {
       var b = e.target.closest && e.target.closest("button[id]");
-      if (b && GAMES[b.id]) { TT.game = GAMES[b.id]; hot.sit(TT.game); }
+      if (b && GAMES[b.id]) {
+        TT.game = GAMES[b.id]; hot.sit(TT.game);
+        // points week: walked away from this game with under $5,000? Coming back starts it over at a fresh $10,000
+        // (not when a saved seat has chips waiting on the felt: those are still yours)
+        if (TT.on && TT.points && !TT.closed) {
+          var key = k("bankroll"), held = store.get(key, POINTS_CASH);
+          var seatWaiting = typeof Seat !== "undefined" && Seat.saved && Object.keys(Seat.saved()).some(function (n) { return Seat.saved()[n].tile === b.id; });
+          if (held < 5000 && !seatWaiting) { store.set(key, POINTS_CASH); TT.changed(true); }
+        }
+      }
     }, true);
     function readStats() {
       try { return JSON.parse(store.getStr(kw("stats"), "{}")) || {}; } catch (e) { return {}; }
