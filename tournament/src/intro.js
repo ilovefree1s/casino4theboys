@@ -195,14 +195,19 @@
         rows.forEach(function (row) {
           hmax = Math.max(hmax, row.h);
           row.xs.forEach(function (lx) {
-            var x0 = row.left + lx[0], x1 = row.left + lx[1], wd = x1 - x0, t = row.y - row.h * 0.28, b = row.y + row.h * 0.26;
-            var pts = [P(x0 + wd * 0.22, t), P(x0 + wd * 0.8, t + row.h * 0.05), P(x0 + wd * 0.22, b), P(x0 + wd * 0.8, b)];
+            // up and down passes side by side across the letter, close enough that they overlap
+            var x0 = row.left + lx[0], x1 = row.left + lx[1], wd = x1 - x0, t = row.y - row.h * 0.4, b = row.y + row.h * 0.3;
+            var n = Math.max(2, Math.ceil(wd / (row.h * 0.22))), pts = [];
+            for (var i = 0; i < n; i++) {
+              var x = x0 + wd * (i + 0.5) / n, down = i % 2 === 0;
+              pts.push(P(x, down ? t : b)); pts.push(P(x + wd * 0.04, down ? b : t));
+            }
             if (prev) seg(prev, pts[0], false);
             for (var k = 1; k < pts.length; k++) seg(pts[k - 1], pts[k], true);
             prev = pts[pts.length - 1];
           });
         });
-        return { legs: legs, total: total || 1, r: hmax * 0.36 };
+        return { legs: legs, total: total || 1, r: hmax * 0.19 };
       }
       function pathPos(P, p) {
         var d = Math.max(0, Math.min(1, p)) * P.total, L = P.legs[P.legs.length - 1];
@@ -651,7 +656,7 @@
 
       // timings, in ms
       // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
-      var A0 = 620, A1 = 2650, T0 = 2950, T1 = 3700, SUB = 3850, len = LEN;
+      var A0 = 620, A1 = 2650, T0 = 2950, T1 = opts.quick ? 3700 : 4450, SUB = T1 + 150, len = opts.quick ? LEN : LEN + 750;
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
@@ -667,9 +672,10 @@
         var nozzle = null;
         if (t >= A0) {
           var pa = Math.min(1, (t - A0) / (A1 - A0));
-          for (var q = prevA; q <= pa; q += 0.003) {
+          var stepA = opts.quick && wordPath ? wordPath.r * 0.28 / wordPath.total : 0.003;
+          for (var q = prevA; q <= pa; q += stepA) {
             var pt = artPos(q);
-            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? (wordPath ? wordPath.r : box.h * 0.34) : box.w * 0.125, 0.6);
+            if (pt.down) blob(artMask, pt.x, pt.y, opts.quick ? (wordPath ? wordPath.r : box.h * 0.34) : box.w * 0.125, opts.quick && wordPath ? 0.45 : 0.6);
           }
           prevA = pa;
           if (pa < 1) { nozzle = artPos(pa); if (nozzle.down) puff(nozzle.x, nozzle.y, "120,170,255"); }
@@ -689,9 +695,10 @@
         // 2) the words
         if (t >= T0) {
           var pw = Math.min(1, (t - T0) / (T1 - T0));
-          for (var q2 = prevT; q2 <= pw; q2 += 0.003) {
+          var stepT = tBox.path ? tBox.path.r * 0.28 / tBox.path.total : 0.003;
+          for (var q2 = prevT; q2 <= pw; q2 += stepT) {
             var p2 = txtPos(q2);
-            if (p2.down !== false) blob(txtMask, p2.x, p2.y, tBox.path ? tBox.path.r : tBox.h * 0.62, 0.75);
+            if (p2.down !== false) blob(txtMask, p2.x, p2.y, tBox.path ? tBox.path.r : tBox.h * 0.62, tBox.path ? 0.5 : 0.75);
           }
           prevT = pw;
           if (pw < 1) { nozzle = txtPos(pw); if (nozzle.down !== false) puff(nozzle.x, nozzle.y, "255,190,60"); }
