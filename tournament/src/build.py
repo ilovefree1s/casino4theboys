@@ -927,8 +927,16 @@ sub('id="sf-music" min="0" max="100" step="5" value="30"', 'id="sf-music" min="0
 sub("""    demoteIfBroke: function () {
       var i = this.roomIndex(), b = this.getBankroll();""", """    demoteIfBroke: function () {
       var i = this.roomIndex(), b = this.getBankroll();
-      // a tournament points week rebuys a busted game to a fresh $10,000: stay on this floor, the rebuy decides
-      if (typeof TT !== "undefined" && TT.on && TT.points && b < Math.max(25, ROOMS[i].min)) return;""")
+      // a tournament points week: a busted game is about to be rebought to $10,000, and the rebuy picks its floor
+      if (typeof TT !== "undefined" && TT.on && TT.points && b < 25) return;""")
+# ---- points week: each game has its own floor, and sitting down puts you on the highest one that game's wallet can buy into ----
+sub("""    demoteIfBroke: function () {""", """    autoFloor: function () {
+      if (typeof TT === "undefined" || !TT.on || !TT.points) return;
+      var b = this.getBankroll(), i = ROOMS.length - 1;
+      while (i > 0 && b < ROOMS[i].buyIn) i--;
+      store.setStr(wkey("room"), ROOMS[i].key);
+    },
+    demoteIfBroke: function () {""")
 
 # ---- blackjack (Free Bet and Blazing 777): drag a stack of chips from one spot to another, or off to the rack ----
 sub("""    function on(root, sel, fn) {

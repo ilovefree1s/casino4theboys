@@ -115,6 +115,8 @@
     setTimeout(loadGames, 1500);
     function k(name) {
       var base = "ftt." + TT.week + (TT.day ? "." + TT.day : "") + ".";
+      // points week: every game keeps its own floor, beside its own wallet
+      if (TT.points && name === "room") return base + "g." + gslug(TT.game) + ".room";
       if (TT.points && name === "bankroll") {
         // the wallet of the game you're at (or last sat down at); a new one starts at $10,000
         var key = base + "g." + gslug(TT.game) + ".bankroll";
@@ -676,6 +678,7 @@
           var key = k("bankroll"), held = store.get(key, POINTS_CASH);
           var seatWaiting = typeof Seat !== "undefined" && Seat.saved && Object.keys(Seat.saved()).some(function (n) { return Seat.saved()[n].tile === b.id; });
           if (held < 5000 && !seatWaiting) { store.set(key, POINTS_CASH); TT.changed(true); }
+          try { Shell.autoFloor(); } catch (e2) {}   // and sit on the highest floor this game's wallet can buy into
         }
       }
     }, true);
@@ -866,7 +869,7 @@
           try { Shell.setBankroll(POINTS_CASH); } finally { TT.quiet = false; }
           TT.changed(true);
         }
-        try { Shell.demoteIfBroke(); } catch (e) {}     // a fresh $10,000 keeps you on any floor it covers
+        try { Shell.autoFloor(); } catch (e) {}     // a fresh $10,000: the highest floor it buys into
       }
       TT.rebuy = rebuy;
       function rebuyBtn() {
