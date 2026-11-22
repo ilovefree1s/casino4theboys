@@ -13522,6 +13522,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           if (showYou) {
             if (!you) { you = document.createElement("span"); you.className = "tt-ly"; btn.appendChild(you); }
             var mine = Number(mineRaw) || 0;
+            // under $5,000 with no seat saved here: sitting down starts it over at $10,000, so that's what it shows
+            var seated = typeof Seat !== "undefined" && Seat.saved && Object.keys(Seat.saved()).some(function (n) { return Seat.saved()[n].tile === id; });
+            if (mine < 5000 && !seated) mine = POINTS_CASH;
             you.innerHTML = "<b>YOU</b>$" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
           } else if (you) you.remove();
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
