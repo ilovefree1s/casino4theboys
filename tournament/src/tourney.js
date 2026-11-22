@@ -854,6 +854,7 @@
       Shell.show = function (name) {
         var r = showScreen.apply(this, arguments);
         if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow)$/.test(name)) leaders();
+        else if (!(TT.on && TT.points)) paint();   // out of the tournament: the leaders' faces and money come off the tiles
         return r;
       };
 
