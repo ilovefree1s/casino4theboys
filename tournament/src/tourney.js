@@ -831,12 +831,22 @@
           if (!pl) return;
           var face = pl.querySelector(".tt-lf"), amt = pl.querySelector(".tt-la"), pt = btn.querySelector(".tt-lp");
           if (pt && pt.parentNode !== btn) { pt.remove(); pt = null; }               // it used to ride on the circle
-          if (!TT.on || !TT.points || !TT.day) { [face, amt, pt].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led"); return; }
+          var you = pl.querySelector(".tt-ly");
+          if (!TT.on || !TT.points || !TT.day) { [face, amt, pt, you].forEach(function (e) { if (e) e.remove(); }); pl.classList.remove("tt-led", "tt-up"); return; }
           var g = GAMES[id], x = lead[g], pts = gpts(TT.day, g);
           if (!pt) { pt = document.createElement("span"); pt.className = "tt-lp"; btn.appendChild(pt); }
           if (getComputedStyle(btn).position === "static") btn.style.position = "relative";
           pt.textContent = pts + " PT" + (pts > 1 ? "S" : "");
           pl.classList.toggle("tt-led", !!x);
+          // your own wallet under the leader's money: only once you've played the game, and not when the top spot is already you
+          var mineRaw = store.getStr("ftt." + TT.week + "." + TT.day + ".g." + gslug(g) + ".bankroll", "");
+          var showYou = !!x && mineRaw !== "" && String(x.name).toLowerCase() !== (myName() || "").toLowerCase();
+          if (showYou) {
+            if (!you) { you = document.createElement("span"); you.className = "tt-ly"; pl.appendChild(you); }
+            var mine = Number(mineRaw) || 0;
+            you.textContent = "YOU $" + (mine >= 1e6 && typeof shortAmt === "function" ? shortAmt(mine) : fmt(mine));
+          } else if (you) you.remove();
+          pl.classList.toggle("tt-up", showYou);
           if (!x) { if (face) face.remove(); if (amt) amt.remove(); return; }
           var src = faceOf(String(x.name).toLowerCase());
           if (!face) { face = document.createElement("img"); face.className = "tt-lf"; face.alt = ""; pl.appendChild(face); }
