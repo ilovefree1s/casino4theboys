@@ -656,7 +656,7 @@
 
       // timings, in ms
       // the can is shaken first for as long as the knocks in the recording of it last, then the paint goes on
-      var A0 = 620, A1 = 2650, T0 = 2950, T1 = opts.quick ? 3700 : 4450, SUB = T1 + 150, len = opts.quick ? LEN : LEN + 750;
+      var A0 = 620, A1 = 2650, T0 = 2950, T1 = opts.quick ? 3700 : 5950, SUB = T1 + 150, len = opts.quick ? LEN : LEN + 2250;   // the week's title: 3 seconds
       function frame(now) {
         if (over) return;
         if (!ready) { raf = requestAnimationFrame(frame); return; }     // wait for the picture
