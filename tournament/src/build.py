@@ -923,6 +923,13 @@ sub('music: Math.min(1, Math.max(0, store.get("ftb.music", 0.3)))',
     'return Math.min(1, Math.max(0, store.get("ftb.music", 0.02))); })()')
 sub('id="sf-music" min="0" max="100" step="5" value="30"', 'id="sf-music" min="0" max="100" step="1" value="2"')
 
+# ---- points week: going broke doesn't drop you a floor; the free rebuy puts you right back at $10,000 ----
+sub("""    demoteIfBroke: function () {
+      var i = this.roomIndex(), b = this.getBankroll();""", """    demoteIfBroke: function () {
+      var i = this.roomIndex(), b = this.getBankroll();
+      // a tournament points week rebuys a busted game to a fresh $10,000: stay on this floor, the rebuy decides
+      if (typeof TT !== "undefined" && TT.on && TT.points && b < Math.max(25, ROOMS[i].min)) return;""")
+
 # ---- no walking away from a hand ----
 # Leaving a table mid-hand and coming back started a fresh hand, and the chips
 # already on the felt went with the old one. Each table now says when a hand

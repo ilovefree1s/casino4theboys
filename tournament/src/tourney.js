@@ -857,6 +857,7 @@
           try { Shell.setBankroll(POINTS_CASH); } finally { TT.quiet = false; }
           TT.changed(true);
         }
+        try { Shell.demoteIfBroke(); } catch (e) {}     // a fresh $10,000 keeps you on any floor it covers
       }
       TT.rebuy = rebuy;
       function rebuyBtn() {
@@ -2060,6 +2061,28 @@
     function empty(text) {
       var el = document.createElement("div"); el.className = "tt-empty"; el.textContent = text; return el;
     }
+    // swipe the board left or right to move between its tabs
+    (function () {
+      var ORDER = ["day", "week", "msgs"], sx = 0, sy = 0, st = 0, ok = false;
+      var bd = $("tt-board");
+      bd.addEventListener("touchstart", function (e) {
+        var t = e.touches && e.touches[0];
+        ok = !!t && e.touches.length === 1 && !(e.target.closest && e.target.closest("textarea, input, .tt-compose"));
+        if (ok) { sx = t.clientX; sy = t.clientY; st = Date.now(); }
+      }, { passive: true });
+      bd.addEventListener("touchend", function (e) {
+        if (!ok) return; ok = false;
+        var t = e.changedTouches && e.changedTouches[0]; if (!t) return;
+        var dx = t.clientX - sx, dy = t.clientY - sy;
+        if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.6 || Date.now() - st > 800) return;
+        if ($("tt-tabs").style.display === "none") return;
+        var i = ORDER.indexOf(tab === "last" ? "week" : tab); if (i < 0) i = 1;
+        var j = Math.max(0, Math.min(ORDER.length - 1, i + (dx < 0 ? 1 : -1)));
+        if (j === i && tab !== "last") return;
+        var btn = document.querySelector('#tt-tabs [data-t="' + ORDER[j] + '"]');
+        if (btn) btn.click();
+      }, { passive: true });
+    })();
     $("tt-champ").addEventListener("click", function () {
       boardFresh = false; autoMsgs = false;
       tab = tab === "last" ? "week" : "last";
