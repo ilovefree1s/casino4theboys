@@ -66,6 +66,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
 .purse .pw b { font: 11px/1.15 var(--display); color: rgba(245,241,232,.75); font-weight: 400; }
 .purse .pw b.up { color: #57E06A; font-size: 12px; }
 .purse .pw b.dn { color: #FF6B6B; font-size: 12px; }
+#screen-blackjack .spot .placed { touch-action: none; cursor: grab; }
+#screen-blackjack .spot img { pointer-events: none; -webkit-user-drag: none; }
 .purse .pw i { font: italic 10px/1.1 var(--display); color: #FFB238; }
 /* Mini UTH: the dealer's hand name sits beside the dealer's card, clear of the money window */
 #mu-dealer-label { position: relative; }
@@ -16732,6 +16734,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       fillPlaced(spots, "#bj-betspot", mainSpotAmount());
       fillPlaced(spots, "#bj-boyspot", phase === "betting" ? potBet : potStake);
       fillPlaced(spots, "#bj-push22spot", phase === "betting" ? push22SideBet : push22SideStake);
+      bjArmDrag(spots);
       return spots;
     }
     /* TriLux, printed on the cloth: the names on one edge, what they pay on
@@ -16773,6 +16776,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       on(row, "#bj-luxspot", function () { addChip("trilux"); });
       fillPlaced(row, "#bj-betspot", mainSpotAmount());
       fillPlaced(row, "#bj-luxspot", phase === "betting" ? triluxBet : triluxStake, 38);
+      bjArmDrag(row);
       return row;
     }
     /** Once dealt, the main stake lives on the hand rather than the spot. */
@@ -16781,9 +16785,62 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       return hands.length ? hands[0].stake : 0;
     }
     /** Wires a handler inside a not-yet-inserted fragment, so taps never miss. */
+    var bjNoClick = false;   // a drag just ended: the click it leaves behind isn't a bet
     function on(root, sel, fn) {
       var el = root.querySelector(sel);
-      if (el) el.addEventListener("click", fn);
+      if (el) el.addEventListener("click", function (e) { if (bjNoClick) { bjNoClick = false; return; } fn(e); });
+    }
+    var BJ_SPOT = { "bj-betspot": "main", "bj-boyspot": "pot", "bj-push22spot": "push22", "bj-luxspot": "trilux", "bj-busterspot": "superbuster" };
+    function bjGet(k) { return k === "pot" ? potBet : k === "trilux" ? triluxBet : k === "superbuster" ? superBusterBet : k === "push22" ? push22SideBet : bet; }
+    function bjSet(k, v) {
+      if (k === "pot") potBet = v; else if (k === "trilux") triluxBet = v; else if (k === "superbuster") superBusterBet = v;
+      else if (k === "push22") push22SideBet = v; else bet = v;
+    }
+    /** A stack on a spot: a tap still adds a chip; a drag lifts the chosen chip's worth (or all of it) and drops it on
+        another spot, or back on the rack to take it down. Anywhere else, it goes back where it was. */
+    function bjArmDrag(root) {
+      Object.keys(BJ_SPOT).forEach(function (id) {
+        var el = root.querySelector("#" + id); if (!el) return;
+        var k = BJ_SPOT[id];
+        el.addEventListener("pointerdown", function (e) {
+          if (phase !== "betting" || !(bjGet(k) > 0) || !e.isPrimary) return;
+          var x0 = e.clientX, y0 = e.clientY, moved = false, ghost = null, lift = Math.min(selectedChip, bjGet(k));
+          var pl = el.querySelector(".placed"), r = (pl && pl.offsetWidth ? pl : el).getBoundingClientRect();
+          function mv(ev) {
+            var dx = ev.clientX - x0, dy = ev.clientY - y0;
+            if (!moved && Math.abs(dx) + Math.abs(dy) > 9) {
+              moved = true;
+              ghost = document.createElement("div"); ghost.className = "dt-ghost";
+              var sz = Math.min(r.width, r.height) || 46;
+              ghost.style.left = (r.left + r.width / 2 - sz / 2) + "px"; ghost.style.top = (r.top + r.height / 2 - sz / 2) + "px";
+              ghost.style.width = sz + "px"; ghost.style.height = sz + "px";
+              ghost.innerHTML = chipHtml(lift, sz);
+              document.body.appendChild(ghost);
+            }
+            if (ghost) { ev.preventDefault(); ghost.style.transform = "translate(" + dx + "px," + dy + "px)"; }
+          }
+          function up(ev) {
+            window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
+            if (!moved) return;
+            bjNoClick = true; setTimeout(function () { bjNoClick = false; }, 400);
+            if (ghost) ghost.remove();
+            var at = document.elementFromPoint(ev.clientX, ev.clientY);
+            var to = at && at.closest ? at.closest("#" + Object.keys(BJ_SPOT).join(", #")) : null;
+            var dst = to ? BJ_SPOT[to.id] : null, lim = Shell.limits();
+            if (dst && dst !== k) {
+              var ok = allow(lim, lift, bjGet(dst), dst !== "main");
+              if (ok > 0) { bjSet(k, bjGet(k) - ok); bjSet(dst, bjGet(dst) + ok); chipHist = []; setMessage(SPOT_SHOUT[dst]); }
+              else setMessage(refusal(lim, dst !== "main"));
+            } else if (at && at.closest && at.closest("#bj-bottom .rack")) {
+              bjSet(k, bjGet(k) - lift); chipHist = [];
+              setMessage(bjGet(k) > 0 ? fmt(lift) + " taken down" : "Chip taken down");
+            }
+            renderTop(); renderBottom();
+          }
+          window.addEventListener("pointermove", mv, { passive: false });
+          window.addEventListener("pointerup", up); window.addEventListener("pointercancel", up);
+        });
+      });
     }
     function fillPlaced(root, sel, amount, size) {
       var el = root.querySelector(sel + " .placed");
