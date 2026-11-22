@@ -1500,11 +1500,14 @@
           if (!b.rows.length) list.appendChild(empty("No standings from last week."));
         } else {
           // a new week: everybody's name, no money until the first midnight
-          var all = roster || [];
-          if (all.length) list.appendChild(heading(isPoints(b.week) ? "POINTS COME IN AT MIDNIGHT" : "MONEY SHOWS AT MIDNIGHT"));
+          var all = (roster || []).slice(), lv = isPoints(b.week) ? liveToday(b) : {};
+          if (all.length) list.appendChild(heading(isPoints(b.week) ? "TODAY SO FAR · POINTS COUNT AT MIDNIGHT" : "MONEY SHOWS AT MIDNIGHT"));
+          all.sort(function (a, c) { return ((lv[c.name.toLowerCase()] || {}).pts || 0) - ((lv[a.name.toLowerCase()] || {}).pts || 0); });
+          var rk1 = 0;
           all.forEach(function (p) {
-            var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
-            el.classList.add("blank");
+            var lk = p.name.toLowerCase(), t = lv[lk];
+            var el = row(t ? ++rk1 : " ", p.name, t ? "LEADING " + t.games + " GAME" + (t.games === 1 ? "" : "S") : "", t ? "+" + t.pts + " PT" + (t.pts === 1 ? "" : "S") : "", lk === me);
+            if (!t) el.classList.add("blank");
             list.appendChild(el);
           });
           if (!all.length) list.appendChild(empty("The first standings come in at midnight."));
@@ -1569,6 +1572,26 @@
         function () { winnersCache[day] = []; });
     }
     function prevDay(day) { var d = new Date(day + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 1); return d.toISOString().slice(0, 10); }
+    /** Today's points as they stand right now, per player: what the games they lead are worth if nobody passes them. */
+    function liveToday(b) {
+      if (!todayLead || todayLead.day !== b.day || Date.now() - todayLead.at > 30000) {
+        var keep = todayLead && todayLead.day === b.day ? todayLead.rows : [];
+        todayLead = { day: b.day, at: Date.now(), rows: keep };
+        rpc("c4tb_game_leaders", { p_day: b.day }).then(function (j) {
+          todayLead.rows = Array.isArray(j) ? j : [];
+          paintLane();
+          if ($("tt-board").classList.contains("on") && tab === "week") paintBoard();
+        }, function () {});
+      }
+      var m = {};
+      todayLead.rows.forEach(function (x) {
+        var lk = String(x.name).toLowerCase();
+        m[lk] = m[lk] || { pts: 0, games: 0 };
+        m[lk].pts += gpts(b.day, x.game); m[lk].games++;
+      });
+      return m;
+    }
+    function todayTag(t) { return t && t.pts ? "+" + t.pts + " TODAY · LEADING " + t.games + " GAME" + (t.games === 1 ? "" : "S") : ""; }
     function paintPoints(b, list, me) {
       var dayTab = tab === "day";
       if (dayTab) {
@@ -1585,19 +1608,22 @@
       }
       var pb = pointsCache[b.week];
       if (!pb) { list.appendChild(empty("Loading…")); getPoints(b.week).then(function () { if (tab === "week") paintBoard(); }); return; }
-      var scored = pb.filter(function (r) { return r.points > 0 || r.money; });
+      var scored = pb.filter(function (r) { return r.points > 0 || r.money; }), live = liveToday(b);
       list.appendChild(heading("POINTS · AS OF " + dayName(b.as_of) + " MIDNIGHT · TIES GO TO MOST MONEY"));
       var listed = {};
       scored.forEach(function (r, i) {
-        listed[r.name.toLowerCase()] = 1;
-        list.appendChild(row(i + 1, r.name, r.wins + " WIN" + (r.wins === 1 ? "" : "S") + " · " + signed(r.money),
-          r.points + " PT" + (r.points === 1 ? "" : "S"), r.name.toLowerCase() === me));
-      });
-      (roster || []).filter(function (p) { return !listed[p.name.toLowerCase()]; }).forEach(function (p) {
-        var el = row(" ", p.name, "", "", p.name.toLowerCase() === me);
-        el.classList.add("blank");
+        var lk = r.name.toLowerCase(); listed[lk] = 1;
+        var el = row(i + 1, r.name, r.wins + " WIN" + (r.wins === 1 ? "" : "S") + " · " + signed(r.money) + (live[lk] ? " · +" + live[lk].pts + " TODAY" : ""),
+          r.points + " PT" + (r.points === 1 ? "" : "S"), lk === me);
         list.appendChild(el);
       });
+      (roster || []).filter(function (p) { return !listed[p.name.toLowerCase()]; })
+        .sort(function (a, c) { return ((live[c.name.toLowerCase()] || {}).pts || 0) - ((live[a.name.toLowerCase()] || {}).pts || 0); })
+        .forEach(function (p) {
+          var lk = p.name.toLowerCase(), el = row(" ", p.name, todayTag(live[lk]), live[lk] ? "0 PTS" : "", lk === me);
+          if (!live[lk]) el.classList.add("blank");
+          list.appendChild(el);
+        });
       if (!scored.length && !(roster || []).length) list.appendChild(empty("Points come in at midnight."));
     }
     // walk-ups: everyone's, live
