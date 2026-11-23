@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.04"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.05"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -417,6 +417,11 @@ sub("  #st-hero.oth {", "  .mm-other { padding: 0; gap: 0; }\n  .mm-other b { fl
     "  .mm-other .mm-oa { width: 78px; height: 100%; object-fit: cover; opacity: 1; flex: none; }\n"
     "  .mm-other .mm-oa.l { -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent); mask-image: linear-gradient(90deg, #000 55%, transparent); }\n"
     "  .mm-other .mm-oa.r { -webkit-mask-image: linear-gradient(270deg, #000 55%, transparent); mask-image: linear-gradient(270deg, #000 55%, transparent); }\n  #st-hero.oth {")
+
+# ---- Plinko: LOW and MEDIUM made friendlier. Most balls used to land under 1x on every board;
+#      now 58% of balls on LOW win, and on MEDIUM 58% at least get the bet back. LOW pays back 99.7%, MEDIUM 99.1% ----
+sub("      LOW: [8.1, 4, 3, 1.9, 1.2, 0.9, 0.7, 0.7, 0.9, 1.2, 1.9, 3, 4, 8.1],\n      MEDIUM: [43, 13, 6, 3, 1.3, 0.7, 0.4, 0.4, 0.7, 1.3, 3, 6, 13, 43],",
+    "      LOW: [10, 5, 3, 2, 1.3, 1.1, 0.5, 0.5, 1.1, 1.3, 2, 3, 5, 10],\n      MEDIUM: [43, 15, 5, 2.2, 1.4, 1, 0.3, 0.3, 1, 1.4, 2.2, 5, 15, 43],")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
