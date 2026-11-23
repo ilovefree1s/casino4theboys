@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.15"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.16"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -474,6 +474,60 @@ sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }\n"
     "  .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }\n"
     "  .dz-res .pip.msl { width: 7px; height: 17px; margin: 0 1.5px; }")
+
+# ---- Destroyer: a miss is a missile falling out of the sky into the water, then a splash ----
+sub("""    function impact(row, col) {
+      // A settle that lands after the hand is over — a stray flick during the
+      // pause — must not fire a phantom shot or settle the hand twice.
+      if (phase !== "targeting" || lives <= 0) return;""", """    var fxBusy = false;
+    /** A missile drops onto the cell from above and splashes; [hit] fires at the moment it lands. */
+    function missileFx(row, col, hit) {
+      var host = $("dz-board"), r = host.getBoundingClientRect();
+      var x = r.left + cellPct(col + 0.5, "x") / 100 * r.width, y = r.top + cellPct(row + 0.5, "y") / 100 * r.height;
+      var cw = CELL_W / 100 * r.width;
+      var fx = document.createElement("div");
+      fx.className = "dz-mfx";
+      fx.style.cssText = "left:" + x + "px;top:" + y + "px;--cw:" + cw + "px;--fall:" + Math.round(y + cw * 1.2) + "px";
+      fx.innerHTML = '<i class="m"><svg viewBox="0 0 20 60"><defs><linearGradient id="dzmg" x1="0" x2="1"><stop offset="0" stop-color="#7d8696"/><stop offset=".45" stop-color="#e9edf3"/><stop offset="1" stop-color="#59616f"/></linearGradient></defs>' +
+        '<path d="M10 60 C15 54 15 48 15 44 L15 12 L19 6 L19 0 L14 4 L6 4 L1 0 L1 6 L5 12 L5 44 C5 48 5 54 10 60Z" fill="url(#dzmg)" stroke="#2a2f38" stroke-width="1"/>' +
+        '<rect x="5" y="40" width="10" height="3" fill="#FF3B4D"/><path d="M6 2 L10 -18 L14 2Z" fill="#FFB43A" opacity=".9"/><path d="M7.5 1 L10 -10 L12.5 1Z" fill="#fff6c8"/></svg></i>' +
+        '<i class="ring"></i><i class="ring r2"></i><i class="col"></i>' +
+        Array.from({ length: 10 }, function (_, i) { var a = i / 10 * 6.283; return '<i class="drop" style="--dx:' + (Math.cos(a) * (0.55 + Math.random() * 0.35)).toFixed(2) + ';--dy:' + (Math.sin(a) * (0.45 + Math.random() * 0.3) - 0.35).toFixed(2) + '"></i>'; }).join("");
+      document.body.appendChild(fx);
+      setTimeout(function () { fx.classList.add("splash"); hit(); }, 600);
+      setTimeout(function () { fx.remove(); }, 1800);
+    }
+    function impact(row, col) {
+      // A settle that lands after the hand is over — a stray flick during the
+      // pause — must not fire a phantom shot or settle the hand twice.
+      if (phase !== "targeting" || lives <= 0 || fxBusy) return;
+      var cellQ = row * DZ.GRID + col;
+      if (!arguments[2] && !fleet.some(function (ship) { return ship.indexOf(cellQ) >= 0; })) {
+        fxBusy = true;
+        lastRoll = [row, col]; renderBoard();
+        missileFx(row, col, function () { fxBusy = false; impact(row, col, true); });
+        return;
+      }""")
+sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
+    "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
+    "  .dz-mfx { position: fixed; width: 0; height: 0; z-index: 40; pointer-events: none; }\n"
+    "  .dz-mfx .m { position: absolute; left: calc(var(--cw) * -.2); top: calc(var(--cw) * -1.2); width: calc(var(--cw) * .4); height: calc(var(--cw) * 1.2); transform-origin: 50% 100%;\n"
+    "    animation: dzMDrop .6s cubic-bezier(.45,0,.95,.75) both; filter: drop-shadow(0 6px 6px rgba(0,0,0,.55)); }\n"
+    "  .dz-mfx .m svg { width: 100%; height: 100%; display: block; overflow: visible; }\n"
+    "  @keyframes dzMDrop { from { transform: translateY(calc(-1 * var(--fall))) scale(1.5); } to { transform: translateY(0) scale(.6); } }\n"
+    "  .dz-mfx.splash .m { display: none; }\n"
+    "  .dz-mfx .ring { position: absolute; left: 0; top: 0; width: var(--cw); height: var(--cw); margin: calc(var(--cw) * -.5); border-radius: 50%; box-shadow: 0 0 10px rgba(180,225,255,.8);\n"
+    "    border: 3px solid rgba(220,240,255,.95); opacity: 0; transform: scale(.1); }\n"
+    "  .dz-mfx.splash .ring { animation: dzRing .8s ease-out forwards; }\n"
+    "  .dz-mfx.splash .ring.r2 { animation-delay: .14s; border-width: 2px; }\n"
+    "  @keyframes dzRing { 0% { opacity: 1; transform: scale(.15); } 100% { opacity: 0; transform: scale(1.35); } }\n"
+    "  .dz-mfx .col { position: absolute; left: calc(var(--cw) * -.16); bottom: 0; width: calc(var(--cw) * .32); height: 0; border-radius: 50% 50% 20% 20%;\n"
+    "    background: linear-gradient(to top, rgba(170,215,255,.95), rgba(255,255,255,.9) 70%, rgba(255,255,255,0)); opacity: 0; }\n"
+    "  .dz-mfx.splash .col { animation: dzCol .6s ease-out forwards; }\n"
+    "  @keyframes dzCol { 0% { opacity: 1; height: 0; } 40% { opacity: 1; height: calc(var(--cw) * .9); } 100% { opacity: 0; height: calc(var(--cw) * .5); } }\n"
+    "  .dz-mfx .drop { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #e6f4ff; opacity: 0; }\n"
+    "  .dz-mfx.splash .drop { animation: dzDrop .75s cubic-bezier(.2,.7,.4,1) forwards; }\n"
+    "  @keyframes dzDrop { 0% { opacity: 1; transform: translate(0,0) scale(1.2); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--dx) * var(--cw)), calc(var(--dy) * var(--cw) + var(--cw) * .35)) scale(.4); } }")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
