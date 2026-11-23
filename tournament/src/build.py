@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.02"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.03"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -406,6 +406,17 @@ sub("  .mm-other { margin-top: 12px; height: 64px; }",
 
 sub('    $("st-hero").src = r.art;', '    $("st-hero").src = r.art;\n    $("st-hero").classList.toggle("oth", r.key === "other");   // the picture with square edges: faded in')
 sub("  .mm-other { margin-top: 12px; height: 64px; }\n", "  .mm-other { margin-top: 12px; height: 64px; }\n  #st-hero.oth { border-radius: 14px; -webkit-mask-image: radial-gradient(100% 100% at 50% 50%, #000 50%, transparent 100%); mask-image: radial-gradient(100% 100% at 50% 50%, #000 50%, transparent 100%); }\n")
+
+# ---- the Play Testing panel's OTHER GAMES bar: the wheel on one side, mines on the other, the name in the middle ----
+_b64 = lambda f: __import__("base64").b64encode((here / "art" / f).read_bytes()).decode()
+sub('<button class="st-tab plain mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i><b>OTHER GAMES</b>',
+    '<button class="st-tab mm-other" id="mm-other" type="button" aria-label="OTHER GAMES, free play" style="--c:#F2EEE6"><i></i>'
+    '<img class="mm-oa l" alt="" src="data:image/webp;base64,' + _b64("other_wheel.webp") + '"><b>OTHER GAMES</b>'
+    '<img class="mm-oa r" alt="" src="data:image/webp;base64,' + _b64("other_mines.webp") + '">')
+sub("  #st-hero.oth {", "  .mm-other { padding: 0; gap: 0; }\n  .mm-other b { flex: 1; text-align: center; white-space: nowrap; }\n"
+    "  .mm-other .mm-oa { width: 78px; height: 100%; object-fit: cover; opacity: 1; flex: none; }\n"
+    "  .mm-other .mm-oa.l { -webkit-mask-image: linear-gradient(90deg, #000 55%, transparent); mask-image: linear-gradient(90deg, #000 55%, transparent); }\n"
+    "  .mm-other .mm-oa.r { -webkit-mask-image: linear-gradient(270deg, #000 55%, transparent); mask-image: linear-gradient(270deg, #000 55%, transparent); }\n  #st-hero.oth {")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
