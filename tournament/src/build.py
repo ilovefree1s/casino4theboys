@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.10"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.11"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -439,6 +439,19 @@ sub('gold = isRainBin(risk, k), lb = String(m[k]);', 'gold = isRainBin(risk, k),
 
 # ---- Destroyer: no "shake below · cross to fire" text on the tray line ----
 sub('      if (guide) guide.textContent = "shake below · cross to fire";', '      if (guide) guide.style.display = "none";')
+
+# ---- Destroyer: the shots are little missiles (blacked out once fired), and no "Fire — 4 shots in the rack" line ----
+sub("""        shots += '<span class="pip' + (i < lives ? "" : " spent") + '"></span>';""",
+    """        shots += '<span class="pip msl' + (i < lives ? "" : " spent") + '"><svg viewBox="0 0 10 26"><path d="M5 0 C8 3 8 7 8 9 L8 19 L10 23 L10 26 L7 23 L3 23 L0 26 L0 23 L2 19 L2 9 C2 7 2 3 5 0Z"/><rect x="2" y="9" width="6" height="2"/></svg></span>';""")
+sub('      setMessage("Fire — " + DZ.LIVES + " shots in the rack");\n      renderAll();', '      setMessage("");\n      renderAll();')
+sub("  .dz-status .pip.spent { background: rgba(255,255,255,.2); }",
+    "  .dz-status .pip.spent { background: rgba(255,255,255,.2); }\n"
+    "  .dz-status .pip.msl { width: 9px; height: 22px; border-radius: 0; background: none; box-shadow: none; display: inline-block; }\n"
+    "  .dz-status .pip.msl svg { width: 100%; height: 100%; display: block; overflow: visible; }\n"
+    "  .dz-status .pip.msl path { fill: #FFD24D; filter: drop-shadow(0 0 3px rgba(255,210,77,.6)); }\n"
+    "  .dz-status .pip.msl rect { fill: #FF3B4D; }\n"
+    "  .dz-status .pip.msl.spent path { fill: #111; stroke: rgba(255,255,255,.25); stroke-width: .8; filter: none; }\n"
+    "  .dz-status .pip.msl.spent rect { fill: #222; }")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
