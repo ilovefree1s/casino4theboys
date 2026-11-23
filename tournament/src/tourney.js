@@ -1439,7 +1439,7 @@
       boardFresh = true;
       var unread = function () { return !!(msgs && msgs[0] && msgs[0].id > msgSeen); };
       if (unread()) { tab = "msgs"; autoMsgs = true; }
-      else if (autoMsgs) { tab = "week"; autoMsgs = false; }   // it only jumped there for the message: back to the standings
+      else { tab = (board ? isPoints(board.week) : TT.points) ? "day" : "week"; autoMsgs = false; }   // it opens on TODAY (a points week) or the standings
       loadMsgs().then(function () {
         if (boardFresh && tab !== "msgs" && unread() && $("tt-board").classList.contains("on")) { tab = "msgs"; autoMsgs = true; msgSeenAtOpen = msgSeen; paintBoard(); }
       });
