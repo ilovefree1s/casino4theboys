@@ -1128,7 +1128,7 @@ _graf = "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / "back_g
 # the graffiti back is everyone's default now
 CARDBACKS = [("graffiti", "GRAFFITI", _graf), ("classic", "4 THE BOYS", _boys), ("original", "ORIGINAL", _classic)] + [
     (k, n, "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / f"back_{k}.webp").read_bytes()).decode())
-    for k, n in [("dragon", "DRAGON"), ("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG"), ("midnight", "MIDNIGHT"), ("black", "BLACK CARD")]]
+    for k, n in [("dragon", "DRAGON"), ("neon", "NEON"), ("crown", "CROWN TAG")]]
 _cbcss = f'  html:not([data-cb]) .card .back {{ background-image: url("{_graf}"); }}\n'
 _cbcss += "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += "".join(f'  .cb-opt[data-cb="{k}"] i {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
@@ -1152,7 +1152,11 @@ sub("</body>", """<script>
   var KEY = "ftb.cardback", root = document.documentElement;
   // once: everyone starts on the graffiti back (they can still pick another after)
   try { if (!localStorage.getItem("ftb.cb.graffiti")) { localStorage.setItem("ftb.cb.graffiti", "1"); localStorage.setItem(KEY, "graffiti"); } } catch (e) {}
-  function get() { try { return localStorage.getItem(KEY) || "graffiti"; } catch (e) { return "graffiti"; } }
+  function get() {
+    var k = "graffiti";
+    try { k = localStorage.getItem(KEY) || "graffiti"; } catch (e) {}
+    return document.querySelector('.cb-opt[data-cb="' + k + '"]') ? k : "graffiti";   // a back that's been taken out goes back to the default
+  }
   function apply(k) {
     root.setAttribute("data-cb", k);
     var row = document.getElementById("cb-row");
