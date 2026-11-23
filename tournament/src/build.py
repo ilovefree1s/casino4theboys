@@ -1124,10 +1124,12 @@ import base64 as _b64
 _classic = re.search(r'\.card \.back \{\s*transform: rotateY\(180deg\);\s*background: #0A0507 url\("(data:image/webp;base64,[^"]+)"\)', h).group(1)
 _boys = "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / "back_boys.webp").read_bytes()).decode()
 # the 4 The Boys back is the default; the old back stays as ORIGINAL
-CARDBACKS = [("classic", "4 THE BOYS", _boys), ("original", "ORIGINAL", _classic)] + [
+_graf = "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / "back_graffiti.webp").read_bytes()).decode()
+# the graffiti back is everyone's default now
+CARDBACKS = [("graffiti", "GRAFFITI", _graf), ("classic", "4 THE BOYS", _boys), ("original", "ORIGINAL", _classic)] + [
     (k, n, "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / f"back_{k}.webp").read_bytes()).decode())
-    for k, n in [("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG"), ("midnight", "MIDNIGHT"), ("black", "BLACK CARD")]]
-_cbcss = f'  html:not([data-cb]) .card .back {{ background-image: url("{_boys}"); }}\n'
+    for k, n in [("dragon", "DRAGON"), ("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG"), ("midnight", "MIDNIGHT"), ("black", "BLACK CARD")]]
+_cbcss = f'  html:not([data-cb]) .card .back {{ background-image: url("{_graf}"); }}\n'
 _cbcss += "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += "".join(f'  .cb-opt[data-cb="{k}"] i {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += """  .cb-box { width: 100%; max-width: 380px; margin-top: 14px; }
@@ -1148,7 +1150,9 @@ sub('      <div class="st-foot">BOTH ARE KEPT ON THIS PHONE', '''      <div clas
 sub("</body>", """<script>
 (function () {
   var KEY = "ftb.cardback", root = document.documentElement;
-  function get() { try { return localStorage.getItem(KEY) || "classic"; } catch (e) { return "classic"; } }
+  // once: everyone starts on the graffiti back (they can still pick another after)
+  try { if (!localStorage.getItem("ftb.cb.graffiti")) { localStorage.setItem("ftb.cb.graffiti", "1"); localStorage.setItem(KEY, "graffiti"); } } catch (e) {}
+  function get() { try { return localStorage.getItem(KEY) || "graffiti"; } catch (e) { return "graffiti"; } }
   function apply(k) {
     root.setAttribute("data-cb", k);
     var row = document.getElementById("cb-row");
