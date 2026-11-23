@@ -1,0 +1,74 @@
+  /* ========== HIGH OR LOW ==========
+     Nine piles face up; call the next card higher or lower than the pile you put it on. */
+  #screen-highlow {
+    position: relative; --uth-green: #35C8FF; --uth-dim: rgba(53,200,255,.35);
+    background: radial-gradient(120% 70% at 50% 40%, #0B2236 0%, #06111B 55%, #020609 100%);
+  }
+  .hl-bg { filter: grayscale(1) sepia(1) hue-rotate(160deg) saturate(2.6) brightness(.75); }
+  #screen-highlow .uth-money .val { color: #FFD24D; }
+  .hl-sign { font-family: var(--display); font-size: 13px; letter-spacing: .14em; color: #35C8FF; text-align: center; margin: 2px 0 6px; }
+  .hl-sign span { display: block; margin-top: 3px; font-family: var(--mono); font-size: 8px; letter-spacing: .14em; color: rgba(245,241,232,.55); }
+  .hl-status { display: grid; grid-template-columns: 70px 1fr 70px; align-items: center; gap: 8px; width: 100%; margin-bottom: 8px; }
+  .hl-deck { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  .hl-deck .stack { position: relative; width: 40px; height: 60px; }
+  .hl-deck .stack .card { position: absolute; left: 0; top: 0; width: 40px; height: 60px; }
+  .hl-deck .stack .card:nth-child(2) { left: 2px; top: -2px; }
+  .hl-deck .stack .card:nth-child(3) { left: 4px; top: -4px; }
+  .hl-deck .n, .hl-alive b, .hl-pot b { font-family: var(--mono); font-size: 8px; letter-spacing: .16em; color: rgba(245,241,232,.55); font-weight: 400; }
+  .hl-deck .n i { font-style: normal; color: var(--bone); font-family: var(--display); font-size: 12px; letter-spacing: .04em; }
+  .hl-pot { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hl-pot span { font-family: var(--display); font-size: 26px; line-height: 1; color: #FFD24D; letter-spacing: .02em; }
+  .hl-pot i { font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: rgba(245,241,232,.7); min-height: 12px; }
+  .hl-alive { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .hl-alive span { font-family: var(--display); font-size: 22px; line-height: 1; color: #35C8FF; }
+  /* the nine piles */
+  .hl-grid { display: grid; grid-template-columns: repeat(3, 66px); justify-content: center; gap: 10px 22px; margin: 2px 0 6px; }
+  .hl-pile { position: relative; width: 66px; height: 99px; padding: 0; border: 0; background: none; border-radius: 8px; cursor: pointer; }
+  .hl-pile .card { position: absolute; left: 0; top: 0; width: 66px; height: 99px; }
+  .hl-pile .card .front { padding: 4px 5px; }
+  .hl-pile .card .tl { font-size: 17px; }
+  .hl-pile .card .mid { font-size: 26px; }
+  .hl-pile .card .br { font-size: 11px; }
+  .hl-pile .depth { position: absolute; left: 3px; top: 3px; width: 66px; height: 99px; border-radius: 6px; background: #0A0507; border: 1px solid rgba(245,241,232,.25); }
+  .hl-pile.sel .card .front { box-shadow: 0 0 0 3px #FFD24D, 0 0 16px rgba(255,210,77,.6); }
+  .hl-pile.sel { transform: translateY(-3px); }
+  .hl-pile.dead { cursor: default; }
+  .hl-pile.dead .card { filter: grayscale(.85) brightness(.45); }
+  .hl-pile.dead::after { content: "✕"; position: absolute; inset: 0; display: grid; place-items: center; font: 900 44px/1 system-ui, sans-serif; color: #FF4D4D; text-shadow: 0 2px 6px #000; }
+  .hl-pile.hit .card .front { box-shadow: 0 0 0 3px #57E06A, 0 0 14px rgba(87,224,106,.6); }
+  .hl-pile.miss .card .front { box-shadow: 0 0 0 3px #FF4D4D, 0 0 14px rgba(255,77,77,.6); }
+  .hl-pile .cnt { position: absolute; right: -6px; bottom: -6px; z-index: 2; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: #0B0A10;
+                  border: 1px solid rgba(245,241,232,.3); font: 700 10px/16px system-ui, sans-serif; color: rgba(245,241,232,.8); text-align: center; }
+  /* the two calls */
+  .hl-calls { display: flex; gap: 10px; width: 100%; min-height: 64px; margin-bottom: 8px; }
+  .hl-call { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border-radius: 14px; padding: 8px 6px;
+             background: rgba(0,0,0,.45); border: 2px solid var(--k); color: var(--k); font-family: var(--display); }
+  .hl-call b { font-size: 19px; letter-spacing: .08em; font-weight: 400; }
+  .hl-call i { font-style: normal; font-family: var(--mono); font-size: 11px; letter-spacing: .08em; color: rgba(245,241,232,.75); }
+  .hl-call.hi { --k: #57E06A; } .hl-call.lo { --k: #FF6B6B; }
+  .hl-call[disabled] { opacity: .3; }
+  .hl-calls .hint { flex: 1; align-self: center; text-align: center; font-family: var(--mono); font-size: 10px; letter-spacing: .12em; color: rgba(245,241,232,.6); }
+  .hl-betrow { display: flex; justify-content: center; min-height: 0; }
+  .hl-spot { display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--bone); padding: 0; border: 0; background: none; touch-action: none; }
+  .hl-spot .ring { position: relative; width: 60px; height: 60px; border-radius: 50%; border: 2px solid #35C8FF; background: rgba(0,0,0,.35); display: grid; place-items: center;
+                   box-shadow: 0 0 10px rgba(53,200,255,.45); }
+  .hl-spot .ring .placed { display: block; width: 50px; height: 50px; touch-action: none; }
+  .hl-spot .ring .empty { font-family: var(--display); font-size: 9px; letter-spacing: .1em; color: rgba(245,241,232,.45); }
+  .hl-spot .cap { font-family: var(--display); font-size: 10px; letter-spacing: .12em; color: #35C8FF; }
+  #hl-rack { min-height: 50px; }
+  #screen-highlow .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
+  #screen-highlow .uth-btn[disabled] { opacity: .4; }
+  #screen-highlow .uth-actions { width: 100%; display: flex; gap: 10px; margin-top: 8px; }
+  @media (max-height: 770px) {
+    .hl-sign span { display: none; }
+    .hl-grid { grid-template-columns: repeat(3, 58px); gap: 8px 20px; }
+    .hl-pile, .hl-pile .card, .hl-pile .depth { width: 58px; height: 87px; }
+    .hl-pile .card .mid { font-size: 22px; }
+  }
+  @media (max-height: 700px) {
+    .hl-sign { display: none; }
+    .hl-grid { grid-template-columns: repeat(3, 52px); gap: 6px 18px; }
+    .hl-pile, .hl-pile .card, .hl-pile .depth { width: 52px; height: 78px; }
+    .hl-pile .card .tl { font-size: 14px; } .hl-pile .card .mid { font-size: 19px; }
+    .hl-calls { min-height: 54px; }
+  }

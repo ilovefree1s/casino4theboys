@@ -1,0 +1,35 @@
+<!-- ================= HIGH OR LOW ================= -->
+<div class="screen" id="screen-highlow">
+  <img class="pg-bg hl-bg" id="hl-bg" alt="">
+  <div class="uth-table dj-table hl-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="wayout" id="hl-back" aria-label="Back to other games"><i>&#8249;</i><b>OTHER GAMES</b></button>
+        <div class="uth-money purse">
+          <span class="lbl">BANKROLL</span><span class="val" id="hl-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="hl-risk">0</span>
+        </div>
+      </div>
+      <div class="hl-sign">HIGH OR LOW <span>CALL IT · CLEAR THE DECK · POT ×3</span></div>
+      <div class="hl-status">
+        <div class="hl-deck" id="hl-deck"></div>
+        <div class="hl-pot"><b>POT</b><span id="hl-pot">—</span><i id="hl-potx"></i></div>
+        <div class="hl-alive"><b>PILES</b><span id="hl-alive">9</span></div>
+      </div>
+      <div class="hl-grid" id="hl-grid"></div>
+      <div class="uth-message" id="hl-message">Place your bet</div>
+    </div>
+    <div class="dj-bottom">
+      <div class="hl-calls" id="hl-calls"></div>
+      <div class="hl-betrow" id="hl-betrow"><div id="hl-spot"></div></div>
+      <div id="hl-rack"></div>
+      <div class="uth-actions" id="hl-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="hl-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="hl-buyin">BUY BACK IN</button>
+  </div>
+</div>

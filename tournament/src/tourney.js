@@ -100,7 +100,7 @@
     TT.gpts = gpts;
     /* Games added after the tournament began only count once the server lists them too (its points sum
        has to match this one), so each waits for the server's own list of games. Until then it stays out. */
-    var NEWER = { "Pai Gow": 1 }, serverGames = null;
+    var NEWER = { "Pai Gow": 1, "High or Low": 1 }, serverGames = null;
     try { serverGames = JSON.parse(store.getStr("ftt.games", "null")); } catch (e) { serverGames = null; }
     function hasGame(g) { return !NEWER[g] || !!(serverGames && serverGames.indexOf(g) >= 0); }
     TT.hasGame = hasGame;
@@ -287,14 +287,14 @@
       // the table each game is played at, for telling when a hand is over
       var TABLE = { "Punto Banco": "Baccarat", "Dragon Tiger": "DragonTiger", "Free Bet Blackjack": "Blackjack",
         "Blazing 777": "Blackjack", "Double Down Madness": "DoubleDown", "Ultimate Texas Hold'em": "Holdem",
-        "DJ Wild": "DjWild", "Shootout": "Shootout", "Mini UTH": "MiniUth", "I Luv Suits": "IluvSuits", "Kirby": "Kirby", "Pai Gow": "PaiGow",
+        "DJ Wild": "DjWild", "Shootout": "Shootout", "Mini UTH": "MiniUth", "I Luv Suits": "IluvSuits", "Kirby": "Kirby", "Pai Gow": "PaiGow", "High or Low": "HighLow",
         "Double Zero Roulette": "Roulette", "Lightning Roulette": "Roulette", "Double Ball Roulette": "Roulette",
         "Keno": "Keno", "Money Wheel": "Wheel", "Sic Bo": "SicBo", "Plinko": "Plinko", "Mines": "Mines" };
       function tableOf(game) {
         try {
           return { Baccarat: Baccarat, DragonTiger: DragonTiger, Blackjack: Blackjack, DoubleDown: DoubleDown, Holdem: Holdem,
             DjWild: DjWild, Shootout: Shootout, MiniUth: MiniUth, IluvSuits: IluvSuits, Kirby: Kirby, Roulette: Roulette,
-            Keno: Keno, Wheel: Wheel, SicBo: SicBo, Plinko: Plinko, Mines: Mines, PaiGow: PaiGow }[TABLE[game]];
+            Keno: Keno, Wheel: Wheel, SicBo: SicBo, Plinko: Plinko, Mines: Mines, PaiGow: PaiGow, HighLow: HighLow }[TABLE[game]];
         } catch (e) { return null; }
       }
       // days the house picked by hand
@@ -664,7 +664,7 @@
       "pk-mini": "Mini UTH", "pk-suits": "I Luv Suits", "pk-kirby": "Kirby", "pk-paigow": "Pai Gow",
       "rlm-classic": "Double Zero Roulette", "rlm-lightning": "Lightning Roulette", "rlm-doubleball": "Double Ball Roulette",
       "cm-crapless": "Crapless Craps", "cm-destroyer": "Destroyer",
-      "om-keno": "Keno", "om-wheel": "Money Wheel", "om-sicbo": "Sic Bo", "om-plinko": "Plinko", "om-mines": "Mines"
+      "om-keno": "Keno", "om-wheel": "Money Wheel", "om-sicbo": "Sic Bo", "om-plinko": "Plinko", "om-mines": "Mines", "om-highlow": "High or Low"
     };
     var statsDirty = false;
     // capture, so the game is named before its own click handler deals the first hand
@@ -872,7 +872,7 @@
       var showScreen = Shell.show;
       Shell.show = function (name) {
         var r = showScreen.apply(this, arguments);
-        if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow)$/.test(name)) { leaders(); setTimeout(leaders, 2500); }   // again once the wallet you left with has gone up
+        if (TT.on && TT.points && !/^(holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow|highlow)$/.test(name)) { leaders(); setTimeout(leaders, 2500); }   // again once the wallet you left with has gone up
         else if (!(TT.on && TT.points)) paint();   // out of the tournament: the leaders' faces and money come off the tiles
         return r;
       };
@@ -905,7 +905,7 @@
       setInterval(function () {
         var b = rebuyBtn(), on = document.querySelector(".screen.on");
         var atTable = on && on.id !== "screen-menu" && on.id !== "screen-lobby" && TT.game &&
-          /holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow/.test(on.id);
+          /holdem|djwild|shootout|miniuth|iluvsuits|destroyer|sicbo|roulette|wheel|keno|mines|blackjack|doubledown|baccarat|dragontiger|plinko|kirby|craps|paigow|highlow/.test(on.id);
         var lim = Shell.limits ? Shell.limits() : null, min = Math.max(25, (lim && lim.min) || 0);
         var show = TT.on && TT.points && !TT.closed && atTable && Shell.getBankroll() < min;
         b.style.display = show ? "" : "none";

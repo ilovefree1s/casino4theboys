@@ -362,6 +362,37 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "chain.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
+# ---- HIGH OR LOW: nine piles, call each card higher or lower. Campaign and Play Testing; the tournament hides it ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "highlow.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "highlow.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+_HLART = ('<svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="omhlbg" cx=".5" cy=".4" r=".8"><stop offset="0" stop-color="#0E2A40"/><stop offset="1" stop-color="#030A12"/></radialGradient></defs>'
+          '<rect width="102" height="78" fill="url(#omhlbg)"/>'
+          '<g transform="translate(14 14) rotate(-10)"><rect width="30" height="44" rx="4" fill="#FAF6EC" stroke="#000" stroke-opacity=".4"/><text x="5" y="13" font-family="Georgia,serif" font-weight="700" font-size="11" fill="#C8102E">7</text><text x="15" y="31" text-anchor="middle" font-size="15" fill="#C8102E">&#9829;</text></g>'
+          '<g transform="translate(58 12) rotate(9)"><rect width="30" height="44" rx="4" fill="#0A0507" stroke="#35C8FF" stroke-width="1.5"/><text x="15" y="29" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="16" fill="#35C8FF">?</text></g>'
+          '<path d="M51 26 l7 9 h-4.5 v9 h-5 v-9 H44Z" fill="#57E06A"/><path d="M51 70 l7 -9 h-4.5 v-9 h-5 v9 H44Z" fill="#FF6B6B"/></svg>')
+sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="cm-plate" id="om-chain\"""", """          <span class="l2">CASH OUT WHEN YOU LIKE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="cm-plate" id="om-highlow" style="--c:#35C8FF" aria-label="High or Low — play">
+        <span class="art">""" + _HLART + """</span>
+        <span class="txt">
+          <span class="nm">HIGH OR LOW</span>
+          <span class="l1">NINE PILES · CALL EVERY CARD</span>
+          <span class="l2">CLEAR THE DECK · POT ×3</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="cm-plate" id="om-chain\"""")
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "highlow.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
         else if (isBust(h.cards)) { returned = 0; lost = true; }

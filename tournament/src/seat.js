@@ -5,7 +5,7 @@
       try {
         return { Baccarat: Baccarat, DragonTiger: DragonTiger, Blackjack: Blackjack, DoubleDown: DoubleDown, Holdem: Holdem, DjWild: DjWild,
                  Shootout: Shootout, MiniUth: MiniUth, IluvSuits: IluvSuits, Kirby: Kirby, Roulette: Roulette, Keno: Keno, Wheel: Wheel,
-                 SicBo: SicBo, Plinko: Plinko, Mines: Mines, Craps: Craps, Destroyer: Destroyer, PaiGow: PaiGow };
+                 SicBo: SicBo, Plinko: Plinko, Mines: Mines, Craps: Craps, Destroyer: Destroyer, PaiGow: PaiGow, HighLow: HighLow };
       } catch (e) { return {}; }
     }
     function say(text) {
