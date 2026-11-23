@@ -3709,6 +3709,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   .dt-spot .placed { position: absolute; left: auto; right: 4px; top: 50%; transform: translateY(-50%); width: 30px; height: 30px; display: none; }
   .dt-spot .placed.on { display: block; pointer-events: auto; touch-action: none; cursor: grab; }
   /* the lifted chips ride a ghost pinned to the glass, over everything */
+  .uth-spot, .pg-spot, #dd-spots .spot, #dz-bet, #bj-betspot, #bj-boyspot, #bj-push22spot, #bj-luxspot, #bj-busterspot { touch-action: none; }
   .uth-spot .placed, .pg-spot .placed, #dd-spots .spot .placed { touch-action: none; cursor: grab; }
   .dt-ghost { position: fixed; z-index: 60; pointer-events: none; border-radius: 50%; overflow: hidden; box-shadow: 0 6px 14px rgba(0,0,0,.6); }
   .dt-ghost .scrim {
@@ -8184,6 +8185,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         function up(ev) {
           window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
           if (!moved) return;
+          if (ev.type === "pointercancel") { if (ghost) ghost.remove(); o.done(); return; }   // the phone took the touch: put it all back
           chipDragEat = Date.now() + 150;
           if (ghost) ghost.remove();
           var at = document.elementFromPoint(ev.clientX, ev.clientY), dst = null;

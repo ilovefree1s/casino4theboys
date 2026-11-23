@@ -1043,6 +1043,7 @@ sub("""  function chipHtml(amount, size) {""", """  /** One drag for every table
         function up(ev) {
           window.removeEventListener("pointermove", mv); window.removeEventListener("pointerup", up); window.removeEventListener("pointercancel", up);
           if (!moved) return;
+          if (ev.type === "pointercancel") { if (ghost) ghost.remove(); o.done(); return; }   // the phone took the touch: put it all back
           chipDragEat = Date.now() + 150;
           if (ghost) ghost.remove();
           var at = document.elementFromPoint(ev.clientX, ev.clientY), dst = null;
@@ -1085,7 +1086,7 @@ for pre, spots, keys in [
         '        add: function (k, v) { var s = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = s; } },\n'
         '        rack: "#%s-rack, #%s-actions", say: setMessage, done: function () { %srenderTop(); renderSpots(); } });'
         % (pre, spots, m, get, st, pre, pre, "chipHist = []; " if pre in ("uth", "dj") else ""))
-sub("  .dt-ghost { position: fixed;", "  .uth-spot .placed, .pg-spot .placed, #dd-spots .spot .placed { touch-action: none; cursor: grab; }\n  .dt-ghost { position: fixed;")
+sub("  .dt-ghost { position: fixed;", "  .uth-spot, .pg-spot, #dd-spots .spot, #dz-bet, #bj-betspot, #bj-boyspot, #bj-push22spot, #bj-luxspot, #bj-busterspot { touch-action: none; }\n  .uth-spot .placed, .pg-spot .placed, #dd-spots .spot .placed { touch-action: none; cursor: grab; }\n  .dt-ghost { position: fixed;")
 # Double Down Madness
 sub('      fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);',
     '''      fill(s, "#dd-pairspot", betting ? pairBet : pairStake, 32);
