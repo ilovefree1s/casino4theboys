@@ -176,9 +176,6 @@
   try { window.Seat = Seat; } catch (e) {}
   /* the name on the door turns over to 2.0 with the points week: midnight Eastern, Sunday 22 November */
   (function () {
-    var V2_AT = Date.parse("2026-11-22T05:00:00Z");
-    function ver() { var el = document.getElementById("mm-ver"); if (el && Date.now() >= V2_AT) el.textContent = "v2.0"; }
-    ver(); setInterval(ver, 30000);
   })();
   /* Craps is a sideways table. On the way in, the game holds the screen sideways itself (full screen, then the
      landscape lock) so nobody has to turn auto-rotate on; on the way out it lets go of whatever it took.
