@@ -302,6 +302,10 @@
   .tt-fold > p { display: none; margin: 0; padding: 0 13px 12px 47px; font-size: 13px; line-height: 1.45; color: rgba(245,241,232,.78); }
   .tt-fold.open > p { display: block; }
   .tt-fold > p b { color: var(--bone); }
+  .tt-fold > .tt-fbody { display: none; padding: 0 8px 8px; }
+  .tt-fold.open > .tt-fbody { display: flex; flex-direction: column; gap: 6px; }
+  .tt-dayfold { margin-bottom: 6px; }
+  .tt-dayfold > button b { font: 800 13px/1.25 system-ui, sans-serif; letter-spacing: .06em; }
   .tt-compose button:disabled { opacity: .5; }
 
   /* joining by face */

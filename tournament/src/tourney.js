@@ -1620,7 +1620,7 @@
         rpc("c4tb_game_leaders", { p_day: b.day }).then(function (j) {
           todayLead.rows = Array.isArray(j) ? j : [];
           paintLane();
-          if ($("tt-board").classList.contains("on") && tab === "week") paintBoard();
+          if ($("tt-board").classList.contains("on") && (tab === "week" || tab === "day")) paintBoard();
         }, function () {});
       }
       var m = {};
@@ -1670,15 +1670,14 @@
           list.appendChild(row(i + 1, x.name, "LEADING " + x.t.games + " GAME" + (x.t.games === 1 ? "" : "S"),
             "+" + x.t.pts + " PT" + (x.t.pts === 1 ? "" : "S"), x.name.toLowerCase() === me));
         });
-        if (b.day_no > 1) {
-          var yd = prevDay(b.day);
-          if (!winnersCache[yd]) { getWinners(yd).then(function () { if (tab === "day") paintBoard(); }); return; }
-          var ws = winnersCache[yd];
-          list.appendChild(heading(dayName(yd) + " · WHO TOOK EACH GAME"));
-          if (!ws.length) list.appendChild(empty("Nobody played yesterday."));
-          ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
-            list.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
-              w.name.toLowerCase() === me));
+        // today's games, live: who is on top of each one right now
+        var tl = (todayLead && todayLead.day === b.day ? todayLead.rows : []).slice();
+        if (tl.length) {
+          list.appendChild(heading("TODAY · WHO'S ON TOP OF EACH GAME"));
+          tl.sort(function (a, c) { return gpts(b.day, c.game) - gpts(b.day, a.game) || c.cash - a.cash; }).forEach(function (w) {
+            var pt = gpts(b.day, w.game);
+            list.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + pt + " PT" + (pt > 1 ? "S" : ""),
+              String(w.name).toLowerCase() === me));
           });
         }
         return;
@@ -1699,7 +1698,29 @@
         list.appendChild(el);
       });
       if (!scored.length && !(roster || []).length) list.appendChild(empty("Points come in at midnight."));
+      // each finished day, newest first: who took each game, folded away behind its arrow
+      var days = [], d = b.day;
+      for (var i = 1; i < (b.day_no || 1); i++) { d = prevDay(d); days.push(d); }
+      if (days.length) list.appendChild(heading("EACH DAY · WHO TOOK EACH GAME"));
+      days.forEach(function (day) {
+        var el = document.createElement("div"); el.className = "tt-fold tt-dayfold" + (dayOpen[day] ? " open" : "");
+        var hd = document.createElement("button"); hd.type = "button";
+        var tx = document.createElement("b"); tx.textContent = dayName(day) + " · " + day.slice(5).replace("-", "/");
+        var ch = document.createElement("em"); ch.textContent = "▸";
+        hd.appendChild(tx); hd.appendChild(ch);
+        var body = document.createElement("div"); body.className = "tt-fbody";
+        var ws = winnersCache[day];
+        if (dayOpen[day] && !ws) { body.appendChild(empty("Loading…")); getWinners(day).then(function () { if (tab === "week") paintBoard(); }); }
+        else if (ws && !ws.length) body.appendChild(empty("Nobody played that day."));
+        else if (ws) ws.slice().sort(function (a, c) { return c.pts - a.pts || c.cash - a.cash; }).forEach(function (w) {
+          body.appendChild(row("", w.game, "👑 " + shown(w.name).toUpperCase() + " · $" + fmt(w.cash), "+" + w.pts + " PT" + (w.pts > 1 ? "S" : ""),
+            String(w.name).toLowerCase() === me));
+        });
+        hd.onclick = function () { dayOpen[day] = !dayOpen[day]; paintBoard(); };
+        el.appendChild(hd); el.appendChild(body); list.appendChild(el);
+      });
     }
+    var dayOpen = {};
     // walk-ups: everyone's, live
     var wuCache = {};
     function getWalkups(week) {
