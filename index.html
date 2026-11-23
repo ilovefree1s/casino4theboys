@@ -4846,7 +4846,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.06</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.07</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -21765,7 +21765,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       BOYS: [175, 25, 4, 2, 1, 0.32, 0.2, 0.2, 0.32, 1, 2, 4, 25, 175]
     };
     var LEVELS = ["LOW", "MEDIUM", "HIGH", "BOYS"], TITLES = { LOW: "LOW", MEDIUM: "MEDIUM", HIGH: "HIGH", BOYS: "4TB" }, RAIN_BINS = [3, 10];
-    var RAIN_MULTS = [[2, 394], [3, 200], [5, 150], [10, 120], [25, 80], [50, 38], [100, 18]];
+    var RAIN_MULTS = [[2, 448], [3, 220], [5, 150], [10, 110], [25, 45], [50, 18], [100, 9]];
     function isRainBin(l, k) { return l === "BOYS" && RAIN_BINS.indexOf(k) >= 0; }
     function rainMult() { var r = Math.floor(Math.random() * 1000); for (var i = 0; i < RAIN_MULTS.length; i++) { if (r < RAIN_MULTS[i][1]) return RAIN_MULTS[i][0]; r -= RAIN_MULTS[i][1]; } return 2; }
     function label(m) { return m + "x"; }
@@ -22013,8 +22013,10 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       ball.el.remove();
       t(REST_SHOW_MS, function () { balls.splice(balls.indexOf(ball), 1); renderAll(); });
       // a gold bin on the bet's own ball: draw the multiplier, then a free ball with it riding
-      if (ball.rain === 0 && isRainBin(ball.risk, bin)) {
-        var m0 = rainMult(); lastPaid = false; msgText = "4TB! " + m0 + "X ON A FREE BALL";
+      if (isRainBin(ball.risk, bin)) {
+        var m0 = rainMult(), again = ball.rain > 0;
+        m0 = Math.min(10000, (again ? ball.rain : 1) * m0);
+        lastPaid = false; msgText = again ? "4TB AGAIN! NOW " + m0 + "X ON A FREE BALL" : "4TB! " + m0 + "X ON A FREE BALL";
         Wheel.tick(1); renderAll();
         // and the free ball goes at once
         launchBall(ball.stake, m0);

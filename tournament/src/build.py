@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.06"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.07"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -421,6 +421,17 @@ sub("  #st-hero.oth {", "  .mm-other { padding: 0; gap: 0; }\n  .mm-other b { fl
 # ---- Plinko: 4TB pays a touch more. The two 0.3x bins next to the middle pay 0.32x: back 99.7%, was 98.7% ----
 sub("      BOYS: [175, 25, 4, 2, 1, 0.3, 0.2, 0.2, 0.3, 1, 2, 4, 25, 175]",
     "      BOYS: [175, 25, 4, 2, 1, 0.32, 0.2, 0.2, 0.32, 1, 2, 4, 25, 175]")
+
+# ---- Plinko 4TB: a free ball that lands in a gold bin again draws another multiplier, and they stack (capped at 10,000x).
+#      The draw is weighted lower so the board still pays back about 99.8% ----
+sub("    var RAIN_MULTS = [[2, 394], [3, 200], [5, 150], [10, 120], [25, 80], [50, 38], [100, 18]];",
+    "    var RAIN_MULTS = [[2, 448], [3, 220], [5, 150], [10, 110], [25, 45], [50, 18], [100, 9]];")
+sub("""      if (ball.rain === 0 && isRainBin(ball.risk, bin)) {
+        var m0 = rainMult(); lastPaid = false; msgText = "4TB! " + m0 + "X ON A FREE BALL";""",
+    """      if (isRainBin(ball.risk, bin)) {
+        var m0 = rainMult(), again = ball.rain > 0;
+        m0 = Math.min(10000, (again ? ball.rain : 1) * m0);
+        lastPaid = false; msgText = again ? "4TB AGAIN! NOW " + m0 + "X ON A FREE BALL" : "4TB! " + m0 + "X ON A FREE BALL";""")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
