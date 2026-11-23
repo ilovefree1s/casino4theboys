@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.19"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.20"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -461,7 +461,9 @@ sub("</head><body>", "</head><body>\n" + _bootHtml + "\n")
 # ---- Destroyer: the 3 missiles you can still buy sit in a little RESERVES box beside the shots ----
 sub('      <div class="dz-board" id="dz-board"></div>',
     '      <div class="dz-boardwrap"><div class="dz-board" id="dz-board"></div><span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span></div>')
-sub('      setMessage("Out of shells — one more missile?");', '      setMessage("Out of shells\\nBuy 1 from reserves?");')
+sub('      setMessage("Out of shells — one more missile?");', '      setMessage(""); $("dz-resmsg").textContent = "Out of shells\\nBuy 1 from reserves?";')
+sub('        <span class="lbl">SHOTS</span><span id="dz-shots"></span>', '        <span class="dz-resmsg" id="dz-resmsg"></span>\n        <span class="lbl">SHOTS</span><span id="dz-shots"></span>')
+sub('    function renderStatus() {\n', '    function renderStatus() {\n      if (phase !== "offer" && $("dz-resmsg")) $("dz-resmsg").textContent = "";\n')
 sub('      $("dz-shots").innerHTML = shots;\n',
     """      $("dz-shots").innerHTML = shots;
       var res = "";
@@ -472,7 +474,9 @@ sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
     "  .dz-boardwrap { position: relative; width: 100%; max-width: 380px; }\n"
     "  .dz-boardwrap .dz-res { position: absolute; left: 7.4%; top: 90.2%; transform: translate(-50%, -50%); z-index: 2; }\n"
-    "  #dz-message { white-space: pre-line; line-height: 1.25; }\n"
+    "  .dz-status { position: relative; width: 100%; box-sizing: border-box; justify-content: flex-end; padding-right: 6px; }\n"
+    "  .dz-resmsg { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); white-space: pre-line; text-align: left;\n"
+    "    font-style: italic; font-weight: 600; font-size: 12.5px; line-height: 1.25; color: rgba(245,241,232,.92); }\n"
     "  .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }\n"
     "  .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }\n"
     "  .dz-res .pip.msl { display: inline-block; width: 7px; height: 17px; margin: 0 1.5px; vertical-align: middle; }\n"

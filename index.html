@@ -3135,7 +3135,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   @keyframes dzDrop { 0% { opacity: 1; transform: translate(0,0) scale(1.2); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--dx) * var(--cw)), calc(var(--dy) * var(--cw) + var(--cw) * .35)) scale(.4); } }
   .dz-boardwrap { position: relative; width: 100%; max-width: 380px; }
   .dz-boardwrap .dz-res { position: absolute; left: 7.4%; top: 90.2%; transform: translate(-50%, -50%); z-index: 2; }
-  #dz-message { white-space: pre-line; line-height: 1.25; }
+  .dz-status { position: relative; width: 100%; box-sizing: border-box; justify-content: flex-end; padding-right: 6px; }
+  .dz-resmsg { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); white-space: pre-line; text-align: left;
+    font-style: italic; font-weight: 600; font-size: 12.5px; line-height: 1.25; color: rgba(245,241,232,.92); }
   .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }
   .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }
   .dz-res .pip.msl { display: inline-block; width: 7px; height: 17px; margin: 0 1.5px; vertical-align: middle; }
@@ -4990,7 +4992,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.19</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.20</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -6270,6 +6272,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       <div style="height:8px"></div>
       <div class="dz-boardwrap"><div class="dz-board" id="dz-board"></div><span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span></div>
       <div class="dz-status">
+        <span class="dz-resmsg" id="dz-resmsg"></span>
         <span class="lbl">SHOTS</span><span id="dz-shots"></span>
         <span class="dz-roll" id="dz-roll">— · —</span>
         <button class="dz-pays" id="dz-pays">PAY TABLE</button>
@@ -24093,6 +24096,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       });
     }
     function renderStatus() {
+      if (phase !== "offer" && $("dz-resmsg")) $("dz-resmsg").textContent = "";
       var shots = "";
       for (var i = 0; i < DZ.LIVES; i++) {
         shots += '<span class="pip msl' + (i < lives ? "" : " spent") + '"><svg viewBox="0 0 10 26"><path d="M5 0 C8 3 8 7 8 9 L8 19 L10 23 L10 26 L7 23 L3 23 L0 26 L0 23 L2 19 L2 9 C2 7 2 3 5 0Z"/><rect x="2" y="9" width="6" height="2"/></svg></span>';
@@ -24385,7 +24389,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       // The house sells at most three a hand.
       if (missilesBought >= 3 || bankroll < missileCost) { settleHand(); return; }
       phase = "offer";
-      setMessage("Out of shells\nBuy 1 from reserves?");
+      setMessage(""); $("dz-resmsg").textContent = "Out of shells\nBuy 1 from reserves?";
       renderStatus(); renderActions();
     }
     function buyMissile() {
