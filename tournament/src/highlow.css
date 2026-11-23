@@ -18,7 +18,7 @@
   .hl-deck .n i { font-style: normal; color: var(--bone); font-family: var(--display); font-size: 12px; letter-spacing: .04em; }
   .hl-pot { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .hl-pot span { font-family: var(--display); font-size: 26px; line-height: 1; color: #FFD24D; letter-spacing: .02em; }
-  .hl-pot i { font-style: normal; font-family: var(--mono); font-size: 10px; letter-spacing: .1em; color: rgba(245,241,232,.7); min-height: 12px; }
+  .hl-pot i { font-style: normal; font-family: var(--mono); font-size: 9.5px; letter-spacing: .04em; white-space: nowrap; color: rgba(245,241,232,.7); min-height: 12px; }
   .hl-alive { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .hl-alive span { font-family: var(--display); font-size: 22px; line-height: 1; color: #35C8FF; }
   /* the nine piles */
@@ -72,3 +72,11 @@
     .hl-pile .card .tl { font-size: 14px; } .hl-pile .card .mid { font-size: 19px; }
     .hl-calls { min-height: 54px; }
   }
+  /* the tie bet: a narrow switch between the two calls, and its own circle next to the bet */
+  .hl-call.tie { flex: 0 0 88px; --k: #FFD24D; }
+  .hl-call.tie b { font-size: 15px; }
+  .hl-call.tie i { font-size: 9.5px; letter-spacing: .04em; }
+  .hl-call.tie.on { background: rgba(255,210,77,.16); box-shadow: 0 0 12px rgba(255,210,77,.45); }
+  #hl-spot { display: flex; gap: 34px; justify-content: center; }
+  .hl-spot.tie .ring { border-color: #FFD24D; box-shadow: 0 0 10px rgba(255,210,77,.45); }
+  .hl-spot.tie .cap { color: #FFD24D; }

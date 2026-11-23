@@ -4,18 +4,29 @@
        Right: the card goes on that pile.
        Wrong: that pile is dead. Same rank is wrong. Nothing else is lost.
      Lose every pile and the bet is gone.
-     The pay is set by how many calls you've got right: nothing until 22, then
-     1x, and every right call after that multiplies it by 1.104. Cash out any
-     time once you're paid; the deck running out pays what you've reached.
+     The pay is set by how many calls you've got right: nothing until 12, then
+     25% of the bet, and every right call after that multiplies it by 1.118
+     (your bet back at 25 right, about 8x for all 43). Cash out any time once
+     you're paid; the deck running out pays what you've reached.
+     TIE: a side bet riding on each flip. If the card matches the pile's rank it
+     pays the odds of that, from the cards left (about 97% back). It never
+     touches your piles or the main bet.
      Played as well as it can be (the likeliest pile every time, and knowing
      when to stop on the last pile) it returns about 98% of what's bet.
      Campaign and Play Testing; the tournament hides it until its server lists it.
      ============================================================ */
   var HL = (function () {
-    var START = 22, GROW = 1.104;
+    var START = 12, BASE = 0.25, GROW = 1.118;
     function val(c) { return c.rank === "A" ? 14 : c.rank === "K" ? 13 : c.rank === "Q" ? 12 : c.rank === "J" ? 11 : parseInt(c.rank, 10); }
     /** What [n] right calls pay, times the bet. */
-    function pay(n) { return n < START ? 0 : Math.floor(100 * Math.pow(GROW, n - START) + 1e-9) / 100; }
+    function pay(n) { return n < START ? 0 : Math.floor(100 * BASE * Math.pow(GROW, n - START) + 1e-9) / 100; }
+    /** The tie bet on a pile showing [top]: what it pays to 1, from the cards left (0 = can't happen). */
+    function tiePays(top, deck) {
+      var t = val(top), same = 0;
+      deck.forEach(function (c) { if (val(c) === t) same++; });
+      if (!same || !deck.length) return 0;
+      return Math.max(1, Math.floor(0.97 * deck.length / same - 1));
+    }
     /** The odds of each call on a pile showing [top], from what's left in [deck]. */
     function odds(top, deck) {
       var t = val(top), hi = 0, lo = 0;
@@ -23,7 +34,7 @@
       var n = deck.length || 1;
       return { hi: hi / n, lo: lo / n };
     }
-    return { val: val, pay: pay, odds: odds, START: START, GROW: GROW };
+    return { val: val, pay: pay, odds: odds, tiePays: tiePays, START: START, GROW: GROW };
   })();
   window.HL = HL;
 
@@ -33,6 +44,7 @@
     // betting | play | flip | result
     var phase = "betting";
     var bet = 0, lastBet = 0, stake = 0, pot = 0, calls = 0;
+    var tie = 0, lastTie = 0, tieOn = false, tieNet = 0;
     var deck = [], piles = [], sel = -1, flash = null, outcome = null, net = 0;
     var timers = [];
     function t(ms, fn) { timers.push(setTimeout(fn, ms)); }
@@ -53,7 +65,7 @@
     // ---------- render ----------
     function renderTop() {
       $("hl-bankroll").textContent = fmt(bankroll);
-      $("hl-risk").textContent = fmt(phase === "play" || phase === "flip" ? stake : 0);
+      $("hl-risk").textContent = fmt(phase === "play" || phase === "flip" ? stake + (tieOn ? tie : 0) : 0);
       if (window.purseWin) {
         var purse = document.querySelector("#screen-highlow .purse");
         if (phase === "result" && outcome) purseWin.net(purse, net, true);
@@ -64,6 +76,7 @@
       var togo = HL.START - calls;
       $("hl-potx").textContent = !live ? (phase === "result" ? calls + " RIGHT" : "")
         : togo > 0 ? togo + " MORE RIGHT TO GET PAID" : "×" + HL.pay(calls).toFixed(2) + " · NEXT ×" + HL.pay(calls + 1).toFixed(2);
+      if (live && tieNet) $("hl-potx").textContent += " · TIE " + (tieNet > 0 ? "+" : "−") + money(Math.abs(tieNet));
       $("hl-alive").textContent = piles.length ? alive() : 9;
       var d = $("hl-deck"), left = piles.length ? deck.length : 43;
       d.innerHTML = '<div class="stack">' + (left > 2 ? '<div class="card"><div class="inner"><div class="face back"></div></div></div>' : "") +
@@ -96,9 +109,19 @@
         h.appendChild(s); return;
       }
       var p = piles[sel], o = p && !p.dead ? HL.odds(p.cards[p.cards.length - 1], deck) : null;
-      [["hi", "HIGHER", o && o.hi], ["lo", "LOWER", o && o.lo]].forEach(function (x) {
+      var tp = o ? HL.tiePays(p.cards[p.cards.length - 1], deck) : 0;
+      [["hi", "HIGHER", o && o.hi], ["tie"], ["lo", "LOWER", o && o.lo]].forEach(function (x) {
         var b = document.createElement("button");
-        b.type = "button"; b.className = "hl-call " + x[0];
+        b.type = "button";
+        if (x[0] === "tie") {
+          // the tie bet: on or off, it rides every flip until you turn it off
+          b.className = "hl-call tie" + (tieOn ? " on" : "");
+          b.disabled = phase !== "play" || !(tie > 0);
+          b.innerHTML = "<b>TIE " + (tieOn ? "ON" : "OFF") + "</b><i>" + (!(tie > 0) ? "NO TIE BET" : "$" + money(tie) + (o ? (tp ? " · " + tp + ":1" : " · CAN'T") : "")) + "</i>";
+          b.addEventListener("click", function () { tieOn = !tieOn; renderCalls(); renderTop(); });
+          h.appendChild(b); return;
+        }
+        b.className = "hl-call " + x[0];
         b.disabled = phase !== "play" || !o || !x[2];
         b.innerHTML = "<b>" + (x[0] === "hi" ? "▲ " : "▼ ") + x[1] + "</b><i>" + (!o ? "PICK A PILE" : x[2] ? Math.round(x[2] * 100) + "% CHANCE" : "CAN'T BE") + "</i>";
         b.addEventListener("click", function () { call(x[0]); });
@@ -107,16 +130,19 @@
     }
     function renderSpot() {
       var host = $("hl-spot"); host.innerHTML = "";
-      var v = phase === "betting" ? bet : stake, open = phase === "betting";
-      var b = document.createElement("button");
-      b.type = "button"; b.className = "hl-spot"; b.id = "hl-betspot"; b.disabled = !open;
-      b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 50) + "</span>" : '<span class="empty">TAP</span>') +
-        '</span><span class="cap">BET</span>';
-      b.addEventListener("click", place);
-      host.appendChild(b);
-      if (open && typeof chipDrag === "function") chipDrag(host, { map: { "#hl-betspot": "bet" },
+      var open = phase === "betting";
+      [["bet", "BET", phase === "betting" ? bet : stake], ["tie", "TIE · EACH FLIP", tie]].forEach(function (x) {
+        var v = x[2], b = document.createElement("button");
+        b.type = "button"; b.className = "hl-spot" + (x[0] === "tie" ? " tie" : ""); b.id = "hl-" + x[0] + "spot"; b.disabled = !open;
+        b.innerHTML = '<span class="ring">' + (v > 0 ? '<span class="placed">' + chipHtml(v, 50) + "</span>" : '<span class="empty">TAP</span>') +
+          '</span><span class="cap">' + x[1] + "</span>";
+        b.addEventListener("click", function () { place(x[0]); });
+        host.appendChild(b);
+      });
+      if (open && typeof chipDrag === "function") chipDrag(host, { map: { "#hl-betspot": "bet", "#hl-tiespot": "tie" },
         live: function () { return phase === "betting"; }, chip: function () { return selectedChip; },
-        get: function () { return bet; }, set: function (k, x) { bet = x; }, add: function () {},
+        get: function (k) { return k === "tie" ? tie : bet; }, set: function (k, x) { if (k === "tie") tie = x; else bet = x; },
+        add: function (k, v) { var q = selectedChip; selectedChip = v; try { place(k); } finally { selectedChip = q; } },
         rack: "#hl-rack, #hl-actions", say: setMessage, done: renderAll });
     }
     function renderRack() {
@@ -145,7 +171,7 @@
     function renderActions() {
       var a = $("hl-actions"); a.innerHTML = "";
       if (phase === "betting") {
-        a.appendChild(actionBtn("CLEAR", DIM, clearBet, bet <= 0));
+        a.appendChild(actionBtn("CLEAR", DIM, clearBet, bet + tie <= 0));
         a.appendChild(actionBtn(bet > 0 ? "DEAL · $" + fmt(bet) : "DEAL", GOLD, deal, bet <= 0 || bet > bankroll));
       } else if (phase === "play" || phase === "flip") {
         a.appendChild(actionBtn(pot > 0 ? "CASH OUT · $" + money(pot) : "PAID FROM " + HL.START + " RIGHT CALLS", GOLD, cashOut, phase !== "play" || !(pot > 0)));
@@ -159,23 +185,23 @@
     function renderAll() { renderTop(); renderGrid(); renderCalls(); renderSpot(); renderRack(); renderActions(); renderRebuy(); }
 
     // ---------- betting ----------
-    function place() {
+    function place(which) {
       if (phase !== "betting") return;
-      var lim = Shell.limits(), want = Math.min(selectedChip, bankroll - bet);
+      var side = which === "tie", lim = Shell.limits(), want = Math.min(selectedChip, bankroll - bet - tie);
       if (want <= 0) { setMessage("That's all your chips"); return; }
-      var ok = allow(lim, want, bet, false);
-      if (ok <= 0) { setMessage(refusal(lim, false)); return; }
-      bet += ok;
-      setMessage("Deal when you're ready");
+      var ok = allow(lim, want, side ? tie : bet, side);
+      if (ok <= 0) { setMessage(refusal(lim, side)); return; }
+      if (side) tie += ok; else bet += ok;
+      setMessage(side ? "The tie bet rides each flip while it's ON" : "Deal when you're ready");
       renderAll();
     }
-    function clearBet() { if (phase !== "betting") return; bet = 0; setMessage("Place your bet"); renderAll(); }
+    function clearBet() { if (phase !== "betting") return; bet = 0; tie = 0; setMessage("Place your bet"); renderAll(); }
 
     // ---------- the game ----------
     function deal() {
       if (phase !== "betting" || bet <= 0 || bet > bankroll) return;
       bankroll -= bet; syncWallet();
-      stake = bet; lastBet = bet; pot = 0; calls = 0; net = 0; outcome = null; flash = null;
+      stake = bet; lastBet = bet; lastTie = tie; pot = 0; calls = 0; net = 0; outcome = null; flash = null; tieNet = 0; tieOn = false;
       deck = buildShoe(1);
       piles = [];
       phase = "flip";
@@ -201,7 +227,13 @@
       if (phase !== "play" || sel < 0 || !piles[sel] || piles[sel].dead || !deck.length) return;
       var p = piles[sel], top = p.cards[p.cards.length - 1], o = HL.odds(top, deck);
       if (!(dir === "hi" ? o.hi : o.lo)) return;
+      // the tie bet goes down on this flip, at the odds as they stand
+      var tieBet = tieOn && tie > 0 && bankroll >= tie ? tie : 0, tp = tieBet ? HL.tiePays(top, deck) : 0;
+      if (tieBet && !tp) tieBet = 0;
+      if (tieOn && tie > 0 && !tieBet && bankroll < tie) tieOn = false;
+      if (tieBet) { bankroll -= tieBet; syncWallet(); }
       var c = deck.pop(), ok = dir === "hi" ? HL.val(c) > HL.val(top) : HL.val(c) < HL.val(top);
+      var tieHit = tieBet && HL.val(c) === HL.val(top);
       p.cards.push(c);
       phase = "flip";
       flash = { pile: sel, ok: ok, down: true };
@@ -213,7 +245,12 @@
         if (el) el.classList.add("up");
       });
       t(620, function () {
-        if (ok) {
+        if (tieBet) {
+          if (tieHit) { bankroll += tieBet * (tp + 1); tieNet += tieBet * tp; syncWallet(); }
+          else tieNet -= tieBet;
+        }
+        if (tieHit) setMessage("TIE! " + tp + " to 1 — +$" + fmt(tieBet * tp) + (alive() > 1 ? " · that pile's dead" : ""), "win");
+        else if (ok) {
           calls++;
           pot = stake * HL.pay(calls);
           var togo = HL.START - calls;
@@ -221,7 +258,7 @@
         } else {
           p.dead = true;
           var left = alive();
-          setMessage(left ? "Wrong — that pile's dead · " + left + " left" : "Wrong — that was your last pile", "lose");
+          if (!tieHit) setMessage(left ? "Wrong — that pile's dead · " + left + " left" : "Wrong — that was your last pile", "lose");
         }
         if (!alive()) return finish("bust");
         if (!deck.length) return finish("clear");
@@ -234,7 +271,7 @@
       outcome = how;
       var back = how === "bust" ? 0 : Math.floor(pot);
       if (back > 0) { bankroll += back; syncWallet(); }
-      net = back - stake;
+      net = back - stake + tieNet;
       phase = "result"; sel = -1;
       var msg = how === "clear" ? "DECK CLEARED! " + calls + " right — ×" + HL.pay(calls).toFixed(2)
         : how === "bust" ? "Out of piles — the pot's gone"
@@ -248,21 +285,22 @@
     function again() {
       if (phase !== "result") return;
       clearTimers();
-      phase = "betting"; piles = []; deck = []; sel = -1; flash = null; outcome = null; stake = 0; pot = 0; calls = 0;
+      phase = "betting"; piles = []; deck = []; sel = -1; flash = null; outcome = null; stake = 0; pot = 0; calls = 0; tieOn = false; tieNet = 0;
       var lim = Shell.limits();
       bet = Math.min(allow(lim, lastBet, 0, false), bankroll);
+      tie = bet > 0 ? Math.min(allow(lim, lastTie, 0, true), bankroll - bet) : 0;
       setMessage(bet > 0 ? "Same bet — deal, or change it" : "Place your bet");
       renderAll();
       Shell.gate(refresh);
     }
     function refresh() {
       if (Shell.mode === "campaign") bankroll = Shell.getBankroll();
-      if (phase === "betting" && bet > bankroll) bet = 0;
+      if (phase === "betting" && bet + tie > bankroll) { bet = 0; tie = 0; }
       renderAll();
     }
     function enter() {
       clearTimers();
-      phase = "betting"; piles = []; deck = []; sel = -1; flash = null; outcome = null; stake = 0; pot = 0; calls = 0; bet = 0; lastBet = 0;
+      phase = "betting"; piles = []; deck = []; sel = -1; flash = null; outcome = null; stake = 0; pot = 0; calls = 0; bet = 0; lastBet = 0; tie = 0; lastTie = 0; tieOn = false; tieNet = 0;
       bankroll = Shell.mode === "campaign" ? Shell.getBankroll() : FREEPLAY.buyIn;
       setMessage("Place your bet");
       renderAll();

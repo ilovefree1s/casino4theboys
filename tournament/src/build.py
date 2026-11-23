@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.01"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.02"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -385,13 +385,27 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
         <span class="txt">
           <span class="nm">HIGH OR LOW</span>
           <span class="l1">NINE PILES · CALL EVERY CARD</span>
-          <span class="l2">PAID FROM 22 RIGHT · THEN IT CLIMBS</span>
+          <span class="l2">PAID FROM 12 RIGHT · TIE BET ON ANY FLIP</span>
         </span>
         <span class="play">PLAY</span>
       </button>
       <button class="cm-plate" id="om-chain\"""")
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "highlow.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
+# ---- the OTHER GAMES bar in the lobby gets a picture like the rest: half money wheel, half mines ----
+sub("""    { key: "other", c: "#F2EEE6", name: "OTHER GAMES", tables: 5,
+      meta: "KENO · MONEY WHEEL · SIC BO · PLINKO · MINES", plain: true,
+      art: "data:image/svg+xml;utf8," + encodeURIComponent(KENO_ART),""",
+"""    { key: "other", c: "#F2EEE6", name: "OTHER GAMES", tables: 6,
+      meta: "KENO · WHEEL · MINES · HIGH OR LOW & MORE",
+      art: "data:image/webp;base64,""" + __import__("base64").b64encode((here / "art" / "other_games.webp").read_bytes()).decode() + """",""")
+sub("  .mm-other { margin-top: 12px; height: 64px; }",
+    "  .mm-other { margin-top: 12px; height: 64px; }\n  .st-tab[aria-label=\"OTHER GAMES\"] img { border-radius: 9px; object-fit: cover; height: 62px; width: 104px; margin-left: 4px;\n"
+    "    -webkit-mask-image: radial-gradient(120% 120% at 50% 50%, #000 55%, transparent 100%); mask-image: radial-gradient(120% 120% at 50% 50%, #000 55%, transparent 100%); }")
+
+sub('    $("st-hero").src = r.art;', '    $("st-hero").src = r.art;\n    $("st-hero").classList.toggle("oth", r.key === "other");   // the picture with square edges: faded in')
+sub("  .mm-other { margin-top: 12px; height: 64px; }\n", "  .mm-other { margin-top: 12px; height: 64px; }\n  #st-hero.oth { border-radius: 14px; -webkit-mask-image: radial-gradient(100% 100% at 50% 50%, #000 50%, transparent 100%); mask-image: radial-gradient(100% 100% at 50% 50%, #000 50%, transparent 100%); }\n")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
