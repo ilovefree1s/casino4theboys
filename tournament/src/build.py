@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.07"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.08"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -432,6 +432,10 @@ sub("""      if (ball.rain === 0 && isRainBin(ball.risk, bin)) {
         var m0 = rainMult(), again = ball.rain > 0;
         m0 = Math.min(10000, (again ? ball.rain : 1) * m0);
         lastPaid = false; msgText = again ? "4TB AGAIN! NOW " + m0 + "X ON A FREE BALL" : "4TB! " + m0 + "X ON A FREE BALL";""")
+
+# ---- Plinko: a bin under 1x shows one decimal (0.32 pays 0.32, shows 0.3) ----
+sub('    function label(m) { return m + "x"; }', '    function shown(m) { return m < 1 ? String(Math.round(m * 10) / 10) : String(m); }\n    function label(m) { return shown(m) + "x"; }')
+sub('gold = isRainBin(risk, k), lb = String(m[k]);', 'gold = isRainBin(risk, k), lb = shown(m[k]);')
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }

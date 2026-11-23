@@ -4846,7 +4846,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.07</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.08</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -21768,7 +21768,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     var RAIN_MULTS = [[2, 448], [3, 220], [5, 150], [10, 110], [25, 45], [50, 18], [100, 9]];
     function isRainBin(l, k) { return l === "BOYS" && RAIN_BINS.indexOf(k) >= 0; }
     function rainMult() { var r = Math.floor(Math.random() * 1000); for (var i = 0; i < RAIN_MULTS.length; i++) { if (r < RAIN_MULTS[i][1]) return RAIN_MULTS[i][0]; r -= RAIN_MULTS[i][1]; } return 2; }
-    function label(m) { return m + "x"; }
+    function shown(m) { return m < 1 ? String(Math.round(m * 10) / 10) : String(m); }
+    function label(m) { return shown(m) + "x"; }
     function mix(a, b, u) { var ca = parseInt(a.slice(1), 16), cb = parseInt(b.slice(1), 16); var r = Math.round((ca >> 16) * (1 - u) + (cb >> 16) * u), g = Math.round(((ca >> 8) & 255) * (1 - u) + ((cb >> 8) & 255) * u), bl = Math.round((ca & 255) * (1 - u) + (cb & 255) * u); return "#" + ((1 << 24) + (r << 16) + (g << 8) + bl).toString(16).slice(1); }
     /** A bin's colour: yellow in the middle, orange, red at the corners; 4TB grey to violet, its gold bins apart. */
     function binColour(l, k) {
@@ -21849,7 +21850,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       var m = MULT[risk], lit = {};
       balls.forEach(function (b) { if (b.settled) lit[binOf(b.path)] = true; });
       for (var k = 0; k < 14; k++) {
-        var g = $("pk-bin-" + k), rect = g.querySelector("rect"), ta = g.querySelector("text.a"), tb = g.querySelector("text.b"), win = !!lit[k], gold = isRainBin(risk, k), lb = String(m[k]);
+        var g = $("pk-bin-" + k), rect = g.querySelector("rect"), ta = g.querySelector("text.a"), tb = g.querySelector("text.b"), win = !!lit[k], gold = isRainBin(risk, k), lb = shown(m[k]);
         rect.setAttribute("fill", binColour(risk, k));
         if (gold) { ta.textContent = "4TB"; ta.setAttribute("y", BINY + 17); ta.setAttribute("font-size", "7"); tb.textContent = ""; }
         else { ta.textContent = lb; ta.setAttribute("y", BINY + 17); ta.setAttribute("font-size", lb.length > 3 ? "6.5" : "8"); tb.textContent = ""; }
