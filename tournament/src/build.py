@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.17"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.18"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -480,6 +480,10 @@ sub("""    function impact(row, col) {
       // A settle that lands after the hand is over — a stray flick during the
       // pause — must not fire a phantom shot or settle the hand twice.
       if (phase !== "targeting" || lives <= 0) return;""", """    var fxBusy = false;
+    // real recordings (from Zero-K's sound library): the missile coming in, then water or a hit
+    var DZ_WHOOSH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_whoosh.mp3").read_bytes()).decode() + """"),
+        DZ_SPLASH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_splash.mp3").read_bytes()).decode() + """"),
+        DZ_BOOM = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_boom.mp3").read_bytes()).decode() + """");
     /** A missile drops onto the cell from above and splashes; [hit] fires at the moment it lands. */
     function missileFx(row, col, hit, boom) {
       var host = $("dz-board"), r = host.getBoundingClientRect();
@@ -496,7 +500,8 @@ sub("""    function impact(row, col) {
         : '<i class="ring"></i><i class="ring r2"></i><i class="col"></i>') +
         Array.from({ length: boom ? 0 : 10 }, function (_, i) { var a = i / 10 * 6.283; return '<i class="drop" style="--dx:' + (Math.cos(a) * (0.55 + Math.random() * 0.35)).toFixed(2) + ';--dy:' + (Math.sin(a) * (0.45 + Math.random() * 0.3) - 0.35).toFixed(2) + '"></i>'; }).join("");
       document.body.appendChild(fx);
-      setTimeout(function () { fx.classList.add("splash"); hit(); }, 600);
+      playClip(DZ_WHOOSH, 1, 0, 0.3);
+      setTimeout(function () { playClip(boom ? DZ_BOOM : DZ_SPLASH, 1, 0, boom ? 0.55 : 0.5); fx.classList.add("splash"); hit(); }, 600);
       if (boom) setTimeout(function () { var b = document.querySelector("#screen-destroyer .dz-board"); if (b) { b.classList.remove("dz-shake"); void b.offsetWidth; b.classList.add("dz-shake"); } }, 600);
       setTimeout(function () { fx.remove(); }, boom ? 2000 : 1800);
     }

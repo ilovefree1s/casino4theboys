@@ -1,0 +1,5 @@
+Destroyer sound effects, cut down from the Zero-K sound library (github.com/ZeroK-RTS/Zero-K, sounds/):
+  dz_whoosh.mp3  <- weapon/missile/missile_launch_short.wav  (Open LieroX / Scorched 3D, via Zero-K)
+  dz_splash.mp3  <- explosion/wet/splash.wav                 (Scorched 3D, via Zero-K)
+  dz_boom.mp3    <- explosion/ex_with_debri.wav              (via Zero-K)
+These come from open-source games under GPL-compatible licenses; see each origin.txt in the Zero-K repo.
