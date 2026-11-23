@@ -1122,10 +1122,13 @@ sub('<div class="cards is-hand" id="is-hole" style="margin-top:4px"></div>', '<d
 # ---- card backs: pick one in Settings (kept on this phone) ----
 import base64 as _b64
 _classic = re.search(r'\.card \.back \{\s*transform: rotateY\(180deg\);\s*background: #0A0507 url\("(data:image/webp;base64,[^"]+)"\)', h).group(1)
-CARDBACKS = [("classic", "CLASSIC", _classic)] + [
+_boys = "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / "back_boys.webp").read_bytes()).decode()
+# the 4 The Boys back is the default; the old back stays as ORIGINAL
+CARDBACKS = [("classic", "4 THE BOYS", _boys), ("original", "ORIGINAL", _classic)] + [
     (k, n, "data:image/webp;base64," + _b64.b64encode((here / "cardbacks" / f"back_{k}.webp").read_bytes()).decode())
     for k, n in [("neon", "NEON"), ("gold", "GOLD TAG"), ("ice", "ICE TAG"), ("crown", "CROWN TAG"), ("midnight", "MIDNIGHT"), ("black", "BLACK CARD")]]
-_cbcss = "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS[1:])
+_cbcss = f'  html:not([data-cb]) .card .back {{ background-image: url("{_boys}"); }}\n'
+_cbcss += "".join(f'  html[data-cb="{k}"] .card .back {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += "".join(f'  .cb-opt[data-cb="{k}"] i {{ background-image: url("{u}"); }}\n' for k, n, u in CARDBACKS)
 _cbcss += """  .cb-box { width: 100%; max-width: 380px; margin-top: 14px; }
   .cb-box .hd { font-family: var(--display); font-size: 11px; letter-spacing: .16em; color: rgba(245,241,232,.8); text-align: center; margin-bottom: 8px; }
