@@ -385,7 +385,7 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
         <span class="txt">
           <span class="nm">HIGH OR LOW</span>
           <span class="l1">NINE PILES · CALL EVERY CARD</span>
-          <span class="l2">CLEAR THE DECK · POT ×3</span>
+          <span class="l2">PAID FROM 22 RIGHT · THEN IT CLIMBS</span>
         </span>
         <span class="play">PLAY</span>
       </button>

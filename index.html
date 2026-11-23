@@ -5245,7 +5245,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
           <span class="lbl">AT RISK</span><span class="val risk" id="hl-risk">0</span>
         </div>
       </div>
-      <div class="hl-sign">HIGH OR LOW <span>CALL IT · CLEAR THE DECK · POT ×3</span></div>
+      <div class="hl-sign">HIGH OR LOW <span>22 RIGHT PAYS 1× · EVERY ONE AFTER ×1.104</span></div>
       <div class="hl-status">
         <div class="hl-deck" id="hl-deck"></div>
         <div class="hl-pot"><b>POT</b><span id="hl-pot">—</span><i id="hl-potx"></i></div>
@@ -5857,7 +5857,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         <span class="txt">
           <span class="nm">HIGH OR LOW</span>
           <span class="l1">NINE PILES · CALL EVERY CARD</span>
-          <span class="l2">CLEAR THE DECK · POT ×3</span>
+          <span class="l2">PAID FROM 22 RIGHT · THEN IT CLIMBS</span>
         </span>
         <span class="play">PLAY</span>
       </button>
@@ -10626,30 +10626,29 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   /* ============================================================
      HIGH OR LOW — one deck. Nine cards go out face up as nine piles.
      Pick a pile and call the next card HIGHER or LOWER than it, then it flips.
-       Right: the card goes on that pile and the pot grows by the call's number
-              (the longer the odds, the bigger the number; it's worked out from
-              the cards still in the deck).
-       Wrong: that pile is dead, and the pot drops to 60%. Same rank is wrong.
-     Lose every pile and the pot is gone. Get through the whole deck with a pile
-     still standing and the pot pays ×3. Cash out any time after your first call.
+       Right: the card goes on that pile.
+       Wrong: that pile is dead. Same rank is wrong. Nothing else is lost.
+     Lose every pile and the bet is gone.
+     The pay is set by how many calls you've got right: nothing until 22, then
+     1x, and every right call after that multiplies it by 1.104. Cash out any
+     time once you're paid; the deck running out pays what you've reached.
+     Played as well as it can be (the likeliest pile every time, and knowing
+     when to stop on the last pile) it returns about 98% of what's bet.
      Campaign and Play Testing; the tournament hides it until its server lists it.
      ============================================================ */
   var HL = (function () {
-    var EDGE = 0.979, KEEP = 0.6, CLEAR = 3;
+    var START = 22, GROW = 1.104;
     function val(c) { return c.rank === "A" ? 14 : c.rank === "K" ? 13 : c.rank === "Q" ? 12 : c.rank === "J" ? 11 : parseInt(c.rank, 10); }
-    /** What a call pays when it comes in [p] of the time: right is worth this much to the pot. */
-    function mult(p) {
-      if (!(p > 0)) return 0;
-      return Math.max(1.01, Math.floor(100 * (EDGE - KEEP * (1 - p)) / p) / 100);
-    }
+    /** What [n] right calls pay, times the bet. */
+    function pay(n) { return n < START ? 0 : Math.floor(100 * Math.pow(GROW, n - START) + 1e-9) / 100; }
     /** The odds of each call on a pile showing [top], from what's left in [deck]. */
     function odds(top, deck) {
       var t = val(top), hi = 0, lo = 0;
       deck.forEach(function (c) { var v = val(c); if (v > t) hi++; else if (v < t) lo++; });
       var n = deck.length || 1;
-      return { hi: hi / n, lo: lo / n, mhi: mult(hi / n), mlo: mult(lo / n) };
+      return { hi: hi / n, lo: lo / n };
     }
-    return { val: val, mult: mult, odds: odds, KEEP: KEEP, CLEAR: CLEAR };
+    return { val: val, pay: pay, odds: odds, START: START, GROW: GROW };
   })();
   window.HL = HL;
 
@@ -10687,7 +10686,9 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       }
       var live = phase === "play" || phase === "flip";
       $("hl-pot").textContent = live || phase === "result" ? "$" + money(pot) : "—";
-      $("hl-potx").textContent = live && stake ? "×" + (pot / stake).toFixed(2) : phase === "result" && outcome === "clear" ? "DECK CLEARED · ×" + HL.CLEAR : "";
+      var togo = HL.START - calls;
+      $("hl-potx").textContent = !live ? (phase === "result" ? calls + " RIGHT" : "")
+        : togo > 0 ? togo + " MORE RIGHT TO GET PAID" : "×" + HL.pay(calls).toFixed(2) + " · NEXT ×" + HL.pay(calls + 1).toFixed(2);
       $("hl-alive").textContent = piles.length ? alive() : 9;
       var d = $("hl-deck"), left = piles.length ? deck.length : 43;
       d.innerHTML = '<div class="stack">' + (left > 2 ? '<div class="card"><div class="inner"><div class="face back"></div></div></div>' : "") +
@@ -10716,15 +10717,15 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       var h = $("hl-calls"); h.innerHTML = "";
       if (phase === "betting" || phase === "result" || !piles.length) {
         var s = document.createElement("div"); s.className = "hint";
-        s.textContent = phase === "result" ? "" : "PICK A PILE · CALL THE NEXT CARD · SAME RANK LOSES";
+        s.textContent = phase === "result" ? "" : "PICK A PILE · CALL THE NEXT CARD · SAME RANK IS WRONG";
         h.appendChild(s); return;
       }
       var p = piles[sel], o = p && !p.dead ? HL.odds(p.cards[p.cards.length - 1], deck) : null;
-      [["hi", "HIGHER", o && o.mhi], ["lo", "LOWER", o && o.mlo]].forEach(function (x) {
+      [["hi", "HIGHER", o && o.hi], ["lo", "LOWER", o && o.lo]].forEach(function (x) {
         var b = document.createElement("button");
         b.type = "button"; b.className = "hl-call " + x[0];
         b.disabled = phase !== "play" || !o || !x[2];
-        b.innerHTML = "<b>" + (x[0] === "hi" ? "▲ " : "▼ ") + x[1] + "</b><i>" + (!o ? "PICK A PILE" : x[2] ? "POT ×" + x[2].toFixed(2) : "CAN'T BE") + "</i>";
+        b.innerHTML = "<b>" + (x[0] === "hi" ? "▲ " : "▼ ") + x[1] + "</b><i>" + (!o ? "PICK A PILE" : x[2] ? Math.round(x[2] * 100) + "% CHANCE" : "CAN'T BE") + "</i>";
         b.addEventListener("click", function () { call(x[0]); });
         h.appendChild(b);
       });
@@ -10772,7 +10773,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         a.appendChild(actionBtn("CLEAR", DIM, clearBet, bet <= 0));
         a.appendChild(actionBtn(bet > 0 ? "DEAL · $" + fmt(bet) : "DEAL", GOLD, deal, bet <= 0 || bet > bankroll));
       } else if (phase === "play" || phase === "flip") {
-        a.appendChild(actionBtn(calls ? "CASH OUT · $" + money(pot) : "CASH OUT AFTER YOUR FIRST CALL", GOLD, cashOut, phase !== "play" || !calls));
+        a.appendChild(actionBtn(pot > 0 ? "CASH OUT · $" + money(pot) : "PAID FROM " + HL.START + " RIGHT CALLS", GOLD, cashOut, phase !== "play" || !(pot > 0)));
       } else if (phase === "result") {
         a.appendChild(actionBtn("NEW GAME", GOLD, again));
       }
@@ -10799,7 +10800,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     function deal() {
       if (phase !== "betting" || bet <= 0 || bet > bankroll) return;
       bankroll -= bet; syncWallet();
-      stake = bet; lastBet = bet; pot = bet; calls = 0; net = 0; outcome = null; flash = null;
+      stake = bet; lastBet = bet; pot = 0; calls = 0; net = 0; outcome = null; flash = null;
       deck = buildShoe(1);
       piles = [];
       phase = "flip";
@@ -10824,8 +10825,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     function call(dir) {
       if (phase !== "play" || sel < 0 || !piles[sel] || piles[sel].dead || !deck.length) return;
       var p = piles[sel], top = p.cards[p.cards.length - 1], o = HL.odds(top, deck);
-      var m = dir === "hi" ? o.mhi : o.mlo;
-      if (!m) return;
+      if (!(dir === "hi" ? o.hi : o.lo)) return;
       var c = deck.pop(), ok = dir === "hi" ? HL.val(c) > HL.val(top) : HL.val(c) < HL.val(top);
       p.cards.push(c);
       phase = "flip";
@@ -10838,13 +10838,15 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         if (el) el.classList.add("up");
       });
       t(620, function () {
-        calls++;
-        if (ok) { pot = pot * m; setMessage((dir === "hi" ? "Higher" : "Lower") + " — right! Pot ×" + m.toFixed(2), "win"); }
-        else {
+        if (ok) {
+          calls++;
+          pot = stake * HL.pay(calls);
+          var togo = HL.START - calls;
+          setMessage(togo > 0 ? "Right! " + togo + " more to get paid" : togo === 0 ? "Right! You're getting paid — 1× your bet" : "Right! Now ×" + HL.pay(calls).toFixed(2), "win");
+        } else {
           p.dead = true;
           var left = alive();
-          pot = left ? pot * HL.KEEP : 0;
-          setMessage(left ? "Wrong — that pile's dead, pot down to 60%" : "Wrong — that was your last pile", "lose");
+          setMessage(left ? "Wrong — that pile's dead · " + left + " left" : "Wrong — that was your last pile", "lose");
         }
         if (!alive()) return finish("bust");
         if (!deck.length) return finish("clear");
@@ -10855,20 +10857,19 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     }
     function finish(how) {
       outcome = how;
-      if (how === "clear") pot = pot * HL.CLEAR;
       var back = how === "bust" ? 0 : Math.floor(pot);
       if (back > 0) { bankroll += back; syncWallet(); }
       net = back - stake;
       phase = "result"; sel = -1;
-      var msg = how === "clear" ? "DECK CLEARED! Pot ×3 — +$" + fmt(Math.max(0, net))
+      var msg = how === "clear" ? "DECK CLEARED! " + calls + " right — ×" + HL.pay(calls).toFixed(2)
         : how === "bust" ? "Out of piles — the pot's gone"
-        : net >= 0 ? "Cashed out +$" + fmt(net) : "Cashed out $" + fmt(back);
+        : net > 0 ? "Cashed out +$" + fmt(net) : net === 0 ? "Cashed out — you broke even" : "Cashed out $" + fmt(back);
       if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) msg = "🏆 GOAL REACHED!";
       setMessage(msg, net > 0 ? "win" : net < 0 ? "lose" : "");
       renderAll();
       if (Shell.mode === "campaign" && bankroll >= Shell.getGoal()) Shell.gate(refresh);
     }
-    function cashOut() { if (phase !== "play" || !calls) return; finish("cash"); }
+    function cashOut() { if (phase !== "play" || !(pot > 0)) return; finish("cash"); }
     function again() {
       if (phase !== "result") return;
       clearTimers();
@@ -10899,7 +10900,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     (function () { var from = document.querySelector("#screen-miniuth .mu-bg"); if (from) $("hl-bg").src = from.src; })();
     $("hl-back").addEventListener("click", function () {
       // a run in progress stays put: cash out (or save your seat) first
-      if (phase === "play" || phase === "flip") { setMessage(calls ? "Cash out first — or save your seat" : "Make your first call first", "lose"); return; }
+      if (phase === "play" || phase === "flip") { setMessage(pot > 0 ? "Cash out first — or save your seat" : "Finish the game — or save your seat", "lose"); return; }
       Shell.show("othermenu");
     });
     $("om-highlow").addEventListener("click", function () { HighLow.enter(); Shell.show("highlow"); });
