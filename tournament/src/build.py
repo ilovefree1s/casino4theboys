@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.14"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.15"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -469,7 +469,8 @@ sub('      $("dz-shots").innerHTML = shots;\n',
 """)
 sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
-    "  .dz-status { gap: 8px; }\n"
+    "  .dz-status { gap: 8px; width: 100%; box-sizing: border-box; justify-content: flex-start; }\n"
+    "  .dz-status .dz-res { margin-right: auto; }\n"
     "  .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }\n"
     "  .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }\n"
     "  .dz-res .pip.msl { width: 7px; height: 17px; margin: 0 1.5px; }")

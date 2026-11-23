@@ -3095,7 +3095,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   .dz-status .pip.msl rect { fill: #FF3B4D; }
   .dz-status .pip.msl.spent path { fill: #111; stroke: rgba(255,255,255,.25); stroke-width: .8; filter: none; }
   .dz-status .pip.msl.spent rect { fill: #222; }
-  .dz-status { gap: 8px; }
+  .dz-status { gap: 8px; width: 100%; box-sizing: border-box; justify-content: flex-start; }
+  .dz-status .dz-res { margin-right: auto; }
   .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }
   .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }
   .dz-res .pip.msl { width: 7px; height: 17px; margin: 0 1.5px; }
@@ -4945,7 +4946,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.14</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.15</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
