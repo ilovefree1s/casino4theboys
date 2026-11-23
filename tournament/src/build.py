@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.12"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.13"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -457,6 +457,22 @@ sub("  .dz-status .pip.spent { background: rgba(255,255,255,.2); }",
 _bootHtml = (here / "boot.html").read_text().replace("/*BOOTFONT*/", __import__("base64").b64encode((here / "spray-title.woff2").read_bytes()).decode()).replace(
     "/*BOOTBACK*/", __import__("base64").b64encode((here / "cardbacks" / "back_graffiti.webp").read_bytes()).decode())
 sub("</head><body>", "</head><body>\n" + _bootHtml + "\n")
+
+# ---- Destroyer: the 3 missiles you can still buy sit in a little RESERVES box beside the shots ----
+sub('        <span class="lbl">SHOTS</span><span id="dz-shots"></span>\n',
+    '        <span class="lbl">SHOTS</span><span id="dz-shots"></span>\n        <span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span>\n')
+sub('      $("dz-shots").innerHTML = shots;\n',
+    """      $("dz-shots").innerHTML = shots;
+      var res = "";
+      for (var r = 0; r < 3; r++) res += '<span class="pip msl' + (r < 3 - missilesBought ? "" : " spent") + '"><svg viewBox="0 0 10 26"><path d="M5 0 C8 3 8 7 8 9 L8 19 L10 23 L10 26 L7 23 L3 23 L0 26 L0 23 L2 19 L2 9 C2 7 2 3 5 0Z"/><rect x="2" y="9" width="6" height="2"/></svg></span>';
+      $("dz-res").innerHTML = res;
+""")
+sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
+    "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
+    "  .dz-status { gap: 8px; }\n"
+    "  .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }\n"
+    "  .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }\n"
+    "  .dz-res .pip.msl { width: 7px; height: 17px; margin: 0 1.5px; }")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
