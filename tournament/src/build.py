@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.20"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.21"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -463,7 +463,8 @@ sub('      <div class="dz-board" id="dz-board"></div>',
     '      <div class="dz-boardwrap"><div class="dz-board" id="dz-board"></div><span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span></div>')
 sub('      setMessage("Out of shells — one more missile?");', '      setMessage(""); $("dz-resmsg").textContent = "Out of shells\\nBuy 1 from reserves?";')
 sub('        <span class="lbl">SHOTS</span><span id="dz-shots"></span>', '        <span class="dz-resmsg" id="dz-resmsg"></span>\n        <span class="lbl">SHOTS</span><span id="dz-shots"></span>')
-sub('    function renderStatus() {\n', '    function renderStatus() {\n      if (phase !== "offer" && $("dz-resmsg")) $("dz-resmsg").textContent = "";\n')
+sub('    function renderStatus() {\n', '    function renderStatus() {\n      if (phase !== "offer" && $("dz-resmsg")) $("dz-resmsg").textContent = "";\n      $("dz-tray").classList.toggle("locked", phase === "offer");   // out of missiles: no rolling till one is bought\n')
+sub('    var tray = null;\n    function ensureTray() {', '    var tray = null;\n    // locked tray: a touch on the dice goes nowhere\n    $("dz-tray").addEventListener("pointerdown", function (e) { if ($("dz-tray").classList.contains("locked")) { e.stopPropagation(); e.preventDefault(); } }, true);\n    function ensureTray() {')
 sub('      $("dz-shots").innerHTML = shots;\n',
     """      $("dz-shots").innerHTML = shots;
       var res = "";
@@ -474,6 +475,7 @@ sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
     "  .dz-boardwrap { position: relative; width: 100%; max-width: 380px; }\n"
     "  .dz-boardwrap .dz-res { position: absolute; left: 7.4%; top: 90.2%; transform: translate(-50%, -50%); z-index: 2; }\n"
+    "  #dz-tray.locked .dt-field { pointer-events: none; opacity: .4; filter: grayscale(.6); transition: opacity .25s; }\n"
     "  .dz-status { position: relative; width: 100%; box-sizing: border-box; justify-content: flex-end; padding-right: 6px; }\n"
     "  .dz-resmsg { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); white-space: pre-line; text-align: left;\n"
     "    font-style: italic; font-weight: 600; font-size: 12.5px; line-height: 1.25; color: rgba(245,241,232,.92); }\n"

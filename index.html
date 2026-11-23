@@ -3135,6 +3135,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   @keyframes dzDrop { 0% { opacity: 1; transform: translate(0,0) scale(1.2); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--dx) * var(--cw)), calc(var(--dy) * var(--cw) + var(--cw) * .35)) scale(.4); } }
   .dz-boardwrap { position: relative; width: 100%; max-width: 380px; }
   .dz-boardwrap .dz-res { position: absolute; left: 7.4%; top: 90.2%; transform: translate(-50%, -50%); z-index: 2; }
+  #dz-tray.locked .dt-field { pointer-events: none; opacity: .4; filter: grayscale(.6); transition: opacity .25s; }
   .dz-status { position: relative; width: 100%; box-sizing: border-box; justify-content: flex-end; padding-right: 6px; }
   .dz-resmsg { position: absolute; left: 4px; top: 50%; transform: translateY(-50%); white-space: pre-line; text-align: left;
     font-style: italic; font-weight: 600; font-size: 12.5px; line-height: 1.25; color: rgba(245,241,232,.92); }
@@ -4992,7 +4993,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.20</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.21</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -24097,6 +24098,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     }
     function renderStatus() {
       if (phase !== "offer" && $("dz-resmsg")) $("dz-resmsg").textContent = "";
+      $("dz-tray").classList.toggle("locked", phase === "offer");   // out of missiles: no rolling till one is bought
       var shots = "";
       for (var i = 0; i < DZ.LIVES; i++) {
         shots += '<span class="pip msl' + (i < lives ? "" : " spent") + '"><svg viewBox="0 0 10 26"><path d="M5 0 C8 3 8 7 8 9 L8 19 L10 23 L10 26 L7 23 L3 23 L0 26 L0 23 L2 19 L2 9 C2 7 2 3 5 0Z"/><rect x="2" y="9" width="6" height="2"/></svg></span>';
@@ -24268,6 +24270,8 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
      * a hand is a shot, one die the row and the other the column.
      */
     var tray = null;
+    // locked tray: a touch on the dice goes nowhere
+    $("dz-tray").addEventListener("pointerdown", function (e) { if ($("dz-tray").classList.contains("locked")) { e.stopPropagation(); e.preventDefault(); } }, true);
     function ensureTray() {
       if (tray) return tray;
       tray = DiceTray.create($("dz-tray"), {
