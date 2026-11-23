@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.18"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.19"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -459,8 +459,9 @@ _bootHtml = (here / "boot.html").read_text().replace("/*BOOTFONT*/", __import__(
 sub("</head><body>", "</head><body>\n" + _bootHtml + "\n")
 
 # ---- Destroyer: the 3 missiles you can still buy sit in a little RESERVES box beside the shots ----
-sub('        <span class="lbl">SHOTS</span><span id="dz-shots"></span>\n',
-    '        <span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span>\n        <span class="lbl">SHOTS</span><span id="dz-shots"></span>\n')
+sub('      <div class="dz-board" id="dz-board"></div>',
+    '      <div class="dz-boardwrap"><div class="dz-board" id="dz-board"></div><span class="dz-res"><b>RESERVES</b><span id="dz-res"></span></span></div>')
+sub('      setMessage("Out of shells — one more missile?");', '      setMessage("Out of shells\\nBuy 1 from reserves?");')
 sub('      $("dz-shots").innerHTML = shots;\n',
     """      $("dz-shots").innerHTML = shots;
       var res = "";
@@ -469,11 +470,17 @@ sub('      $("dz-shots").innerHTML = shots;\n',
 """)
 sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
-    "  .dz-status { gap: 8px; width: 100%; box-sizing: border-box; justify-content: flex-start; }\n"
-    "  .dz-status .dz-res { margin-right: auto; }\n"
+    "  .dz-boardwrap { position: relative; width: 100%; max-width: 380px; }\n"
+    "  .dz-boardwrap .dz-res { position: absolute; left: 7.4%; top: 90.2%; transform: translate(-50%, -50%); z-index: 2; }\n"
+    "  #dz-message { white-space: pre-line; line-height: 1.25; }\n"
     "  .dz-res { position: relative; display: inline-flex; align-items: center; padding: 9px 4px 3px; border: 1px solid rgba(232,193,105,.55); border-radius: 6px; background: rgba(0,0,0,.3); }\n"
     "  .dz-res b { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); padding: 0 3px; background: #14030B; font: 900 7px/1 system-ui, sans-serif; letter-spacing: .14em; color: #E8C169; white-space: nowrap; }\n"
-    "  .dz-res .pip.msl { width: 7px; height: 17px; margin: 0 1.5px; }")
+    "  .dz-res .pip.msl { display: inline-block; width: 7px; height: 17px; margin: 0 1.5px; vertical-align: middle; }\n"
+    "  .dz-res .pip.msl svg { width: 100%; height: 100%; display: block; overflow: visible; }\n"
+    "  .dz-res .pip.msl path { fill: #FFD24D; filter: drop-shadow(0 0 3px rgba(255,210,77,.6)); }\n"
+    "  .dz-res .pip.msl rect { fill: #FF3B4D; }\n"
+    "  .dz-res .pip.msl.spent path { fill: #111; stroke: rgba(255,255,255,.25); stroke-width: .8; filter: none; }\n"
+    "  .dz-res .pip.msl.spent rect { fill: #222; }")
 
 # ---- Destroyer: a miss is a missile falling out of the sky into the water, then a splash ----
 sub("""    function impact(row, col) {
