@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.23"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.24"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -496,7 +496,7 @@ sub("""    function impact(row, col) {
     /** The roll homes in: the row lights up square by square from column 1, the column from A up,
         both meeting on the called square, then [done]. */
     function sweepTo(row, col, done) {
-      var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 75;
+      var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 260;
       var w = CELL_W / 100 * r.width, h = CELL_H / 100 * r.height;
       function lightAt(rr, cc, last) {
         var x = r.left + cellPct(cc + 0.5, "x") / 100 * r.width, y = r.top + cellPct(rr + 0.5, "y") / 100 * r.height;
@@ -504,10 +504,11 @@ sub("""    function impact(row, col) {
         e.className = "dz-sweep" + (last ? " lock" : "");
         e.style.cssText = "left:" + (x - w / 2) + "px;top:" + (y - h / 2) + "px;width:" + w + "px;height:" + h + "px";
         document.body.appendChild(e);
-        setTimeout(function () { e.remove(); }, last ? 700 : 420);
+        setTimeout(function () { e.remove(); }, last ? 1600 : 1300);
       }
       var steps = Math.max(col + 1, DZ.GRID - row);
-      playClip(DZ_LOCK, 1, 0, 0.22);   // the lock-on: three quick beeps and a held one
+      // the lock-on: three quick beeps and a held one, the held one landing as the square locks
+      setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
@@ -517,7 +518,7 @@ sub("""    function impact(row, col) {
           if (last && k > col) lightAt(row, col, true);
         }, k * STEP);
       })(i);
-      setTimeout(done, steps * STEP + 120);
+      setTimeout(done, (steps - 1) * STEP + 450);
     }
     // real recordings (from Zero-K's sound library): the missile coming in, then water or a hit
     var DZ_WHOOSH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_whoosh.mp3").read_bytes()).decode() + """"),
@@ -560,8 +561,8 @@ sub("""    function impact(row, col) {
 sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
     "  .dz-sweep { position: fixed; z-index: 39; pointer-events: none; border-radius: 6px; background: rgba(255,210,77,.55); box-shadow: 0 0 14px rgba(255,210,77,.85), inset 0 0 0 2px #FFE27A;\n"
-    "    animation: dzSweep .42s ease-out forwards; }\n"
-    "  .dz-sweep.lock { background: rgba(255,210,77,.7); box-shadow: 0 0 22px rgba(255,210,77,1), inset 0 0 0 3px #fff6c8; animation: dzLock .7s ease-out forwards; }\n"
+    "    animation: dzSweep 1.3s ease-out forwards; }\n"
+    "  .dz-sweep.lock { background: rgba(255,210,77,.7); box-shadow: 0 0 22px rgba(255,210,77,1), inset 0 0 0 3px #fff6c8; animation: dzLock 1.6s ease-out forwards; }\n"
     "  @keyframes dzSweep { 0% { opacity: 1; } 100% { opacity: 0; } }\n"
     "  @keyframes dzLock { 0% { opacity: 1; transform: scale(1.12); } 25% { transform: scale(1); } 100% { opacity: 0; } }\n"
     "  .dz-mfx { position: fixed; width: 0; height: 0; z-index: 40; pointer-events: none; }\n"
