@@ -4998,7 +4998,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.24</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.25</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -24325,7 +24325,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     var fxBusy = false;
     /** The roll homes in: the row lights up square by square from column 1, the column from A up,
         both meeting on the called square, then [done]. */
-    function sweepTo(row, col, done) {
+    function sweepTo(row, col, done, onShip) {
       var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 260;
       var w = CELL_W / 100 * r.width, h = CELL_H / 100 * r.height;
       function lightAt(rr, cc, last) {
@@ -24338,7 +24338,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       }
       var steps = Math.max(col + 1, DZ.GRID - row);
       // the lock-on: three quick beeps and a held one, the held one landing as the square locks
-      setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));
+      if (onShip) setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));   // only a ship gets locked on to
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
@@ -24385,7 +24385,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       if (!arguments[2] && (!onQ || !hitSet[cellQ])) {
         fxBusy = true;
         lastRoll = [row, col]; renderBoard();
-        sweepTo(row, col, function () { missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ); });
+        sweepTo(row, col, function () { missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ); }, onQ);
         return;
       }
       lastRoll = [row, col];

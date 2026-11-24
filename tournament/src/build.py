@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.24"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.25"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -495,7 +495,7 @@ sub("""    function impact(row, col) {
       if (phase !== "targeting" || lives <= 0) return;""", """    var fxBusy = false;
     /** The roll homes in: the row lights up square by square from column 1, the column from A up,
         both meeting on the called square, then [done]. */
-    function sweepTo(row, col, done) {
+    function sweepTo(row, col, done, onShip) {
       var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 260;
       var w = CELL_W / 100 * r.width, h = CELL_H / 100 * r.height;
       function lightAt(rr, cc, last) {
@@ -508,7 +508,7 @@ sub("""    function impact(row, col) {
       }
       var steps = Math.max(col + 1, DZ.GRID - row);
       // the lock-on: three quick beeps and a held one, the held one landing as the square locks
-      setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));
+      if (onShip) setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));   // only a ship gets locked on to
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
@@ -555,7 +555,7 @@ sub("""    function impact(row, col) {
       if (!arguments[2] && (!onQ || !hitSet[cellQ])) {
         fxBusy = true;
         lastRoll = [row, col]; renderBoard();
-        sweepTo(row, col, function () { missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ); });
+        sweepTo(row, col, function () { missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ); }, onQ);
         return;
       }""")
 sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
