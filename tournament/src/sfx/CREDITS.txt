@@ -3,4 +3,4 @@ Destroyer sound effects, cut down from the Zero-K sound library (github.com/Zero
   dz_splash.mp3  <- explosion/wet/splash.wav                 (Scorched 3D, via Zero-K)
   dz_boom.mp3    <- explosion/ex_with_debri.wav              (via Zero-K)
 These come from open-source games under GPL-compatible licenses; see each origin.txt in the Zero-K repo.
-  dz_lock.mp3    <- made here: three short 1.9kHz beeps and a held 2.1kHz one (a missile lock tone)
+  dz_lock.mp3    <- made here: three short 1.9kHz beeps and a 0.5s held 2.1kHz one (a missile lock tone)
