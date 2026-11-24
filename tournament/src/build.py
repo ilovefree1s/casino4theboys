@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.22"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.23"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -507,6 +507,7 @@ sub("""    function impact(row, col) {
         setTimeout(function () { e.remove(); }, last ? 700 : 420);
       }
       var steps = Math.max(col + 1, DZ.GRID - row);
+      playClip(DZ_LOCK, 1, 0, 0.22);   // the lock-on: three quick beeps and a held one
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
@@ -521,6 +522,7 @@ sub("""    function impact(row, col) {
     // real recordings (from Zero-K's sound library): the missile coming in, then water or a hit
     var DZ_WHOOSH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_whoosh.mp3").read_bytes()).decode() + """"),
         DZ_SPLASH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_splash.mp3").read_bytes()).decode() + """"),
+        DZ_LOCK = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_lock.mp3").read_bytes()).decode() + """"),
         DZ_BOOM = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_boom.mp3").read_bytes()).decode() + """");
     /** A missile drops onto the cell from above and splashes; [hit] fires at the moment it lands. */
     function missileFx(row, col, hit, boom) {
