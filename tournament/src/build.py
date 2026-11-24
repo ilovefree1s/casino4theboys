@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.21"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.22"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -493,6 +493,31 @@ sub("""    function impact(row, col) {
       // A settle that lands after the hand is over — a stray flick during the
       // pause — must not fire a phantom shot or settle the hand twice.
       if (phase !== "targeting" || lives <= 0) return;""", """    var fxBusy = false;
+    /** The roll homes in: the row lights up square by square from column 1, the column from A up,
+        both meeting on the called square, then [done]. */
+    function sweepTo(row, col, done) {
+      var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 75;
+      var w = CELL_W / 100 * r.width, h = CELL_H / 100 * r.height;
+      function lightAt(rr, cc, last) {
+        var x = r.left + cellPct(cc + 0.5, "x") / 100 * r.width, y = r.top + cellPct(rr + 0.5, "y") / 100 * r.height;
+        var e = document.createElement("div");
+        e.className = "dz-sweep" + (last ? " lock" : "");
+        e.style.cssText = "left:" + (x - w / 2) + "px;top:" + (y - h / 2) + "px;width:" + w + "px;height:" + h + "px";
+        document.body.appendChild(e);
+        setTimeout(function () { e.remove(); }, last ? 700 : 420);
+      }
+      var steps = Math.max(col + 1, DZ.GRID - row);
+      for (var i = 0; i < steps; i++) (function (k) {
+        setTimeout(function () {
+          var last = k === steps - 1;
+          if (k <= col && !(k === col && !last)) lightAt(row, k, k === col);           // along the row, from column 1
+          var rr = DZ.GRID - 1 - k;                                                    // up the column, from A
+          if (rr > row) lightAt(rr, col, false);
+          if (last && k > col) lightAt(row, col, true);
+        }, k * STEP);
+      })(i);
+      setTimeout(done, steps * STEP + 120);
+    }
     // real recordings (from Zero-K's sound library): the missile coming in, then water or a hit
     var DZ_WHOOSH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_whoosh.mp3").read_bytes()).decode() + """"),
         DZ_SPLASH = new Audio("data:audio/mpeg;base64,""" + __import__("base64").b64encode((here / "sfx" / "dz_splash.mp3").read_bytes()).decode() + """"),
@@ -527,11 +552,16 @@ sub("""    function impact(row, col) {
       if (!arguments[2] && (!onQ || !hitSet[cellQ])) {
         fxBusy = true;
         lastRoll = [row, col]; renderBoard();
-        missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ);
+        sweepTo(row, col, function () { missileFx(row, col, function () { fxBusy = false; impact(row, col, true); }, onQ); });
         return;
       }""")
 sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }\n"
+    "  .dz-sweep { position: fixed; z-index: 39; pointer-events: none; border-radius: 6px; background: rgba(255,210,77,.55); box-shadow: 0 0 14px rgba(255,210,77,.85), inset 0 0 0 2px #FFE27A;\n"
+    "    animation: dzSweep .42s ease-out forwards; }\n"
+    "  .dz-sweep.lock { background: rgba(255,210,77,.7); box-shadow: 0 0 22px rgba(255,210,77,1), inset 0 0 0 3px #fff6c8; animation: dzLock .7s ease-out forwards; }\n"
+    "  @keyframes dzSweep { 0% { opacity: 1; } 100% { opacity: 0; } }\n"
+    "  @keyframes dzLock { 0% { opacity: 1; transform: scale(1.12); } 25% { transform: scale(1); } 100% { opacity: 0; } }\n"
     "  .dz-mfx { position: fixed; width: 0; height: 0; z-index: 40; pointer-events: none; }\n"
     "  .dz-mfx .m { position: absolute; left: calc(var(--cw) * -.2); top: calc(var(--cw) * -1.2); width: calc(var(--cw) * .4); height: calc(var(--cw) * 1.2); transform-origin: 50% 100%;\n"
     "    animation: dzMDrop .6s cubic-bezier(.45,0,.95,.75) both; filter: drop-shadow(0 6px 6px rgba(0,0,0,.55)); }\n"
