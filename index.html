@@ -4998,7 +4998,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.26</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.27</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -24326,7 +24326,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     /** The roll homes in: the row lights up square by square from column 1, the column from A up,
         both meeting on the called square, then [done]. */
     function sweepTo(row, col, done, onShip) {
-      var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 260;
+      var host = $("dz-board"), r = host.getBoundingClientRect(), STEP = 215;
       var w = CELL_W / 100 * r.width, h = CELL_H / 100 * r.height;
       function lightAt(rr, cc, last) {
         var x = r.left + cellPct(cc + 0.5, "x") / 100 * r.width, y = r.top + cellPct(rr + 0.5, "y") / 100 * r.height;
