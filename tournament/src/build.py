@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.27"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.28"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -454,8 +454,7 @@ sub("  .dz-status .pip.spent { background: rgba(255,255,255,.2); }",
     "  .dz-status .pip.msl.spent rect { fill: #222; }")
 
 # ---- the loading screen: first thing in the page, so it shows while the rest of the game comes down ----
-_bootHtml = (here / "boot.html").read_text().replace("/*BOOTFONT*/", __import__("base64").b64encode((here / "spray-title.woff2").read_bytes()).decode()).replace(
-    "/*BOOTBACK*/", __import__("base64").b64encode((here / "cardbacks" / "back_graffiti.webp").read_bytes()).decode())
+_bootHtml = (here / "boot.html").read_text().replace("/*BOOTLOGO*/", __import__("base64").b64encode((here / "art" / "boot_logo.webp").read_bytes()).decode())
 sub("</head><body>", "</head><body>\n" + _bootHtml + "\n")
 
 # ---- Destroyer: the 3 missiles you can still buy sit in a little RESERVES box beside the shots ----
