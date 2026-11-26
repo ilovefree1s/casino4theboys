@@ -30,6 +30,8 @@
   .ts-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--bone); padding: 0; border: 0; background: none; --k: #29E0C0; }
   .ts-spot .ring { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--k); background: rgba(0,0,0,.35); display: grid; place-items: center;
                    box-shadow: 0 0 10px color-mix(in srgb, var(--k) 45%, transparent); }
+  /* chips drag off these on a phone: the page mustn't take the touch for a scroll */
+  .ts-spot, .ts-spot .ring .placed { touch-action: none; }
   .ts-spot .ring .placed { display: block; width: 38px; height: 38px; }
   .ts-spot .ring .empty { font-family: var(--display); font-size: 8.5px; letter-spacing: .08em; color: rgba(245,241,232,.45); }
   .ts-spot .cap { font-family: var(--display); font-size: 9.5px; letter-spacing: .1em; color: var(--k); white-space: nowrap; }
