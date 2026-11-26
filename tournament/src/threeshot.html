@@ -1,0 +1,49 @@
+<!-- ================= 3 SHOT POKER ================= -->
+<div class="screen" id="screen-threeshot">
+  <img class="pg-bg ts-bg" id="ts-bg" alt="">
+  <div class="uth-table dj-table ts-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="wayout" id="ts-back" aria-label="Back to poker"><i>&#8249;</i><b>POKER</b></button>
+        <div class="uth-money purse">
+          <span class="lbl">BANKROLL</span><span class="val" id="ts-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="ts-risk">0</span>
+        </div>
+      </div>
+      <div class="ts-sign">3 SHOT POKER <span>YOUR TWO CARDS PLAY WITH EACH SHOT · PAIR OR BETTER PAYS</span></div>
+      <div class="uth-label" id="ts-shots-label"><span class="nm">THE SHOTS</span></div>
+      <div class="ts-shots" id="ts-shots"></div>
+      <div class="uth-rule ts-rule"></div>
+      <div class="uth-label gold" id="ts-you-label"><span class="nm">YOUR HAND</span></div>
+      <div class="ts-hole" id="ts-hole"></div>
+      <div class="uth-message" id="ts-message">Place your bet</div>
+      <div class="pg-bonusline" id="ts-fiveline"></div>
+    </div>
+    <div class="dj-bottom">
+      <div class="ts-felt">
+        <div class="pg-pays ts-pays" id="ts-pays">
+          <div class="hd">EACH SHOT PAYS</div>
+          <div class="rows" id="ts-pays-rows"></div>
+          <div class="ft">THREE-CARD HANDS</div>
+        </div>
+        <div class="ts-spots">
+          <div id="ts-spot-five"></div>
+          <div class="ts-trio"><div id="ts-spot-s1"></div><div id="ts-spot-s2"></div><div id="ts-spot-s3"></div></div>
+        </div>
+        <div class="pg-pays ts-pays" id="ts-fivepays">
+          <div class="hd">5 SHOT PAYS</div>
+          <div class="rows" id="ts-five-rows"></div>
+          <div class="ft">ALL FIVE CARDS</div>
+        </div>
+      </div>
+      <div id="ts-rack"></div>
+      <div class="uth-actions" id="ts-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="ts-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="ts-buyin">BUY BACK IN</button>
+  </div>
+</div>

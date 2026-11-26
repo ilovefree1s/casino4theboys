@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.30"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.31"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -392,6 +392,59 @@ sub("""          <span class="l2">CASH OUT WHEN YOU LIKE</span>
       <button class="cm-plate" id="om-chain\"""")
 sub("  paintMenu();\n  /* ---------- sound",
     (here / "highlow.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
+
+# ---- 3 SHOT POKER: two cards, three shots, raise or fold. Campaign and Play Testing; the tournament hides it ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "threeshot.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "threeshot.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+sub("""        <span class="pk-txt"><span class="nm">PAI GOW</span><span class="l1">FACE UP · SET TWO HANDS</span><span class="l2">NO COMMISSION · JOKER IN THE DECK</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>""",
+"""        <span class="pk-txt"><span class="nm">PAI GOW</span><span class="l1">FACE UP · SET TWO HANDS</span><span class="l2">NO COMMISSION · JOKER IN THE DECK</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>
+      <button class="pk-game" id="pk-threeshot" style="--c:#29E0C0" aria-label="3 Shot Poker — play">
+        <img src="data:image/svg+xml;base64,""" + __import__("base64").b64encode((here / "threeshot-icon.svg").read_bytes()).decode() + """" alt="">
+        <span class="pk-txt"><span class="nm">3 SHOT POKER</span><span class="l1">TWO CARDS · THREE SHOTS</span><span class="l2">RAISE OR FOLD · 5 SHOT BONUS</span></span>
+        <span class="pk-play">PLAY</span>
+      </button>""")
+sub('{ nm: "POKER",     sub: "7",', '{ nm: "POKER",     sub: "8",')
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "threeshot.js").read_text() + "  paintMenu();\n  /* ---------- sound")
+
+# ---- BREAKOUT BLACKJACK: back the player or the dealer. Campaign and Play Testing; the tournament hides it ----
+sub("</style>\n\n<!-- ================= MENU ================= -->",
+    (here / "breakout.css").read_text() + "</style>\n\n<!-- ================= MENU ================= -->")
+sub('<!-- ================= SETTINGS ================= -->',
+    (here / "breakout.html").read_text() + '<!-- ================= SETTINGS ================= -->')
+_BOART = ('<svg viewBox="0 0 102 78" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="ombobg" cx=".5" cy=".45" r=".8"><stop offset="0" stop-color="#3A1A05"/><stop offset="1" stop-color="#0A0401"/></radialGradient></defs>'
+          '<rect width="102" height="78" fill="url(#ombobg)"/>'
+          '<path d="M51 8 l6 13 14-6-5 14 15 2-12 9 10 11-15-1 2 15-11-10-6 14-5-14-11 10 2-15-15 1 10-11-12-9 15-2-5-14 14 6z" fill="#FF8A1F" opacity=".85"/>'
+          '<g transform="translate(20 22) rotate(-14)"><rect width="28" height="40" rx="4" fill="#FAF6EC" stroke="#000" stroke-opacity=".4"/><text x="5" y="12" font-family="Georgia,serif" font-weight="700" font-size="10" fill="#1a1a1a">K</text><text x="14" y="29" text-anchor="middle" font-size="14" fill="#1a1a1a">&#9824;</text></g>'
+          '<g transform="translate(54 20) rotate(12)"><rect width="28" height="40" rx="4" fill="#FAF6EC" stroke="#000" stroke-opacity=".4"/><text x="5" y="12" font-family="Georgia,serif" font-weight="700" font-size="10" fill="#C8102E">Q</text><text x="14" y="29" text-anchor="middle" font-size="14" fill="#C8102E">&#9829;</text></g>'
+          '<text x="51" y="73" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="13" fill="#FFD24D" stroke="#3A1A05" stroke-width=".8">BUST!</text></svg>')
+sub("""          <span class="l2">PUSH 22 · PAIR SQUARE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>""", """          <span class="l2">PUSH 22 · PAIR SQUARE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>
+      <button class="bjm-plate" id="bjm-breakout" style="--c:#FF8A1F" aria-label="Breakout Blackjack — play">
+        <span class="art">""" + _BOART + """</span>
+        <span class="txt">
+          <span class="nm">BREAKOUT</span>
+          <span class="l1">BACK PLAYER OR DEALER</span>
+          <span class="l2">BUST BONUS · SUPER TIE</span>
+        </span>
+        <span class="play">PLAY</span>
+      </button>""")
+sub('{ nm: "BLACKJACK", sub: "3",', '{ nm: "BLACKJACK", sub: "4",')
+sub('<span class="sub">THREE WAYS TO PLAY IT</span>', '<span class="sub" id="bjm-sub">THREE WAYS TO PLAY IT</span>')
+sub("  paintMenu();\n  /* ---------- sound",
+    (here / "breakout.js").read_text() + "  paintMenu();\n  /* ---------- sound")
 
 # ---- the OTHER GAMES bar in the lobby gets a picture like the rest: half money wheel, half mines ----
 sub("""    { key: "other", c: "#F2EEE6", name: "OTHER GAMES", tables: 5,

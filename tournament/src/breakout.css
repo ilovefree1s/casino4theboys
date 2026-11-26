@@ -1,0 +1,84 @@
+  /* ========== BREAKOUT BLACKJACK ==========
+     Back the player or the dealer; on the dealer the player's hand draws like the dealer's. */
+  #screen-breakout {
+    position: relative; --uth-green: #FF8A1F; --uth-dim: rgba(255,138,31,.35);
+    background: radial-gradient(120% 70% at 50% 40%, #3A1A05 0%, #180A02 55%, #070301 100%);
+  }
+  .bo-bg { filter: grayscale(1) sepia(1) hue-rotate(-12deg) saturate(3) brightness(.75); }
+  #screen-breakout .uth-money .val { color: #FFD24D; }
+  .bo-sign { font-family: var(--display); font-size: 13px; letter-spacing: .14em; color: #FF8A1F; text-align: center; margin: 2px 0 6px; }
+  .bo-sign span { display: block; margin-top: 3px; font-family: var(--mono); font-size: 8px; letter-spacing: .12em; color: rgba(245,241,232,.55); }
+  .bo-who { display: flex; align-items: center; gap: 8px; width: 100%; margin-top: 2px; }
+  .bo-who .nm { font-family: var(--display); font-size: 11px; letter-spacing: .16em; color: rgba(245,241,232,.8); white-space: nowrap; }
+  .bo-who .rule { flex: 1; height: 1px; background: rgba(255,138,31,.35); }
+  .bo-badge { min-width: 30px; height: 22px; padding: 0 7px; border-radius: 11px; border: 1.5px solid rgba(255,138,31,.6); font: 800 12px/19px system-ui, sans-serif; color: #F5F1E8;
+              text-align: center; box-sizing: border-box; visibility: hidden; }
+  .bo-badge.on { visibility: visible; }
+  .bo-badge.bust { border-color: #FF4D4D; color: #FF6B6B; }
+  .bo-badge.bj { border-color: #FFD24D; color: #FFD24D; }
+  /* hands: laid side by side, overlapping once they run long */
+  .bo-row { display: flex; justify-content: center; align-items: flex-start; gap: 14px; width: 100%; min-height: 80px; margin: 6px 0 4px; }
+  .bo-row.you { min-height: 96px; }
+  .bo-hand { display: flex; flex-direction: column; align-items: center; gap: 3px; border-radius: 10px; padding: 3px; }
+  .bo-hand .cards { display: flex; margin: 0; }
+  .bo-hand .card, .bo-hand .slot { width: 50px; height: 75px; flex: none; }
+  .bo-hand .card + .card { margin-left: var(--ov, 4px); }
+  .bo-hand .card .front { padding: 3px 4px; }
+  .bo-hand .card .tl { font-size: 14px; } .bo-hand .card .mid { font-size: 20px; } .bo-hand .card .br { font-size: 9px; }
+  .bo-row.many .bo-hand .card, .bo-row.many .bo-hand .slot { width: 40px; height: 60px; }
+  .bo-row.many .bo-hand .card .mid { font-size: 16px; } .bo-row.many .bo-hand .card .tl { font-size: 12px; }
+  .bo-hand.act { box-shadow: 0 0 0 2px #FFD24D, 0 0 14px rgba(255,210,77,.35); }
+  .bo-hand .tag { font-family: var(--display); font-size: 9.5px; letter-spacing: .08em; color: rgba(245,241,232,.75); white-space: nowrap; min-height: 12px; }
+  .bo-hand .tag.w { color: #57E06A; } .bo-hand .tag.l { color: #FF6B6B; }
+  /* the felt */
+  .bo-felt { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 6px; align-items: stretch; margin-bottom: 8px; }
+  .bo-spots { display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 6px; padding-top: 2px; }
+  .bo-sides, .bo-mains { display: flex; gap: 6px; }
+  .bo-mains { gap: 12px; }
+  .bo-spot { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--bone); padding: 0; border: 0; background: none; --k: #FF8A1F; }
+  .bo-spot .ring { position: relative; width: 44px; height: 44px; border-radius: 50%; border: 2px solid var(--k); background: rgba(0,0,0,.35); display: grid; place-items: center;
+                   box-shadow: 0 0 10px color-mix(in srgb, var(--k) 45%, transparent); }
+  .bo-spot.main .ring { width: 54px; height: 54px; }
+  .bo-spot .ring .placed { display: block; width: 38px; height: 38px; }
+  .bo-spot.main .ring .placed { width: 46px; height: 46px; }
+  .bo-spot .ring .empty { font-family: var(--display); font-size: 8.5px; letter-spacing: .08em; color: rgba(245,241,232,.45); }
+  .bo-spot .cap { font-family: var(--display); font-size: 9px; letter-spacing: .08em; color: var(--k); white-space: nowrap; }
+  .bo-spot.main .cap { font-size: 10px; letter-spacing: .12em; }
+  .bo-spot[data-spot="player"] { --k: #35C8FF; } .bo-spot[data-spot="dealer"] { --k: #FF8A1F; }
+  .bo-spot[data-spot="breakout"] { --k: #FF4D6D; } .bo-spot[data-spot="tie"] { --k: #FFD24D; } .bo-spot[data-spot="pair"] { --k: #B98CFF; }
+  .bo-spot.off { opacity: .32; }
+  .bo-spot[disabled] { opacity: 1; } .bo-spot.off[disabled] { opacity: .32; }
+  .bo-spot .dj-pill { position: absolute; left: 50%; top: -8px; transform: translateX(-50%); z-index: 3; padding: 2px 7px; font-size: 10.5px; white-space: nowrap;
+                      background: rgba(6,4,8,.94); pointer-events: none; }
+  .bo-spot .dj-pill.w { border-color: #57E06A; } .bo-spot .dj-pill.l { border-color: rgba(255,77,77,.7); }
+  #bo-brpays { --k: #FF4D6D; } #bo-tiepays { --k: #FFD24D; }
+  .bo-pays { display: flex; flex-direction: column; }
+  .bo-pays .rows div { gap: 4px; padding: 1px 3px; }
+  /* one line, always: a long message never pushes the table down */
+  #bo-message { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .bo-pays .rows { flex: 1; justify-content: center; }
+  .bo-pays .hd.sub { margin: 4px 0 3px; color: #B98CFF; }
+  #bo-pair-rows { flex: none; } #bo-pair-rows div b { color: #B98CFF; } #bo-pair-rows div.hit { background: #B98CFF; }
+  .bo-pays.off { opacity: .45; }
+  #bo-rack { min-height: 50px; }
+  #screen-breakout .uth-rack .chip-btn.sel { box-shadow: 0 0 0 1.5px #FFD24D, 0 5px 12px rgba(0,0,0,.5); }
+  #screen-breakout .uth-btn[disabled] { opacity: .4; }
+  #screen-breakout .uth-actions { width: 100%; display: flex; gap: 8px; margin-top: 8px; }
+  #screen-breakout .uth-actions .uth-btn { min-width: 0; flex: 1; padding-left: 4px; padding-right: 4px; }
+  @media (max-height: 770px) {
+    .bo-sign { margin: 0 0 4px; } .bo-sign span { display: none; }
+    .bo-hand .card, .bo-hand .slot { width: 44px; height: 66px; }
+    .bo-row { min-height: 72px; } .bo-row.you { min-height: 86px; }
+    .bo-felt { margin-bottom: 6px; }
+  }
+  @media (max-height: 700px) {
+    .bo-sign { display: none; }
+    .bo-hand .card, .bo-hand .slot { width: 40px; height: 60px; }
+    .bo-row.many .bo-hand .card, .bo-row.many .bo-hand .slot { width: 34px; height: 51px; }
+    .bo-row { min-height: 64px; margin: 4px 0 2px; } .bo-row.you { min-height: 78px; }
+    .bo-spot .ring { width: 40px; height: 40px; } .bo-spot.main .ring { width: 48px; height: 48px; }
+    .bo-spot .ring .placed { width: 34px; height: 34px; } .bo-spot.main .ring .placed { width: 40px; height: 40px; }
+    #bo-rack { min-height: 46px; } #screen-breakout .uth-rack .chip-btn { width: 46px; height: 46px; }
+    #screen-breakout .uth-actions { margin-top: 5px; }
+    #screen-breakout .uth-table { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
+  }

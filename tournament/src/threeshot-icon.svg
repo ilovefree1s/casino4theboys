@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="34 2 116 118">
+<g transform="translate(92 36)">
+<g transform="translate(-58 -22)"><rect width="34" height="46" rx="5" fill="#062A25" stroke="#29E0C0" stroke-width="2"/><text x="17" y="31" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="15" fill="#29E0C0">1</text></g>
+<g transform="translate(-17 -22)"><rect width="34" height="46" rx="5" fill="#062A25" stroke="#29E0C0" stroke-width="2"/><text x="17" y="31" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="15" fill="#29E0C0">2</text></g>
+<g transform="translate(24 -22)"><rect width="34" height="46" rx="5" fill="#062A25" stroke="#29E0C0" stroke-width="2"/><text x="17" y="31" text-anchor="middle" font-family="Arial Black,Arial" font-weight="900" font-size="15" fill="#29E0C0">3</text></g>
+</g>
+<g transform="translate(92 92)">
+<g transform="translate(-38 -24) rotate(-8 17 23)"><rect width="34" height="46" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="6" y="15" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#C8102E">A</text><text x="17" y="36" text-anchor="middle" font-size="17" fill="#C8102E">&#9829;</text></g>
+<g transform="translate(4 -24) rotate(8 17 23)"><rect width="34" height="46" rx="5" fill="#FAF6EC" stroke="#000" stroke-opacity=".35"/><text x="6" y="15" font-family="Georgia,serif" font-size="13" font-weight="700" fill="#C8102E">K</text><text x="17" y="36" text-anchor="middle" font-size="17" fill="#C8102E">&#9829;</text></g>
+</g>
+</svg>

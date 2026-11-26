@@ -1,0 +1,49 @@
+<!-- ================= BREAKOUT BLACKJACK ================= -->
+<div class="screen" id="screen-breakout">
+  <img class="pg-bg bo-bg" id="bo-bg" alt="">
+  <div class="uth-table dj-table bo-table">
+    <div class="dj-top">
+      <div class="uth-topbar">
+        <button class="wayout" id="bo-back" aria-label="Back to blackjack"><i>&#8249;</i><b>BLACKJACK</b></button>
+        <div class="uth-money purse">
+          <span class="lbl">BANKROLL</span><span class="val" id="bo-bankroll">5,000</span>
+          <span class="gap"></span>
+          <span class="lbl">AT RISK</span><span class="val risk" id="bo-risk">0</span>
+        </div>
+      </div>
+      <div class="bo-sign">BREAKOUT BLACKJACK <span>BACK THE PLAYER OR THE DEALER · 6 DECKS · DEALER STANDS ON 17</span></div>
+      <div class="bo-who"><span class="nm">DEALER</span><span class="rule"></span><span class="bo-badge" id="bo-dbadge"></span></div>
+      <div class="bo-row" id="bo-dealer"></div>
+      <div class="uth-message" id="bo-message">Place your bet</div>
+      <div class="bo-who"><span class="nm" id="bo-pname">PLAYER</span><span class="rule"></span><span class="bo-badge" id="bo-pbadge"></span></div>
+      <div class="bo-row you" id="bo-player"></div>
+      <div class="pg-bonusline" id="bo-sideline"></div>
+    </div>
+    <div class="dj-bottom">
+      <div class="bo-felt">
+        <div class="pg-pays bo-pays" id="bo-brpays">
+          <div class="hd">BREAKOUT PAYS</div>
+          <div class="rows" id="bo-br-rows"></div>
+          <div class="ft">BOTH BUST · CARDS IN BOTH HANDS</div>
+        </div>
+        <div class="bo-spots">
+          <div class="bo-sides"><div id="bo-spot-breakout"></div><div id="bo-spot-tie"></div><div id="bo-spot-pair"></div></div>
+          <div class="bo-mains"><div id="bo-spot-player"></div><div id="bo-spot-dealer"></div></div>
+        </div>
+        <div class="pg-pays bo-pays" id="bo-tiepays">
+          <div class="hd">SUPER TIE PAYS</div>
+          <div class="rows" id="bo-tie-rows"></div>
+          <div class="hd sub">PAIR UP PAYS</div>
+          <div class="rows" id="bo-pair-rows"></div>
+        </div>
+      </div>
+      <div id="bo-rack"></div>
+      <div class="uth-actions" id="bo-actions"></div>
+    </div>
+  </div>
+  <!-- Free play only: the campaign gets the shell's GAME OVER instead. -->
+  <div class="uth-rebuy" id="bo-rebuy">
+    <div class="ttl">OUT OF CHIPS</div>
+    <button class="buy" id="bo-buyin">BUY BACK IN</button>
+  </div>
+</div>
