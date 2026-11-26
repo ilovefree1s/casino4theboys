@@ -5108,7 +5108,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.32</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.33</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -19015,14 +19015,11 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       });
       renderAll();
       t(450, function () { hands[i].cards.push(draw()); renderHands(); });
-      t(900, function () { hands[i + 1].cards.push(draw()); renderHands(); });
-      t(1200, function () {
+      t(800, function () {
         if (aces) {
           // Split aces receive one card each and stand — unless that card is
-          // another ace, which the player may split again.
-          [i, i + 1].forEach(function (idx) {
-            if (!canResplit(hands[idx])) hands[idx].done = true;
-          });
+          // another ace, which the player may split again. The other ace gets its card when its turn comes.
+          if (!canResplit(hands[i])) hands[i].done = true;
           advance();
         } else {
           if (total(hands[i].cards) === 21) hands[i].done = true;
@@ -19039,6 +19036,20 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
     function advance() {
       var next = -1;
       for (var i = 0; i < hands.length; i++) if (!hands[i].done) { next = i; break; }
+      if (next >= 0 && hands[next].cards.length === 1) {
+        // a split hand still holding one card: deal its second now that its turn has come
+        active = next;
+        phase = "dealing";
+        renderAll();
+        t(450, function () {
+          var h = hands[next];
+          h.cards.push(draw());
+          if (h.aceSplit && !canResplit(h)) h.done = true;
+          renderHands();
+          t(350, advance);
+        });
+        return;
+      }
       if (next >= 0) {
         active = next;
         phase = "player";

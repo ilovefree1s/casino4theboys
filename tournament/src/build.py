@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.32"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.33"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -655,6 +655,45 @@ sub("  .dz-status .pip.msl.spent rect { fill: #222; }",
     "  .dz-mfx .drop { position: absolute; left: -4px; top: -4px; width: 8px; height: 8px; border-radius: 50%; background: #e6f4ff; opacity: 0; }\n"
     "  .dz-mfx.splash .drop { animation: dzDrop .75s cubic-bezier(.2,.7,.4,1) forwards; }\n"
     "  @keyframes dzDrop { 0% { opacity: 1; transform: translate(0,0) scale(1.2); } 70% { opacity: 1; } 100% { opacity: 0; transform: translate(calc(var(--dx) * var(--cw)), calc(var(--dy) * var(--cw) + var(--cw) * .35)) scale(.4); } }")
+
+# ---- blackjack split: the split-off card waits on its own until the hand before it is finished ----
+sub("""      t(450, function () { hands[i].cards.push(draw()); renderHands(); });
+      t(900, function () { hands[i + 1].cards.push(draw()); renderHands(); });
+      t(1200, function () {
+        if (aces) {
+          // Split aces receive one card each and stand — unless that card is
+          // another ace, which the player may split again.
+          [i, i + 1].forEach(function (idx) {
+            if (!canResplit(hands[idx])) hands[idx].done = true;
+          });
+          advance();""", """      t(450, function () { hands[i].cards.push(draw()); renderHands(); });
+      t(800, function () {
+        if (aces) {
+          // Split aces receive one card each and stand — unless that card is
+          // another ace, which the player may split again. The other ace gets its card when its turn comes.
+          if (!canResplit(hands[i])) hands[i].done = true;
+          advance();""")
+sub("""      if (next >= 0) {
+        active = next;
+        phase = "player";
+        if (hands.length > 1) setMessage("Your move — hand " + (next + 1));""", """      if (next >= 0 && hands[next].cards.length === 1) {
+        // a split hand still holding one card: deal its second now that its turn has come
+        active = next;
+        phase = "dealing";
+        renderAll();
+        t(450, function () {
+          var h = hands[next];
+          h.cards.push(draw());
+          if (h.aceSplit && !canResplit(h)) h.done = true;
+          renderHands();
+          t(350, advance);
+        });
+        return;
+      }
+      if (next >= 0) {
+        active = next;
+        phase = "player";
+        if (hands.length > 1) setMessage("Your move — hand " + (next + 1));""")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
