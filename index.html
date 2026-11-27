@@ -5108,7 +5108,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
   <canvas id="cr-rain" aria-hidden="true"></canvas><div class="cr-vignette"></div>
   <div class="mm-col">
     <div class="mm-sign">
-      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.33</span></div>
+      <div class="mm-name">Casino Games<span class="mm-ver" id="mm-ver">v2.34</span></div>
       <div class="mm-casino">4 THE BOYS</div>
     </div>
     <div class="mm-rail">
@@ -24959,7 +24959,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         s += '<polygon points="' + jx + ',' + (jy - 11) + ' ' + (jx + 11) + ',' + jy + ' ' + jx + ',' + (jy + 11) + ' ' + (jx - 11) + ',' + jy + '" fill="' + DZ_PINK_HI + '" opacity=".9"/>';
       }
       // the badges: letters down the side, F at the top; numbers along the foot
-      "FEDCBA".split("").forEach(function (ch, i) { s += dzOctagon(93, ROW_CY[i], 72, ch); });
+      "ABCDEF".split("").forEach(function (ch, i) { s += dzOctagon(93, ROW_CY[i], 72, ch); });
       for (var i = 0; i < 6; i++) s += dzOctagon(COL_CX[i], 1131, 72, String(i + 1));
       return s + '</svg>';
     }
@@ -25223,7 +25223,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
       $("dz-res").innerHTML = res;
       // Called the battleship way, lettered from the bottom row up.
       $("dz-roll").textContent = lastRoll
-        ? String.fromCharCode(65 + (DZ.GRID - 1 - lastRoll[0])) + (lastRoll[1] + 1) : "——";
+        ? String.fromCharCode(65 + lastRoll[0]) + (lastRoll[1] + 1) : "——";
       // What the hits so far pay if the hand ended right here.
       $("dz-owed").textContent = phase === "targeting" || phase === "offer"
         ? "PAYING $" + fmt(DZ.settle(fleet, hitSet) * stake) : "";
@@ -25399,7 +25399,7 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         sound: { url: DICE_SND },
         // Die 0 calls the row letter, die 1 the column number. Rows are
         // lettered from the bottom up — A is the near water.
-        onSettle: function (vals) { impact(DZ.GRID - vals[0], vals[1] - 1); }
+        onSettle: function (vals) { impact(vals[0] - 1, vals[1] - 1); }
       });
       // The near edge says what it is for.
       var guide = $("dz-tray").querySelector(".dt-line span");
@@ -25445,15 +25445,15 @@ input, textarea, [contenteditable], .tt-mbody, .tt-msg p { -webkit-user-select: 
         document.body.appendChild(e);
         setTimeout(function () { e.remove(); }, last ? 1600 : 1300);
       }
-      var steps = Math.max(col + 1, DZ.GRID - row);
+      var steps = Math.max(col + 1, row + 1);
       // the lock-on: three quick beeps and a held one, the held one landing as the square locks
       if (onShip) setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));   // only a ship gets locked on to
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
           if (k <= col && !(k === col && !last)) lightAt(row, k, k === col);           // along the row, from column 1
-          var rr = DZ.GRID - 1 - k;                                                    // up the column, from A
-          if (rr > row) lightAt(rr, col, false);
+          var rr = k;                                                                  // down the column, from A at the top
+          if (rr < row) lightAt(rr, col, false);
           if (last && k > col) lightAt(row, col, true);
         }, k * STEP);
       })(i);

@@ -9,7 +9,7 @@ url = sys.argv[3] if len(sys.argv) > 3 else ""
 key = sys.argv[4] if len(sys.argv) > 4 else ""
 here = pathlib.Path(__file__).parent
 # the version on the front-page sign: bump it with each update that goes out
-VERSION = "2.33"   # bump with each update: 2.02, 2.03, ...
+VERSION = "2.34"   # bump with each update: 2.02, 2.03, ...
 h = open(src, encoding="utf-8").read()
 SEAT = __import__("os").environ.get("SEAT", "1") != "0"      # seat save and the moved fullscreen button: built in only when asked for, until it ships
 
@@ -558,15 +558,15 @@ sub("""    function impact(row, col) {
         document.body.appendChild(e);
         setTimeout(function () { e.remove(); }, last ? 1600 : 1300);
       }
-      var steps = Math.max(col + 1, DZ.GRID - row);
+      var steps = Math.max(col + 1, row + 1);
       // the lock-on: three quick beeps and a held one, the held one landing as the square locks
       if (onShip) setTimeout(function () { playClip(DZ_LOCK, 1, 0, 0.22); }, Math.max(0, (steps - 1) * STEP - 270));   // only a ship gets locked on to
       for (var i = 0; i < steps; i++) (function (k) {
         setTimeout(function () {
           var last = k === steps - 1;
           if (k <= col && !(k === col && !last)) lightAt(row, k, k === col);           // along the row, from column 1
-          var rr = DZ.GRID - 1 - k;                                                    // up the column, from A
-          if (rr > row) lightAt(rr, col, false);
+          var rr = k;                                                                  // down the column, from A at the top
+          if (rr < row) lightAt(rr, col, false);
           if (last && k > col) lightAt(row, col, true);
         }, k * STEP);
       })(i);
@@ -694,6 +694,14 @@ sub("""      if (next >= 0) {
         active = next;
         phase = "player";
         if (hands.length > 1) setMessage("Your move — hand " + (next + 1));""")
+
+# ---- Destroyer: rows lettered A..F from the top down (they used to run up from the bottom) ----
+sub('"FEDCBA".split("").forEach(function (ch, i) { s += dzOctagon(93, ROW_CY[i], 72, ch); });',
+    '"ABCDEF".split("").forEach(function (ch, i) { s += dzOctagon(93, ROW_CY[i], 72, ch); });')
+sub("onSettle: function (vals) { impact(DZ.GRID - vals[0], vals[1] - 1); }",
+    "onSettle: function (vals) { impact(vals[0] - 1, vals[1] - 1); }")
+sub("? String.fromCharCode(65 + (DZ.GRID - 1 - lastRoll[0])) + (lastRoll[1] + 1) : \"——\";",
+    "? String.fromCharCode(65 + lastRoll[0]) + (lastRoll[1] + 1) : \"——\";")
 
 # ---- Super Buster: when the side bet wins, the main hand pushes instead of busting ----
 sub("""        else if (dealerBj) { returned = 0; lost = true; }
